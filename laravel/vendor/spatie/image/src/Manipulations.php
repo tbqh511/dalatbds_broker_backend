@@ -31,6 +31,7 @@ class Manipulations
     public const FIT_CONTAIN = 'contain';
     public const FIT_MAX = 'max';
     public const FIT_FILL = 'fill';
+    public const FIT_FILL_MAX = 'fill-max';
     public const FIT_STRETCH = 'stretch';
     public const FIT_CROP = 'crop';
 
@@ -192,7 +193,7 @@ class Manipulations
     /**
      * @throws InvalidManipulation
      */
-    public function fit(string $fitMethod, int $width, int $height): static
+    public function fit(string $fitMethod, ?int $width = null, ?int $height = null): static
     {
         if (! $this->validateManipulation($fitMethod, 'fit')) {
             throw InvalidManipulation::invalidParameter(
@@ -202,8 +203,17 @@ class Manipulations
             );
         }
 
-        $this->width($width);
-        $this->height($height);
+        if ($width === null && $height === null) {
+            throw new InvalidManipulation('Width or height or both must be provided');
+        }
+
+        if ($width !== null) {
+            $this->width($width);
+        }
+
+        if ($height !== null) {
+            $this->height($height);
+        }
 
         return $this->addManipulation('fit', $fitMethod);
     }

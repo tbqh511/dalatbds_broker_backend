@@ -7,7 +7,7 @@
     "require": {
         "php": "^8.0.2",
         "barryvdh/laravel-debugbar": "^3.7",
-
+        "cviebrock/eloquent-sluggable": "^9.0",
         "doctrine/dbal": "^3.6",
         "guzzlehttp/guzzle": "^7.2",
         "kornrunner/blurhash": "^1.2",
