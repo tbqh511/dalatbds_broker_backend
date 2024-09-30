@@ -110,11 +110,11 @@ class FrontEndPropertiesController extends Controller
         // Get the list of product categories sorted by category in ascending order
         $categories = Category::orderBy('category')->get();
 
-        // get the list legals of properties         
+        // get the list legals of properties
         $legalsParameter = Parameter::find(config('global.legal')); // Lấy bản ghi theo config
         $legals = $legalsParameter->type_values;
 
-        // get the list directions of properties         
+        // get the list directions of properties
         $directionsParameter = Parameter::find(config('global.direction')); // Lấy bản ghi theo config
         $directions = $directionsParameter->type_values;
 
@@ -170,7 +170,7 @@ class FrontEndPropertiesController extends Controller
                 // Không cần thêm điều kiện gì vì đã xử lý các trường hợp này trước đó
             }
         }
-        
+
 
         if (!empty($priceRangeInput)) {
             // Tách giá trị thành mảng các khoảng giá

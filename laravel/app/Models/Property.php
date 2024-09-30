@@ -1,14 +1,16 @@
 <?php
 
 namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
 
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Cviebrock\EloquentSluggable\Sluggable;
 
 class Property extends Model
 {
     use HasFactory;
+    use Sluggable;
 
     protected $table = 'propertys';
 
@@ -49,6 +51,14 @@ class Property extends Model
         'legalimages'
     ];
 
+    public function sluggable(): array
+    {
+        return [
+            'slug' => [
+                'source' => 'title'
+            ]
+        ];
+    }
     //HuyTBQ: Start add address coloumns for propertys table
     public function ward()
     {
