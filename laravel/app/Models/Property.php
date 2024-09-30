@@ -55,10 +55,16 @@ class Property extends Model
     {
         return [
             'slug' => [
-                'source' => 'title'
+                'source' => 'slugtitle'
             ]
         ];
     }
+
+    public function getSlugtitleAttribute(): string
+    {
+        return $this->title . '-' . $this->id;
+    }
+
     //HuyTBQ: Start add address coloumns for propertys table
     public function ward()
     {
