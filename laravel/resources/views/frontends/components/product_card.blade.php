@@ -1,12 +1,12 @@
 <div class="listing-item">
     <article class="geodir-category-listing fl-wrap">
         <div class="geodir-category-img fl-wrap">
-                <a href="{{ route('property.show', ['slug' => $productCard->slug]) }}" class="geodir-category-img_item">
+                <a href="{{ route('property.showid', ['id' => $productCard->id]) }}" class="geodir-category-img_item">
                     <img src="{{$productCard->title_image}}" alt="">
                     <div class="overlay"></div>
                 </a>
                 <div class="geodir-category-location">
-                    <a href="{{ route('property.show', ['slug' => $productCard->slug]) }}"><i class="fas fa-map-marker-alt"></i>
+                    <a href="{{ route('property.showid', ['id' => $productCard->id]) }}"><i class="fas fa-map-marker-alt"></i>
                         <span>
                             {{ $productCard->address_location }}
                         </span></a>
@@ -25,7 +25,7 @@
         </div>
         <div class="geodir-category-content fl-wrap">
             <h3 class="title-sin_item">
-                <a href="{{ route('property.show', ['slug' => $productCard->slug]) }}">{{ $productCard->title }}</a>
+                <a href="{{ route('property.showid', ['id' => $productCard->id]) }}">{{ $productCard->slug }}</a>
             </h3>
             <div class="geodir-category-content_price">{{ $productCard->formatted_prices }}</div>
             <p> {{$productCard->description}}</p>
