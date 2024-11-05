@@ -2820,6 +2820,8 @@ class ApiController extends Controller
             $id = $request->host_id;
 
             $host = CrmHost::find($id);
+
+            dd($host);
             if (!empty($host)) {
 
                 $response['error'] = false;
