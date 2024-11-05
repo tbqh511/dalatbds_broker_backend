@@ -2819,9 +2819,8 @@ class ApiController extends Controller
         if (!$validator->fails()) {
             $id = $request->host_id;
 
-            //$host = CrmHost::find($id);
-            //$host = DB::table('crm_hosts')->where('id', $id)->first();
-            $host = CrmHost::select()-> get();
+            $host = CrmHost::find($id);
+            
 
             if (!empty($host)) {
 
