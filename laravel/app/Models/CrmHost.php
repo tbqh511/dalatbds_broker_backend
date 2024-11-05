@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CrmHost extends Model
 {
+    use HasFactory;
+    
     protected $table = 'crm_hosts';
 
     protected $fillable = [
