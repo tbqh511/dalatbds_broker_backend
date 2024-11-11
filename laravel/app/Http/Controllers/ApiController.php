@@ -674,10 +674,10 @@ class ApiController extends Controller
         $result = $property->skip($offset)->take($limit)->get();
 
         //dd(DB::getQueryLog());
-
+        //HuyBQ
 
         if (!$result->isEmpty()) {
-            $property_detailss
+            $property_details
                 = get_property_details($result, $current_user);
             
             $response['error'] = false;
