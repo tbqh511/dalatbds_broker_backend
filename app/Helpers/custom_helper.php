@@ -377,13 +377,6 @@ function get_property_details($result, $current_user = NULL)
         $tempRow['rentduration'] = $row->rentduration;
         $tempRow['commission'] = $row->commission;
 
-        //HuyTBQ: Add avg price per m2 by category_id, location modulee
-        $category_id = $row->category_id;
-        $street_code = $row->street_code;
-        $ward_code = $row->ward_code;
-        $avg_price_per_m2 = get_avg_price_per_m2_by_category_location($category_id, $street_code, $ward_code);
-        $tempRow['avg_price_per_m2'] = $avg_price_per_m2;
-
         $tempRow['assign_facilities'] = [];
         foreach ($row->assignfacilities as $facility) {
             $tempRow['assign_facilities'][] = [
@@ -507,34 +500,7 @@ function get_property_details($result, $current_user = NULL)
     }
     return $rows;
 }
-function get_avg_price_per_m2_by_category_location($category_id, $street_code,$ward_code)
-{
-    // Lấy tất cả các bất động sản theo category_id và street_code
-    $properties = Property::where('category_id', $category_id)
-        ->where('street_code', $street_code)
-        ->where('ward_code', $ward_code)
-        ->whereHas('parameters', function ($query) {
-            $query->where('id', config('global.price_m2')); // Chỉ lấy parameters có ID là price_m2
-        })
-        ->with(['parameters' => function ($query) {
-            $query->where('id', config('global.price_m2')); // Lấy giá trị price_m2 trong parameters
-        }])
-        ->get();
 
-    $totalPricePerM2 = 0;
-    $count = 0;
-
-    // Duyệt qua từng property và lấy giá trị price_m2 từ parameters
-    foreach ($properties as $property) {
-        $priceM2 = $property->parameters->first()?->pivot->value;
-        if ($priceM2) {
-            $totalPricePerM2 += $priceM2;
-            $count++;
-        }
-    }
-
-    return $count > 0 ? $totalPricePerM2 / $count : 0;
-}
 function get_language()
 {
     return Language::get();
