@@ -506,6 +506,7 @@ function get_property_details($result, $current_user = NULL)
         $parameters[] = $arr;
         $count++;
     }
+    dd($row);
     return $rows;
 }
 
