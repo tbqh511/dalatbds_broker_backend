@@ -679,7 +679,7 @@ class ApiController extends Controller
         if (!$result->isEmpty()) {
             $property_details
                 = get_property_details($result, $current_user);
-
+            dd($property_details);
 
             $response['error'] = false;
             $response['message'] = "Data Fetch Successfully";
