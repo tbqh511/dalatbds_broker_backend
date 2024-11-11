@@ -6,6 +6,7 @@ use App\Models\Favourite;
 use App\Models\InterestedUser;
 use App\Models\Language;
 use App\Models\parameter;
+use App\Models\Property;
 use App\Models\PropertysInquiry;
 use App\Models\Setting;
 use App\Models\UserPurchasedPackage;
