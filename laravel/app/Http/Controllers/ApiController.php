@@ -677,7 +677,7 @@ class ApiController extends Controller
         //HuyBQ
 
         if (!$result->isEmpty()) {
-            $property_details
+            $property_detailssss
                 = get_property_details($result, $current_user);
             
             $response['error'] = false;
