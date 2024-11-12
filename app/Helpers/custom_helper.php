@@ -391,7 +391,6 @@ function get_property_details($result, $current_user = NULL)
             ];
         }
 
-
         $inquiry = PropertysInquiry::where('customers_id', $current_user)->where('propertys_id', $row->id)->where('status', 2)->first();
 
         if ($inquiry) {
@@ -427,11 +426,9 @@ function get_property_details($result, $current_user = NULL)
             }
         }
 
-
         $favourite = Favourite::where('property_id', $row->id)->where('user_id', $current_user)->get();
 
         $interest = InterestedUser::where('property_id', $row->id)->where('customer_id', $current_user)->get();
-
 
         if (count($favourite) != 0) {
             $tempRow['is_favourite'] = 1;
