@@ -509,15 +509,15 @@ function get_avg_price_per_m2_by_category_location($category_id, $street_code,$w
 {
     // Lấy tất cả các bất động sản theo category_id và street_code
     $properties = Property::where('category_id', $category_id)
-        ->where('street_code', $street_code)
-        ->where('ward_code', $ward_code)
-        ->whereHas('parameters', function ($query) {
-            $query->where('id', config('global.price_m2')); // Chỉ lấy parameters có ID là price_m2
-        })
-        ->with(['parameters' => function ($query) {
-            $query->where('id', config('global.price_m2')); // Lấy giá trị price_m2 trong parameters
-        }])
-        ->get();
+    ->where('street_code', $street_code)
+    ->where('ward_code', $ward_code)
+    ->whereHas('parameters', function ($query) {
+        $query->where('parameters.id', config('global.price_m2')); // Chỉ lấy parameters có ID là price_m2
+    })
+    ->with(['parameters' => function ($query) {
+        $query->where('parameters.id', config('global.price_m2')); // Lấy giá trị price_m2 trong parameters
+    }])
+    ->get();
 
     $totalPricePerM2 = 0;
     $count = 0;
