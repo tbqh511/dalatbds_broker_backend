@@ -505,13 +505,27 @@ function get_property_details($result, $current_user = NULL)
     }
     return $rows;
 }
-function get_avg_price_per_m2_by_category_location($category_id, $street_code,$ward_code)
+function get_avg_price_per_m2_by_category_location($category_id = null, $street_code = null, $ward_code = null)
 {
-    // Lấy tất cả các bất động sản theo category_id và street_code
-    $properties = Property::where('category_id', $category_id)
-    ->where('street_code', $street_code)
-    ->where('ward_code', $ward_code)
-    ->whereHas('parameters', function ($query) {
+    
+    $category_id = $category_id ?? -1;
+    $street_code = $street_code ?? '';
+    $ward_code = $ward_code ?? ''; 
+
+    $query = Property::query();
+
+    if ($category_id !== -1) {
+        $query->where('category_id', $category_id);
+    }
+    if ($street_code !== '') {
+        $query->where('street_code', $street_code);
+    }
+    if ($ward_code !== '') {
+        $query->where('ward_code', $ward_code);
+    }
+
+    // Lấy các bất động sản có parameters là price_m2
+    $properties = $query->whereHas('parameters', function ($query) {
         $query->where('parameters.id', config('global.price_m2')); // Chỉ lấy parameters có ID là price_m2
     })
     ->with(['parameters' => function ($query) {
@@ -519,10 +533,11 @@ function get_avg_price_per_m2_by_category_location($category_id, $street_code,$w
     }])
     ->get();
 
+    // Tính giá trị trung bình
     $totalPricePerM2 = 0;
     $count = 0;
 
-    // Duyệt qua từng property và lấy giá trị price_m2 từ parameters
+    // Duyệt qua các properties và tính tổng giá trị price_m2
     foreach ($properties as $property) {
         $priceM2 = $property->parameters->first()?->pivot->value;
         if ($priceM2) {
@@ -531,8 +546,10 @@ function get_avg_price_per_m2_by_category_location($category_id, $street_code,$w
         }
     }
 
+    // Trả về giá trị trung bình nếu có giá trị hợp lệ, nếu không trả về 0
     return $count > 0 ? $totalPricePerM2 / $count : 0;
 }
+
 
 function get_language()
 {
