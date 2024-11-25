@@ -1,12 +1,12 @@
 <div class="listing-item">
     <article class="geodir-category-listing fl-wrap">
         <div class="geodir-category-img fl-wrap">
-                <a href="{{ route('property.showid', ['id' => $productCard->id]) }}" class="geodir-category-img_item">
-                    <img src="{{$productCard->title_image}}" alt="">
+                <a href="{{ route('bds.show', ['slug' => $productCard->slug]) }}" class="geodir-category-img_item">
+                    <img src="{{ $productCard->title_image }}" alt="">
                     <div class="overlay"></div>
                 </a>
                 <div class="geodir-category-location">
-                    <a href="{{ route('property.showid', ['id' => $productCard->id]) }}"><i class="fas fa-map-marker-alt"></i>
+                    <a href="{{ route('bds.show', ['slug' => $productCard->slug]) }}"><i class="fas fa-map-marker-alt"></i>
                         <span>
                             {{ $productCard->address_location }}
                         </span></a>
@@ -15,28 +15,17 @@
                     <li><a href="{{ route('properties.index') }}" class="cat-opt blue-bg">{{ $productCard->category->category }}</a></li>
                     <li><a href="{{ route('properties.index') }}" class="cat-opt color-bg">{{ $productCard->created_at->diffForHumans() }}</a></li>
                 </ul>
-                {{-- <a href="#" class="geodir_save-btn tolt" data-microtip-position="left" data-tooltip="Save"><span><i
-                            class="fal fa-heart"></i></span></a>
-                <a href="#" class="compare-btn tolt" data-microtip-position="left" f data-tooltip="Compare"><span><i
-                            class="fal fa-random"></i></span></a> --}}
                 <div class="geodir-category-listing_media-list">
-                    <span><i class="fas fa-camera"></i> {{$productCard->imagesCount}}</span>
+                    <span><i class="fas fa-camera"></i> {{ $productCard->imagesCount }}</span>
                 </div>
         </div>
         <div class="geodir-category-content fl-wrap">
             <h3 class="title-sin_item">
-                <a href="{{ route('property.showid', ['id' => $productCard->id]) }}">{{ $productCard->title }}</a>
+                <a href="{{ route('bds.show', ['slug' => $productCard->slug]) }}">{{ $productCard->title }}</a>
             </h3>
             <div class="geodir-category-content_price">{{ $productCard->formatted_prices }}</div>
-            <p> {{$productCard->description}}</p>
+            <p> {{ $productCard->description }}</p>
             <div class="geodir-category-content-details">
-                {{-- <ul> --}}
-                    {{-- <li><i class="fal fa-bed"></i><span>3</span></li>
-                    <li><i class="fal fa-bath"></i><span>2</span></li> --}}
-                    {{-- <li><i class="fal fa-cube"></i><span>{{ number_format((float) $productCard->area) }} m²</span></li>
-                    --}}
-                    {{--
-                </ul> --}}
                 <ul>
                     @if ($productCard->area)
                         <li>
@@ -54,7 +43,7 @@
             </div>
             <div class="geodir-category-footer fl-wrap">
                 <a href="{{ route('agent.showid', ['id' => $productCard->added_by]) }}" class="gcf-company">
-                        <img src="{{$productCard->agent ? ($productCard->agent->profile ? $productCard->agent->profile : 'https://dalatbds.com/images/users/1693209486.1303.png'):'https://dalatbds.com/images/users/1693209486.1303.png'}}" alt="Đà Lạt BDS">
+                        <img src="{{ $productCard->agent ? ($productCard->agent->profile ? $productCard->agent->profile : 'https://dalatbds.com/images/users/1693209486.1303.png') : 'https://dalatbds.com/images/users/1693209486.1303.png' }}" alt="Đà Lạt BDS">
 
                         <span>{{ $productCard->agent ? ($productCard->agent->name ?: 'Đà Lạt BDS') : 'Đà Lạt BDS' }}</span>
                     </a>
