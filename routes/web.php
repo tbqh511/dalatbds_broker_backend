@@ -55,8 +55,8 @@ use Illuminate\Support\Facades\Artisan;
 Route::get('/', [FrontEndHomeController::class, 'index'])->name('index');
 
 //property controller
-//Route::get('/property/{id}', [FrontEndPropertiesController::class, 'getPropertyById'])->name('property.showid');
-Route::get('/property/{slug}', [FrontEndPropertiesController::class, 'getPropertyById'])->name('property.show');
+Route::get('/property/{id}', [FrontEndPropertiesController::class, 'getPropertyById'])->name('property.showid');
+//Route::get('/property/{slug}', [FrontEndPropertiesController::class, 'getPropertyById'])->name('property.show');
 Route::get('/autocomplete/street', [FrontEndPropertiesController::class, 'autocompleteStreet'])->name('autocomplete.street');
 
 // Route for displaying the detail of a property
