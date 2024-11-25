@@ -343,6 +343,7 @@ function get_property_details($result, $current_user = NULL)
         }
 
         $tempRow['id'] = $row->id;
+        $tempRow['slug'] = $row->slug; 
         $tempRow['title'] = $row->title;
         $tempRow['price'] = $row->price;
         $tempRow['category'] = $row->category;

@@ -525,6 +525,18 @@ class ApiController extends Controller
                 $property = $property->orderBy('price', 'ASC');
             }
         }
+        //HuyTBQ: Add slug query 
+        // Filter by slug
+        if (isset($request->slug)) {
+            // Tách slug thành title và id
+            $slugParts = explode('-', $request->slug);
+            $titlePart = implode('-', array_slice($slugParts, 0, -1)); // Phần title
+            $idPart = end($slugParts); // Phần id
+        
+            $property = $property->where('title', 'LIKE', "%$titlePart%")
+                                 ->where('id', $idPart);
+        }
+        
 
         if (isset($street_number)) {
             $property = $property->where('street_number', $street_number);
@@ -796,6 +808,7 @@ class ApiController extends Controller
                     $Saveproperty->street_number =  (isset($request->street_number)) ? $request->street_number : '';
                     //HuyTBQ: add commission columns for properites table
                     $Saveproperty->commission = (isset($request->commission)) ? $request->commission :0 ;
+                    
 
                     $Saveproperty->added_by = $current_user;
                     $Saveproperty->status = (isset($request->status)) ? $request->status : 0;
