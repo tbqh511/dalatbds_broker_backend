@@ -25,7 +25,7 @@
         </div>
         <div class="geodir-category-content fl-wrap">
             <h3 class="title-sin_item">
-                <a href="{{ route('property.showid', ['id' => $productCard->id]) }}">{{ $productCard->slug }}</a>
+                <a href="{{ route('property.showid', ['id' => $productCard->id]) }}">{{ $productCard->title }}</a>
             </h3>
             <div class="geodir-category-content_price">{{ $productCard->formatted_prices }}</div>
             <p> {{$productCard->description}}</p>
