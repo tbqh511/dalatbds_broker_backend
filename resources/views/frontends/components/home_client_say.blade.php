@@ -12,7 +12,7 @@
             <div class="slick-item">
                 <div class="text-carousel-item fl-wrap">
                     <div class="text-carousel-item-header fl-wrap">
-                        <div class="popup-avatar"><img src="{{asset('images/avatar/7.png')}}" alt=""></div>
+                        <div class="popup-avatar"><img src="{{asset('images/avatar/7.png')}}" alt="dalat-bds"></div>
                         <div class="review-owner fl-wrap">Chị: Nguyễn Thị Hằng</div>
                         <div class="listing-rating card-popup-rainingvis" data-starrating2="5"> </div>
                     </div>
@@ -27,7 +27,7 @@
             <div class="slick-item">
                 <div class="text-carousel-item fl-wrap">
                     <div class="text-carousel-item-header fl-wrap">
-                        <div class="popup-avatar"><img src="{{asset('images/avatar/7.png')}}" alt=""></div>
+                        <div class="popup-avatar"><img src="{{asset('images/avatar/7.png')}}" alt="dalat-bds"></div>
                         <div class="review-owner fl-wrap">Anh: Trần Văn Đức</div>
                         <div class="listing-rating card-popup-rainingvis" data-starrating2="4"> </div>
                     </div>
@@ -42,7 +42,7 @@
             <div class="slick-item">
                 <div class="text-carousel-item fl-wrap">
                     <div class="text-carousel-item-header fl-wrap">
-                        <div class="popup-avatar"><img src="{{asset('images/avatar/7.png')}}" alt=""></div>
+                        <div class="popup-avatar"><img src="{{asset('images/avatar/7.png')}}" alt="dalat-bds"></div>
                         <div class="review-owner fl-wrap">Chị: Lê Thị Thanh Hằng</div>
                         <div class="listing-rating card-popup-rainingvis" data-starrating2="4"> </div>
                     </div>
@@ -57,7 +57,7 @@
             <div class="slick-item">
                 <div class="text-carousel-item fl-wrap">
                     <div class="text-carousel-item-header fl-wrap">
-                        <div class="popup-avatar"><img src="{{asset('images/avatar/7.png')}}" alt=""></div>
+                        <div class="popup-avatar"><img src="{{asset('images/avatar/7.png')}}" alt="dalat-bds"></div>
                         <div class="review-owner fl-wrap">Anh: Phạm Văn Nam</div>
                         <div class="listing-rating card-popup-rainingvis" data-starrating2="5"> </div>
                     </div>

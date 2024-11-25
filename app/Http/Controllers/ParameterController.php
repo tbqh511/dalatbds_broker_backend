@@ -132,7 +132,7 @@ class ParameterController extends Controller
             $tempRow['name'] = $row->name;
             $tempRow['type'] = $row->type_of_parameter;
             $tempRow['value'] = is_array($row->type_values) ? implode(',', $row->type_values) : $row->type_values;
-            $tempRow['image'] = ($row->image != '') ? '<a class="image-popup-no-margins" href="' . $row->image . '"><img class="rounded avatar-md shadow img-fluid" alt="" src="' . $row->image . '" width="55"></a>' : '';
+            $tempRow['image'] = ($row->image != '') ? '<a class="image-popup-no-margins" href="' . $row->image . '"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . $row->image . '" width="55"></a>' : '';
 
 
             if (has_permissions('update', 'type')) {

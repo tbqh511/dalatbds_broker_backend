@@ -34,7 +34,7 @@
                                             onclick="setallMessage({{ $value->property_id }}, {{ $value->sender->id }});"
                                             class="{{ $key == 0 ? 'active' : '' }}" style="display: flex;">
 
-                                            <img alt="" class="img-circle medium-image"
+                                            <img alt="dalat-bds" class="img-circle medium-image"
                                                 src="{{ $value->sender->profile ? $value->sender->profile : 'https://www.nicepng.com/png/detail/128-1280406_view-user-icon-png-user-circle-icon-png.png' }}">
 
 
@@ -60,7 +60,7 @@
                                             onclick="setallMessage({{ $value->property_id }}, {{ $value->receiver->id }});"
                                             class="{{ $key == 0 ? 'active' : '' }}" style="display: flex;">
 
-                                            <img alt="" class="img-circle medium-image"
+                                            <img alt="dalat-bds" class="img-circle medium-image"
                                                 src="{{ $value->receiver->profile ? $value->receiver->profile : 'https://www.nicepng.com/png/detail/128-1280406_view-user-icon-png-user-circle-icon-png.png' }}">
 
                                             <div class="vcentered info-combo">
@@ -376,7 +376,7 @@
 
 
                                         '<div class="message my-message">' +
-                                        '<img alt="" class="img-circle medium-image"' +
+                                        '<img alt="dalat-bds" class="img-circle medium-image"' +
                                         'src="https://www.nicepng.com/png/detail/128-1280406_view-user-icon-png-user-circle-icon-png.png">' +
                                         '<div class="message-body">' +
                                         '<div class="message-body-inner"' +
@@ -397,7 +397,7 @@
 
                                     html +=
                                         '<div class="message info">' +
-                                        '<img alt="" class="img-circle medium-image"' +
+                                        '<img alt="dalat-bds" class="img-circle medium-image"' +
                                         'src="' + profile + '">' +
                                         '<div class="message-body">' +
                                         '<div class="message-body-inner"' +
@@ -548,7 +548,7 @@
                             var chatHeader = document.querySelector('.chat_header');
                             if (chatHeader) {
                                 chatHeader.innerHTML =
-                                    '<img alt="" class="img-circle medium-image" src="' + (
+                                    '<img alt="dalat-bds" class="img-circle medium-image" src="' + (
                                         img_src ? img_src : '') + '">' +
                                     '<div>' + (username ? username : '') + '</div>';
                             }
@@ -587,7 +587,7 @@
                                     html +=
 
                                         '<div class="message my-message">' +
-                                        '<img alt="" class="img-circle medium-image"' +
+                                        '<img alt="dalat-bds" class="img-circle medium-image"' +
                                         'src="https://www.nicepng.com/png/detail/128-1280406_view-user-icon-png-user-circle-icon-png.png">' +
                                         '<div class="message-body">' +
                                         '<div class="message-body-inner"' +
@@ -613,7 +613,7 @@
                                         'https://www.nicepng.com/png/detail/128-1280406_view-user-icon-png-user-circle-icon-png.png';
                                     html +=
                                         '<div class="message info">' +
-                                        '<img alt="" class="img-circle medium-image"' +
+                                        '<img alt="dalat-bds" class="img-circle medium-image"' +
                                         'src="' + profile + '">' +
                                         '<div class="message-body">' +
                                         '<div class="message-body-inner"' +
@@ -681,7 +681,7 @@
 
                         html1 =
                             '<div class="message info">' +
-                            '<img alt="" class="img-circle medium-image"' +
+                            '<img alt="dalat-bds" class="img-circle medium-image"' +
                             'src="' + data.user_profile + '">' +
 
                             '<div class="message-body">' +

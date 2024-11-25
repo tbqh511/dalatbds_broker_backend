@@ -230,7 +230,7 @@
                                                     <div class="owl-item">
                                                         <div class="bbb_viewed_item discount d-flex flex-column  ">
                                                             <div class="bbb_viewed_image"><img
-                                                                    src="{{ $item->title_image }}" alt=""></div>
+                                                                    src="{{ $item->title_image }}" alt="{{ $item->title }}"></div>
                                                             <div class="bbb_viewed_content">
 
                                                                 <div class="bbb_viewed_name">{{ $item->title }}</div>
@@ -272,7 +272,7 @@
                             <div class="d-flex align-items-center property_card mt-4">
                                 <div class="property_img">
                                     <img src="{{ $value->title_image ? $value->title_image : url('assets/images/logo/favicon.png') }}"
-                                        width="75" alt="">
+                                        width="75" alt="{{ $value->title }}">
                                 </div>
                                 <div>
                                     <h5 class="mb-0">{{ $value->title }}</h5>

@@ -63,7 +63,7 @@
                             <article class="geodir-category-listing fl-wrap">
                                 <div class="geodir-category-img fl-wrap  agent_card">
                                     <a href="agent-single.html" class="geodir-category-img_item">
-                                        <img src="images/agency/agent/1.jpg" alt="">
+                                        <img src="images/agency/agent/1.jpg" alt="dalat-bds">
                                         <ul class="list-single-opt_header_cat">
                                             <li><span class="cat-opt color-bg">4 bài đăng</span></li>
                                         </ul>
@@ -170,7 +170,7 @@
                                 <ul class="no-list-style">
                                     <li>
                                         <div class="widget-posts-img">
-                                            <a href="agent-single.html"><img src="images/agency/agent/1.jpg" alt=""></a>
+                                            <a href="agent-single.html"><img src="images/agency/agent/1.jpg" alt="dalat-bds"></a>
                                         </div>
                                         <div class="widget-posts-descr agent-post_descr">
                                             <h4><a href="agent-single.html">Liza Rose</a></h4>
@@ -188,7 +188,7 @@
                                     </li>
                                     <li>
                                         <div class="widget-posts-img">
-                                            <a href="agent-single.html"><img src="images/agency/agent/1.jpg" alt=""></a>
+                                            <a href="agent-single.html"><img src="images/agency/agent/1.jpg" alt="dalat-bds"></a>
                                         </div>
                                         <div class="widget-posts-descr agent-post_descr">
                                             <h4><a href="agent-single.html">Martin Smith</a></h4>
@@ -206,7 +206,7 @@
                                     </li>
                                     <li>
                                         <div class="widget-posts-img">
-                                            <a href="agent-single.html"><img src="images/agency/agent/1.jpg" alt=""></a>
+                                            <a href="agent-single.html"><img src="images/agency/agent/1.jpg" alt="dalat-bds"></a>
                                         </div>
                                         <div class="widget-posts-descr agent-post_descr">
                                             <h4><a href="agent-single.html">Andy Sposty</a></h4>
@@ -224,7 +224,7 @@
                                     </li>
                                     <li>
                                         <div class="widget-posts-img">
-                                            <a href="agent-single.html"><img src="images/agency/agent/1.jpg" alt=""></a>
+                                            <a href="agent-single.html"><img src="images/agency/agent/1.jpg" alt="dalat-bds"></a>
                                         </div>
                                         <div class="widget-posts-descr agent-post_descr">
                                             <h4><a href="agent-single.html">Anna Lips</a></h4>

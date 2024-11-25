@@ -262,7 +262,7 @@
                                     <!--  rooms-item -->
                                     <div class="rooms-item fl-wrap">
                                         <div class="rooms-media">
-                                            <img src="images/all/1.jpg" alt="">
+                                            <img src="images/all/1.jpg" alt="dalat-bds">
                                             <div class="dynamic-gal more-photos-button color-bg"
                                                 data-dynamicPath="[{'src': 'images/all/1.jpg'}, {'src': 'images/all/1.jpg'},{'src': 'images/all/1.jpg'}]">
                                                 <i class="fas fa-camera"></i> <span>3 photos</span>
@@ -296,7 +296,7 @@
                                     <!--  rooms-item -->
                                     <div class="rooms-item fl-wrap">
                                         <div class="rooms-media">
-                                            <img src="images/all/1.jpg" alt="">
+                                            <img src="images/all/1.jpg" alt="dalat-bds">
                                             <div class="dynamic-gal more-photos-button color-bg"
                                                 data-dynamicPath="[{'src': 'images/all/1.jpg'}, {'src': 'images/all/1.jpg'} ]">
                                                 <i class="fas fa-camera"></i> <span>2 photos</span>
@@ -332,7 +332,7 @@
                                     <!--  rooms-item -->
                                     <div class="rooms-item fl-wrap">
                                         <div class="rooms-media">
-                                            <img src="images/all/1.jpg" alt="">
+                                            <img src="images/all/1.jpg" alt="dalat-bds">
                                             <div class="dynamic-gal more-photos-button color-bg"
                                                 data-dynamicPath="[{'src': 'images/all/1.jpg'}, {'src': 'images/all/1.jpg'},{'src': 'images/all/1.jpg'}]">
                                                 <i class="fas fa-camera"></i> <span>3 photos</span>
@@ -375,7 +375,7 @@
                                     <a class="toggle act-accordion" href="#"> First Floor Plan <strong>286 sq
                                             ft</strong> <span></span> </a>
                                     <div class="accordion-inner visible">
-                                        <img src="images/plans/1.jpg" alt="">
+                                        <img src="images/plans/1.jpg" alt="dalat-bds">
                                         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in pulvinar
                                             neque. Nulla finibus lobortis pulvinar. Donec a consectetur nulla. Nulla
                                             posuere sapien vitae lectus suscipit, et pulvinar nisi tincidunt. .</p>
@@ -383,14 +383,14 @@
                                     <a class="toggle" href="#">Second Floor Plan <strong>280 sq ft</strong>
                                         <span></span></a>
                                     <div class="accordion-inner">
-                                        <img src="images/plans/1.jpg" alt="">
+                                        <img src="images/plans/1.jpg" alt="dalat-bds">
                                         <p>Aliquam erat volutpat. Curabitur convallis fringilla diam sed aliquam. Sed
                                             tempor iaculis massa faucibus feugiat. In fermentum facilisis massa, a
                                             consequat purus viverra</p>
                                     </div>
                                     <a class="toggle" href="#"> Garage Plan <strong>180 sq ft</strong> <span></span></a>
                                     <div class="accordion-inner">
-                                        <img src="images/plans/1.jpg" alt="">
+                                        <img src="images/plans/1.jpg" alt="dalat-bds">
                                         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tempor iaculis
                                             massa faucibus feugiat. In fermentum facilisis massa, a consequat purus
                                             viverra.</p>

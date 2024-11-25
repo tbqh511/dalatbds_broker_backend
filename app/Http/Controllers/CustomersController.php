@@ -103,7 +103,7 @@ class CustomersController extends Controller
             $tempRow['address'] = $row->address;
             $tempRow['firebase_id'] = $row->firebase_id;
             $tempRow['isActive'] = ($row->isActive == '0') ? '<span class="badge rounded-pill bg-danger">Inactive</span>' : '<span class="badge rounded-pill bg-success">Active</span>';
-            $tempRow['profile'] = ($row->profile != '') ? '<a class="image-popup-no-margins" href="' . $row->profile . '" width="55" height="55"><img class="rounded avatar-md shadow img-fluid" alt="" src="' . $row->profile . '" width="55" height="55"></a>' : '';
+            $tempRow['profile'] = ($row->profile != '') ? '<a class="image-popup-no-margins" href="' . $row->profile . '" width="55" height="55"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . $row->profile . '" width="55" height="55"></a>' : '';
 
             $tempRow['fcm_id'] = $row->fcm_id;
 

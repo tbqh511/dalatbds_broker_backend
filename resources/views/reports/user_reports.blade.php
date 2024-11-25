@@ -236,14 +236,14 @@
                                         class="form-label col-12 text-center">{{ __('Title Image') }}</label>
 
 
-                                    <img src="" alt="" id="title_image">
+                                    <img src="" alt="dalat-bds" id="title_image">
                                 </div>
                                 <div class="col-md-6 col-12">
                                     <label for="description"
                                         class="form-label col-12 text-center">{{ __('3D Image') }}</label>
 
 
-                                    <img src="" alt="" id="3d_image">
+                                    <img src="" alt="dalat-bds" id="3d_image">
                                 </div>
                             </div>
                             <label for="description"
@@ -311,7 +311,7 @@
                         '<div class="col-md-3 col-12">' +
 
                         '<img src="' + value.image_url +
-                        '" alt="" id="3d_image" width="100%" height="100%">' +
+                        '" alt="dalat-bds" id="3d_image" width="100%" height="100%">' +
                         '</div>'
 
 

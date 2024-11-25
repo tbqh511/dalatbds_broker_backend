@@ -6,7 +6,7 @@
                 <div class="col-md-3">
                     <div class="footer-widget fl-wrap">
                         <div class="footer-widget-logo fl-wrap">
-                            <img src="{{asset('images/logo.svg')}}" alt="">
+                            <img src="{{asset('images/logo.svg')}}" alt="dalat-bds">
                         </div>
                         <p>Mạng lưới thổ địa duy nhất ở Đà Lạt</p>
                         <div class="fw_hours fl-wrap">

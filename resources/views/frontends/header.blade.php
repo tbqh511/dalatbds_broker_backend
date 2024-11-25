@@ -182,7 +182,7 @@
                             <ul class="no-list-style">
                                 <li>
                                     <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                src="{{asset('images/all/small/1.jpg')}} " alt=""></a>
+                                                src="{{asset('images/all/small/1.jpg')}} " alt="dalat-bds"></a>
                                     </div>
                                     <div class="widget-posts-descr">
                                         <h4><a href="listing-single.html">Affordable Urban Room</a></h4>
@@ -196,7 +196,7 @@
                                 </li>
                                 <li>
                                     <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                src="{{asset('images/all/small/1.jpg')}}" alt=""></a>
+                                                src="{{asset('images/all/small/1.jpg')}}" alt="dalat-bds"></a>
                                     </div>
                                     <div class="widget-posts-descr">
                                         <h4><a href="listing-single.html">Family House</a></h4>
@@ -209,7 +209,7 @@
                                 </li>
                                 <li>
                                     <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                src="{{asset('images/all/small/1.jpg')}}" alt=""></a>
+                                                src="{{asset('images/all/small/1.jpg')}}" alt="dalat-bds"></a>
                                     </div>
                                     <div class="widget-posts-descr">
                                         <h4><a href="listing-single.html">Apartment to Rent</a></h4>
@@ -240,7 +240,7 @@
                                 <ul class="no-list-style">
                                     <li>
                                         <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                    src="{{asset('images/all/small/1.jpg')}}" alt=""></a>
+                                                    src="{{asset('images/all/small/1.jpg')}}" alt="dalat-bds"></a>
                                         </div>
                                         <div class="widget-posts-descr">
                                             <h4><a href="listing-single.html">Gorgeous house for sale</a></h4>
@@ -253,7 +253,7 @@
                                     </li>
                                     <li>
                                         <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                    src="{{asset('images/all/small/1.jpg')}}" alt=""></a>
+                                                    src="{{asset('images/all/small/1.jpg')}}" alt="dalat-bds"></a>
                                         </div>
                                         <div class="widget-posts-descr">
                                             <h4><a href="listing-single.html">Family Apartments</a></h4>

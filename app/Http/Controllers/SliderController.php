@@ -228,7 +228,7 @@ class SliderController extends Controller
             $tempRow['title'] =  (!empty($row->property)) ? $row->property->title : '';
             $tempRow['sequence'] = $row->sequence; //$row->sequence;
 
-            $tempRow['image'] = ($row->image != '') ? '<a class="image-popup-no-margins" href="' . url('') . config('global.IMG_PATH') . config('global.SLIDER_IMG_PATH')  . $row->image . '"><img class="rounded avatar-md shadow img-fluid" alt="" src="' . url('') . config('global.IMG_PATH') . config('global.SLIDER_IMG_PATH') . $row->image . '" width="55"></a>' : $row->property->title_image;;
+            $tempRow['image'] = ($row->image != '') ? '<a class="image-popup-no-margins" href="' . url('') . config('global.IMG_PATH') . config('global.SLIDER_IMG_PATH')  . $row->image . '"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . url('') . config('global.IMG_PATH') . config('global.SLIDER_IMG_PATH') . $row->image . '" width="55"></a>' : $row->property->title_image;;
             $tempRow['operate'] = $operate;
             $rows[] = $tempRow;
             $count++;

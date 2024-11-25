@@ -138,7 +138,7 @@ class ArticleController extends Controller
             $tempRow['id'] = $row->id;
             $tempRow['title'] = $row->title;
             $tempRow['description'] = substr($row->description, 0, 150) . '...';
-            $tempRow['image'] = ($row->image != '') ? '<a class="image-popup-no-margins" href="' . $row->image . '"><img class="rounded avatar-md shadow img-fluid" alt="" src="' . ($row->image) . '" width="55"></a>' : '';
+            $tempRow['image'] = ($row->image != '') ? '<a class="image-popup-no-margins" href="' . $row->image . '"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . ($row->image) . '" width="55"></a>' : '';
             $tempRow['operate'] = $operate;
             $rows[] = $tempRow;
             $count++;

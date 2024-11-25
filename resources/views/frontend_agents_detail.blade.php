@@ -135,7 +135,7 @@
                                                     <!-- reviews-comments-item -->  
                                                     <div class="reviews-comments-item">
                                                         <div class="review-comments-avatar">
-                                                            <img src="images/avatar/1.jpg" alt=""> 
+                                                            <img src="images/avatar/1.jpg" alt="dalat-bds"> 
                                                         </div>
                                                         <div class="reviews-comments-item-text smpar">
                                                             <div class="box-widget-menu-btn smact"><i class="far fa-ellipsis-h"></i></div>
@@ -154,7 +154,7 @@
                                                     <!-- reviews-comments-item -->  
                                                     <div class="reviews-comments-item">
                                                         <div class="review-comments-avatar">
-                                                            <img src="images/avatar/1.jpg" alt=""> 
+                                                            <img src="images/avatar/1.jpg" alt="dalat-bds"> 
                                                         </div>
                                                         <div class="reviews-comments-item-text smpar">
                                                             <div class="box-widget-menu-btn smact"><i class="far fa-ellipsis-h"></i></div>

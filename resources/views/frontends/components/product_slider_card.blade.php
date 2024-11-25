@@ -1,6 +1,6 @@
 <div class="slick-slide-item">
     <div class="box-item">
-        <img src="{{asset('images/bg/1.jpg')}}" alt="">
+        <img src="{{asset('images/bg/1.jpg')}}" alt="dalat-bds">
         <a href="{{asset('images/bg/1.jpg')}}" class="gal-link popup-image"><i class="fal fa-search"></i></a>
         <div class="show-info">
             <span><i class="fas fa-info"></i></span>

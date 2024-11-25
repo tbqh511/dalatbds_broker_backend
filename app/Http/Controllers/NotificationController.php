@@ -244,7 +244,7 @@ class NotificationController extends Controller
             $tempRow['message'] = $row->message;
             $tempRow['customers_id'] = $row->customers_id;
             $tempRow['created_at'] = $row->created_at->diffForHumans();;
-            $tempRow['image'] = ($row->image != '') ? '<a class="image-popup-no-margins" href="' . config('global.IMG_PATH') . config('global.NOTIFICATION_IMG_PATH')  . $row->image . '"><img class="rounded avatar-md shadow img-fluid" alt="" src="' . config('global.IMG_PATH') . config('global.NOTIFICATION_IMG_PATH')  . $row->image . '" width="55"></a>' : ''; //(!empty($row->image)) ? '<a href=' . $image . ' data-lightbox="Images"><img src="' . $image . '" height=50, width=50 ></a>' : 'No Image';
+            $tempRow['image'] = ($row->image != '') ? '<a class="image-popup-no-margins" href="' . config('global.IMG_PATH') . config('global.NOTIFICATION_IMG_PATH')  . $row->image . '"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . config('global.IMG_PATH') . config('global.NOTIFICATION_IMG_PATH')  . $row->image . '" width="55"></a>' : ''; //(!empty($row->image)) ? '<a href=' . $image . ' data-lightbox="Images"><img src="' . $image . '" height=50, width=50 ></a>' : 'No Image';
             $tempRow['operate'] = $operate;
             $rows[] = $tempRow;
             $count++;

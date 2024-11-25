@@ -570,9 +570,9 @@ class PropertController extends Controller
             }
             $tempRow['propery_type'] = $type;
             $tempRow['price'] = $row->price;
-            $tempRow['title_image'] = ($row->title_image != '') ? '<a class="image-popup-no-margins" href="' . $row->title_image . '"><img class="rounded avatar-md shadow img-fluid" alt="" src="' . $row->title_image . '" width="55"></a>' : '';
+            $tempRow['title_image'] = ($row->title_image != '') ? '<a class="image-popup-no-margins" href="' . $row->title_image . '"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . $row->title_image . '" width="55"></a>' : '';
 
-            $tempRow['3d_image'] = ($row->threeD_image != '') ? '<a class="class="photo360" href="' . $row->threeD_image . '"><img class="rounded avatar-md shadow img-fluid" alt="" src="' . $row->threeD_image . '" width="55"></a>' : '';
+            $tempRow['3d_image'] = ($row->threeD_image != '') ? '<a class="class="photo360" href="' . $row->threeD_image . '"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . $row->threeD_image . '" width="55"></a>' : '';
 
             $tempRow['interested_users'] = $operate1;
 

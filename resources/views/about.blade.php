@@ -122,7 +122,7 @@
                 <div class="col-md-4">
                     <div class="team-item fl-wrap">
                         <div class="team-img fl-wrap">
-                            <img src="images/agency/agent/2.jpg" class="respimg" alt="">
+                            <img src="images/agency/agent/2.jpg" class="respimg" alt="dalat-bds">
                         </div>
                         <div class="team-content fl-wrap">
                             <h4>Huy Thái</h4>
@@ -148,7 +148,7 @@
                 <div class="col-md-4">
                     <div class="team-item fl-wrap">
                         <div class="team-img fl-wrap">
-                            <img src="images/agency/agent/2.jpg" class="respimg" alt="">
+                            <img src="images/agency/agent/2.jpg" class="respimg" alt="dalat-bds">
                         </div>
                         <div class="team-content fl-wrap">
                             <h4>Huy Thái</h4>
@@ -174,7 +174,7 @@
                 <div class="col-md-4">
                     <div class="team-item fl-wrap">
                         <div class="team-img fl-wrap">
-                            <img src="images/agency/agent/2.jpg" class="respimg" alt="">
+                            <img src="images/agency/agent/2.jpg" class="respimg" alt="dalat-bds">
                         </div>
                         <div class="team-content fl-wrap">
                             <h4>Huy Thái</h4>

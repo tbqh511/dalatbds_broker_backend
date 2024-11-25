@@ -45,7 +45,7 @@
                                             <div class="box-item">
                                                 <a href="images/all/blog/1.jpg" class="gal-link popup-image"><i
                                                         class="fal fa-search"></i></a>
-                                                <img src="images/all/blog/1.jpg" alt="">
+                                                <img src="images/all/blog/1.jpg" alt="dalat-bds">
                                             </div>
                                         </div>
                                         <!--  slick-slide-item end -->
@@ -54,7 +54,7 @@
                                             <div class="box-item">
                                                 <a href="images/all/blog/1.jpg" class="gal-link popup-image"><i
                                                         class="fal fa-search"></i></a>
-                                                <img src="images/all/blog/1.jpg" alt="">
+                                                <img src="images/all/blog/1.jpg" alt="dalat-bds">
                                             </div>
                                         </div>
                                         <!--  slick-slide-item end -->
@@ -63,7 +63,7 @@
                                             <div class="box-item">
                                                 <a href="images/all/blog/1.jpg" class="gal-link popup-image"><i
                                                         class="fal fa-search"></i></a>
-                                                <img src="images/all/blog/1.jpg" alt="">
+                                                <img src="images/all/blog/1.jpg" alt="dalat-bds">
                                             </div>
                                         </div>
                                         <!--  slick-slide-item end -->
@@ -83,7 +83,7 @@
                                     Nulla finibus lobortis pulvinar. Donec a consectetur nulla. Nulla posuere sapien
                                     vitae lectus suscipit, et pulvinar nisi tincidunt...</p>
                                 <span class="fw-separator fl-wrap"></span>
-                                <div class="post-author"><a href="#"><img src="images/avatar/1.jpg" alt=""><span>By ,
+                                <div class="post-author"><a href="#"><img src="images/avatar/1.jpg" alt="dalat-bds"><span>By ,
                                             Alisa Noory</span></a></div>
                                 <div class="post-opt">
                                     <ul class="no-list-style">
@@ -134,7 +134,7 @@
                                     <ul class="no-list-style">
                                         <li>
                                             <div class="widget-posts-img"><a href="blog-single.html"><img
-                                                        src="images/all/blog/1.jpg" alt=""></a></div>
+                                                        src="images/all/blog/1.jpg" alt="dalat-bds"></a></div>
                                             <div class="widget-posts-descr">
                                                 <h4><a href="listing-single.html">Nullam dictum felis</a></h4>
                                                 <div class="geodir-category-location fl-wrap"><a href="#"><i
@@ -143,7 +143,7 @@
                                         </li>
                                         <li>
                                             <div class="widget-posts-img"><a href="blog-single.html"><img
-                                                        src="images/all/blog/1.jpg" alt=""></a></div>
+                                                        src="images/all/blog/1.jpg" alt="dalat-bds"></a></div>
                                             <div class="widget-posts-descr">
                                                 <h4><a href="listing-single.html">Scrambled it to mak</a></h4>
                                                 <div class="geodir-category-location fl-wrap"><a href="#"><i
@@ -152,7 +152,7 @@
                                         </li>
                                         <li>
                                             <div class="widget-posts-img"><a href="blog-single.html"><img
-                                                        src="images/all/blog/1.jpg" alt=""></a> </div>
+                                                        src="images/all/blog/1.jpg" alt="dalat-bds"></a> </div>
                                             <div class="widget-posts-descr">
                                                 <h4><a href="listing-single.html">Fermentum nis type</a></h4>
                                                 <div class="geodir-category-location fl-wrap"><a href="#"><i
@@ -161,7 +161,7 @@
                                         </li>
                                         <li>
                                             <div class="widget-posts-img"><a href="blog-single.html"><img
-                                                        src="images/all/blog/1.jpg" alt=""></a> </div>
+                                                        src="images/all/blog/1.jpg" alt="dalat-bds"></a> </div>
                                             <div class="widget-posts-descr">
                                                 <h4><a href="listing-single.html">Rutrum elementum</a></h4>
                                                 <div class="geodir-category-location fl-wrap"><a href="#"><i

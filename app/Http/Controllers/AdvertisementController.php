@@ -112,7 +112,7 @@ class AdvertisementController extends Controller
             
             
             
-             $tempRow['image'] = '<a class="image-popup-no-margins" href="' . $row->property->title_image . '"><img class="rounded avatar-md shadow img-fluid" alt="" src="' . $row->property->title_image . '" width="55"></a>';
+             $tempRow['image'] = '<a class="image-popup-no-margins" href="' . $row->property->title_image . '"><img class="rounded avatar-md shadow img-fluid" alt="Dalat BDS" src="' . $row->property->title_image . '" width="55"></a>';
             
             $tempRow['start_date'] = $row->start_date;
             $tempRow['end_date'] = $row->end_date;

@@ -4,7 +4,7 @@
         <div class="main-register-wrapper modal_main fl-wrap">
             <div class="main-register-header color-bg">
                 <div class="main-register-logo fl-wrap">
-                    <img src="images/logo1.svg" alt="">
+                    <img src="images/logo1.svg" alt="dalat-bds">
                 </div>
                 <div class="main-register-bg">
                     <div class="mrb_pin"></div>
