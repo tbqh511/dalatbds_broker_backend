@@ -55,7 +55,7 @@ class Property extends Model
     {
         return [
             'slug' => [
-                'source' => 'slugtitle'
+                'source' => ['title', 'id'] // Tạo slug từ title và id
             ]
         ];
     }

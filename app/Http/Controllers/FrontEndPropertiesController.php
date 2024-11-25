@@ -14,17 +14,75 @@ use PHPUnit\Framework\MockObject\Rule\Parameters;
 
 class FrontEndPropertiesController extends Controller
 {
+
     /**
-     * Display the detail of a product.
+     * Display the detail of a property by its slug.
      */
     public function show(string $slug)
     {
-        // Fetch the product based on the slug
-        $product = Property::where('slug', $slug)->first();
+        $categories = Category::orderBy('category')->get();
 
-        // Return the product detail view with the necessary data
-        return view('frontend_properties_detail', ['property' => $product]);
+        // Get the district code from configuration
+        $districtCode = config('location.district_code');
+        // If there's a district code, get the list of wards in that district
+        $locationsWards = ($districtCode != null) ? LocationsWard::where('district_code', $districtCode)->get()->sortBy('full_name') : LocationsWard::all();
+
+        // Fetch the property based on the slug
+        $property = Property::where('slug', $slug)->firstOrFail();
+        //dd($property);
+
+        // Set parameters for the product query
+        $offset = 0;
+        $limit = 5;
+        $sort = 'updated_at';
+        $order = 'DESC';
+
+        // Lấy loại của property hiện tại
+        $category_id = $property->category_id;
+        $ward_code = $property->ward_code;
+
+        $relatedProducts = Property::where('category_id', $category_id)
+            ->orWhere('ward_code', $ward_code)
+            ->where('id', '!=', $property->id) // Loại bỏ sản phẩm hiện tại
+            ->with('customer')
+            ->with('user')
+            ->with('category:id,category,image')
+            ->with('assignfacilities.outdoorfacilities')
+            ->with('favourite')
+            ->with('parameters')
+            ->with('interested_users')
+            ->with('ward')
+            ->with('street')
+            ->with('host')
+            ->orderBy($sort, $order)
+            ->skip($offset)
+            ->take($limit)
+            ->get();
+
+        // Set parameters for highlighted Products
+        $limit = 5;
+        $sort = 'total_click'; // Sắp xếp theo số lượt click
+        $order = 'DESC';
+
+        $highlightedProducts = Property::orderBy($sort, $order)
+            ->take($limit)
+            ->get();
+
+        // Tăng giá trị của cột total_click
+        $property->increment('total_click');
+
+        //dd(Property::where('added_by', '2')->get()->count());
+
+        // Return the property detail view with the necessary data
+        return view('frontend_properties_detail', [
+            'property' => $property,
+            'relatedProducts' => $relatedProducts,
+            'highlightedProducts' => $highlightedProducts,
+            'categories' => $categories,
+            'locationsWards' => $locationsWards,
+        ]);
     }
+
     /**
      * Display the detail of a property by its ID.
      */
