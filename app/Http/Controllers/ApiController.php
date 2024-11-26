@@ -784,8 +784,22 @@ class ApiController extends Controller
                     $Saveproperty->description = $request->description;
                     $Saveproperty->address = $request->address;
                     $Saveproperty->client_address = (isset($request->client_address)) ? $request->client_address : '';
-
-                    $Saveproperty->propery_type = (isset($request->property_type)) ? $request->property_type : 0;
+                    
+                    // HuyTBQ: Change backend for update property type
+                    //$Saveproperty->propery_type = (isset($request->property_type)) ? $request->property_type : 0;
+                    if (isset($request->property_type)) {
+                        if ($request->property_type == "Sell") {
+                            $Saveproperty->propery_type = 0;
+                        } elseif ($request->property_type == "Rent") {
+                            $Saveproperty->propery_type = 1;
+                        } elseif ($request->property_type == "Sold") {
+                            $Saveproperty->propery_type = 2;
+                        } elseif ($request->property_type == "Rented") {
+                            $Saveproperty->propery_type = 3;
+                        } else{
+                            $Saveproperty->propery_type = $request->property_type;
+                        }
+                    }
                     $Saveproperty->price = (isset($request->price)) ? $request->price :0 ;
 
                     $Saveproperty->country = (isset($request->country)) ? $request->country : '';
@@ -1167,6 +1181,8 @@ class ApiController extends Controller
                             $property->propery_type = 2;
                         } elseif ($request->property_type == "Rented") {
                             $property->propery_type = 3;
+                        } else{
+                            $property->propery_type = $request->property_type;
                         }
                     }
                     //HuyTBQ: test
