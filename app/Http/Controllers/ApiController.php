@@ -2579,7 +2579,7 @@ class ApiController extends Controller
         ]);
         if (!$validator->fails()) {
             $property = Property::find($request->property_id);
-            $property->propery_type = $request->status;
+            $property->status = $request->status;
             $property->save();
             $response['error'] = false;
             $response['message'] = "Data updated Successfully";
