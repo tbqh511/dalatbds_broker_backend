@@ -107,15 +107,17 @@
     <!-- section -->
     <section class="gray-bg small-padding">
         <div class="container">
+            <div class="pricing-switcher-header">Chính sách hoa hồng:</div>
+                <div class="clearfix"></div>
             <div class="row">
                 <!-- pricing-column: Người giới thiệu khách hàng -->
                 <div class="col-md-3">
                     <div class="pricing-column fl-wrap">
                         <div class="pricing-header">
-                            <h3><span>01.</span>Người giới thiệu khách hàng</h3>
+                            <h3><span>Người giới thiệu khách hàng</span></h3>
                             <div class="price-num price-item fl-wrap">
                                 <div class="price-num-item">
-                                    <span class="curen">25%</span>
+                                    <span>25 %</span>
                                 </div>
                                 <div class="price-num-desc">
                                     <span>Hoa hồng</span>
@@ -139,10 +141,10 @@
                 <div class="col-md-3">
                     <div class="pricing-column fl-wrap">
                         <div class="pricing-header">
-                            <h3><span>02.</span>Người cung cấp nguồn bất động sản</h3>
+                            <h3><span>Người cung cấp nguồn bất động sản</span></h3>
                             <div class="price-num price-item fl-wrap">
                                 <div class="price-num-item">
-                                    <span class="curen">25%</span>
+                                    <span>25 %</span>
                                 </div>
                                 <div class="price-num-desc">
                                     <span>Hoa hồng</span>
@@ -166,10 +168,10 @@
                 <div class="col-md-3">
                     <div class="pricing-column fl-wrap">
                         <div class="pricing-header">
-                            <h3><span>03.</span>Chuyên viên chốt giao dịch</h3>
+                            <h3><span>Chuyên viên chốt giao dịch</span></h3>
                             <div class="price-num price-item fl-wrap">
                                 <div class="price-num-item">
-                                    <span class="curen">25%</span>
+                                    <span>25 %</span>
                                 </div>
                                 <div class="price-num-desc">
                                     <span>Hoa hồng</span>
@@ -193,10 +195,10 @@
                 <div class="col-md-3">
                     <div class="pricing-column fl-wrap">
                         <div class="pricing-header">
-                            <h3><span>04.</span>Đội ngũ vận hành hệ thống</h3>
+                            <h3><span>Đội ngũ vận hành hệ thống</span></h3>
                             <div class="price-num price-item fl-wrap">
                                 <div class="price-num-item">
-                                    <span class="curen">25%</span>
+                                    <span>25 %</span>
                                 </div>
                                 <div class="price-num-desc">
                                     <span>Hoa hồng</span>
