@@ -37,6 +37,123 @@
     <section class="gray-bg small-padding">
         <div class="container">
             <div class="row">
+                <!-- pricing-column: Người giới thiệu khách hàng -->
+                <div class="col-md-3">
+                    <div class="pricing-column fl-wrap">
+                        <div class="pricing-header">
+                            <h3><span>01.</span>Người giới thiệu khách hàng</h3>
+                            <div class="price-num price-item fl-wrap">
+                                <div class="price-num-item">
+                                    <span class="curen">25%</span>
+                                </div>
+                                <div class="price-num-desc">
+                                    <span>Hoa hồng</span>
+                                </div>
+                            </div>
+                            <p>Cá nhân hoặc tổ chức có công giới thiệu khách hàng tiềm năng đến DalatBDS.</p>
+                        </div>
+                        <div class="pricing-content fl-wrap">
+                            <ul class="no-list-style">
+                                <li>Giới thiệu khách hàng tiềm năng</li>
+                                <li>Hỗ trợ cung cấp thông tin cần thiết</li>
+                                <li>Không cần tham gia trực tiếp giao dịch</li>
+                            </ul>
+                            <a href="#" class="price-link color-bg fl-wrap">Chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- pricing-column end -->
+
+                <!-- pricing-column: Người cung cấp nguồn bất động sản -->
+                <div class="col-md-3">
+                    <div class="pricing-column fl-wrap">
+                        <div class="pricing-header">
+                            <h3><span>02.</span>Người cung cấp nguồn bất động sản</h3>
+                            <div class="price-num price-item fl-wrap">
+                                <div class="price-num-item">
+                                    <span class="curen">25%</span>
+                                </div>
+                                <div class="price-num-desc">
+                                    <span>Hoa hồng</span>
+                                </div>
+                            </div>
+                            <p>Chủ sở hữu bất động sản hoặc môi giới độc quyền cung cấp thông tin giao dịch.</p>
+                        </div>
+                        <div class="pricing-content fl-wrap">
+                            <ul class="no-list-style">
+                                <li>Cung cấp thông tin chính xác</li>
+                                <li>Hỗ trợ tiếp cận khách hàng</li>
+                                <li>Không cần tham gia trực tiếp giao dịch</li>
+                            </ul>
+                            <a href="#" class="price-link color-bg fl-wrap">Chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- pricing-column end -->
+
+                <!-- pricing-column: Chuyên viên chốt giao dịch -->
+                <div class="col-md-3">
+                    <div class="pricing-column fl-wrap">
+                        <div class="pricing-header">
+                            <h3><span>03.</span>Chuyên viên chốt giao dịch</h3>
+                            <div class="price-num price-item fl-wrap">
+                                <div class="price-num-item">
+                                    <span class="curen">25%</span>
+                                </div>
+                                <div class="price-num-desc">
+                                    <span>Hoa hồng</span>
+                                </div>
+                            </div>
+                            <p>Chuyên viên trực tiếp tư vấn, đàm phán và chốt thành công giao dịch với khách hàng.</p>
+                        </div>
+                        <div class="pricing-content fl-wrap">
+                            <ul class="no-list-style">
+                                <li>Hỗ trợ khách hàng từ đầu đến cuối</li>
+                                <li>Đảm bảo giao dịch thành công</li>
+                                <li>Thuyết phục khách hàng hiệu quả</li>
+                            </ul>
+                            <a href="#" class="price-link color-bg fl-wrap">Chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- pricing-column end -->
+
+                <!-- pricing-column: Đội ngũ vận hành hệ thống -->
+                <div class="col-md-3">
+                    <div class="pricing-column fl-wrap">
+                        <div class="pricing-header">
+                            <h3><span>04.</span>Đội ngũ vận hành hệ thống</h3>
+                            <div class="price-num price-item fl-wrap">
+                                <div class="price-num-item">
+                                    <span class="curen">25%</span>
+                                </div>
+                                <div class="price-num-desc">
+                                    <span>Hoa hồng</span>
+                                </div>
+                            </div>
+                            <p>Đội ngũ DalatBDS đảm bảo vận hành hệ thống an toàn và minh bạch.</p>
+                        </div>
+                        <div class="pricing-content fl-wrap">
+                            <ul class="no-list-style">
+                                <li>Vận hành và phát triển nền tảng</li>
+                                <li>Cung cấp công cụ hỗ trợ</li>
+                                <li>Đảm bảo quy trình giao dịch minh bạch</li>
+                            </ul>
+                            <a href="#" class="price-link color-bg fl-wrap">Chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- pricing-column end -->
+            </div>
+        </div>
+    </section>
+    <!-- section end -->
+
+
+    <!-- section -->
+    <section class="gray-bg small-padding">
+        <div class="container">
+            <div class="row">
                 <!-- services-item -->
                 <div class="col-md-4">
                     <div class="services-item fl-wrap">
