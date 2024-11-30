@@ -64,8 +64,8 @@
                         </div>
                         <p>Bắt đầu làm việc với Đà Lạt BDS, nền tảng có thể cung cấp mọi thứ bạn cần. </p>
                         <div class="api-links fl-wrap">
-                            <a href="#" class="api-btn color-bg"><i class="fab fa-apple"></i> App Store</a>
-                            <a href="https://play.google.com/store/search?q=dalat%20bds&c=apps" class="api-btn color-bg"><i class="fab fa-google-play"></i> Play Market</a>
+                            <a href="https://apps.apple.com/us/app/dalat-bds/id6717595501" class="api-btn color-bg"><i class="fab fa-apple"></i> App Store</a>
+                            <a href="https://play.google.com/store/apps/details?id=com.dalatbds.ebroker" class="api-btn color-bg"><i class="fab fa-google-play"></i> Play Market</a>
                         </div>
                     </div>
                 </div>
@@ -80,8 +80,8 @@
             <div class="subfooter-nav">
                 <ul class="no-list-style">
                     {{-- <li><a href="#">Terms of use</a></li>
-                    <li><a href="#">Privacy Policy</a></li> --}}
-                    <li><a href="/tin-tuc">Tin tức</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="/tin-tuc">Tin tức</a></li> --}}
                 </ul>
             </div>
         </div>

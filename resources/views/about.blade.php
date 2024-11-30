@@ -141,7 +141,7 @@
                             <h3><span>02</span>Nguồn BDS</h3>
                             <div class="price-num price-item fl-wrap">
                                 <div class="price-num-item">
-                                    <span>25 %</span>
+                                    <mspan>25 %</mspan>
                                 </div>
                             </div>
                             <p>Chủ sở hữu bất động sản hoặc môi giới độc quyền cung cấp thông tin giao dịch.</p>
