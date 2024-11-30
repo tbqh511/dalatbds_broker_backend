@@ -37,6 +37,77 @@
     <section class="gray-bg small-padding">
         <div class="container">
             <div class="row">
+                <!-- services-item -->
+                <div class="col-md-4">
+                    <div class="services-item fl-wrap">
+                        <i class="fal fa-phone-laptop"></i>
+                        <h4>Công nghệ tiên tiến <span>02</span></h4>
+                        <p>Ứng dụng công nghệ hiện đại, mang đến trải nghiệm tìm kiếm, giao dịch bất động sản nhanh chóng, thuận tiện và an toàn.</p>
+                        {{-- <a href="#" class="serv-link">Read more</a> --}}
+                    </div>
+                </div>
+                <!-- services-item  end-->
+                <!-- services-item -->
+                <div class="col-md-4">
+                    <div class="services-item fl-wrap">
+                        <i class="fal fa-headset"></i>
+                        <h4>Thông tin minh bạch <span>01</span></h4>
+                        <p>Cung cấp thông tin thị trường bất động sản Đà Lạt chính xác, đáng tin cậy, giúp bạn đưa ra quyết định đầu tư sáng suốt.</p>
+                        {{-- <a href="#" class="serv-link">Read more</a> --}}
+                    </div>
+                </div>
+                <!-- services-item  end-->
+                <!-- services-item -->
+                <div class="col-md-4">
+                    <div class="services-item fl-wrap">
+                        <i class="fal fa-users-cog"></i>
+                        <h4>Đồng hành tin cậy <span>03</span></h4>
+                        <p>Đội ngũ chuyên gia giàu kinh nghiệm luôn sẵn sàng hỗ trợ, tư vấn và đồng hành cùng bạn trong suốt quá trình giao dịch.</p>
+                        {{-- <a href="#" class="serv-link">Read more</a> --}}
+                    </div>
+                </div>
+                <!-- services-item  end-->
+            </div>
+        </div>
+    </section>
+    <!-- section end-->
+    <!-- section -->
+    <section>
+        <div class="container">
+            <!--about-wrap -->
+            <div class="about-wrap">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="about-title fl-wrap">
+                            <h2>Hành trình  <span>Dalatbds</span></h2>
+                            <h4>Nâng tầm giá trị bất động sản Đà Lạt.</h4>
+                        </div>
+                        <p>Dalatbds không chỉ đơn thuần là một nền tảng công nghệ, mà còn là minh chứng cho sự nỗ lực không ngừng nghỉ trong việc kiến tạo một thị trường bất động sản minh bạch, hiệu quả và bền vững tại Đà Lạt.</p>
+                        <p>Chúng tôi hiểu rằng, mỗi giao dịch bất động sản đều chứa đựng những kỳ vọng và giá trị to lớn. Chính vì vậy, Dalatbds ra đời với sứ mệnh đồng hành cùng quý khách hàng, từ chủ sở hữu bất động sản đến các chuyên gia môi giới, trên mọi chặng đường từ đăng tin, định giá, kết nối đối tác đến hỗ trợ pháp lý chuyên sâu.</p>
+                        <p>Với nền tảng công nghệ tiên tiến, kết hợp cùng đội ngũ chuyên gia giàu kinh nghiệm và am hiểu thị trường, Dalatbds không ngừng cải tiến để mang đến những trải nghiệm vượt trội, đáp ứng tối đa nhu cầu của quý khách hàng. Mỗi tính năng trên nền tảng đều được phát triển dựa trên sự thấu hiểu sâu sắc về thị trường và mong muốn của quý khách.</p>
+                        {{-- <a href="#" class="btn small-btn float-btn color-bg">Read More</a> --}}
+                    </div>
+                    <div class="col-md-1"></div>
+                    <div class="col-md-6">
+                        <div class="about-img fl-wrap">
+                            <img src="/images/bg/about.jpg" class="respimg" alt="Đà Lạt BDS">
+                            <div class="about-img-hotifer color-bg">
+                                <p>Đà Lạt BDS - Hợp tác để kiến tạo thị trường bất động sản Đà Lạt minh bạch, bền vững và thịnh vượng.</p>
+                                <h4>Huy Thái</h4>
+                                <h5>Dalat BDS CEO</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- about-wrap end  -->
+        </div>
+    </section>
+    <!-- section end-->
+    <!-- section -->
+    <section class="gray-bg small-padding">
+        <div class="container">
+            <div class="row">
                 <!-- pricing-column: Người giới thiệu khách hàng -->
                 <div class="col-md-3">
                     <div class="pricing-column fl-wrap">
@@ -149,78 +220,6 @@
     </section>
     <!-- section end -->
 
-
-    <!-- section -->
-    <section class="gray-bg small-padding">
-        <div class="container">
-            <div class="row">
-                <!-- services-item -->
-                <div class="col-md-4">
-                    <div class="services-item fl-wrap">
-                        <i class="fal fa-phone-laptop"></i>
-                        <h4>Công nghệ tiên tiến <span>02</span></h4>
-                        <p>Ứng dụng công nghệ hiện đại, mang đến trải nghiệm tìm kiếm, giao dịch bất động sản nhanh chóng, thuận tiện và an toàn.</p>
-                        {{-- <a href="#" class="serv-link">Read more</a> --}}
-                    </div>
-                </div>
-                <!-- services-item  end-->
-                <!-- services-item -->
-                <div class="col-md-4">
-                    <div class="services-item fl-wrap">
-                        <i class="fal fa-headset"></i>
-                        <h4>Thông tin minh bạch <span>01</span></h4>
-                        <p>Cung cấp thông tin thị trường bất động sản Đà Lạt chính xác, đáng tin cậy, giúp bạn đưa ra quyết định đầu tư sáng suốt.</p>
-                        {{-- <a href="#" class="serv-link">Read more</a> --}}
-                    </div>
-                </div>
-                <!-- services-item  end-->
-                <!-- services-item -->
-                <div class="col-md-4">
-                    <div class="services-item fl-wrap">
-                        <i class="fal fa-users-cog"></i>
-                        <h4>Đồng hành tin cậy <span>03</span></h4>
-                        <p>Đội ngũ chuyên gia giàu kinh nghiệm luôn sẵn sàng hỗ trợ, tư vấn và đồng hành cùng bạn trong suốt quá trình giao dịch.</p>
-                        {{-- <a href="#" class="serv-link">Read more</a> --}}
-                    </div>
-                </div>
-                <!-- services-item  end-->
-            </div>
-        </div>
-    </section>
-    <!-- section end-->
-    <!-- section -->
-    <section>
-        <div class="container">
-            <!--about-wrap -->
-            <div class="about-wrap">
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="about-title fl-wrap">
-                            <h2>Hành trình  <span>Dalatbds</span></h2>
-                            <h4>Nâng tầm giá trị bất động sản Đà Lạt.</h4>
-                        </div>
-                        <p>Dalatbds không chỉ đơn thuần là một nền tảng công nghệ, mà còn là minh chứng cho sự nỗ lực không ngừng nghỉ trong việc kiến tạo một thị trường bất động sản minh bạch, hiệu quả và bền vững tại Đà Lạt.</p>
-                        <p>Chúng tôi hiểu rằng, mỗi giao dịch bất động sản đều chứa đựng những kỳ vọng và giá trị to lớn. Chính vì vậy, Dalatbds ra đời với sứ mệnh đồng hành cùng quý khách hàng, từ chủ sở hữu bất động sản đến các chuyên gia môi giới, trên mọi chặng đường từ đăng tin, định giá, kết nối đối tác đến hỗ trợ pháp lý chuyên sâu.</p>
-                        <p>Với nền tảng công nghệ tiên tiến, kết hợp cùng đội ngũ chuyên gia giàu kinh nghiệm và am hiểu thị trường, Dalatbds không ngừng cải tiến để mang đến những trải nghiệm vượt trội, đáp ứng tối đa nhu cầu của quý khách hàng. Mỗi tính năng trên nền tảng đều được phát triển dựa trên sự thấu hiểu sâu sắc về thị trường và mong muốn của quý khách.</p>
-                        {{-- <a href="#" class="btn small-btn float-btn color-bg">Read More</a> --}}
-                    </div>
-                    <div class="col-md-1"></div>
-                    <div class="col-md-6">
-                        <div class="about-img fl-wrap">
-                            <img src="/images/bg/about.jpg" class="respimg" alt="Đà Lạt BDS">
-                            <div class="about-img-hotifer color-bg">
-                                <p>Đà Lạt BDS - Hợp tác để kiến tạo thị trường bất động sản Đà Lạt minh bạch, bền vững và thịnh vượng.</p>
-                                <h4>Huy Thái</h4>
-                                <h5>Dalat BDS CEO</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- about-wrap end  -->
-        </div>
-    </section>
-    <!-- section end-->
     <!-- section -->
     @include('frontends.components.home_report_info',['infos' => $infos])
     <!-- section end-->
