@@ -47,10 +47,9 @@
                         </ul>
                         <div class="footer-social fl-wrap">
                             <ul>
-                                <li><a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
-                                <li><a href="#" target="_blank"><i class="fab fa-twitter"></i></a></li>
-                                <li><a href="#" target="_blank"><i class="fab fa-instagram"></i></a></li>
-                                <li><a href="#" target="_blank"><i class="fab fa-vk"></i></a></li>
+                                <li><a href="https://www.facebook.com/dalatbdscom" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
+                                {{-- <li><a href="#" target="_blank"><i class="fab fa-youtube"></i></a></li>
+                                <li><a href="#" target="_blank"><i class="fab fa-tiktok"></i></a></li> --}}
                             </ul>
                         </div>
                     </div>
