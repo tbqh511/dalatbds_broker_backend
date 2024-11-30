@@ -114,7 +114,7 @@
                 <div class="col-md-3">
                     <div class="pricing-column fl-wrap">
                         <div class="pricing-header">
-                            <h3><span>01</span>Người giới thiệu khách hàng</h3>
+                            <h3><span>01</span>Nguồn khách hàng</h3>
                             <div class="price-num price-item fl-wrap">
                                 <div class="price-num-item">
                                     <span>25 %</span>
@@ -138,7 +138,7 @@
                 <div class="col-md-3">
                     <div class="pricing-column fl-wrap">
                         <div class="pricing-header">
-                            <h3><span>02</span>Người cung cấp nguồn BDS</h3>
+                            <h3><span>02</span>Nguồn BDS</h3>
                             <div class="price-num price-item fl-wrap">
                                 <div class="price-num-item">
                                     <span>25 %</span>
