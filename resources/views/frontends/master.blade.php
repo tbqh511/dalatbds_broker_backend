@@ -61,7 +61,7 @@
     <!-- Floating Chat Zalo -->
     <div class="chat-zalo">
         <a href="https://zalo.me/0918963878" target="_blank">
-            <img title="Chat Zalo" src="{{ asset('images/zalo-icon.svg') }}" alt="zalo-icon" width="40" height="40" />
+            <img title="Chat Zalo" src="{{ asset('images/zalo-icon.png') }}" alt="zalo-icon" width="40" height="40" />
         </a>
     </div>
 <!-- Floating Chat Zalo End -->
