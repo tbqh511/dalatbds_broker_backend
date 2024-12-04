@@ -7520,3 +7520,22 @@ section.single-par2  .scroll-down-wrap{
 		background-position: center;
 	}
 }
+/*
+HuyTBQ: Style for zalo button
+*/.float-contact {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.chat-zalo img {
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease-in-out;
+}
+
+.chat-zalo img:hover {
+    transform: scale(1.1);
+}
+
