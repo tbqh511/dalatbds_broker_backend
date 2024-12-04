@@ -49,6 +49,13 @@
         <!--map-modal -->
         @include('frontends.map_model')
         <!--map-modal end -->
+        <!-- Floating Chat Zalo -->
+        <div class="chat-zalo">
+            <a href="https://zalo.me/0918963878" target="_blank">
+                <img title="Chat Zalo" src="{{ asset('images/zalo-icon.png') }}" alt="zalo-icon" width="40" height="40" />
+            </a>
+        </div>
+<!-- Floating Chat Zalo End -->
     </div>
     <!-- Main end -->
     <!--=============== scripts  ===============-->
@@ -57,13 +64,5 @@
     <script src="{{asset('js/scripts.js')}}"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxEHw0sJRjvQtF50i3y2vxFTr3qkx728k&libraries=places"></script>
     <script src="{{asset('js/map-single.js')}}"></script>
-
-    <!-- Floating Chat Zalo -->
-    <div class="chat-zalo">
-        <a href="https://zalo.me/0918963878" target="_blank">
-            <img title="Chat Zalo" src="{{ asset('images/zalo-icon.png') }}" alt="zalo-icon" width="40" height="40" />
-        </a>
-    </div>
-<!-- Floating Chat Zalo End -->
 </body>
 </html>

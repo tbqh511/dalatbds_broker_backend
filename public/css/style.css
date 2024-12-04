@@ -7520,31 +7520,23 @@ section.single-par2  .scroll-down-wrap{
 		background-position: center;
 	}
 }
-/*
-HuyTBQ: Style for zalo button
-*/.float-contact {
+
+/* HuyTBQ: Định dạng nút chat Zalo */
+.float-contact {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    z-index: 9999;
+    z-index: 9999; /* Đảm bảo nút Zalo luôn nổi */
 }
 
 .chat-zalo img {
-    border-radius: 50%;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s ease-in-out;
+    border-radius: 50%; /* Hình tròn */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Bóng mờ */
+    transition: transform 0.2s ease-in-out; /* Hiệu ứng khi hover */
+    cursor: pointer;
 }
 
 .chat-zalo img:hover {
-    transform: scale(1.1);
+    transform: scale(1.1); /* Phóng to khi hover */
 }
 
-.chat-zalo svg {
-    fill: #0099ff; /* Màu Zalo mặc định */
-    transition: transform 0.2s ease-in-out;
-}
-
-.chat-zalo svg:hover {
-    transform: scale(1.1);
-    fill: #005bb5; /* Màu đậm hơn khi hover */
-}
