@@ -7522,10 +7522,10 @@ section.single-par2  .scroll-down-wrap{
 }
 
 /* HuyTBQ: Định dạng nút chat Zalo */
-.float-contact {
+.chat-zalo {
     position: fixed;
     bottom: 20px;
-    right: 20px;
+    left: 20px;
     z-index: 9999; /* Đảm bảo nút Zalo luôn nổi */
 }
 
