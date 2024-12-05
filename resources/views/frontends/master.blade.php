@@ -55,7 +55,15 @@
                 <img title="Chat Zalo" src="{{ asset('images/zalo-icon.png') }}" alt="zalo-icon" width="40" height="40" />
             </a>
         </div>
-<!-- Floating Chat Zalo End -->
+        <!-- Floating Chat Zalo End -->
+        <!-- Floating Call Button -->
+        <div class="call-button">
+            <a href="tel:0918963878" target="_self" title="0918963878">
+                <img title="Gọi ngay" src="{{ asset('images/call-icon.png') }}" alt="call-icon" width="40" height="40" />
+            </a>
+        </div>
+        <!-- Floating Call Button End -->
+
     </div>
     <!-- Main end -->
     <!--=============== scripts  ===============-->

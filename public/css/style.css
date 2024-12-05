@@ -7540,3 +7540,21 @@ section.single-par2  .scroll-down-wrap{
     transform: scale(1.1); /* Phóng to khi hover */
 }
 
+/* HuyTBQ: Định dạng nút gọi */
+.call-button {
+    position: fixed;
+    bottom: 120px; /* Đặt vị trí bên trên nút Zalo */
+    left: 20px;
+    z-index: 9999; /* Đảm bảo nút luôn nổi trên giao diện */
+}
+
+.call-button img {
+    border-radius: 50%; /* Làm hình ảnh tròn */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Bóng mờ */
+    transition: transform 0.2s ease-in-out; /* Hiệu ứng khi hover */
+    cursor: pointer;
+}
+
+.call-button img:hover {
+    transform: scale(1.1); /* Phóng to khi hover */
+}
