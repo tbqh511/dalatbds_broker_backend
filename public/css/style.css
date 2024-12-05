@@ -7524,7 +7524,7 @@ section.single-par2  .scroll-down-wrap{
 /* HuyTBQ: Định dạng nút chat Zalo */
 .chat-zalo {
     position: fixed;
-    bottom: 20px;
+    bottom: 50px;
     left: 20px;
     z-index: 9999; /* Đảm bảo nút Zalo luôn nổi */
 }
