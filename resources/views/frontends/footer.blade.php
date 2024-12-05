@@ -48,8 +48,8 @@
                         <div class="footer-social fl-wrap">
                             <ul>
                                 <li><a href="https://www.facebook.com/dalatbdscom" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
-                                {{-- <li><a href="#" target="_blank"><i class="fab fa-youtube"></i></a></li>
-                                <li><a href="#" target="_blank"><i class="fab fa-tiktok"></i></a></li> --}}
+                                <li><a href="https://www.youtube.com/@dalatbds" target="_blank"><i class="fab fa-youtube"></i></a></li>
+                                <li><a href="#" target="_blank"><i class="fab fa-tiktok"></i></a></li>
                             </ul>
                         </div>
                     </div>
