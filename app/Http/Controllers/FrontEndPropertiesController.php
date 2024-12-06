@@ -43,7 +43,8 @@ class FrontEndPropertiesController extends Controller
 
         $relatedProducts = Property::where('category_id', $category_id)
             ->orWhere('ward_code', $ward_code)
-            ->where('id', '!=', $property->id) // Loại bỏ sản phẩm hiện tại
+            ->where('id', '!=', $property->id)
+            ->where('status', '1') // Loại bỏ sản phẩm hiện tại
             ->with('customer')
             ->with('user')
             ->with('category:id,category,image')
@@ -112,7 +113,8 @@ class FrontEndPropertiesController extends Controller
 
         $relatedProducts = Property::where('category_id', $category_id)
             ->orwhere('ward_code', $ward_code)
-            ->where('id', '!=', $property->id) // Loại bỏ sản phẩm hiện tại
+            ->where('id', '!=', $property->id)
+            ->where('status', '1')
             ->with('customer')
             ->with('user')
             ->with('category:id,category,image')
