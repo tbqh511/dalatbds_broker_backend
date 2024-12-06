@@ -90,7 +90,7 @@
                                 <div class="progress-indicator">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
                                         <circle cx="16" cy="16" r="15.9155" class="progress-bar__background" />
-                                        <circle cx="16" cy="16" r="15.9155" class="progress-bar__progress 
+                                        <circle cx="16" cy="16" r="15.9155" class="progress-bar__progress
                                             js-progress-bar" />
                                     </svg>
                                 </div>
@@ -710,22 +710,26 @@
                                 <ul class="no-list-style">
                                     @foreach($highlightedProducts as $product)
                                     <li>
-                                        <div class="widget-posts-img"><a
-                                                href="{{ route('property.show', $product->id) }}"><img
-                                                    src="{{ $product->title_image  }}"
-                                                    alt="{{ $product->title_by_address  }}"></a>
+                                        <div class="widget-posts-img">
+                                            <a href="{{ route('bds.show', ['slug' => $product->slug]) }}">
+                                                <img src="{{ $product->title_image }}" alt="{{ $product->title_by_address }}">
+                                            </a>
                                         </div>
                                         <div class="widget-posts-descr">
-                                            <h4><a href="{{ route('property.show', $product->id) }}">{{
-                                                    $product->title_by_address
-                                                    }}</a></h4>
-                                            <div class="geodir-category-location fl-wrap"><a href="#"><i
-                                                        class="fas fa-map-marker-alt"></i> {{ $product->address_location
-                                                    }}</a>
+                                            <h4>
+                                                <a href="{{ route('bds.show', ['slug' => $product->slug]) }}">
+                                                    {{ $product->title_by_address }}
+                                                </a>
+                                            </h4>
+                                            <div class="geodir-category-location fl-wrap">
+                                                <a href="#">
+                                                    <i class="fas fa-map-marker-alt"></i>
+                                                    {{ $product->address_location }}
+                                                </a>
                                             </div>
-                                            <div class="widget-posts-descr-price"><span>Giá: </span> {{
-                                                $product->formatted_prices
-                                                }}</div>
+                                            <div class="widget-posts-descr-price">
+                                                <span>Giá: </span> {{ $product->formatted_prices }}
+                                            </div>
                                         </div>
                                     </li>
                                     @endforeach
