@@ -113,7 +113,7 @@ class FrontEndPropertiesController extends Controller
             $query->where('parameters.id', config('global.price_m2'));
         })
         ->with(['parameters' => function ($query) {
-            $query->select('parameters.id', 'parameters.pivot.value')
+            $query->select('parameters.id')
                 ->where('parameters.id', config('global.price_m2'));
         }])
         ->get();

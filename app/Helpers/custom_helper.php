@@ -530,7 +530,7 @@ function get_avg_price_per_m2_by_category_location($category_id = null, $street_
         $query->where('parameters.id', config('global.price_m2'));
     })
     ->with(['parameters' => function ($query) {
-        $query->select('parameters.id', 'parameters.pivot.value')
+        $query->select('parameters.id')
             ->where('parameters.id', config('global.price_m2'));
     }])
     ->get();
