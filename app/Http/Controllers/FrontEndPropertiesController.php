@@ -121,7 +121,23 @@ class FrontEndPropertiesController extends Controller
         $totalPricePerM2 = $properties->sum(fn($property) => $property->parameters->first()?->pivot->value ?? 0);
         $count = $properties->filter(fn($property) => $property->parameters->first()?->pivot->value)->count();
 
-        return $count > 0 ? $totalPricePerM2 / $count : 0;
+        $avgPricePerM2 = $count > 0 ? $totalPricePerM2 / $count : 0;
+
+        // Format the average price
+        $ty = 1000000000;
+        $trieu = 1000000;
+
+        if ($avgPricePerM2 >= $ty) {
+            if ($avgPricePerM2 % $ty == 0) {
+                return number_format($avgPricePerM2 / $ty, 0) . ' tỷ/m²';
+            } else {
+                return number_format($avgPricePerM2 / $ty, 1) . ' tỷ/m²';
+            }
+        } elseif ($avgPricePerM2 > 0) {
+            return number_format($avgPricePerM2 / $trieu, 1) . ' triệu/m²';
+        } else {
+            return 'Giá thỏa thuận';
+        }
     }
 
     /**
