@@ -262,9 +262,13 @@
                                         <ul>
                                             @if($property->avg_price_per_m2)
                                             <li>
-                                                <span>Giá trung bình:</span>
+                                                <span>Giá trung bình
+                                                @if($property->legal)
+                                                {{$property->legal $property->address_location: }}
+                                                @endif
+                                                </span>
                                                 {{-- <span>{{config('global.avg_price_per_m2_title')}}:</span> --}}
-                                                {{ number_format($property->avg_price_per_m2, 2) }}/m²
+                                                {{ number_format($property->avg_price_per_m2, 0) }}/m²
                                             </li>
                                             @endif
                                         </ul>
