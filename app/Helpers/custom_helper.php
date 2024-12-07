@@ -343,7 +343,7 @@ function get_property_details($result, $current_user = NULL)
         }
 
         $tempRow['id'] = $row->id;
-        $tempRow['slug'] = $row->slug; 
+        $tempRow['slug'] = $row->slug;
         $tempRow['title'] = $row->title;
         $tempRow['price'] = $row->price;
         $tempRow['category'] = $row->category;
@@ -508,10 +508,10 @@ function get_property_details($result, $current_user = NULL)
 }
 function get_avg_price_per_m2_by_category_location($category_id = null, $street_code = null, $ward_code = null)
 {
-    
+
     $category_id = $category_id ?? -1;
     $street_code = $street_code ?? '';
-    $ward_code = $ward_code ?? ''; 
+    $ward_code = $ward_code ?? '';
 
     $query = Property::query();
 
@@ -527,25 +527,17 @@ function get_avg_price_per_m2_by_category_location($category_id = null, $street_
 
     // Lấy các bất động sản có parameters là price_m2
     $properties = $query->whereHas('parameters', function ($query) {
-        $query->where('parameters.id', config('global.price_m2')); // Chỉ lấy parameters có ID là price_m2
+        $query->where('parameters.id', config('global.price_m2'));
     })
     ->with(['parameters' => function ($query) {
-        $query->where('parameters.id', config('global.price_m2')); // Lấy giá trị price_m2 trong parameters
+        $query->select('parameters.id', 'parameters.pivot.value')
+            ->where('parameters.id', config('global.price_m2'));
     }])
     ->get();
 
-    // Tính giá trị trung bình
-    $totalPricePerM2 = 0;
-    $count = 0;
-
-    // Duyệt qua các properties và tính tổng giá trị price_m2
-    foreach ($properties as $property) {
-        $priceM2 = $property->parameters->first()?->pivot->value;
-        if ($priceM2) {
-            $totalPricePerM2 += $priceM2;
-            $count++;
-        }
-    }
+     // Tính tổng giá trị và đếm số lượng
+     $totalPricePerM2 = $properties->sum(fn($property) => $property->parameters->first()?->pivot->value ?? 0);
+     $count = $properties->filter(fn($property) => $property->parameters->first()?->pivot->value)->count();
 
     // Trả về giá trị trung bình nếu có giá trị hợp lệ, nếu không trả về 0
     return $count > 0 ? $totalPricePerM2 / $count : 0;

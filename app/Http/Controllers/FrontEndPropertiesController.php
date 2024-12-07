@@ -41,6 +41,16 @@ class FrontEndPropertiesController extends Controller
         $category_id = $property->category_id;
         $ward_code = $property->ward_code;
 
+        // Calculate the average price per m2
+        $avgPricePerM2 = $this->getAvgPricePerM2ByCategoryLocation(
+            $property->category_id,
+            $property->street_code,
+            $property->ward_code
+        );
+
+        // Add avg_price_per_m2 to the property object
+        $property->avg_price_per_m2 = $avgPricePerM2;
+
         $relatedProducts = Property::where('category_id', $category_id)
             ->orWhere('ward_code', $ward_code)
             ->where('id', '!=', $property->id)
@@ -82,6 +92,36 @@ class FrontEndPropertiesController extends Controller
             'categories' => $categories,
             'locationsWards' => $locationsWards,
         ]);
+    }
+
+        // Helper function to calculate avg_price_per_m2
+    private function getAvgPricePerM2ByCategoryLocation($category_id = null, $street_code = null, $ward_code = null)
+    {
+        $query = Property::query();
+
+        if ($category_id) {
+            $query->where('category_id', $category_id);
+        }
+        if ($street_code) {
+            $query->where('street_code', $street_code);
+        }
+        if ($ward_code) {
+            $query->where('ward_code', $ward_code);
+        }
+
+        $properties = $query->whereHas('parameters', function ($query) {
+            $query->where('parameters.id', config('global.price_m2'));
+        })
+        ->with(['parameters' => function ($query) {
+            $query->select('parameters.id', 'parameters.pivot.value')
+                ->where('parameters.id', config('global.price_m2'));
+        }])
+        ->get();
+
+        $totalPricePerM2 = $properties->sum(fn($property) => $property->parameters->first()?->pivot->value ?? 0);
+        $count = $properties->filter(fn($property) => $property->parameters->first()?->pivot->value)->count();
+
+        return $count > 0 ? $totalPricePerM2 / $count : 0;
     }
 
     /**

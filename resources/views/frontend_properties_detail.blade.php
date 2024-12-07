@@ -252,6 +252,26 @@
                                 </div>
                             </div>
                             <!-- list-single-main-item end -->
+                            <!-- list-single-main-item -->
+                            <div class="list-single-main-item fl-wrap">
+                                <div class="list-single-main-item-title">
+                                    <h3>Chi tiết thị trường</h3>
+                                </div>
+                                <div class="list-single-main-item_content fl-wrap">
+                                    <div class="details-list">
+                                        <ul>
+                                            @if($property->avg_price_per_m2)
+                                            <li>
+                                                <span>Giá trung bình:</span>
+                                                {{-- <span>{{config('global.avg_price_per_m2_title')}}:</span> --}}
+                                                {{ number_format($property->avg_price_per_m2, 2) }}/m²
+                                            </li>
+                                            @endif
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- list-single-main-item end -->
                             <!--   list-single-main-item -->
                             {{-- <div class="list-single-main-item fl-wrap" id="sec4">
                                 <div class="list-single-main-item-title fl-wrap">
