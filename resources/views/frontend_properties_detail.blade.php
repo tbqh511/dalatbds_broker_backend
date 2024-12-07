@@ -267,7 +267,7 @@
                                                     {{ $property->legal . ' ' . $property->address_location . ': ' }}
                                                     @endif
                                                 </span>
-                                                {{$property->avg_price_per_m2, 0}}/m²
+                                                {{$property->avg_price_per_m2, 0}}
                                             </li>
                                             @endif
                                         </ul>
