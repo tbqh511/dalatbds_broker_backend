@@ -525,13 +525,13 @@ class ApiController extends Controller
                 $property = $property->orderBy('price', 'ASC');
             }
         }
-        //HuyTBQ: Add slug query 
+        //HuyTBQ: Add slug query
         // Filter by slug
-        $slug = $request->slug;        
+        $slug = $request->slug;
         if (isset($slug)) {
             $property = $property->where('slug', $slug);
         }
-        
+
         if (isset($street_number)) {
             $property = $property->where('street_number', $street_number);
         }
@@ -552,9 +552,12 @@ class ApiController extends Controller
             });
         }
         if (isset($userid)) {
-            $property = $property->where('post_type', 1)->where('added_by', $userid);
+            $property = $property
+                ->where('post_type', 1)
+                ->where('added_by', $userid)
+                ->whereIn('status', [0, 1, 2, 3, 4, 5]); // Loại trừ `status = 6`
         } else {
-            $property = $property->Where('status', 1);
+            $property = $property->where('status', 1);
         }
 
 
@@ -784,7 +787,7 @@ class ApiController extends Controller
                     $Saveproperty->description = $request->description;
                     $Saveproperty->address = $request->address;
                     $Saveproperty->client_address = (isset($request->client_address)) ? $request->client_address : '';
-                    
+
                     // HuyTBQ: Change backend for update property type
                     //$Saveproperty->propery_type = (isset($request->property_type)) ? $request->property_type : 0;
                     if (isset($request->property_type)) {
@@ -816,7 +819,7 @@ class ApiController extends Controller
                     $Saveproperty->street_number =  (isset($request->street_number)) ? $request->street_number : '';
                     //HuyTBQ: add commission columns for properites table
                     $Saveproperty->commission = (isset($request->commission)) ? $request->commission :0 ;
-                    //HuyTBQ: add slug for create 
+                    //HuyTBQ: add slug for create
                     $Saveproperty->slug = (isset($request->slug)) ? $request->slug : '';
 
                     $Saveproperty->added_by = $current_user;
