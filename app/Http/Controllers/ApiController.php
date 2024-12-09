@@ -554,8 +554,8 @@ class ApiController extends Controller
         if (isset($userid)) {
             $property = $property
                 ->where('post_type', 1)
-                ->where('added_by', $userid)
-                ->whereIn('status', [0, 1, 2, 3, 4, 5]); // Loại trừ `status = 6`
+                ->where('added_by', $userid);
+
         } else {
             $property = $property->where('status', 1);
         }
