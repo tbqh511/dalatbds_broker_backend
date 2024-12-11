@@ -15,6 +15,14 @@ return new class extends Migration
     {
         Schema::create('crm_deals_commissions', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('deal_id');
+            $table->unsignedBigInteger('sale_id');
+            $table->unsignedBigInteger('property_id');
+            $table->double('sale_commission')->default(0);
+            $table->double('app_commission')->default(0);
+            $table->double('lead_commission')->default(0);
+            $table->double('owner_commission')->default(0);
+            $table->string('notes', 255)->nullable();
             $table->timestamps();
         });
     }

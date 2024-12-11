@@ -15,6 +15,11 @@ return new class extends Migration
     {
         Schema::create('crm_customers', function (Blueprint $table) {
             $table->id();
+            $table->string('full_name', 255);
+            $table->string('gender', 10)->nullable();
+            $table->integer('age')->nullable();
+            $table->string('about_customer', 255)->nullable();
+            $table->string('contact', 255)->nullable();
             $table->timestamps();
         });
     }
