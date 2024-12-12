@@ -41,6 +41,12 @@ class CrmLead extends Model
     }
 
     // Quan hệ: Một lead thuộc về một khách hàng
+    public function sale()
+    {
+        return $this->belongsTo(Customer::class, 'user_id', 'id');
+    }
+
+    // Quan hệ: Một lead thuộc về một khách hàng
     public function customer()
     {
         return $this->belongsTo(CrmCustomer::class, 'customer_id', 'id');
