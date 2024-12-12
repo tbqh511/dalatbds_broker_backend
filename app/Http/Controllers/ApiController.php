@@ -26,7 +26,6 @@ use App\Models\Slider;
 use App\Models\Type;
 use App\Models\Usertokens;
 
-
 use App\Models\User;
 use App\Models\Chats;
 use Carbon\CarbonInterface;
@@ -43,6 +42,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\report_reasons;
 use App\Models\user_reports;
 
+
 use Intervention\Image\ImageManagerStatic as Image;
 
 use Illuminate\Support\Str;
@@ -52,6 +52,14 @@ use App\Models\Payments;
 use App\Libraries\Paypal_pro;
 use App\Models\AssignedOutdoorFacilities;
 use App\Models\OutdoorFacilities;
+// HuyTBQ:
+use App\Models\CrmCustomer;
+use App\Models\CrmDeal;
+use App\Models\CrmLead;
+use App\Models\CrmDealAssigned;
+use App\Models\CrmDealProduct;
+use App\Models\CrmDealCommission;
+
 // use PayPal_Pro as GlobalPayPal_Pro;
 use Tymon\JWTAuth\Claims\Issuer;
 
@@ -332,8 +340,8 @@ class ApiController extends Controller
         $offset = isset($request->offset) ? $request->offset : 0;
         $limit = isset($request->limit) ? $request->limit : 10;
         $categories = Category::select('id', 'category', 'image', 'parameter_types', 'order')
-        ->where('status', '1')
-        ->orderBy('order', 'asc');
+            ->where('status', '1')
+            ->orderBy('order', 'asc');
 
         if (isset($request->search) && !empty($request->search)) {
             $search = $request->search;
@@ -555,7 +563,6 @@ class ApiController extends Controller
             $property = $property
                 ->where('post_type', 1)
                 ->where('added_by', $userid);
-
         } else {
             $property = $property->where('status', 1);
         }
@@ -799,11 +806,11 @@ class ApiController extends Controller
                             $Saveproperty->propery_type = 2;
                         } elseif ($request->property_type == "Rented") {
                             $Saveproperty->propery_type = 3;
-                        } else{
+                        } else {
                             $Saveproperty->propery_type = $request->property_type;
                         }
                     }
-                    $Saveproperty->price = (isset($request->price)) ? $request->price :0 ;
+                    $Saveproperty->price = (isset($request->price)) ? $request->price : 0;
 
                     $Saveproperty->country = (isset($request->country)) ? $request->country : '';
                     $Saveproperty->state = (isset($request->state)) ? $request->state : '';
@@ -818,7 +825,7 @@ class ApiController extends Controller
                     $Saveproperty->ward_code = (isset($request->ward_code)) ? $request->ward_code : '';
                     $Saveproperty->street_number =  (isset($request->street_number)) ? $request->street_number : '';
                     //HuyTBQ: add commission columns for properites table
-                    $Saveproperty->commission = (isset($request->commission)) ? $request->commission :0 ;
+                    $Saveproperty->commission = (isset($request->commission)) ? $request->commission : 0;
                     //HuyTBQ: add slug for create
                     $Saveproperty->slug = (isset($request->slug)) ? $request->slug : '';
 
@@ -1184,7 +1191,7 @@ class ApiController extends Controller
                             $property->propery_type = 2;
                         } elseif ($request->property_type == "Rented") {
                             $property->propery_type = 3;
-                        } else{
+                        } else {
                             $property->propery_type = $request->property_type;
                         }
                     }
@@ -2795,7 +2802,7 @@ class ApiController extends Controller
                           full_name")
             ->get();
 
-            $total = $result->count();
+        $total = $result->count();
 
         if (!$result->isEmpty()) {
             $response['error'] = false;
@@ -2864,4 +2871,655 @@ class ApiController extends Controller
         return response()->json($response);
     }
     //* END :: get_crm_host   *//
+
+    //HuyTBQ : Crm customer
+    //* START :: get_customers *//
+    public function get_customers(Request $request)
+    {
+        $offset = $request->offset ?? 0;
+        $limit = $request->limit ?? 10;
+
+        $customers = CrmCustomer::query();
+
+        if (!empty($request->search)) {
+            $customers->where('full_name', 'LIKE', '%' . $request->search . '%')
+                ->orWhere('contact', 'LIKE', '%' . $request->search . '%');
+        }
+
+        $total = $customers->count();
+        $result = $customers->skip($offset)->take($limit)->get();
+
+        if ($result->isNotEmpty()) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['total'] = $total;
+            $response['data'] = $result;
+        } else {
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_customers *//
+
+    //* START :: get_customer *//
+    public function get_customer($id)
+    {
+        $customer = CrmCustomer::find($id);
+
+        if ($customer) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['data'] = $customer;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Customer not found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_customer *//
+
+    //* START :: create_customer *//
+    public function create_customer(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'full_name' => 'required|string|max:255',
+            'contact' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            $response['error'] = true;
+            $response['message'] = $validator->errors()->first();
+        } else {
+            $customer = CrmCustomer::create([
+                'full_name' => $request->full_name,
+                'contact' => $request->contact,
+                'gender' => $request->gender ?? null,
+                'age' => $request->age ?? null,
+                'about_customer' => $request->about_customer ?? null,
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Customer created successfully";
+            $response['data'] = $customer;
+        }
+        return response()->json($response);
+    }
+    //* END :: create_customer *//
+
+    //* START :: update_customer *//
+    public function update_customer(Request $request, $id)
+    {
+        $customer = CrmCustomer::find($id);
+
+        if ($customer) {
+            $customer->update([
+                'full_name' => $request->full_name ?? $customer->full_name,
+                'contact' => $request->contact ?? $customer->contact,
+                'gender' => $request->gender ?? $customer->gender,
+                'age' => $request->age ?? $customer->age,
+                'about_customer' => $request->about_customer ?? $customer->about_customer,
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Customer updated successfully";
+            $response['data'] = $customer;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Customer not found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: update_customer *//
+
+    //* START :: delete_customer *//
+    public function delete_customer($id)
+    {
+        $customer = CrmCustomer::find($id);
+
+        if ($customer) {
+            $customer->delete();
+            $response['error'] = false;
+            $response['message'] = "Customer deleted successfully";
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Customer not found!";
+        }
+        return response()->json($response);
+    }
+    //* END :: delete_customer *//
+    //HuyTBQ : crm leads
+    //* START :: get_leads *//
+    public function get_leads(Request $request)
+    {
+        $offset = $request->offset ?? 0;
+        $limit = $request->limit ?? 10;
+
+        $leads = CrmLead::with('customer');
+
+        if (!empty($request->search)) {
+            $leads->where('source_note', 'LIKE', '%' . $request->search . '%')
+                ->orWhereHas('customer', function ($query) use ($request) {
+                    $query->where('full_name', 'LIKE', '%' . $request->search . '%');
+                });
+        }
+
+        $total = $leads->count();
+        $result = $leads->skip($offset)->take($limit)->get();
+
+        if ($result->isNotEmpty()) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['total'] = $total;
+            $response['data'] = $result;
+        } else {
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_leads *//
+
+    //* START :: get_lead *//
+    public function get_lead($id)
+    {
+        $lead = CrmLead::with('customer')->find($id);
+
+        if ($lead) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['data'] = $lead;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Lead not found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_lead *//
+
+    //* START :: create_lead *//
+    public function create_lead(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'customer_id' => 'required|exists:crm_customers,id',
+            'source_note' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            $response['error'] = true;
+            $response['message'] = $validator->errors()->first();
+        } else {
+            $lead = CrmLead::create([
+                'customer_id' => $request->customer_id,
+                'source_note' => $request->source_note,
+                'lead_type' => $request->lead_type ?? null,
+                'categories' => $request->categories ?? null,
+                'wards' => $request->wards ?? null,
+                'demand_rate_min' => $request->demand_rate_min ?? 0,
+                'demand_rate_max' => $request->demand_rate_max ?? 0,
+                'note' => $request->note ?? null,
+                'status' => $request->status ?? 'new',
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Lead created successfully";
+            $response['data'] = $lead;
+        }
+        return response()->json($response);
+    }
+    //* END :: create_lead *//
+
+    //* START :: update_lead *//
+    public function update_lead(Request $request, $id)
+    {
+        $lead = CrmLead::find($id);
+
+        if ($lead) {
+            $lead->update([
+                'source_note' => $request->source_note ?? $lead->source_note,
+                'lead_type' => $request->lead_type ?? $lead->lead_type,
+                'categories' => $request->categories ?? $lead->categories,
+                'wards' => $request->wards ?? $lead->wards,
+                'demand_rate_min' => $request->demand_rate_min ?? $lead->demand_rate_min,
+                'demand_rate_max' => $request->demand_rate_max ?? $lead->demand_rate_max,
+                'note' => $request->note ?? $lead->note,
+                'status' => $request->status ?? $lead->status,
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Lead updated successfully";
+            $response['data'] = $lead;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Lead not found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: update_lead *//
+
+    //* START :: delete_lead *//
+    public function delete_lead($id)
+    {
+        $lead = CrmLead::find($id);
+
+        if ($lead) {
+            $lead->delete();
+            $response['error'] = false;
+            $response['message'] = "Lead deleted successfully";
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Lead not found!";
+        }
+        return response()->json($response);
+    }
+    //* END :: delete_lead *//
+
+    //* START :: convert_lead_to_deal *//
+    public function convert_lead_to_deal($id)
+    {
+        $lead = CrmLead::find($id);
+
+        if ($lead) {
+            $deal = CrmDeal::create([
+                'customer_id' => $lead->customer_id,
+                'notes' => $lead->note,
+                'status' => 'new',
+                'amount' => $lead->demand_rate_min ?? 0,
+            ]);
+
+            $lead->update(['status' => 'converted']);
+
+            $response['error'] = false;
+            $response['message'] = "Lead converted to Deal successfully";
+            $response['data'] = $deal;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Lead not found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: convert_lead_to_deal *//
+    //HuyTBQ: crm_deal
+    //* START :: get_deals *//
+    public function get_deals(Request $request)
+    {
+        $offset = $request->offset ?? 0;
+        $limit = $request->limit ?? 10;
+
+        $deals = CrmDeal::with('customer');
+
+        if (!empty($request->search)) {
+            $deals->where('notes', 'LIKE', '%' . $request->search . '%')
+                ->orWhereHas('customer', function ($query) use ($request) {
+                    $query->where('full_name', 'LIKE', '%' . $request->search . '%');
+                });
+        }
+
+        $total = $deals->count();
+        $result = $deals->skip($offset)->take($limit)->get();
+
+        if ($result->isNotEmpty()) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['total'] = $total;
+            $response['data'] = $result;
+        } else {
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_deals *//
+
+    //* START :: get_deal *//
+    public function get_deal($id)
+    {
+        $deal = CrmDeal::with('customer')->find($id);
+
+        if ($deal) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['data'] = $deal;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Deal not found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_deal *//
+
+    //* START :: create_deal *//
+    public function create_deal(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'customer_id' => 'required|exists:crm_customers,id',
+            'amount' => 'required|numeric',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            $response['error'] = true;
+            $response['message'] = $validator->errors()->first();
+        } else {
+            $deal = CrmDeal::create([
+                'customer_id' => $request->customer_id,
+                'amount' => $request->amount,
+                'notes' => $request->notes,
+                'status' => 'new',
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Deal created successfully";
+            $response['data'] = $deal;
+        }
+        return response()->json($response);
+    }
+    //* END :: create_deal *//
+
+    //* START :: update_deal *//
+    public function update_deal(Request $request, $id)
+    {
+        $deal = CrmDeal::find($id);
+
+        if ($deal) {
+            $deal->update([
+                'amount' => $request->amount ?? $deal->amount,
+                'notes' => $request->notes ?? $deal->notes,
+                'status' => $request->status ?? $deal->status,
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Deal updated successfully";
+            $response['data'] = $deal;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Deal not found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: update_deal *//
+
+    //* START :: delete_deal *//
+    public function delete_deal($id)
+    {
+        $deal = CrmDeal::find($id);
+
+        if ($deal) {
+            $deal->delete();
+            $response['error'] = false;
+            $response['message'] = "Deal deleted successfully";
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Deal not found!";
+        }
+        return response()->json($response);
+    }
+    //* END :: delete_deal *//
+
+    //* START :: update_deal_status *//
+    public function update_deal_status(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:new,prospecting,negotiating,deposit_paid,pending_notary,win,lost',
+        ]);
+
+        if ($validator->fails()) {
+            $response['error'] = true;
+            $response['message'] = $validator->errors()->first();
+        } else {
+            $deal = CrmDeal::find($id);
+
+            if ($deal) {
+                $deal->update(['status' => $request->status]);
+
+                $response['error'] = false;
+                $response['message'] = "Deal status updated successfully";
+                $response['data'] = $deal;
+            } else {
+                $response['error'] = true;
+                $response['message'] = "Deal not found!";
+                $response['data'] = [];
+            }
+        }
+        return response()->json($response);
+    }
+    //* END :: update_deal_status *//
+    //HuyTBQ: crm_deal_assign
+    public function assign_deal(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            $response['error'] = true;
+            $response['message'] = $validator->errors()->first();
+        } else {
+            $assignment = CrmDealAssigned::create([
+                'deal_id' => $id,
+                'user_id' => $request->user_id,
+                'note' => $request->note ?? '',
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Deal assigned successfully";
+            $response['data'] = $assignment;
+        }
+        return response()->json($response);
+    }
+    //* END :: assign_deal *//
+
+    //* START :: get_assigned_deals *//
+    public function get_assigned_deals($id)
+    {
+        $assignedDeals = CrmDealAssigned::where('deal_id', $id)->with('user')->get();
+
+        if ($assignedDeals->isNotEmpty()) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['data'] = $assignedDeals;
+        } else {
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_assigned_deals *//
+
+    //* START :: remove_assigned_deal *//
+    public function remove_assigned_deal($id, $assigned_id)
+    {
+        $assignment = CrmDealAssigned::where('deal_id', $id)->where('id', $assigned_id)->first();
+
+        if ($assignment) {
+            $assignment->delete();
+            $response['error'] = false;
+            $response['message'] = "Assigned deal removed successfully";
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Assigned deal not found!";
+        }
+        return response()->json($response);
+    }
+    //* END :: remove_assigned_deal *//
+    //HuyTBQ: crm_deal_products
+    //* START :: add_deal_product *//
+    public function add_deal_product(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+            'status' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            $response['error'] = true;
+            $response['message'] = $validator->errors()->first();
+        } else {
+            $product = CrmDealProduct::create([
+                'deal_id' => $id,
+                'product_id' => $request->product_id,
+                'status' => $request->status ?? 'Sent',
+                'note' => $request->note ?? '',
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Product added to deal successfully";
+            $response['data'] = $product;
+        }
+        return response()->json($response);
+    }
+    //* END :: add_deal_product *//
+
+    //* START :: get_deal_products *//
+    public function get_deal_products($id)
+    {
+        $products = CrmDealProduct::where('deal_id', $id)->with('product')->get();
+
+        if ($products->isNotEmpty()) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['data'] = $products;
+        } else {
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_deal_products *//
+
+    //* START :: update_deal_product *//
+    public function update_deal_product(Request $request, $id, $product_id)
+    {
+        $product = CrmDealProduct::where('deal_id', $id)->where('id', $product_id)->first();
+
+        if ($product) {
+            $product->update([
+                'status' => $request->status ?? $product->status,
+                'note' => $request->note ?? $product->note,
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Product updated successfully";
+            $response['data'] = $product;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Product not found!";
+        }
+        return response()->json($response);
+    }
+    //* END :: update_deal_product *//
+
+    //* START :: delete_deal_product *//
+    public function delete_deal_product($id, $product_id)
+    {
+        $product = CrmDealProduct::where('deal_id', $id)->where('id', $product_id)->first();
+
+        if ($product) {
+            $product->delete();
+            $response['error'] = false;
+            $response['message'] = "Product removed from deal successfully";
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Product not found!";
+        }
+        return response()->json($response);
+    }
+    //* END :: delete_deal_product *//
+    //HuyTBQ: crm_deal_commissions
+    //* START :: add_deal_commission *//
+    public function add_deal_commission(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'sale_commission' => 'required|numeric',
+            'sale_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            $response['error'] = true;
+            $response['message'] = $validator->errors()->first();
+        } else {
+            $commission = CrmDealCommission::create([
+                'deal_id' => $id,
+                'sale_id' => $request->sale_id,
+                'sale_commission' => $request->sale_commission,
+                'notes' => $request->notes ?? '',
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Commission added successfully";
+            $response['data'] = $commission;
+        }
+        return response()->json($response);
+    }
+    //* END :: add_deal_commission *//
+
+    //* START :: get_deal_commission *//
+    public function get_deal_commission($id)
+    {
+        $commissions = CrmDealCommission::where('deal_id', $id)->get();
+
+        if ($commissions->isNotEmpty()) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['data'] = $commissions;
+        } else {
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        return response()->json($response);
+    }
+    //* END :: get_deal_commission *//
+
+    //* START :: update_deal_commission *//
+    public function update_deal_commission(Request $request, $id, $commission_id)
+    {
+        $commission = CrmDealCommission::where('deal_id', $id)->where('id', $commission_id)->first();
+
+        if ($commission) {
+            $commission->update([
+                'sale_commission' => $request->sale_commission ?? $commission->sale_commission,
+                'notes' => $request->notes ?? $commission->notes,
+            ]);
+
+            $response['error'] = false;
+            $response['message'] = "Commission updated successfully";
+            $response['data'] = $commission;
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Commission not found!";
+        }
+        return response()->json($response);
+    }
+    //* END :: update_deal_commission *//
+
+    //* START :: delete_deal_commission *//
+    public function delete_deal_commission($id, $commission_id)
+    {
+        $commission = CrmDealCommission::where('deal_id', $id)->where('id', $commission_id)->first();
+
+        if ($commission) {
+            $commission->delete();
+            $response['error'] = false;
+            $response['message'] = "Commission removed successfully";
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Commission not found!";
+        }
+        return response()->json($response);
+    }
+    //* END :: delete_deal_commission *//
+
 }

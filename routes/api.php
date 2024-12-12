@@ -71,8 +71,53 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('get_facilities', [ApiController::class, 'get_facilities']);
     Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
 
-    //HuyTBQ: add route for location module
+    //HuyTBQ: Integrations
     Route::get('get_locations_wards', [ApiController::class, 'get_locations_wards']);
     Route::get('get_locations_streets', [ApiController::class, 'get_locations_streets']);
     Route::get('get_crm_hosts', [ApiController::class, 'get_crm_hosts']);
+
+    // CRM Customers
+    Route::get('customers', [ApiController::class, 'get_customers']);
+    Route::get('customers/{id}', [ApiController::class, 'get_customer']);
+    Route::post('customers', [ApiController::class, 'create_customer']);
+    Route::put('customers/{id}', [ApiController::class, 'update_customer']);
+    Route::delete('customers/{id}', [ApiController::class, 'delete_customer']);
+
+    // CRM Leads
+    Route::get('leads', [ApiController::class, 'get_leads']);
+    Route::get('leads/{id}', [ApiController::class, 'get_lead']);
+    Route::post('leads', [ApiController::class, 'create_lead']);
+    Route::put('leads/{id}', [ApiController::class, 'update_lead']);
+    Route::delete('leads/{id}', [ApiController::class, 'delete_lead']);
+    Route::post('leads/{id}/convert', [ApiController::class, 'convert_lead_to_deal']);
+
+    // CRM Deals
+    Route::get('deals', [ApiController::class, 'get_deals']);
+    Route::get('deals/{id}', [ApiController::class, 'get_deal']);
+    Route::post('deals', [ApiController::class, 'create_deal']);
+    Route::put('deals/{id}', [ApiController::class, 'update_deal']);
+    Route::delete('deals/{id}', [ApiController::class, 'delete_deal']);
+    Route::post('deals/{id}/status', [ApiController::class, 'update_deal_status']);
+
+    // CRM Deals Assigned
+    Route::post('deals/{id}/assign', [ApiController::class, 'assign_deal']);
+    Route::get('deals/{id}/assigned', [ApiController::class, 'get_assigned_deals']);
+    Route::delete('deals/{id}/assigned/{assigned_id}', [ApiController::class, 'remove_assigned_deal']);
+
+    // CRM Deal Products
+    Route::post('deals/{id}/products', [ApiController::class, 'add_deal_product']);
+    Route::get('deals/{id}/products', [ApiController::class, 'get_deal_products']);
+    Route::put('deals/{id}/products/{product_id}', [ApiController::class, 'update_deal_product']);
+    Route::delete('deals/{id}/products/{product_id}', [ApiController::class, 'delete_deal_product']);
+
+    // CRM Deal Commissions
+    Route::post('deals/{id}/commissions', [ApiController::class, 'add_deal_commission']);
+    Route::get('deals/{id}/commissions', [ApiController::class, 'get_deal_commission']);
+    Route::put('deals/{id}/commissions/{commission_id}', [ApiController::class, 'update_deal_commission']);
+    Route::delete('deals/{id}/commissions/{commission_id}', [ApiController::class, 'delete_deal_commission']);
+
+    // Reports and Analytics
+    Route::get('reports/leads', [ApiController::class, 'get_leads_report']);
+    Route::get('reports/deals', [ApiController::class, 'get_deals_report']);
+    Route::get('reports/customers', [ApiController::class, 'get_customers_statistics']);
 });
