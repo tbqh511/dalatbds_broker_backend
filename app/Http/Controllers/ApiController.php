@@ -3521,5 +3521,47 @@ class ApiController extends Controller
         return response()->json($response);
     }
     //* END :: delete_deal_commission *//
+    // HuyTBQ: crm_report
+    //* START :: get_leads_report *//
+    public function get_leads_report()
+    {
+        $report = CrmLead::select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->get();
 
+        $response['error'] = false;
+        $response['message'] = "Data Fetch Successfully";
+        $response['data'] = $report;
+
+        return response()->json($response);
+    }
+    //* END :: get_leads_report *//
+
+    //* START :: get_deals_report *//
+    public function get_deals_report()
+    {
+        $report = CrmDeal::select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->get();
+
+        $response['error'] = false;
+        $response['message'] = "Data Fetch Successfully";
+        $response['data'] = $report;
+
+        return response()->json($response);
+    }
+    //* END :: get_deals_report *//
+
+    //* START :: get_customers_statistics *//
+    public function get_customers_statistics()
+    {
+        $totalCustomers = CrmCustomer::count();
+
+        $response['error'] = false;
+        $response['message'] = "Data Fetch Successfully";
+        $response['data'] = ['total_customers' => $totalCustomers];
+
+        return response()->json($response);
+    }
+    //* END :: get_customers_statistics *//
 }
