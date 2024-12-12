@@ -31,4 +31,16 @@ class CrmCustomer extends Model
     {
         return $value ? "$value" : 'N/A';
     }
+
+
+    public function leads()
+    {
+        return $this->hasMany(CrmLead::class, 'customer_id', 'id');
+    }
+
+
+    public function deals()
+    {
+        return $this->hasMany(CrmDeal::class, 'customer_id', 'id');
+    }
 }

@@ -34,4 +34,22 @@ class CrmDealCommission extends Model
     {
         return number_format($value, 2);
     }
+
+    // Quan hệ: Thuộc về một deal
+    public function deal()
+    {
+        return $this->belongsTo(CrmDeal::class, 'deal_id', 'id');
+    }
+
+    // Quan hệ: Một lead thuộc user app
+    public function sale()
+    {
+        return $this->belongsTo(Customer::class, 'sale_id', 'id');
+    }
+
+    // Relationship: Thuộc về một property
+    public function property()
+    {
+        return $this->belongsTo(Property::class, 'property_id', 'id');
+    }
 }

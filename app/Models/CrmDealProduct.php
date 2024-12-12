@@ -26,4 +26,16 @@ class CrmDealProduct extends Model
     {
         return ucfirst(str_replace('_', ' ', $value));
     }
+
+    // Quan hệ: Thuộc về một deal
+    public function deal()
+    {
+        return $this->belongsTo(CrmDeal::class, 'deal_id', 'id');
+    }
+
+    // Relationship: Thuộc về một property
+    public function property()
+    {
+        return $this->belongsTo(Property::class, 'product_id', 'id');
+    }
 }

@@ -24,5 +24,11 @@ class CrmDealAssigned extends Model
     {
         return $this->belongsTo(CrmDeal::class, 'deal_id');
     }
+
+    // Quan hệ: Một lead thuộc user app
+    public function sale()
+    {
+        return $this->belongsTo(Customer::class, 'user_id', 'id');
+    }
 }
 

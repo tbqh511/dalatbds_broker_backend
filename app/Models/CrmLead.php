@@ -39,5 +39,17 @@ class CrmLead extends Model
     {
         return ucfirst(str_replace('-', ' ', $value));
     }
+
+    // Quan hệ: Một lead thuộc về một khách hàng
+    public function customer()
+    {
+        return $this->belongsTo(CrmCustomer::class, 'customer_id', 'id');
+    }
+
+    // Quan hệ: Một lead có thể được chuyển đổi thành một deal
+    public function deal()
+    {
+        return $this->hasOne(CrmDeal::class, 'lead_id', 'id');
+    }
 }
 

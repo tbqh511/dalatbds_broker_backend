@@ -17,4 +17,10 @@ class CrmHost extends Model
         'company',
         'about',
     ];
+
+    // Relationship: Một CrmHost có nhiều Property
+    public function properties()
+    {
+        return $this->hasMany(Property::class, 'host_id', 'id');
+    }
 }
