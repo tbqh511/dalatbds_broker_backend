@@ -40,10 +40,11 @@ class CrmLead extends Model
         return ucfirst(str_replace('-', ' ', $value));
     }
 
-    // Quan hệ: Một lead thuộc về người dùng
+   // Quan hệ: Một lead thuộc về người dùng
     public function user()
     {
-        return $this->belongsTo(Customer::class, 'user_id', 'id');
+        return $this->belongsTo(Customer::class, 'user_id', 'id')
+                    ->select(['id', 'name', 'email', 'profile', 'customertotalpost']);
     }
 
     // Quan hệ: Một lead thuộc về một khách hàng
