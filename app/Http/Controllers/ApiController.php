@@ -2998,8 +2998,7 @@ class ApiController extends Controller
         $offset = $request->offset ?? 0;
         $limit = $request->limit ?? 10;
 
-        $leads = CrmLead::with('customer');
-        $leads = CrmLead::with('user');
+        $leads = CrmLead::with(['customer', 'user']);
 
         if (!empty($request->search)) {
             $leads->where('source_note', 'LIKE', '%' . $request->search . '%')
