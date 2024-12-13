@@ -3384,7 +3384,7 @@ class ApiController extends Controller
     //* START :: get_deal_products *//
     public function get_deal_products($id)
     {
-        $products = CrmDealProduct::where('deal_id', $id)->with('product')->get();
+        $products = CrmDealProduct::where('deal_id', $id)->with('property')->get();
 
         if ($products->isNotEmpty()) {
             $response['error'] = false;
