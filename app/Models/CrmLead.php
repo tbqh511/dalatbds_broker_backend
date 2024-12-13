@@ -44,7 +44,7 @@ class CrmLead extends Model
     public function user()
     {
         return $this->belongsTo(Customer::class, 'user_id', 'id')
-                    ->select(['id', 'name', 'email', 'profile', 'customertotalpost']);
+                    ->select(['id', 'name', 'email', 'profile']);
     }
 
     // Quan hệ: Một lead thuộc về một khách hàng
