@@ -3358,7 +3358,7 @@ class ApiController extends Controller
     public function add_deal_product(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:products,id',
+            'product_id' => 'required|exists:propertys,id',
             'status' => 'nullable|string|max:255',
         ]);
 
