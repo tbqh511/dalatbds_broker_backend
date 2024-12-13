@@ -3358,7 +3358,7 @@ class ApiController extends Controller
     public function add_deal_product(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:propertys,id',
+            'property_id' => 'required|exists:propertys,id',
             'status' => 'nullable|string|max:255',
         ]);
 
@@ -3368,7 +3368,7 @@ class ApiController extends Controller
         } else {
             $product = CrmDealProduct::create([
                 'deal_id' => $id,
-                'product_id' => $request->product_id,
+                'property_id' => $request->property_id,
                 'status' => $request->status ?? 'Sent',
                 'note' => $request->note ?? '',
             ]);

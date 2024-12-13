@@ -13,7 +13,7 @@ class CrmDealProduct extends Model
 
     protected $fillable = [
         'deal_id',
-        'product_id',
+        'property_id',
         'note',
         'status',
         'reason_dont_like',
@@ -36,6 +36,6 @@ class CrmDealProduct extends Model
     // Relationship: Thuộc về một property
     public function property()
     {
-        return $this->belongsTo(Property::class, 'product_id', 'id');
+        return $this->belongsTo(Property::class, 'property_id', 'id');
     }
 }
