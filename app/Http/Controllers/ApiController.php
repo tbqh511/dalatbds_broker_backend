@@ -3027,7 +3027,7 @@ class ApiController extends Controller
     //* START :: get_lead *//
     public function get_lead($id)
     {
-        $lead = CrmLead::with('customer')->find($id);
+        $lead = CrmLead::with(['customer', 'user'])->find($id);
 
         if ($lead) {
             $response['error'] = false;
