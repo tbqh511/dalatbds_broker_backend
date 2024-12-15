@@ -3055,6 +3055,7 @@ class ApiController extends Controller
             $response['message'] = $validator->errors()->first();
         } else {
             $lead = CrmLead::create([
+                'user_id' => $request->user_id,
                 'customer_id' => $request->customer_id,
                 'source_note' => $request->source_note,
                 'lead_type' => $request->lead_type ?? "0",
