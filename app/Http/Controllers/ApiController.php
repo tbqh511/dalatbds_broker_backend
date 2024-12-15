@@ -3400,9 +3400,9 @@ class ApiController extends Controller
     //* END :: get_deal_products *//
 
     //* START :: update_deal_product *//
-    public function update_deal_product(Request $request, $id, $product_id)
+    public function update_deal_product(Request $request, $id, $property_id)
     {
-        $product = CrmDealProduct::where('deal_id', $id)->where('id', $product_id)->first();
+        $product = CrmDealProduct::where('deal_id', $id)->where('id', $property_id)->first();
 
         if ($product) {
             $product->update([
@@ -3422,9 +3422,9 @@ class ApiController extends Controller
     //* END :: update_deal_product *//
 
     //* START :: delete_deal_product *//
-    public function delete_deal_product($id, $product_id)
+    public function delete_deal_product($id, $property_id)
     {
-        $product = CrmDealProduct::where('deal_id', $id)->where('id', $product_id)->first();
+        $product = CrmDealProduct::where('deal_id', $id)->where('id', $property_id)->first();
 
         if ($product) {
             $product->delete();
