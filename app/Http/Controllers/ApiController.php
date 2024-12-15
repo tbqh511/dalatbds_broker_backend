@@ -3057,7 +3057,7 @@ class ApiController extends Controller
             $lead = CrmLead::create([
                 'customer_id' => $request->customer_id,
                 'source_note' => $request->source_note,
-                'lead_type' => $request->lead_type ?? null,
+                'lead_type' => $request->lead_type ?? "0",
                 'categories' => $request->categories ?? null,
                 'wards' => $request->wards ?? null,
                 'demand_rate_min' => $request->demand_rate_min ?? 0,
