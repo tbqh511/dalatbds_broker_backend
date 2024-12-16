@@ -2997,32 +2997,52 @@ class ApiController extends Controller
     {
         $offset = $request->offset ?? 0;
         $limit = $request->limit ?? 10;
+        $userId = $request->userid;
 
+        // Bắt đầu xây dựng truy vấn
         $leads = CrmLead::with(['customer', 'user']);
 
-        if (!empty($request->search)) {
-            $leads->where('source_note', 'LIKE', '%' . $request->search . '%')
-                ->orWhereHas('customer', function ($query) use ($request) {
-                    $query->where('full_name', 'LIKE', '%' . $request->search . '%');
-                });
+        // Áp dụng điều kiện lọc theo userid nếu được cung cấp
+        if (!empty($userId)) {
+            $leads->where('user_id', $userId);
         }
 
+        // Tìm kiếm theo từ khóa nếu được cung cấp
+        if (!empty($request->search)) {
+            $leads->where(function ($query) use ($request) {
+                $query->where('source_note', 'LIKE', '%' . $request->search . '%')
+                    ->orWhereHas('customer', function ($subQuery) use ($request) {
+                        $subQuery->where('full_name', 'LIKE', '%' . $request->search . '%');
+                    });
+            });
+        }
+
+        // Lấy tổng số lượng leads phù hợp với điều kiện
         $total = $leads->count();
+
+        // Lấy dữ liệu dựa trên offset và limit
         $result = $leads->skip($offset)->take($limit)->get();
 
+        // Chuẩn bị phản hồi
         if ($result->isNotEmpty()) {
-            $response['error'] = false;
-            $response['message'] = "Data Fetch Successfully";
-            $response['total'] = $total;
-            $response['data'] = $result;
+            $response = [
+                'error' => false,
+                'message' => "Data Fetch Successfully",
+                'total' => $total,
+                'data' => $result,
+            ];
         } else {
-            $response['error'] = false;
-            $response['message'] = "No data found!";
-            $response['data'] = [];
+            $response = [
+                'error' => false,
+                'message' => "No data found!",
+                'data' => [],
+            ];
         }
+
         return response()->json($response);
     }
     //* END :: get_leads *//
+
 
     //* START :: get_lead *//
     public function get_lead($id)
