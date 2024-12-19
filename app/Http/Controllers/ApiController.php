@@ -2479,6 +2479,7 @@ class ApiController extends Controller
             ->groupBy('property_id')
             ->paginate($perPage, ['*'], 'page', $page);
 
+        dd($chat);
         if (!$chat->isEmpty()) {
 
             $rows = array();
