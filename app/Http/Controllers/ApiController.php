@@ -2537,7 +2537,7 @@ class ApiController extends Controller
                 $count++;
             }
 
-            dd($rows);
+            //dd($rows);
             $response['error'] = false;
             $response['message'] = "Data Fetch Successfully";
             $response['data'] = $rows;
