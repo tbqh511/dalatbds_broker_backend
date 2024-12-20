@@ -2479,7 +2479,7 @@ class ApiController extends Controller
             ->groupBy('property_id')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        dd($chat->lastPage());
+
 
         if (!$chat->isEmpty()) {
 
@@ -2528,7 +2528,7 @@ class ApiController extends Controller
                 $count++;
             }
 
-
+            dd($rows);
             $response['error'] = false;
             $response['message'] = "Data Fetch Successfully";
             $response['data'] = $rows;
