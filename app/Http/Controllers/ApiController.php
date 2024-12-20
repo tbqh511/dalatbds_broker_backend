@@ -2471,6 +2471,10 @@ class ApiController extends Controller
         $perPage = $request->per_page ? $request->per_page : 15; // Number of results to display per page
         $page = $request->page ?? 1;
 
+        //dd(DB::getQueryLog());
+        dd($current_user);
+
+
         $chat = Chats::with(['sender', 'receiver'])->with('property')
             ->select('id', 'sender_id', 'receiver_id', 'property_id', 'created_at')
             ->where('sender_id', $current_user)
@@ -2479,7 +2483,7 @@ class ApiController extends Controller
             ->groupBy('property_id')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        dd($chat);
+
         if (!$chat->isEmpty()) {
 
             $rows = array();
