@@ -2472,7 +2472,7 @@ class ApiController extends Controller
         $page = $request->page ?? 1;
 
         //dd(DB::getQueryLog());
-        dd($current_user);
+
 
 
         $chat = Chats::with(['sender', 'receiver'])->with('property')
@@ -2483,6 +2483,7 @@ class ApiController extends Controller
             ->groupBy('property_id')
             ->paginate($perPage, ['*'], 'page', $page);
 
+        dd($chat);
 
         if (!$chat->isEmpty()) {
 
