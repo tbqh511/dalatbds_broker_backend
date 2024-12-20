@@ -2491,9 +2491,18 @@ class ApiController extends Controller
 
             foreach ($chat as $key => $row) {
                 $tempRow = array();
-                $tempRow['property_id'] = $row->property_id;
-                $tempRow['title'] = $row->property->title;
-                $tempRow['title_image'] = $row->property->title_image;
+                // $tempRow['property_id'] = $row->property_id;
+                // $tempRow['title'] = $row->property->title;
+                // $tempRow['title_image'] = $row->property->title_image;
+                 // Kiểm tra xem mối quan hệ property có tồn tại không
+                if ($row->property) {
+                    $tempRow['title'] = $row->property->title;
+                    $tempRow['title_image'] = $row->property->title_image;
+                } else {
+                    $tempRow['title'] = "Property not found"; // Giá trị mặc định
+                    $tempRow['title_image'] = ""; // Giá trị mặc định
+                }
+
                 $tempRow['date'] = $row->created_at;
                 $tempRow['property_id'] = $row->property_id;
                 if (!$row->receiver || !$row->sender) {
