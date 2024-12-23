@@ -254,13 +254,13 @@
                 <div class="col-md-4">
                     <div class="team-item fl-wrap">
                         <div class="team-img fl-wrap">
-                            <img src="images/agency/agent/2.jpg" class="respimg" alt="dalat-bds">
+                            <img src="images/agency/agent/3.jpg" class="respimg" alt="dalat-bds">
                         </div>
                         <div class="team-content fl-wrap">
-                            <h4>Huy Thái</h4>
-                            <h5>CEO / Developer </h5>
+                            <h4>Thắng Trần</h4>
+                            <h5>Architect / Builder </h5>
                             <p>
-                                "Đam mê công nghệ và khát khao đổi mới là động lực để chúng tôi kiến tạo những giải pháp vượt trội, góp phần xây dựng một tương lai tốt đẹp hơn."
+                                "Chúng tôi tạo ra không gian sống hòa quyện nét địa phương và tư duy hiện đại, để mỗi công trình không chỉ bền vững mà còn gắn kết con người với nơi chốn."
                             </p>
                         </div>
                         <div class="team-footer fl-wrap">
