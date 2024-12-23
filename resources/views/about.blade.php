@@ -244,7 +244,7 @@
                                 <li><a href="#" target="_blank"><i class="fab fa-instagram"></i></a></li>
                                 <li><a href="#" target="_blank"><i class="fab fa-vk"></i></a></li> --}}
                             </ul>
-                            <a href="mailto:yourmail@email.com" class="tolt tf-btn" data-microtip-position="top-right"
+                            <a href="mailto:huythai@dalatbds.com" class="tolt tf-btn" data-microtip-position="top-right"
                                 data-tooltip="Write Message"><i class="fal fa-envelope"></i></a>
                         </div>
                     </div>
@@ -265,12 +265,12 @@
                         </div>
                         <div class="team-footer fl-wrap">
                             <ul class="team-social">
-                                <li><a href="https://www.facebook.com/tbqh511/" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
+                                <li><a href="https://www.facebook.com/thangxia/" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
                                 {{-- <li><a href="#" target="_blank"><i class="fab fa-twitter"></i></a></li>
                                 <li><a href="#" target="_blank"><i class="fab fa-instagram"></i></a></li>
                                 <li><a href="#" target="_blank"><i class="fab fa-vk"></i></a></li> --}}
                             </ul>
-                            <a href="mailto:tbqh0511@gmail.com" class="tolt tf-btn" data-microtip-position="top-right"
+                            <a href="mailto:thangtran@dalatbds.com" class="tolt tf-btn" data-microtip-position="top-right"
                                 data-tooltip="Write Message"><i class="fal fa-envelope"></i></a>
                         </div>
                     </div>
