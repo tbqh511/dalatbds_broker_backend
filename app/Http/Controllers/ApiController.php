@@ -142,8 +142,8 @@ class ApiController extends Controller
             $firebase_id = $request->firebase_id;
 
             $user = Customer::where('firebase_id', $firebase_id)->where('logintype', $type)->first();
-            dd($user);
-            if ($user->isEmpty()) {
+            //dd($user);
+            if (!$user) {
                 $saveCustomer = new Customer();
                 $saveCustomer->name = isset($request->name) ? $request->name : '';
                 $saveCustomer->email = isset($request->email) ? $request->email : '';
@@ -219,7 +219,8 @@ class ApiController extends Controller
                 $response['token'] = $token;
                 $response['data'] = $credentials;
             } else {
-                $credentials = Customer::where('firebase_id', $firebase_id)->where('logintype', $type)->first();
+                //$credentials = Customer::where('firebase_id', $firebase_id)->where('logintype', $type)->first();
+                $credentials = $user;
                 try {
                     $token = JWTAuth::fromUser($credentials);
                     if (!$token) {
@@ -257,6 +258,8 @@ class ApiController extends Controller
         return response()->json($response);
     }
     //* START :: get_slider   *//
+    
+
     public function get_slider(Request $request)
     {
         $tempRow = array();
