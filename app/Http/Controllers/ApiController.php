@@ -138,15 +138,22 @@ class ApiController extends Controller
         ]);
 
         if (!$validator->fails()) {
-            $type = $request->type;
-            $firebase_id = $request->firebase_id;
+            $type = $request->input('type');
+            $firebase_id = $request->input('firebase_id');
+            $mobile = $request->filled('mobile') ? $request->input('mobile') : null;
 
-            $user = Customer::where(function($query) use ($firebase_id, $mobile) {
-                $query->where('firebase_id', $firebase_id)
-                      ->orWhere('mobile', $mobile);
-            })
-            ->where('logintype', $type)
-            ->first();
+            $user = Customer::where(function ($query) use ($firebase_id, $mobile) {
+                    $query->where('firebase_id', $firebase_id);
+                    
+                    // Chỉ thêm điều kiện mobile nếu giá trị này không null
+                    if (!is_null($mobile)) {
+                        $query->orWhere('mobile', $mobile);
+                    }
+                })
+                ->where('logintype', $type)
+                ->first();
+
+            // $user = Customer::where('firebase_id', $firebase_id)->where('logintype', $type)->first();
           
             //dd($user);
             if (!$user) {
