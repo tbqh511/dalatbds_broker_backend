@@ -141,7 +141,13 @@ class ApiController extends Controller
             $type = $request->type;
             $firebase_id = $request->firebase_id;
 
-            $user = Customer::where('firebase_id', $firebase_id)->where('logintype', $type)->first();
+            $user = Customer::where(function($query) use ($firebase_id, $mobile) {
+                $query->where('firebase_id', $firebase_id)
+                      ->orWhere('mobile', $mobile);
+            })
+            ->where('logintype', $type)
+            ->first();
+          
             //dd($user);
             if (!$user) {
                 $saveCustomer = new Customer();
