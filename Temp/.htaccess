@@ -1,0 +1,35 @@
+
+
+# BEGIN rlrssslReallySimpleSSL rsssl_version[4.0.7]
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{HTTPS} !=on [NC]
+RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+</IfModule>
+# END rlrssslReallySimpleSSL
+# BEGIN WordPress
+# The directives (lines) between "BEGIN WordPress" and "END WordPress" are
+# dynamically generated, and should only be modified via WordPress filters.
+# Any changes to the directives between these markers will be overwritten.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+
+# END WordPress
+RewriteCond %{HTTP_HOST} ^thuycanhviet\.com\.vn$
+RewriteRule ^/?$ "https\:\/\/vietponics\.vn\/" [R=301,L]
+RewriteCond %{HTTP_HOST} ^thuycanhviet\.vn$
+RewriteRule ^/?$ "https\:\/\/vietponics\.vn\/" [R=301,L]
+RewriteCond %{HTTP_HOST} ^vietponics\.com\.vn$
+RewriteRule ^/?$ "https\:\/\/vietponics\.vn\/" [R=301,L]
+RewriteCond %{HTTP_HOST} ^vietponics\.com$
+RewriteRule ^/?$ "https\:\/\/vietponics\.vn\/" [R=301,L]
+RewriteCond %{HTTP_HOST} ^thuycanhviet\.com$
+RewriteRule ^/?$ "https\:\/\/vietponics\.vn\/" [R=301,L]
