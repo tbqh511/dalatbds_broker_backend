@@ -15,9 +15,14 @@ use App\Models\Usertokens;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use kornrunner\Blurhash\Blurhash;
 use Intervention\Image\ImageManagerStatic as Image;
 
+use Google\Client;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Pool;
 
 if (!function_exists('system_setting')) {
 
@@ -111,62 +116,126 @@ if (!function_exists('_attributes_to_string')) {
 
 if (!function_exists('send_push_notification')) {
     //send Notification
-    function send_push_notification($registrationIDs = array(), $fcmMsg = '')
-    {
-        $get_fcm_key = DB::table('settings')->select('data')->where('type', 'fcm_key')->first();
-        $fcm_key = $get_fcm_key->data;
+    //HuyTQB: Old code for google message API notificaton function
+    // function send_push_notification($registrationIDs = array(), $fcmMsg = '')
+    // {
+    //     $get_fcm_key = DB::table('settings')->select('data')->where('type', 'fcm_key')->first();
+    //     $fcm_key = $get_fcm_key->data;
 
-        $registrationIDs_chunks = array_chunk($registrationIDs, 1000);
-        // dd($registrationIDs);
-        $unregisteredIDs = array(); // Array to store unregistered FCM IDs
+    //     $registrationIDs_chunks = array_chunk($registrationIDs, 1000);
+    //     // dd($registrationIDs);
+    //     $unregisteredIDs = array(); // Array to store unregistered FCM IDs
 
-        if(!count($registrationIDs_chunks)){
+    //     if(!count($registrationIDs_chunks)){
+    //         return false;
+    //     }
+    //     foreach ($registrationIDs_chunks as $registrationIDsChunk) {
+    //         // dd("in");
+    //         $fcmFields = array(
+    //             'registration_ids' => $registrationIDsChunk, // expects an array of ids
+    //             'priority' => 'high',
+    //             'notification' => $fcmMsg,
+    //             'data' => $fcmMsg
+    //         );
+
+    //         $headers = array(
+    //             'Authorization: key=' . $fcm_key,
+    //             'Content-Type: application/json'
+    //         );
+
+    //         $ch = curl_init();
+    //         curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+    //         curl_setopt($ch, CURLOPT_POST, true);
+    //         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    //         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fcmFields));
+    //         $get_result = curl_exec($ch);
+
+    //         curl_close($ch);
+    //         $result = json_decode($get_result, true);
+    //         //  dd($result);
+    //         // Check for unregistered FCM IDs in the response
+    //         if (isset($result['results'])) {
+    //             foreach ($result['results'] as $index => $response) {
+    //                 // dd($response);
+    //                 if (isset($response['error']) && $response['error'] == 'NotRegistered') {
+    //                     // dd("in");
+    //                     $unregisteredIDs[] = $registrationIDsChunk[$index];
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     if (count($unregisteredIDs)) {
+
+    //         $users = Usertokens::whereIn('fcm_id', $unregisteredIDs)->delete();
+    //     }
+
+    //     return $result;
+    // }|
+
+    //HuyTQB: New code for firebase message API notificaton function
+    function send_push_notification($registrationIDs = array(), $fcmMsg = '') {
+        if (!count($registrationIDs)) {
             return false;
         }
-        foreach ($registrationIDs_chunks as $registrationIDsChunk) {
-            // dd("in");
-            $fcmFields = array(
-                'registration_ids' => $registrationIDsChunk, // expects an array of ids
-                'priority' => 'high',
-                'notification' => $fcmMsg,
-                'data' => $fcmMsg
-            );
-
-            $headers = array(
-                'Authorization: key=' . $fcm_key,
-                'Content-Type: application/json'
-            );
-
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fcmFields));
-            $get_result = curl_exec($ch);
-
-            curl_close($ch);
-            $result = json_decode($get_result, true);
-            //  dd($result);
-            // Check for unregistered FCM IDs in the response
-            if (isset($result['results'])) {
-                foreach ($result['results'] as $index => $response) {
-                    // dd($response);
-                    if (isset($response['error']) && $response['error'] == 'NotRegistered') {
-                        // dd("in");
-                        $unregisteredIDs[] = $registrationIDsChunk[$index];
+    
+        $client = new GuzzleClient();
+        $access_token = getAccessToken(); // Get Access Token
+        $projectId = system_setting('firebase_project_id'); // Get Project Id
+        $url = 'https://fcm.googleapis.com/v1/projects/' . $projectId . '/messages:send'; // Create URL
+        // Headers
+        $headers = [
+            'Authorization' => 'Bearer ' . $access_token,
+            'Content-Type' => 'application/json'
+        ];
+    
+        // Create Requests
+        $requests = function ($registrationIDs) use ($url, $headers, $fcmMsg) {
+            foreach ($registrationIDs as $registrationID) {
+                $fcmFields = [
+                    'json' => [
+                        'message' => [
+                            'token' => $registrationID,
+                            'notification' => [
+                                'title' => $fcmMsg['title'],
+                                'body' => $fcmMsg['body']
+                            ],
+                            'data' => $fcmMsg
+                        ]
+                    ]
+                ];
+                yield new Request('POST', $url, $headers, json_encode($fcmFields['json']));
+            }
+        };
+    
+        // This is used to Process multiple Request at a same time
+        $pool = new Pool($client, $requests($registrationIDs), [
+            'concurrency' => 10, // Adjust based on your server capability
+            'fulfilled' => function ($response, $index) {
+                // Code after fulfilled Request
+            },
+            'rejected' => function ($reason, $index) use (&$unregisteredIDs, $registrationIDs) {
+                $response = $reason->getResponse();
+                if ($response) {
+                    $decodedResult = json_decode($response->getBody(), true);
+                    if (isset($decodedResult['error']['status']) && ($decodedResult['error']['status'] == 'INVALID_ARGUMENT' || $decodedResult['error']['status'] == 'NOT_FOUND')) {
+                        $unregisteredIDs[] = $registrationIDs[$index];
                     }
                 }
-            }
+                Log::error($reason->getMessage());
+            },
+        ]);
+    
+        $promise = $pool->promise();
+        $promise->wait();
+    
+        if (!empty($unregisteredIDs)) {
+            Usertokens::whereIn('fcm_id', $unregisteredIDs)->delete();
         }
-
-        if (count($unregisteredIDs)) {
-
-            $users = Usertokens::whereIn('fcm_id', $unregisteredIDs)->delete();
-        }
-
-        return $result;
+    
+        return true;
     }
 }
 
@@ -586,5 +655,20 @@ function get_url_contents($url)
     $ret = curl_exec($crl);
     curl_close($crl);
     return $ret;
+}
+if (!function_exists('getAccessToken')) {
+    function getAccessToken(){
+        $file_name = system_setting('firebase_service_json_file');
+
+        $file_path = public_path() . '/assets/'. $file_name;
+
+        $client = new Client();
+        $client->setAuthConfig($file_path);
+        $client->setScopes(['https://www.googleapis.com/auth/firebase.messaging']);
+        $accessToken=$client->fetchAccessTokenWithAssertion()['access_token'];
+
+
+        return $accessToken;
+    }
 }
 
