@@ -119,9 +119,10 @@ if (!function_exists('send_push_notification')) {
         $registrationIDs_chunks = array_chunk($registrationIDs, 1000);
         // dd($registrationIDs);
         $unregisteredIDs = array(); // Array to store unregistered FCM IDs
-if(!count($registrationIDs_chunks)){
-    return false;
-}
+
+        if(!count($registrationIDs_chunks)){
+            return false;
+        }
         foreach ($registrationIDs_chunks as $registrationIDsChunk) {
             // dd("in");
             $fcmFields = array(
