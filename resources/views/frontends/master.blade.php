@@ -4,6 +4,7 @@
 <head>
     <!-- basic   -->
     <meta charset="UTF-8">
+    <meta name="zalo-platform-site-verification" content="E_E22Fdm52aStev_d_nVUsY8YNk4_budD3Cu" />
     <title>Đà Lạt BDS - Mạng lưới thổ địa Đà Lạt</title>
     <meta name="robots" content="index, follow" />
     <meta name="keywords" content="" />
