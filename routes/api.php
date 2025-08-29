@@ -26,6 +26,17 @@ Route::get('app_payment_status', [ApiController::class, 'app_payment_status']);
 // Route::get('paypal', [ApiController::class, 'paypal']);
 // Route::get('paypal1', [ApiController::class, 'paypal']);
 
+
+//HuyTBQH: Add Guest Mode
+Route::get('get_facilities', [ApiController::class, 'get_facilities']);
+//HuyTBQ: Integrations
+Route::get('get_locations_wards', [ApiController::class, 'get_locations_wards']);
+Route::get('get_locations_streets', [ApiController::class, 'get_locations_streets']);
+Route::get('get_categories', [ApiController::class, 'get_categories']);
+Route::get('get_payment_settings', [ApiController::class, 'get_payment_settings']);
+Route::get('get_count_by_cities_categoris', [ApiController::class, 'get_count_by_cities_categoris']);
+
+
 Route::group(['middleware' => ['jwt.verify']], function () {
 
 
@@ -51,7 +62,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('add_reports', [ApiController::class, 'add_reports']);
 
     Route::get('get_slider', [ApiController::class, 'get_slider']);
-    Route::get('get_categories', [ApiController::class, 'get_categories']);
+   
     Route::get('get_user_by_id', [ApiController::class, 'get_user_by_id']);
     Route::get('get_property_inquiry', [ApiController::class, 'get_property_inquiry']);
     Route::get('get_notification_list', [ApiController::class, 'get_notification_list']);
@@ -60,22 +71,19 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('get_package', [ApiController::class, 'get_package']);
     Route::get('get_favourite_property', [ApiController::class, 'get_favourite_property']);
     Route::get('get_payment_details', [ApiController::class, 'get_payment_details']);
-    Route::get('get_payment_settings', [ApiController::class, 'get_payment_settings']);
+    
     Route::get('get_limits', [ApiController::class, 'get_limits']);
     Route::get('get_messages', [ApiController::class, 'get_messages']);
     Route::get('get_chats', [ApiController::class, 'get_chats']);
     Route::get('get_nearby_properties', [ApiController::class, 'get_nearby_properties']);
-    Route::get('get_count_by_cities_categoris', [ApiController::class, 'get_count_by_cities_categoris']);
+    
     Route::get('paypal', [ApiController::class, 'paypal']);
     Route::get('get_agents_details', [ApiController::class, 'get_agents_details']);
-    Route::get('get_facilities', [ApiController::class, 'get_facilities']);
+   
     Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
 
-    //HuyTBQ: Integrations
-    Route::get('get_locations_wards', [ApiController::class, 'get_locations_wards']);
-    Route::get('get_locations_streets', [ApiController::class, 'get_locations_streets']);
+    
     Route::get('get_crm_hosts', [ApiController::class, 'get_crm_hosts']);
-
     // CRM Customers
     Route::get('customers', [ApiController::class, 'get_customers']);
     Route::get('customers/{id}', [ApiController::class, 'get_customer']);
