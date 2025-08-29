@@ -28,7 +28,6 @@ Route::get('app_payment_status', [ApiController::class, 'app_payment_status']);
 
 
 //HuyTBQH: Add Guest Mode
-Route::get('get_slider', [ApiController::class, 'get_slider']);
 Route::get('get_facilities', [ApiController::class, 'get_facilities']);
 //HuyTBQ: Integrations
 Route::get('get_locations_wards', [ApiController::class, 'get_locations_wards']);
@@ -37,17 +36,13 @@ Route::get('get_categories', [ApiController::class, 'get_categories']);
 Route::get('get_payment_settings', [ApiController::class, 'get_payment_settings']);
 Route::get('get_count_by_cities_categoris', [ApiController::class, 'get_count_by_cities_categoris']);
 Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
-
-Route::get('get_articles', [ApiController::class, 'get_articles']);
-Route::get('get_advertisement', [ApiController::class, 'get_advertisement']);
-Route::get('get_package', [ApiController::class, 'get_package']);
-Route::get('get_favourite_property', [ApiController::class, 'get_favourite_property']);
-Route::post('get_property', [ApiController::class, 'get_property']);
+Route::get('get_slider', [ApiController::class, 'get_slider']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
 
+
     Route::post('update_profile', [ApiController::class, 'update_profile']);
-   
+    Route::post('get_property', [ApiController::class, 'get_property']);
     Route::post('post_property', [ApiController::class, 'post_property']);
     Route::post('update_post_property', [ApiController::class, 'update_post_property']);
     Route::post('remove_post_images', [ApiController::class, 'remove_post_images']);
@@ -67,12 +62,15 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('store_advertisement', [ApiController::class, 'store_advertisement']);
     Route::post('add_reports', [ApiController::class, 'add_reports']);
 
- 
+    
    
     Route::get('get_user_by_id', [ApiController::class, 'get_user_by_id']);
     Route::get('get_property_inquiry', [ApiController::class, 'get_property_inquiry']);
     Route::get('get_notification_list', [ApiController::class, 'get_notification_list']);
-    
+    Route::get('get_articles', [ApiController::class, 'get_articles']);
+    Route::get('get_advertisement', [ApiController::class, 'get_advertisement']);
+    Route::get('get_package', [ApiController::class, 'get_package']);
+    Route::get('get_favourite_property', [ApiController::class, 'get_favourite_property']);
     Route::get('get_payment_details', [ApiController::class, 'get_payment_details']);
     
     Route::get('get_limits', [ApiController::class, 'get_limits']);
