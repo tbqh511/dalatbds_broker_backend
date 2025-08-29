@@ -511,8 +511,13 @@ class ApiController extends Controller
     {
         $offset = isset($request->offset) ? $request->offset : 0;
         $limit = isset($request->limit) ? $request->limit : 10;
-        $payload = JWTAuth::getPayload($this->bearerToken($request));
-        $current_user = ($payload['customer_id']);
+        $token = $this->bearerToken($request);
+        if ($token) {
+            $payload = JWTAuth::getPayload($token);
+            $current_user = ($payload['customer_id']);
+        } else {
+            $current_user = null;
+        }
         DB::enableQueryLog();
         $property = Property::with('customer')->with('user')->with('category:id,category,image')->with('assignfacilities.outdoorfacilities')->with('favourite')->with('parameters')->with('interested_users')->with('ward')->with('street')->with('host');
 
@@ -737,8 +742,13 @@ class ApiController extends Controller
         ]);
 
         if (!$validator->fails()) {
-            $payload = JWTAuth::getPayload($this->bearerToken($request));
-            $current_user = ($payload['customer_id']);
+            $token = $this->bearerToken($request);
+            if ($token) {
+                $payload = JWTAuth::getPayload($token);
+                $current_user = ($payload['customer_id']);
+            } else {
+                $current_user = null;
+            }
 
 
             $package = UserPurchasedPackage::where('modal_id', $current_user)->with([
@@ -1008,8 +1018,13 @@ class ApiController extends Controller
             'id' => 'required',
             'action_type' => 'required'
         ]);
-        $payload = JWTAuth::getPayload($this->bearerToken($request));
-        $current_user = ($payload['customer_id']);
+        $token = $this->bearerToken($request);
+        if ($token) {
+            $payload = JWTAuth::getPayload($token);
+            $current_user = ($payload['customer_id']);
+        } else {
+            $current_user = null;
+        }
         if (!$validator->fails()) {
             $id = $request->id;
             $action_type = $request->action_type;
@@ -1429,6 +1444,14 @@ class ApiController extends Controller
             'action_type' => 'required',
         ]);
 
+        $token = $this->bearerToken($request);
+        if ($token) {
+            $payload = JWTAuth::getPayload($token);
+            $current_user = ($payload['customer_id']);
+        } else {
+            $current_user = null;
+        }
+
         if (!$validator->fails()) {
             $action_type = $request->action_type; ////0: add   1:update
             if ($action_type == 0) {
@@ -1436,8 +1459,6 @@ class ApiController extends Controller
                 $validator = Validator::make($request->all(), [
                     'property_id' => 'required',
                 ]);
-                $payload = JWTAuth::getPayload($this->bearerToken($request));
-                $current_user = ($payload['customer_id']);
                 if (!$validator->fails()) {
                     $PropertysInquiry = PropertysInquiry::where('propertys_id', $request->property_id)->where('customers_id', $current_user)->first();
                     if (empty($PropertysInquiry)) {
@@ -1522,8 +1543,13 @@ class ApiController extends Controller
 
         $offset = isset($request->offset) ? $request->offset : 0;
         $limit = isset($request->limit) ? $request->limit : 10;
-        $payload = JWTAuth::getPayload($this->bearerToken($request));
-        $current_user = ($payload['customer_id']);
+        $token = $this->bearerToken($request);
+        if ($token) {
+            $payload = JWTAuth::getPayload($token);
+            $current_user = ($payload['customer_id']);
+        } else {
+            $current_user = null;
+        }
         $propertyInquiry = PropertysInquiry::with('property')->where('customers_id', $current_user);
         $total = $propertyInquiry->get()->count();
         $result = $propertyInquiry->orderBy('id', 'ASC')->skip($offset)->take($limit)->get();
@@ -1656,8 +1682,13 @@ class ApiController extends Controller
 
         if (!$validator->fails()) {
             //add favourite
-            $payload = JWTAuth::getPayload($this->bearerToken($request));
-            $current_user = ($payload['customer_id']);
+            $token = $this->bearerToken($request);
+            if ($token) {
+                $payload = JWTAuth::getPayload($token);
+                $current_user = ($payload['customer_id']);
+            } else {
+                $current_user = null;
+            }
             if ($request->type == 1) {
 
 
@@ -1730,8 +1761,13 @@ class ApiController extends Controller
             'package_id' => 'required',
         ]);
         if (!$validator->fails()) {
-            $payload = JWTAuth::getPayload($this->bearerToken($request));
-            $current_user = ($payload['customer_id']);
+            $token = $this->bearerToken($request);
+            if ($token) {
+                $payload = JWTAuth::getPayload($token);
+                $current_user = ($payload['customer_id']);
+            } else {
+                $current_user = null;
+            }
 
             $userpackage = UserPurchasedPackage::where('modal_id', $current_user)->with([
                 'package' => function ($q) {
@@ -1762,8 +1798,13 @@ class ApiController extends Controller
 
                 if ($userpackage->used_limit_for_advertisement < ($advertisement_count) || $advertisement_count == 0) {
 
-                    $payload = JWTAuth::getPayload($this->bearerToken($request));
-                    $current_user = ($payload['customer_id']);
+                    $token = $this->bearerToken($request);
+                    if ($token) {
+                        $payload = JWTAuth::getPayload($token);
+                        $current_user = ($payload['customer_id']);
+                    } else {
+                        $current_user = null;
+                    }
 
                     $package = Package::where('advertisement_limit', '!=', NULL)->find($request->package_id);
 
@@ -1949,9 +1990,13 @@ class ApiController extends Controller
         $offset = isset($request->offset) ? $request->offset : 0;
         $limit = isset($request->limit) ? $request->limit : 25;
 
-
-        $payload = JWTAuth::getPayload($this->bearerToken($request));
-        $current_user = ($payload['customer_id']);
+        $token = $this->bearerToken($request);
+        if ($token) {
+            $payload = JWTAuth::getPayload($token);
+            $current_user = ($payload['customer_id']);
+        } else {
+            $current_user = null;
+        }
         DB::enableQueryLog(); // Enable query log
 
 
@@ -2024,9 +2069,13 @@ class ApiController extends Controller
 
         ]);
         if (!$validator->fails()) {
-
-            $payload = JWTAuth::getPayload($this->bearerToken($request));
-            $current_user = ($payload['customer_id']);
+            $token = $this->bearerToken($request);
+            if ($token) {
+                $payload = JWTAuth::getPayload($token);
+                $current_user = ($payload['customer_id']);
+            } else {
+                $current_user = null;
+            }
 
             $interested_user = InterestedUser::where('customer_id', $current_user)->where('property_id', $request->property_id);
 
@@ -2137,8 +2186,13 @@ class ApiController extends Controller
             'id' => 'required',
         ]);
         if (!$validator->fails()) {
-            $payload = JWTAuth::getPayload($this->bearerToken($request));
-            $current_user = ($payload['customer_id']);
+            $token = $this->bearerToken($request);
+            if ($token) {
+                $payload = JWTAuth::getPayload($token);
+                $current_user = ($payload['customer_id']);
+            } else {
+                $current_user = null;
+            }
             $package = UserPurchasedPackage::where('modal_id', $current_user)->where('package_id', $request->id)->with([
                 'package' => function ($q) {
                     $q->select('id', 'property_limit', 'advertisement_limit');
@@ -2245,8 +2299,13 @@ class ApiController extends Controller
 
         ]);
         if (!$validator->fails()) {
-            $payload = JWTAuth::getPayload($this->bearerToken($request));
-            $current_user = ($payload['customer_id']);
+            $token = $this->bearerToken($request);
+            if ($token) {
+                $payload = JWTAuth::getPayload($token);
+                $current_user = ($payload['customer_id']);
+            } else {
+                $current_user = null;
+            }
             $paypal = new Paypal();
             // url('') . config('global.IMG_PATH')
             $returnURL = url('api/app_payment_status');
