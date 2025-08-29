@@ -35,7 +35,7 @@ Route::get('get_locations_streets', [ApiController::class, 'get_locations_street
 Route::get('get_categories', [ApiController::class, 'get_categories']);
 Route::get('get_payment_settings', [ApiController::class, 'get_payment_settings']);
 Route::get('get_count_by_cities_categoris', [ApiController::class, 'get_count_by_cities_categoris']);
-
+Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
 
@@ -80,7 +80,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('paypal', [ApiController::class, 'paypal']);
     Route::get('get_agents_details', [ApiController::class, 'get_agents_details']);
    
-    Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
+    
 
     
     Route::get('get_crm_hosts', [ApiController::class, 'get_crm_hosts']);
