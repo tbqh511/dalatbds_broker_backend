@@ -37,10 +37,10 @@ Route::get('get_payment_settings', [ApiController::class, 'get_payment_settings'
 Route::get('get_count_by_cities_categoris', [ApiController::class, 'get_count_by_cities_categoris']);
 Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
 Route::get('get_slider', [ApiController::class, 'get_slider']);
-Route::post('get_property', [ApiController::class, 'get_property']);
+
 
 Route::group(['middleware' => ['jwt.verify']], function () {
-
+    Route::post('get_property', [ApiController::class, 'get_property']);
 
     Route::post('update_profile', [ApiController::class, 'update_profile']);
     
