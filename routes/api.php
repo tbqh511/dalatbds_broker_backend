@@ -29,6 +29,9 @@ Route::get('app_payment_status', [ApiController::class, 'app_payment_status']);
 
 //HuyTBQH: Add Guest Mode
 Route::get('get_facilities', [ApiController::class, 'get_facilities']);
+
+// Public route for get_property_public without JWT middleware
+Route::get('get_property_public', [ApiController::class, 'get_property_public']);
 //HuyTBQ: Integrations
 Route::get('get_locations_wards', [ApiController::class, 'get_locations_wards']);
 Route::get('get_locations_streets', [ApiController::class, 'get_locations_streets']);

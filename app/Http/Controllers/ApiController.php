@@ -731,7 +731,226 @@ class ApiController extends Controller
         }
         return ($response);
     }
-    //* END :: get_property   *//
+
+    //* START :: get_property_public   *//
+    public function get_property_public(Request $request)
+    {
+        $offset = isset($request->offset) ? $request->offset : 0;
+        $limit = isset($request->limit) ? $request->limit : 10;
+
+        DB::enableQueryLog();
+        $property = Property::with('customer')->with('user')->with('category:id,category,image')->with('assignfacilities.outdoorfacilities')->with('favourite')->with('parameters')->with('interested_users')->with('ward')->with('street')->with('host');
+
+        $property_type = $request->property_type; //0 : Buy 1:Rent
+        $max_price = $request->max_price;
+        $min_price = $request->min_price;
+        $top_rated = $request->top_rated;
+
+        $userid = $request->userid;
+        $posted_since = $request->posted_since;
+        $category_id = $request->category_id;
+        $id = $request->id;
+        $country = $request->country;
+        $state = $request->state;
+        $city = $request->city;
+
+        $furnished = $request->furnished;
+        $parameter_id = $request->parameter_id;
+
+        //HuyTBQ: Add address columns for propertys table
+        $street_number = $request->street_number;
+        $street_code = $request->street_code;
+        $ward_code = $request->ward_code;
+        $host_id = $request->host_id;
+        $price_sort = $request->price_sort;
+
+        // HuyTBQ: Add sorting logic for price
+        if (isset($price_sort)) {
+            if ($price_sort == 0) {
+                // Sắp xếp giá từ cao xuống thấp
+                $property = $property->orderBy('price', 'DESC');
+            } elseif ($price_sort == 1) {
+                // Sắp xếp giá từ thấp lên cao
+                $property = $property->orderBy('price', 'ASC');
+            }
+        }
+        //HuyTBQ: Add slug query
+        // Filter by slug
+        $slug = $request->slug;
+        if (isset($slug)) {
+            $property = $property->where('slug', $slug);
+        }
+
+        if (isset($street_number)) {
+            $property = $property->where('street_number', $street_number);
+        }
+        if (isset($street_code)) {
+            $property = $property->where('street_code', $street_code);
+        }
+        if (isset($ward_code)) {
+            $property = $property->where('ward_code', $ward_code);
+        }
+        if (isset($host_id)) {
+            $property = $property->where('host_id', $host_id);
+        }
+
+        if (isset($parameter_id)) {
+
+            $property = $property->whereHas('parameters', function ($q) use ($parameter_id) {
+                $q->where('parameter_id', $parameter_id);
+            });
+        }
+        if (isset($userid)) {
+            $property = $property
+                ->where('post_type', 1)
+                ->where('added_by', $userid);
+        } else {
+            $property = $property->where('status', 1);
+        }
+
+
+        if (isset($max_price) && isset($min_price)) {
+            $property = $property->whereBetween('price', [$min_price, $max_price]);
+        }
+        if (isset($property_type)) {
+            if ($property_type == 0 || $property_type == 2) {
+                $property = $property->where('propery_type', $property_type);
+            }
+            if ($property_type == 1 || $property_type == 3) {
+                $property = $property->where('propery_type', $property_type);
+            }
+        }
+
+        if (isset($posted_since)) {
+            // 0: last_week   1: yesterday
+            if ($posted_since == 0) {
+                $property = $property->whereBetween(
+                    'created_at',
+                    [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]
+                );
+            }
+            if ($posted_since == 1) {
+                $property = $property->whereDate('created_at', Carbon::yesterday());
+            }
+        }
+
+        if (isset($category_id)) {
+            $property = $property->where('category_id', $category_id);
+        }
+        if (isset($id)) {
+            $property = $property->where('id', $id);
+        }
+        if (isset($country)) {
+            $property = $property->where('country', $country);
+        }
+        if (isset($state)) {
+            $property = $property->where('state', $state);
+        }
+        if (isset($city) && $city != '') {
+            $property = $property->where('city', $city);
+        }
+
+        if (isset($furnished)) {
+            $property = $property->where('furnished', $furnished);
+        }
+        if (isset($request->promoted)) {
+            $adv = Advertisement::select('property_id')->where('is_enable', 1)->get();
+
+            $ad_arr = [];
+            foreach ($adv as $ad) {
+
+                array_push($ad_arr, $ad->property_id);
+            }
+
+            $property = $property->whereIn('id', $ad_arr);
+        } else {
+
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        if (isset($request->users_promoted)) {
+            $adv = Advertisement::select('property_id')->where('customer_id', null)->where('is_enable', 1)->get();
+
+            $ad_arr = [];
+            foreach ($adv as $ad) {
+
+                array_push($ad_arr, $ad->property_id);
+            }
+            $property = $property->whereIn('id', $ad_arr);
+        } else {
+
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        if (isset($request->promoted)) {
+
+
+
+            if (!($property->Has('advertisement'))) {
+                $response['error'] = false;
+                $response['message'] = "No data found!";
+                $response['data'] = [];
+                return ($response);
+            }
+
+            $property = $property->with('advertisement');
+        }
+
+        if (isset($request->search) && !empty($request->search)) {
+            $search = $request->search;
+
+            $property = $property->where(function ($query) use ($search) {
+                $query->where('title', 'LIKE', "%$search%")->orwhere('address', 'LIKE', "%$search%")->orwhereHas('category', function ($query1) use ($search) {
+                    $query1->where('category', 'LIKE', "%$search%");
+                });
+            });
+        }
+        if (empty($request->search)) {
+            $property = $property;
+        }
+
+
+
+        if (isset($top_rated) && $top_rated == 1) {
+
+            $property = $property->orderBy('total_click', 'DESC');
+        }
+
+        if (!$request->most_liked && !$request->top_rated) {
+            $property = $property->orderBy('id', 'DESC');
+        }
+        if ($request->most_liked) {
+
+            $property = $property->withCount('favourite')
+                ->orderBy('favourite_count', 'DESC');
+        }
+        $total = $property->get()->count();
+
+        $result = $property->skip($offset)->take($limit)->get();
+
+        //dd(DB::getQueryLog());
+
+
+        if (!$result->isEmpty()) {
+            $property_details
+                = get_property_details($result, null);
+
+
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['total'] = $total;
+            $response['data'] = $property_details;
+        } else {
+
+            $response['error'] = false;
+            $response['message'] = "No data found!";
+            $response['data'] = [];
+        }
+        return ($response);
+    }
+    //* END :: get_property_public   *//
     //* START :: post_property   *//
     public function post_property(Request $request)
     {
