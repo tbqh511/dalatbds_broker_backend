@@ -1403,7 +1403,7 @@ class ApiController extends Controller
                 }
             } else {
                 $response['error'] = true;
-                $response['message'] = 'No Data Found: id =' . $id . ' user =' . $current_user;
+                $response['message'] = 'No Data Found: id = ' . $id . ' user ='  . $current_user.' ,property: '.$property;
             }
         } else {
             $response['error'] = true;
@@ -1413,6 +1413,78 @@ class ApiController extends Controller
         return response()->json($response);
     }
     //* END :: update_post_property   *//
+    //* START :: delete_property   *//
+    public function delete_property(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:propertys,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => true,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $token = $this->bearerToken($request);
+        if ($token) {
+            $payload = JWTAuth::getPayload($token);
+            $current_user = ($payload['customer_id']);
+        } else {
+            $current_user = null;
+        }
+
+        if (!$current_user) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Authentication required',
+            ]);
+        }
+
+        // Check if property belongs to current user
+        $property = Property::where('added_by', $current_user)->find($request->id);
+        if (!$property) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Property not found or you do not have permission to delete it',
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Delete related records
+            Chats::where('property_id', $property->id)->delete();
+            PropertysInquiry::where('propertys_id', $property->id)->delete();
+            Slider::where('propertys_id', $property->id)->delete();
+            Notifications::where('propertys_id', $property->id)->delete();
+            Favourite::where('property_id', $property->id)->delete();
+            InterestedUser::where('property_id', $property->id)->delete();
+            AssignedOutdoorFacilities::where('property_id', $property->id)->delete();
+            AssignParameters::where('modal_id', $property->id)->delete();
+            PropertyImages::where('propertys_id', $property->id)->delete();
+            PropertyLegalImage::where('propertys_id', $property->id)->delete();
+
+            // Delete the property
+            $property->delete();
+
+            DB::commit();
+
+            $response['error'] = false;
+            $response['message'] = 'Property deleted successfully';
+            return response()->json($response);
+
+        } catch (Exception $e) {
+            DB::rollback();
+            $response = array(
+                'error' => true,
+                'message' => 'Something went wrong while deleting property'
+            );
+            return response()->json($response, 500);
+        }
+    }
+    //* END :: delete_property   *//
     //* START :: remove_post_images   *//
     public function remove_post_images(Request $request)
     {

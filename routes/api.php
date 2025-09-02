@@ -49,6 +49,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     
     Route::post('post_property', [ApiController::class, 'post_property']);
     Route::post('update_post_property', [ApiController::class, 'update_post_property']);
+    Route::post('delete_property', [ApiController::class, 'delete_property']);
     Route::post('remove_post_images', [ApiController::class, 'remove_post_images']);
     Route::post('set_property_inquiry', [ApiController::class, 'set_property_inquiry']);
     Route::post('set_property_total_click', [ApiController::class, 'set_property_total_click']);
