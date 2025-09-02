@@ -1403,7 +1403,7 @@ class ApiController extends Controller
                 }
             } else {
                 $response['error'] = true;
-                $response['message'] = 'No Data Found';
+                $response['message'] = 'No Data Found: id =' . $id . ' user =' . $current_user;
             }
         } else {
             $response['error'] = true;
