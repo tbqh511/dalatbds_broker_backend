@@ -64,8 +64,8 @@ use App\Models\CrmDealCommission;
 use Tymon\JWTAuth\Claims\Issuer;
 
 use Google\Client;
-    use Google\Service\PlayIntegrity;
-    use App\Http\Requests\VerifyIntegrityRequest;
+use Google\Service\PlayIntegrity;
+use App\Http\Requests\VerifyIntegrityRequest;
 
 class ApiController extends Controller
 {
