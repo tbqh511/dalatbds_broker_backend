@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::group(['middleware' => ['jwt.verify']], function () {
+    Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
+});
 
 // Artisan::call('migrate');
 Route::post('get_system_settings', [ApiController::class, 'get_system_settings']);
