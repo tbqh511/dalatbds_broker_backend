@@ -24,6 +24,8 @@ Route::post('user_signup', [ApiController::class, 'user_signup']);
 Route::post('get_languages', [ApiController::class, 'get_languages']);
 Route::get('app_payment_status', [ApiController::class, 'app_payment_status']);
 
+
+
 // Route::get('paypal', [ApiController::class, 'paypal']);
 // Route::get('paypal1', [ApiController::class, 'paypal']);
 
@@ -42,7 +44,7 @@ Route::get('get_count_by_cities_categoris', [ApiController::class, 'get_count_by
 Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
 Route::get('get_slider', [ApiController::class, 'get_slider']);
 //Play Integrity
-Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
+//Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('get_property', [ApiController::class, 'get_property']);
