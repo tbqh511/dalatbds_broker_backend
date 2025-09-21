@@ -63,9 +63,11 @@ use App\Models\CrmDealCommission;
 // use PayPal_Pro as GlobalPayPal_Pro;
 use Tymon\JWTAuth\Claims\Issuer;
 
+
 //use Google\Client;
 use Google\Service\PlayIntegrity;
 use App\Http\Requests\VerifyIntegrityRequest;
+
 
 class ApiController extends Controller
 {
@@ -78,72 +80,6 @@ class ApiController extends Controller
             $Customer->update();
         }
     }
-
-    
-
-    public function verifyIntegrity(VerifyIntegrityRequest $request)
-    {
-        try {
-            // Khởi tạo Google Client
-            $client = new Client();
-            $client->setAuthConfig(config('play_integrity.credentials_path'));
-            $client->addScope('https://www.googleapis.com/auth/playintegrity');
-
-            // Khởi tạo Play Integrity service
-            $playIntegrity = new PlayIntegrity($client);
-
-            // Giải mã integrity token
-            $response = $playIntegrity->v1->decodeIntegrityToken(
-                config('play_integrity.package_name'),
-                new \Google\Service\PlayIntegrity\DecodeIntegrityTokenRequest([
-                    'integrityToken' => $request->integrity_token
-                ])
-            );
-
-            // Xử lý kết quả
-            $tokenPayload = $response->getTokenPayloadExternal();
-
-            // Kiểm tra device integrity
-            $deviceIntegrity = $tokenPayload->getDeviceIntegrity();
-            $appIntegrity = $tokenPayload->getAppIntegrity();
-            $accountDetails = $tokenPayload->getAccountDetails();
-
-            // Logic xác thực của bạn
-            $isValid = $this->validateIntegrity($deviceIntegrity, $appIntegrity);
-
-            return response()->json([
-                'error' => false,
-                'message' => 'Integrity check completed',
-                'data' => [
-                    'is_valid' => $isValid,
-                    'device_integrity' => $deviceIntegrity,
-                    'app_integrity' => $appIntegrity,
-                    'account_details' => $accountDetails,
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Integrity verification failed: ' . $e->getMessage()
-            ], 400);
-        }
-    }
-
-    private function validateIntegrity($deviceIntegrity, $appIntegrity)
-    {
-        // Logic tùy chỉnh để xác thực integrity
-        // Ví dụ: kiểm tra device recognition verdict
-        $deviceVerdict = $deviceIntegrity->getDeviceRecognitionVerdict();
-
-        // Kiểm tra các flags
-        $hasBasicIntegrity = in_array('MEETS_BASIC_INTEGRITY', $deviceVerdict);
-        $hasStrongIntegrity = in_array('MEETS_STRONG_INTEGRITY', $deviceVerdict);
-
-        // Trả về true nếu có ít nhất basic integrity
-        return $hasBasicIntegrity || $hasStrongIntegrity;
-    }
-
     //* START :: get_system_settings   *//
     public function get_system_settings(Request $request)
     {
