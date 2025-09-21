@@ -16,9 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['middleware' => ['jwt.verify']], function () {
-    Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
-});
+
 
 // Artisan::call('migrate');
 Route::post('get_system_settings', [ApiController::class, 'get_system_settings']);
@@ -43,7 +41,8 @@ Route::get('get_payment_settings', [ApiController::class, 'get_payment_settings'
 Route::get('get_count_by_cities_categoris', [ApiController::class, 'get_count_by_cities_categoris']);
 Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
 Route::get('get_slider', [ApiController::class, 'get_slider']);
-
+//Play Integrity
+Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('get_property', [ApiController::class, 'get_property']);
