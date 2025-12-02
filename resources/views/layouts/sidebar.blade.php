@@ -125,6 +125,12 @@
                         </a>
                     </li>
                     <li class="sidebar-item">
+                        <a href="{{ route('admin.posts.index') }}" class='sidebar-link'>
+                            <i class="bi bi-newspaper"></i>
+                            <span class="menu-item">{{ __('Posts') }}</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
                         <a href="{{ url('featured_properties') }}" class='sidebar-link'>
                             <i class="bi bi-badge-ad"></i>
                             <span class="menu-item">{{ __('Advertisements') }}</span>

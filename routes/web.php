@@ -31,6 +31,7 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\FrontEndHomeController;
 use App\Http\Controllers\FrontEndPropertiesController;
 use App\Http\Controllers\FrontEndAgentsController;
+use App\Http\Controllers\PostController;
 use App\Models\Payments;
 use App\Models\PropertysInquiry;
 use Illuminate\Support\Facades\Artisan;
