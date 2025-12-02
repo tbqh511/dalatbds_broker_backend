@@ -217,6 +217,12 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
         Route::get('article-destory/{id}', [ArticleController::class, 'destroy'])->name('article.destroy');
         /// END :: ARTICLE ROUTE
 
+        /// START :: POSTS ROUTE
+
+        Route::resource('posts', PostController::class)->names('admin.posts');
+        Route::get('posts-list', [PostController::class, 'getPostsList'])->name('admin.posts.list');
+        /// END :: POSTS ROUTE
+
         /// START :: ADVERTISEMENT ROUTE
 
         Route::resource('featured_properties', AdvertisementController::class);
