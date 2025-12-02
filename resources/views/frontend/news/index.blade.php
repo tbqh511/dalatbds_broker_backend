@@ -55,7 +55,7 @@
                                         </div>
                                     </div>
                                     <div class="list-single-main-item fl-wrap block_box">
-                                        <h2 class="post-opt-title"><a href="{{ route('new.showid', $new->id) }}">{{ $new->post_title }}</a></h2>
+                                        <h2 class="post-opt-title"><a href="{{ route('news.show', $new->post_name) }}">{{ $new->post_title }}</a></h2>
                                         <p>{{ $new->post_excerpt }}</p>
                                         <span class="fw-separator fl-wrap"></span>
                                         <div class="post-author">
@@ -70,7 +70,7 @@
                                                 <li><i class="fal fa-tags"></i> <a href="#">Shop</a> , <a href="#">Hotels</a></li>
                                             </ul>
                                         </div>
-                                        <a href="{{ route('new.showid', $new->id) }}" class="btn color-bg float-btn small-btn">Read more</a>
+                                        <a href="{{ route('news.show', $new->post_name) }}" class="btn color-bg float-btn small-btn">Read more</a>
                                     </div>
                                 </article>
                                 <!-- article end -->

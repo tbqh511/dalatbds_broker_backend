@@ -12,6 +12,8 @@
     @include('frontends.components.home_products_grid', ['newestProducts'=> $newestProducts])
     <!-- section end-->
     <!-- section -->
+    @include('frontends.components.home_news', ['recentNews'=> $recentNews])
+    <!-- section -->
     @include('frontends.components.home_about_wrap')
     <!-- section end-->
     <!-- section  -->

@@ -70,10 +70,12 @@ Route::get('/nha-ban', [FrontEndPropertiesController::class, 'index']);
 
 Route::get('/dat-ban', [FrontEndPropertiesController::class, 'index']);
 
+use App\Http\Controllers\NewsController;
 //News Layout
-Route::get('/new/{id}', [FrontEndNewsController::class,'getNewsById'])->name('new.showid');
-
-Route::get('/news', [FrontEndNewsController::class,'index'])->name('news.index');
+// Route::get('/new/{id}', [FrontEndNewsController::class,'show'])->name('new.showid');
+// Route::get('/news', [FrontEndNewsController::class,'index'])->name('news.index');
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 //agent layout
 Route::get('/agent/{id}', [FrontEndAgentsController::class, 'getAgentById'])->name('agent.showid');
 

@@ -12,6 +12,7 @@ use App\Models\LocationsStreet;
 use App\Models\LocationsWard;
 use App\Models\ProductType;
 use App\Models\Product;
+use App\Http\Controllers\NewsController;
 
 class FrontEndHomeController extends Controller
 {
@@ -84,7 +85,7 @@ class FrontEndHomeController extends Controller
             ],
             // Các cặp title và value khác có thể thêm vào đây
         ];
-
+        $recentNews = NewsController::getRecentNews(3);
         //dd($newestProducts[0]->parameters[0]->pivot->pivot_value);
         //dd($newestProducts[0]->parameters[0]->pivot->value);
         // $valueOfParameterId15 = $newestProducts[0]->parameters->where('name', config('global.area'))->first()->pivot->value;
@@ -102,6 +103,7 @@ class FrontEndHomeController extends Controller
             'newestProducts' => $newestProducts,
             'agents' => $agents,
             'infos' => $infos,
+            'recentNews' => $recentNews,
         ]);
     }
 

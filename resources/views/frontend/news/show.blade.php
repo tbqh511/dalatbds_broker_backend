@@ -8,7 +8,7 @@
         </div>
         <div class="container">
             <div class="section-title center-align big-title">
-                <h2><span>{{ $news->post_title }}</span></h2>
+                <h2><span>{{ $post->post_title }}</span></h2>
                 <h4>Bất Động Sản Đà Lạt</h4>
             </div>
             <div class="scroll-down-wrap">
@@ -22,7 +22,7 @@
     <!--  section  end-->
     <!-- breadcrumbs-->
     @include('frontends.components.home_breadcrumb', [
-    'title' => $news->post_title,
+    'title' => $post->post_title,
     'nodes' => [
             ['title' => 'Trang chủ', 'url' => route('index')],
             ['title' => 'Tin tức', 'url' => route('news.index')],
@@ -38,13 +38,13 @@
                         <article class="post-article fl-wrap">
                             <div class="list-single-main-item fl-wrap block_box">
                                 <div class="post-author">
-                                    @if ($news->author)
-                                        <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="author"><span>By , {{ $news->author->name }}</span></a>
+                                    @if ($post->author)
+                                        <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="author"><span>By , {{ $post->author->name }}</span></a>
                                     @endif
                                 </div>
                                 <div class="post-opt">
                                     <ul class="no-list-style">
-                                        <li><i class="fal fa-calendar"></i> <span>{{ $news->created_at->format('d M Y') }}</span></li>
+                                        <li><i class="fal fa-calendar"></i> <span>{{ $post->created_at->format('d M Y') }}</span></li>
                                         <li><i class="fal fa-eye"></i> <span>164</span></li>
                                         <li><i class="fal fa-tags"></i> <a href="#">Shop</a> , <a href="#">Hotels</a></li>
                                     </ul>
@@ -53,7 +53,7 @@
                                 
                                 <div class="clearfix"></div>
                                 <div class="post-content">
-                                    {!! $news->post_content !!}
+                                    {!! $post->post_content !!}
                                 </div>
 
                                 <span class="fw-separator fl-wrap"></span>

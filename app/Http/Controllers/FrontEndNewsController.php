@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\LocationsWard;
+use App\Models\NewsPost;
 use Illuminate\Http\Request;
 
 class FrontEndNewsController extends Controller
 {
-    ///*** Display the detail of a property by its ID.*/
-    public function getAgentById(int $id)
+    ///*** Display the detail of a news post by its ID.*/
+    public function show(int $id)
     {
         // Get the district code from configuration
         $districtCode = config('location.district_code', null);
@@ -21,15 +22,18 @@ class FrontEndNewsController extends Controller
 
         // Get category for header section
         $categories = Category::orderBy('category')->get();
+
+        $news = NewsPost::findOrFail($id);
         
         return view('frontend_news_detail',[
             'locationsWards'=> $locationsWards,
-            'categories'=> $categories
+            'categories'=> $categories,
+            'news' => $news
         ]);
     }
 
     /**
-     * Display a listing of the properties with search variables: category, ward, street, id.
+     * Display a listing of the news posts.
      */
     public function index(Request $request)
     {
@@ -44,10 +48,13 @@ class FrontEndNewsController extends Controller
 
         // Get category for header section
         $categories = Category::orderBy('category')->get();
+
+        $news = NewsPost::where('post_status', 'publish')->orderByDesc('created_at')->paginate(10);
         
          return view('frontend_news_listing',[
             'locationsWards'=> $locationsWards,
-            'categories'=> $categories
+            'categories'=> $categories,
+            'news' => $news
         ]);
     }
 }
