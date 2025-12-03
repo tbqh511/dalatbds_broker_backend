@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\NewsPost;
+use App\Models\NewsTermTaxonomy;
 use Illuminate\Http\Request;
 
 class NewsController extends Controller
@@ -14,12 +15,25 @@ class NewsController extends Controller
      */
     public function index()
     {
-        $news = NewsPost::where('post_type', 'post')
+        $news = NewsPost::with('tags')
+            ->where('post_type', 'post')
             ->where('post_status', 'publish')
             ->orderBy('post_date', 'desc')
             ->paginate(10);
 
-        return view('frontend.news.index', compact('news'));
+        // Fetch Categories with counts
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->where('count', '>', 0)
+            ->with('term')
+            ->get();
+
+        // Fetch Tags
+        $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
+            ->where('count', '>', 0)
+            ->with('term')
+            ->get();
+
+        return view('frontend.news.index', compact('news', 'categories', 'tags'));
     }
 
     /**

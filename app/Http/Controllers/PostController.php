@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\NewsPost;
 use App\Models\NewsPostmeta;
+use App\Models\NewsTerm;
+use App\Models\NewsTermTaxonomy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -27,7 +29,15 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('admin.posts.create');
+        // Get all categories (terms with 'category' taxonomy)
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->with('term')
+            ->get()
+            ->map(function ($tax) {
+                return $tax->term;
+            });
+
+        return view('admin.posts.create', compact('categories'));
     }
 
     /**
@@ -46,7 +56,7 @@ class PostController extends Controller
         ]);
 
         $post = new NewsPost();
-        $post->post_author = auth()->id();
+        $post->post_author = auth()->id() ?? 0;
         $post->post_date = now();
         $post->post_date_gmt = now();
         $post->post_content = $request->post_content;
@@ -57,6 +67,52 @@ class PostController extends Controller
         $post->post_modified = now();
         $post->post_modified_gmt = now();
         $post->save();
+
+        // Handle Categories
+        if ($request->has('categories')) {
+            // Find taxonomy IDs for selected category term IDs
+            $taxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
+                ->whereIn('term_id', $request->categories)
+                ->pluck('term_taxonomy_id');
+            $post->taxonomies()->attach($taxonomyIds);
+
+            // Update counts (simplified)
+            foreach ($taxonomyIds as $tid) {
+                NewsTermTaxonomy::where('term_taxonomy_id', $tid)->increment('count');
+            }
+        }
+
+        // Handle Tags
+        if ($request->has('tags')) {
+            $tags = explode(',', $request->tags);
+            $tagTaxonomyIds = [];
+            foreach ($tags as $tagName) {
+                $tagName = trim($tagName);
+                if (empty($tagName)) continue;
+
+                $slug = Str::slug($tagName);
+
+                // Find or create term
+                $term = NewsTerm::firstOrCreate(
+                    ['slug' => $slug],
+                    ['name' => $tagName]
+                );
+
+                // Find or create taxonomy
+                $taxonomy = NewsTermTaxonomy::firstOrCreate(
+                    ['term_id' => $term->term_id, 'taxonomy' => 'post_tag']
+                );
+
+                $tagTaxonomyIds[] = $taxonomy->term_taxonomy_id;
+            }
+
+            if (!empty($tagTaxonomyIds)) {
+                $post->taxonomies()->attach($tagTaxonomyIds);
+                foreach ($tagTaxonomyIds as $tid) {
+                    NewsTermTaxonomy::where('term_taxonomy_id', $tid)->increment('count');
+                }
+            }
+        }
 
         return redirect()->route('admin.posts.index')->with('success', 'Bài viết đã được tạo thành công.');
     }
@@ -82,7 +138,22 @@ class PostController extends Controller
     public function edit($id)
     {
         $post = NewsPost::findOrFail($id);
-        return view('admin.posts.edit', compact('post'));
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->with('term')
+            ->get()
+            ->map(function ($tax) {
+                return $tax->term;
+            });
+
+        // Get selected categories
+        $selectedCategories = $post->categories->pluck('term_id')->toArray();
+
+        // Get tags as comma separated string
+        $tags = $post->tags->map(function ($tax) {
+            return $tax->term->name;
+        })->implode(', ');
+
+        return view('admin.posts.edit', compact('post', 'categories', 'selectedCategories', 'tags'));
     }
 
     /**
@@ -110,6 +181,54 @@ class PostController extends Controller
         $post->post_modified = now();
         $post->post_modified_gmt = now();
         $post->save();
+
+        // Handle Categories
+        // Sync categories: detach all categories then attach new ones
+        // First get current category taxonomy IDs to decrement count
+        $currentCatTaxIds = $post->categories()->pluck('news_term_taxonomy.term_taxonomy_id');
+        $post->taxonomies()->detach($currentCatTaxIds);
+        NewsTermTaxonomy::whereIn('term_taxonomy_id', $currentCatTaxIds)->decrement('count');
+
+        if ($request->has('categories')) {
+            $taxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
+                ->whereIn('term_id', $request->categories)
+                ->pluck('term_taxonomy_id');
+            $post->taxonomies()->attach($taxonomyIds);
+            NewsTermTaxonomy::whereIn('term_taxonomy_id', $taxonomyIds)->increment('count');
+        }
+
+        // Handle Tags
+        // Sync tags
+        $currentTagTaxIds = $post->tags()->pluck('news_term_taxonomy.term_taxonomy_id');
+        $post->taxonomies()->detach($currentTagTaxIds);
+        NewsTermTaxonomy::whereIn('term_taxonomy_id', $currentTagTaxIds)->decrement('count');
+
+        if ($request->has('tags')) {
+            $tags = explode(',', $request->tags);
+            $tagTaxonomyIds = [];
+            foreach ($tags as $tagName) {
+                $tagName = trim($tagName);
+                if (empty($tagName)) continue;
+
+                $slug = Str::slug($tagName);
+
+                $term = NewsTerm::firstOrCreate(
+                    ['slug' => $slug],
+                    ['name' => $tagName]
+                );
+
+                $taxonomy = NewsTermTaxonomy::firstOrCreate(
+                    ['term_id' => $term->term_id, 'taxonomy' => 'post_tag']
+                );
+
+                $tagTaxonomyIds[] = $taxonomy->term_taxonomy_id;
+            }
+
+            if (!empty($tagTaxonomyIds)) {
+                $post->taxonomies()->attach($tagTaxonomyIds);
+                NewsTermTaxonomy::whereIn('term_taxonomy_id', $tagTaxonomyIds)->increment('count');
+            }
+        }
 
         return redirect()->route('admin.posts.index')->with('success', 'Bài viết đã được cập nhật thành công.');
     }
