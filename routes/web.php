@@ -76,6 +76,8 @@ use App\Http\Controllers\NewsController;
 // Route::get('/new/{id}', [FrontEndNewsController::class,'show'])->name('new.showid');
 // Route::get('/news', [FrontEndNewsController::class,'index'])->name('news.index');
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+Route::get('/news/danh-muc/{slug}', [NewsController::class, 'category'])->name('news.category');
+Route::get('/news/tag/{slug}', [NewsController::class, 'tag'])->name('news.tag');
 Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 //agent layout
 Route::get('/agent/{id}', [FrontEndAgentsController::class, 'getAgentById'])->name('agent.showid');

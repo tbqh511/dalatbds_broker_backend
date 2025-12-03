@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\NewsPost;
+use App\Models\NewsTerm;
+use App\Models\NewsTermTaxonomy;
 use Illuminate\Http\Request;
 
 class NewsController extends Controller
@@ -14,12 +16,89 @@ class NewsController extends Controller
      */
     public function index()
     {
-        $news = NewsPost::where('post_type', 'post')
+        $news = NewsPost::with('tags')
+            ->where('post_type', 'post')
             ->where('post_status', 'publish')
             ->orderBy('post_date', 'desc')
             ->paginate(10);
 
-        return view('frontend.news.index', compact('news'));
+        // Fetch Categories with counts
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->with('term')
+            ->get();
+
+        // Fetch Tags
+        $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
+            ->with('term')
+            ->get();
+
+        return view('frontend.news.index', compact('news', 'categories', 'tags'));
+    }
+
+    /**
+     * Filter posts by category.
+     *
+     * @param  string  $slug
+     * @return \Illuminate\Http\Response
+     */
+    public function category($slug)
+    {
+        $term = NewsTerm::where('slug', $slug)->firstOrFail();
+
+        $news = NewsPost::whereHas('taxonomies', function ($query) use ($term) {
+                $query->where('taxonomy', 'category')
+                      ->where('news_term_taxonomy.term_id', $term->term_id);
+            })
+            ->with('tags')
+            ->where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->orderBy('post_date', 'desc')
+            ->paginate(10);
+
+        // Fetch Categories with counts
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->with('term')
+            ->get();
+
+        // Fetch Tags
+        $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
+            ->with('term')
+            ->get();
+
+        return view('frontend.news.index', compact('news', 'categories', 'tags'));
+    }
+
+    /**
+     * Filter posts by tag.
+     *
+     * @param  string  $slug
+     * @return \Illuminate\Http\Response
+     */
+    public function tag($slug)
+    {
+        $term = NewsTerm::where('slug', $slug)->firstOrFail();
+
+        $news = NewsPost::whereHas('taxonomies', function ($query) use ($term) {
+                $query->where('taxonomy', 'post_tag')
+                      ->where('news_term_taxonomy.term_id', $term->term_id);
+            })
+            ->with('tags')
+            ->where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->orderBy('post_date', 'desc')
+            ->paginate(10);
+
+        // Fetch Categories with counts
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->with('term')
+            ->get();
+
+        // Fetch Tags
+        $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
+            ->with('term')
+            ->get();
+
+        return view('frontend.news.index', compact('news', 'categories', 'tags'));
     }
 
     /**
