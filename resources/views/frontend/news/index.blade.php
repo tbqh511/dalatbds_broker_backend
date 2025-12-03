@@ -66,11 +66,11 @@
                                         <div class="post-opt">
                                             <ul class="no-list-style">
                                                 <li><i class="fal fa-calendar"></i> <span>{{ $new->created_at->format('d M Y') }}</span></li>
-                                                <li><i class="fal fa-eye"></i> <span>164</span></li>
+                                                <li><i class="fal fa-eye"></i> <span>{{ $new->comment_count }}</span></li>
                                                 <li><i class="fal fa-tags"></i> <a href="#">Shop</a> , <a href="#">Hotels</a></li>
                                             </ul>
                                         </div>
-                                        <a href="{{ route('news.show', $new->post_name) }}" class="btn color-bg float-btn small-btn">Read more</a>
+                                        <a href="{{ route('news.show', $new->post_name) }}" class="btn color-bg float-btn small-btn">Xem thêm</a>
                                     </div>
                                 </article>
                                 <!-- article end -->
