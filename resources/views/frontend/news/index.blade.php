@@ -67,7 +67,13 @@
                                             <ul class="no-list-style">
                                                 <li><i class="fal fa-calendar"></i> <span>{{ $new->created_at->format('d M Y') }}</span></li>
                                                 <li><i class="fal fa-eye"></i> <span>{{ $new->comment_count }}</span></li>
-                                                <li><i class="fal fa-tags"></i> <a href="#">Shop</a> , <a href="#">Hotels</a></li>
+                                                @if($new->tags->count() > 0)
+                                                    <li><i class="fal fa-tags"></i>
+                                                        @foreach($new->tags as $index => $tag)
+                                                            <a href="#">{{ $tag->term->name }}</a>{{ $index < $new->tags->count() - 1 ? ' ,' : '' }}
+                                                        @endforeach
+                                                    </li>
+                                                @endif
                                             </ul>
                                         </div>
                                         <a href="{{ route('news.show', $new->post_name) }}" class="btn color-bg float-btn small-btn">Xem thêm</a>
@@ -155,9 +161,9 @@
                             <div class="box-widget-title fl-wrap">Danh mục</div>
                             <div class="box-widget-content fl-wrap">
                                 <ul class="cat-item no-list-style">
-                                    <li><a href="#">Tin thị trường</a> <span>3</span></li>
-                                    <li><a href="#">Quy hoạch</a> <span>6 </span></li>
-                                    <li><a href="#">Chính sách</a> <span>12 </span></li>
+                                    @foreach($categories as $category)
+                                        <li><a href="#">{{ $category->term->name }}</a> <span>{{ $category->count }}</span></li>
+                                    @endforeach
                                 </ul>
                             </div>
                         </div>
@@ -181,12 +187,9 @@
                             <div class="box-widget-content fl-wrap">
                                 <!--tags-->
                                 <div class="list-single-tags fl-wrap tags-stylwrap" style="margin-top: 20px;">
-                                    <a href="#">Nhà bán</a>
-                                    <a href="#">Đất bán</a>
-                                    <a href="#">Nhà Đà Lạt bán</a>
-                                    <a href="#">Villa Đà Lạt bán</a>
-                                    <a href="#">Nhà phố</a>
-                                    <a href="#">Khách sạn bán</a>
+                                    @foreach($tags as $tag)
+                                        <a href="#">{{ $tag->term->name }}</a>
+                                    @endforeach
                                 </div>
                                 <!--tags end-->
                             </div>
