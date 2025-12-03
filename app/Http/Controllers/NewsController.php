@@ -24,13 +24,11 @@ class NewsController extends Controller
 
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
-            ->where('count', '>', 0)
             ->with('term')
             ->get();
 
         // Fetch Tags
         $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
-            ->where('count', '>', 0)
             ->with('term')
             ->get();
 
