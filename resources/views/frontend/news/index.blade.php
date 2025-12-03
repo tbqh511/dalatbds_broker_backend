@@ -70,7 +70,9 @@
                                                 @if($new->tags->count() > 0)
                                                     <li><i class="fal fa-tags"></i>
                                                         @foreach($new->tags as $index => $tag)
-                                                            <a href="#">{{ $tag->term->name }}</a>{{ $index < $new->tags->count() - 1 ? ' ,' : '' }}
+
+                                                            <a href="{{ route('news.tag', $tag->term->slug) }}">{{ $tag->term->name }}</a>{{ $index < $new->tags->count() - 1 ? ' ,' : '' }}
+
                                                         @endforeach
                                                     </li>
                                                 @endif
@@ -162,7 +164,11 @@
                             <div class="box-widget-content fl-wrap">
                                 <ul class="cat-item no-list-style">
                                     @foreach($categories as $category)
-                                        <li><a href="#">{{ $category->term->name }}</a> <span>{{ $category->count }}</span></li>
+
+                                        @if($category->term)
+                                            <li><a href="{{ route('news.category', $category->term->slug) }}">{{ $category->term->name }}</a> <span>{{ $category->count }}</span></li>
+                                        @endif
+
                                     @endforeach
                                 </ul>
                             </div>
@@ -188,7 +194,9 @@
                                 <!--tags-->
                                 <div class="list-single-tags fl-wrap tags-stylwrap" style="margin-top: 20px;">
                                     @foreach($tags as $tag)
-                                        <a href="#">{{ $tag->term->name }}</a>
+                                        @if($tag->term)
+                                            <a href="{{ route('news.tag', $tag->term->slug) }}">{{ $tag->term->name }}</a>
+                                        @endif
                                     @endforeach
                                 </div>
                                 <!--tags end-->
