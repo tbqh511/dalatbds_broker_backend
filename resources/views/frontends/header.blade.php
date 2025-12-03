@@ -83,10 +83,10 @@
                     </ul>
                     <!--second level end-->
                 </li> --}}
-                {{-- <li>
+                <li>
                     <a href="{{ route('news.index') }}">Wiki BĐS</a>
                 </li>
-                <li>
+                {{-- <li>
                     <a href="{{ route('agents.index') }}">Đối tác</a>
                 </li> --}}
                 <li><a href="{{ url('/gioi-thieu') }}">Đà Lạt BDS</a></li>
