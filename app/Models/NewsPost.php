@@ -49,4 +49,33 @@ class NewsPost extends Model
     {
         return $this->hasMany(NewsPostmeta::class, 'news_post_id');
     }
+
+    /**
+     * Get all taxonomies for the post.
+     */
+    public function taxonomies()
+    {
+        return $this->belongsToMany(
+            NewsTermTaxonomy::class,
+            'news_term_relationships',
+            'object_id',
+            'term_taxonomy_id'
+        );
+    }
+
+    /**
+     * Get categories for the post.
+     */
+    public function categories()
+    {
+        return $this->taxonomies()->where('taxonomy', 'category')->with('term');
+    }
+
+    /**
+     * Get tags for the post.
+     */
+    public function tags()
+    {
+        return $this->taxonomies()->where('taxonomy', 'post_tag')->with('term');
+    }
 }
