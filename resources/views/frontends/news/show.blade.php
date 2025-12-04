@@ -64,48 +64,10 @@
                 </div>
                 <!-- col-md 8 end -->
                 <!--  sidebar-->
-                <div class="col-md-4">
-                     <div class="box-widget-wrap fl-wrap fixed-bar">
-                        <!--box-widget-->
-                        <div class="box-widget fl-wrap">
-                            <div class="search-widget fl-wrap">
-                                <form action="#" class="fl-wrap custom-form">
-                                    <input name="se" id="se" type="text" class="search" placeholder="Tìm kiếm"
-                                        value="" />
-                                    <button class="search-submit" id="submit_btn"><i class="far fa-search"></i></button>
-                                </form>
-                            </div>
-                        </div>
-                        <!--box-widget end -->
-                        
-                        <!--box-widget-->
-                        <div class="box-widget fl-wrap">
-                            <div class="box-widget-title fl-wrap">Danh mục</div>
-                            <div class="box-widget-content fl-wrap">
-                                <ul class="cat-item no-list-style">
-                                    <li><a href="#">Tin thị trường</a> <span>3</span></li>
-                                    <li><a href="#">Quy hoạch</a> <span>6 </span></li>
-                                    <li><a href="#">Chính sách</a> <span>12 </span></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!--box-widget end -->
-                       
-                        <!--box-widget-->
-                        <div class="box-widget fl-wrap">
-                            <div class="box-widget-title fl-wrap">Tags</div>
-                            <div class="box-widget-content fl-wrap">
-                                <!--tags-->
-                                <div class="list-single-tags fl-wrap tags-stylwrap" style="margin-top: 20px;">
-                                    <a href="#">Nhà bán</a>
-                                    <a href="#">Đất bán</a>
-                                </div>
-                                <!--tags end-->
-                            </div>
-                        </div>
-                        <!--box-widget end -->
-                    </div>
-                </div>
+                @include('frontends.news.components.news_sidebar', [
+                    'categories' => $categories,
+                    'tags' => $tags,
+                ])
                 <!-- sidebar end-->
             </div>
         </div>

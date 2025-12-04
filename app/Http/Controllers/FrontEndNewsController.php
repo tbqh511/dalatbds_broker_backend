@@ -114,7 +114,16 @@ class FrontEndNewsController extends Controller
             ->where('post_status', 'publish')
             ->firstOrFail();
 
-        return view('frontends.news.show', compact('post'));
+        // Fetch Categories with counts
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->with('term')
+            ->get();
+
+        // Fetch Tags
+        $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
+            ->with('term')
+            ->get();
+        return view('frontends.news.show', compact('post','categories', 'tags'));
     }
 
     /**
