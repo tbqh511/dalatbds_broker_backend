@@ -96,7 +96,7 @@
                 </div>
                 <!-- col-md 8 end -->
                 <!--  sidebar-->
-                @include('frontends.news.news_sidebar', [
+                @include('frontends.news.components.news_sidebar', [
                     'categories' => $categories,
                     'tags' => $tags,
                 ])
