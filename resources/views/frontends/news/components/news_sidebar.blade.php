@@ -66,11 +66,9 @@
                             <div class="box-widget-content fl-wrap">
                                 <ul class="cat-item no-list-style">
                                     @foreach($categories as $category)
-
                                         @if($category->term)
                                             <li><a href="{{ route('news.category', $category->term->slug) }}">{{ $category->term->name }}</a> <span>{{ $category->count }}</span></li>
                                         @endif
-
                                     @endforeach
                                 </ul>
                             </div>

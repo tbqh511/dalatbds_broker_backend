@@ -25,6 +25,7 @@ class FrontEndNewsController extends Controller
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
             ->with('term')
+            ->withCount(['posts as count'])
             ->get();
 
         // Fetch Tags
@@ -58,6 +59,7 @@ class FrontEndNewsController extends Controller
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
             ->with('term')
+            ->withCount(['posts as count'])
             ->get();
 
         // Fetch Tags
@@ -91,6 +93,7 @@ class FrontEndNewsController extends Controller
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
             ->with('term')
+            ->withCount(['posts as count'])
             ->get();
 
         // Fetch Tags
@@ -117,6 +120,7 @@ class FrontEndNewsController extends Controller
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
             ->with('term')
+            ->withCount(['posts as count'])
             ->get();
 
         // Fetch Tags
