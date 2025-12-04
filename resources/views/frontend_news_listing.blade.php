@@ -93,9 +93,9 @@
                         <!--box-widget-->
                         <div class="box-widget fl-wrap">
                             <div class="search-widget fl-wrap">
-                                <form action="#" class="fl-wrap custom-form">
+                                <form action="{{ route('news.index') }}" method="GET" class="fl-wrap custom-form">
                                     <input name="se" id="se" type="text" class="search" placeholder="Tìm kiếm"
-                                        value="" />
+                                        value="{{ request('se') }}" />
                                     <button class="search-submit" id="submit_btn"><i class="far fa-search"></i></button>
                                 </form>
                             </div>

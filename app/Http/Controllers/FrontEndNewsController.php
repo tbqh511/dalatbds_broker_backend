@@ -16,11 +16,21 @@ class FrontEndNewsController extends Controller
      */
     public function index()
     {
-        $news = NewsPost::with('tags')
+        $q = request('se');
+        $newsQuery = NewsPost::with('tags')
             ->where('post_type', 'post')
-            ->where('post_status', 'publish')
-            ->orderBy('post_date', 'desc')
-            ->paginate(10);
+            ->where('post_status', 'publish');
+
+        if (!empty($q)) {
+            $newsQuery->where(function ($qq) use ($q) {
+                $qq->where('post_title', 'like', "%{$q}%")
+                   ->orWhere('post_content', 'like', "%{$q}%")
+                   ->orWhere('post_excerpt', 'like', "%{$q}%");
+            });
+        }
+
+        $news = $newsQuery->orderBy('post_date', 'desc')->paginate(10);
+        $news->appends(request()->query());
 
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
@@ -55,15 +65,25 @@ class FrontEndNewsController extends Controller
     {
         $term = NewsTerm::where('slug', $slug)->firstOrFail();
 
-        $news = NewsPost::whereHas('taxonomies', function ($query) use ($term) {
+        $q = request('se');
+        $newsQuery = NewsPost::whereHas('taxonomies', function ($query) use ($term) {
                 $query->where('taxonomy', 'category')
                       ->where('news_term_taxonomy.term_id', $term->term_id);
             })
             ->with('tags')
             ->where('post_type', 'post')
-            ->where('post_status', 'publish')
-            ->orderBy('post_date', 'desc')
-            ->paginate(10);
+            ->where('post_status', 'publish');
+
+        if (!empty($q)) {
+            $newsQuery->where(function ($qq) use ($q) {
+                $qq->where('post_title', 'like', "%{$q}%")
+                   ->orWhere('post_content', 'like', "%{$q}%")
+                   ->orWhere('post_excerpt', 'like', "%{$q}%");
+            });
+        }
+
+        $news = $newsQuery->orderBy('post_date', 'desc')->paginate(10);
+        $news->appends(request()->query());
 
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
@@ -98,15 +118,25 @@ class FrontEndNewsController extends Controller
     {
         $term = NewsTerm::where('slug', $slug)->firstOrFail();
         
-        $news = NewsPost::whereHas('taxonomies', function ($query) use ($term) {
+        $q = request('se');
+        $newsQuery = NewsPost::whereHas('taxonomies', function ($query) use ($term) {
                 $query->where('taxonomy', 'post_tag')
                       ->where('news_term_taxonomy.term_id', $term->term_id);
             })
             ->with('tags')
             ->where('post_type', 'post')
-            ->where('post_status', 'publish')
-            ->orderBy('post_date', 'desc')
-            ->paginate(10);
+            ->where('post_status', 'publish');
+
+        if (!empty($q)) {
+            $newsQuery->where(function ($qq) use ($q) {
+                $qq->where('post_title', 'like', "%{$q}%")
+                   ->orWhere('post_content', 'like', "%{$q}%")
+                   ->orWhere('post_excerpt', 'like', "%{$q}%");
+            });
+        }
+
+        $news = $newsQuery->orderBy('post_date', 'desc')->paginate(10);
+        $news->appends(request()->query());
 
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
@@ -140,13 +170,23 @@ class FrontEndNewsController extends Controller
      */
     public function month($year, $month)
     {
-        $news = NewsPost::with('tags')
+        $q = request('se');
+        $newsQuery = NewsPost::with('tags')
             ->where('post_type', 'post')
             ->where('post_status', 'publish')
             ->whereYear('post_date', $year)
-            ->whereMonth('post_date', $month)
-            ->orderBy('post_date', 'desc')
-            ->paginate(10);
+            ->whereMonth('post_date', $month);
+
+        if (!empty($q)) {
+            $newsQuery->where(function ($qq) use ($q) {
+                $qq->where('post_title', 'like', "%{$q}%")
+                   ->orWhere('post_content', 'like', "%{$q}%")
+                   ->orWhere('post_excerpt', 'like', "%{$q}%");
+            });
+        }
+
+        $news = $newsQuery->orderBy('post_date', 'desc')->paginate(10);
+        $news->appends(request()->query());
 
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
