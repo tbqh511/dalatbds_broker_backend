@@ -32,7 +32,7 @@ class FrontEndNewsController extends Controller
             ->with('term')
             ->get();
 
-        return view('frontend.news.index', compact('news', 'categories', 'tags'));
+        return view('frontends.news.index', compact('news', 'categories', 'tags'));
     }
 
     /**
@@ -65,7 +65,7 @@ class FrontEndNewsController extends Controller
             ->with('term')
             ->get();
 
-        return view('frontend.news.index', compact('news', 'categories', 'tags'));
+        return view('frontends.news.index', compact('news', 'categories', 'tags'));
     }
 
     /**
@@ -98,7 +98,7 @@ class FrontEndNewsController extends Controller
             ->with('term')
             ->get();
 
-        return view('frontend.news.index', compact('news', 'categories', 'tags'));
+        return view('frontends.news.index', compact('news', 'categories', 'tags'));
     }
 
     /**
@@ -114,7 +114,7 @@ class FrontEndNewsController extends Controller
             ->where('post_status', 'publish')
             ->firstOrFail();
 
-        return view('frontend.news.show', compact('post'));
+        return view('frontends.news.show', compact('post'));
     }
 
     /**
