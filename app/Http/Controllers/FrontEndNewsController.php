@@ -33,7 +33,16 @@ class FrontEndNewsController extends Controller
             ->with('term')
             ->get();
 
-        return view('frontends.news.index', compact('news', 'categories', 'tags'));
+        // Fetch months (year + month) that have posts, with counts
+        $months = NewsPost::where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->selectRaw('YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count')
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        return view('frontends.news.index', compact('news', 'categories', 'tags', 'months'));
     }
 
     /**
@@ -67,7 +76,16 @@ class FrontEndNewsController extends Controller
             ->with('term')
             ->get();
 
-        return view('frontends.news.index', compact('news', 'categories', 'tags'));
+        // Fetch months
+        $months = NewsPost::where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->selectRaw('YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count')
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        return view('frontends.news.index', compact('news', 'categories', 'tags', 'months'));
     }
 
     /**
@@ -87,6 +105,46 @@ class FrontEndNewsController extends Controller
             ->with('tags')
             ->where('post_type', 'post')
             ->where('post_status', 'publish')
+            ->orderBy('post_date', 'desc')
+            ->paginate(10);
+
+        // Fetch Categories with counts
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->with('term')
+            ->withCount(['posts as count'])
+            ->get();
+
+        // Fetch Tags
+        $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
+            ->with('term')
+            ->get();
+
+        // Fetch months
+        $months = NewsPost::where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->selectRaw('YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count')
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        return view('frontends.news.index', compact('news', 'categories', 'tags', 'months'));
+    }
+
+    /**
+     * Filter posts by year and month.
+     *
+     * @param  int  $year
+     * @param  int  $month
+     * @return \Illuminate\Http\Response
+     */
+    public function month($year, $month)
+    {
+        $news = NewsPost::with('tags')
+            ->where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->whereYear('post_date', $year)
+            ->whereMonth('post_date', $month)
             ->orderBy('post_date', 'desc')
             ->paginate(10);
 
@@ -127,7 +185,17 @@ class FrontEndNewsController extends Controller
         $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
             ->with('term')
             ->get();
-        return view('frontends.news.show', compact('post','categories', 'tags'));
+
+        // Fetch months
+        $months = NewsPost::where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->selectRaw('YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count')
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        return view('frontends.news.show', compact('post','categories', 'tags', 'months'));
     }
 
     /**

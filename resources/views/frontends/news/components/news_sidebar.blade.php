@@ -108,9 +108,16 @@
                             <div class="box-widget-title fl-wrap">Ngày đăng</div>
                             <div class="box-widget-content fl-wrap">
                                 <ul class="cat-item cat-item_dec no-list-style">
-                                    <li><a href="#">tháng 6 năm 2023</a></li>
-                                    <li><a href="#">tháng 5 năm 2023</a></li>
-                                    <li><a href="#">tháng 4 năm 2023</a></li>
+                                    @if(isset($months) && $months->count() > 0)
+                                        @foreach($months as $m)
+                                            <li>
+                                                <a href="{{ route('news.month', ['year' => $m->year, 'month' => $m->month]) }}">tháng {{ $m->month }} năm {{ $m->year }}</a>
+                                                <span>({{ $m->count }})</span>
+                                            </li>
+                                        @endforeach
+                                    @else
+                                        <li>Không có bài viết</li>
+                                    @endif
                                 </ul>
                             </div>
                         </div>

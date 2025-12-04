@@ -81,6 +81,7 @@ Route::get('/news', [FrontEndNewsController::class, 'index'])->name('news.index'
 Route::get('/news/danh-muc/{slug}', [FrontEndNewsController::class, 'category'])->name('news.category');
 Route::get('/news/tag/{slug}', [FrontEndNewsController::class, 'tag'])->name('news.tag');
 Route::get('/news/{slug}', [FrontEndNewsController::class, 'show'])->name('news.show');
+Route::get('/news/nam/{year}/thang/{month}', [FrontEndNewsController::class, 'month'])->name('news.month');
 
 //agent layout
 Route::get('/agent/{id}', [FrontEndAgentsController::class, 'getAgentById'])->name('agent.showid');
