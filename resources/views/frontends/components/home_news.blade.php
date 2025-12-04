@@ -18,7 +18,7 @@
                 <div class="listing-item">
                     <article class="geodir-category-listing fl-wrap">
                         <div class="geodir-category-img">
-                            <a href="{{ route('news.show', $newsItem->post_name) }}"><img src="images/all/blog/1.jpg" alt=""></a>
+                            <a href="{{ route('news.show', $newsItem->post_name) }}"><img src="{{ asset('images/all/blog/1.jpg') }}" alt=""></a>
                             <div class="geodir-category-opt">
                                 <div class="listing-rating card-popup-rainingvis" data-starrating2="5"></div>
                                 <div class="rate-class-name">

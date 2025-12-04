@@ -4,7 +4,7 @@
     <!--  section  -->
     <section class="hidden-section single-par2  " data-scrollax-parent="true">
         <div class="bg-wrap bg-parallax-wrap-gradien">
-            <div class="bg par-elem " data-bg="images/bg/1.jpg" data-scrollax="properties: { translateY: '30%' }"></div>
+            <div class="bg par-elem " data-bg="{{ asset('images/bg/1.jpg') }}" data-scrollax="properties: { translateY: '30%' }"></div>
         </div>
         <div class="container">
             <div class="section-title center-align big-title">
@@ -44,8 +44,8 @@
                                                 <!--  slick-slide-item -->
                                                 <div class="slick-slide-item">
                                                     <div class="box-item">
-                                                        <a href="images/all/blog/1.jpg" class="gal-link popup-image"><i class="fal fa-search"></i></a>
-                                                        <img src="images/all/blog/1.jpg" alt="dalat-bds">
+                                                        <a href="{{ asset('images/all/blog/1.jpg') }}" class="gal-link popup-image"><i class="fal fa-search"></i></a>
+                                                        <img src="{{ asset('images/all/blog/1.jpg') }}" alt="dalat-bds">
                                                     </div>
                                                 </div>
                                                 <!--  slick-slide-item end -->
@@ -60,7 +60,7 @@
                                         <span class="fw-separator fl-wrap"></span>
                                         <div class="post-author">
                                             @if ($new->author)
-                                                <a href="#"><img src="images/avatar/1.jpg" alt="author"><span>By , {{ $new->author->name }}</span></a>
+                                                <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="author"><span>By , {{ $new->author->name }}</span></a>
                                             @endif
                                         </div>
                                         <div class="post-opt">
