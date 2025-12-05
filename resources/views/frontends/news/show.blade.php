@@ -45,15 +45,57 @@
                                 <div class="post-opt">
                                     <ul class="no-list-style">
                                         <li><i class="fal fa-calendar"></i> <span>{{ $post->created_at->format('d M Y') }}</span></li>
-                                        <li><i class="fal fa-eye"></i> <span>164</span></li>
-                                        <li><i class="fal fa-tags"></i> <a href="#">Shop</a> , <a href="#">Hotels</a></li>
+                                        <li><i class="fal fa-eye"></i> <span>{{ $post->comment_count ?? 0 }}</span></li>
+                                        <li><i class="fal fa-folder"></i>
+                                            @if($post->categories && $post->categories->count() > 0)
+                                                @foreach($post->categories as $idx => $cat)
+                                                    @if($cat->term)
+                                                        <a href="{{ route('news.category', $cat->term->slug) }}">{{ $cat->term->name }}</a>{{ $idx < $post->categories->count() - 1 ? ' ,' : '' }}
+                                                    @endif
+                                                @endforeach
+                                            @endif
+                                        </li>
+                                        <li><i class="fal fa-tags"></i>
+                                            @if($post->tags && $post->tags->count() > 0)
+                                                @foreach($post->tags as $index => $tag)
+                                                    @if($tag->term)
+                                                        <a href="{{ route('news.tag', $tag->term->slug) }}">{{ $tag->term->name }}</a>{{ $index < $post->tags->count() - 1 ? ' ,' : '' }}
+                                                    @endif
+                                                @endforeach
+                                            @endif
+                                        </li>
                                     </ul>
                                 </div>
                                 <span class="fw-separator fl-wrap"></span>
                                 
                                 <div class="clearfix"></div>
                                 <div class="post-content">
-                                    {!! $post->post_content !!}
+                                    <?php
+                                        // Try to extract first image from post content to use as featured image
+                                        $content = $post->post_content ?? '';
+                                        $featured = '';
+                                        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $m)) {
+                                            $raw = $m[1];
+                                            // If relative path (not starting with http or /), convert via asset()
+                                            if (preg_match('/^(https?:)?\/\//', $raw) || str_starts_with($raw, '/')) {
+                                                $featured = $raw;
+                                            } else {
+                                                $featured = asset($raw);
+                                            }
+                                            // remove first img tag from content to avoid duplicate display
+                                            $content = preg_replace('/<img[^>]*>/i', '', $content, 1);
+                                        }
+                                        // fallback to default image
+                                        if (empty($featured)) {
+                                            $featured = asset('images/all/blog/1.jpg');
+                                        }
+                                    ?>
+
+                                    <div class="list-single-main-media fl-wrap">
+                                        <img src="{{ $featured }}" alt="{{ $post->post_title }}">
+                                    </div>
+
+                                    {!! $content !!}
                                 </div>
 
                                 <span class="fw-separator fl-wrap"></span>
