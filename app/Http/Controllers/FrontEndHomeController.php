@@ -75,10 +75,10 @@ class FrontEndHomeController extends Controller
                 'title' => 'Đối tác',
                 'value' => Customer::count()
             ],
-            // [
-            //     'title' => 'Khách hàng hài lòng',
-            //     'value' => CrmHost::count()
-            // ],
+             [
+                 'title' => 'Khách hàng hài lòng',
+                 'value' => CrmHost::count()
+             ],
             [
                 'title' => 'Bất động sản mới trong tuần',
                 'value' => Property::where('created_at', '>=', Carbon::now()->subDays(7))->count()
