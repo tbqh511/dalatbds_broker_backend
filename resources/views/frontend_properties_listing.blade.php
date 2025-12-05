@@ -407,7 +407,10 @@
                     <a href="#" class="prevposts-link disabled"><i class="fa fa-caret-left"></i></a>
                 @endif
             
-                @foreach ($properties->getUrlRange(1, $properties->lastPage()) as $page => $url)
+                @php
+                    $endPage = min($properties->lastPage(), 5);
+                @endphp
+                @foreach ($properties->getUrlRange(1, $endPage) as $page => $url)
                     @if ($page == $properties->currentPage())
                         <a href="#" class="current-page">{{ $page }}</a>
                     @else

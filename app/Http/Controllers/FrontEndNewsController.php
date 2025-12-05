@@ -215,10 +215,16 @@ class FrontEndNewsController extends Controller
             ->where('post_status', 'publish')
             ->firstOrFail();
 
-        // Increment view counter (stored in comment_count) atomically
+        // Increment view counter (stored in comment_count) once per session
         try {
-            $post->increment('comment_count');
-            $post->refresh();
+            $viewed = session()->get('viewed_news_posts', []);
+            $postKey = $post->getKey();
+            if (!in_array($postKey, $viewed, true)) {
+                $post->increment('comment_count');
+                $post->refresh();
+                $viewed[] = $postKey;
+                session()->put('viewed_news_posts', $viewed);
+            }
         } catch (\Throwable $e) {
             // If increment fails for any reason, ignore to avoid breaking the page
         }
