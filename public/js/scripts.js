@@ -151,8 +151,8 @@ function initHomeradar() {
     $('.listing-carousel').slick({
         infinite: true,
         slidesToShow: 3,
-        dots: false,
-        arrows: true,
+        dots: true,
+        arrows: false,
         responsive: [{
             breakpoint: 1024,
             settings: {

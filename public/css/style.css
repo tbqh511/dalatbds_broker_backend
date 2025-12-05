@@ -3288,6 +3288,20 @@ section.single-par2  .scroll-down-wrap{
 .listing-carousel   .slick-dots li button {
 	background:#ccc;
 }
+
+/* Limit visible dots to 5 for listing-carousel to avoid layout break */
+.listing-carousel .slick-dots {
+	display: flex;
+	justify-content: center;
+	flex-wrap: nowrap;
+	gap: 6px;
+}
+.listing-carousel .slick-dots li {
+	display: inline-block;
+}
+.listing-carousel .slick-dots li:nth-child(n+6) {
+	display: none !important;
+}
 .lc-wbtn {
 	position: absolute;
 	top: 50%;
