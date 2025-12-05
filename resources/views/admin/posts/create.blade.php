@@ -44,6 +44,28 @@
                             @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label">Danh mục</label>
+                            <div class="card p-3">
+                                @if(isset($categories))
+                                    @foreach($categories as $category)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="categories[]" value="{{ $category->term_id }}" id="category_{{ $category->term_id }}"
+                                                {{ in_array($category->term_id, old('categories', [])) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="category_{{ $category->term_id }}">
+                                                {{ $category->name }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Thẻ (phân cách bằng dấu phẩy)</label>
+                            <input type="text" class="form-control" id="tags" name="tags" value="{{ old('tags') }}" placeholder="Ví dụ: tin tức, công nghệ, bất động sản">
+                        </div>
+
                         <button type="submit" class="btn btn-primary">Tạo bài viết</button>
                         <a href="{{ route('admin.posts.index') }}" class="btn btn-secondary">Hủy</a>
                     </form>

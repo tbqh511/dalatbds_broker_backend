@@ -71,12 +71,14 @@ Route::get('/nha-ban', [FrontEndPropertiesController::class, 'index']);
 
 Route::get('/dat-ban', [FrontEndPropertiesController::class, 'index']);
 
-use App\Http\Controllers\NewsController;
+use App\Http\Controllers\FrontEndNewsController;
 //News Layout
 // Route::get('/new/{id}', [FrontEndNewsController::class,'show'])->name('new.showid');
 // Route::get('/news', [FrontEndNewsController::class,'index'])->name('news.index');
-Route::get('/news', [NewsController::class, 'index'])->name('news.index');
-Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
+Route::get('/news', [FrontEndNewsController::class, 'index'])->name('news.index');
+Route::get('/news/danh-muc/{slug}', [FrontEndNewsController::class, 'category'])->name('news.category');
+Route::get('/news/tag/{slug}', [FrontEndNewsController::class, 'tag'])->name('news.tag');
+Route::get('/news/{slug}', [FrontEndNewsController::class, 'show'])->name('news.show');
 //agent layout
 Route::get('/agent/{id}', [FrontEndAgentsController::class, 'getAgentById'])->name('agent.showid');
 
