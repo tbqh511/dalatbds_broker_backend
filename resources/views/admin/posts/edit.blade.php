@@ -9,7 +9,7 @@
                     <h4>Chỉnh sửa bài viết</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.posts.update', $post->ID) }}" method="POST">
+                    <form action="{{ route('admin.posts.update', $post->ID) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -54,6 +54,22 @@
                         <div class="mb-3">
                             <label for="tags" class="form-label">Thẻ (phân cách bằng dấu phẩy)</label>
                             <input type="text" class="form-control" id="tags" name="tags" value="{{ $tags ?? '' }}" placeholder="Ví dụ: tin tức, công nghệ, bất động sản">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="thumbnail" class="form-label">Ảnh đại diện</label>
+                            @php
+                                $thumb = optional($post->meta->where('meta_key', '_thumbnail')->first())->meta_value;
+                            @endphp
+                            @if($thumb)
+                                <div class="mb-2">
+                                    <img src="{{ asset('storage/' . $thumb) }}" alt="thumbnail" style="max-width:200px;">
+                                </div>
+                            @endif
+                            <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
+                            @error('thumbnail')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <button type="submit" class="btn btn-primary">Cập nhật bài viết</button>

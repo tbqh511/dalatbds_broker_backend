@@ -53,20 +53,39 @@ class PostController extends Controller
             'post_content' => 'required|string',
             'post_excerpt' => 'nullable|string',
             'post_status' => 'required|in:publish,draft',
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $post = new NewsPost();
         $post->post_author = auth()->id() ?? 0;
+        $post->post_type = 'post';
         $post->post_date = now();
         $post->post_date_gmt = now();
         $post->post_content = $request->post_content;
         $post->post_title = $request->post_title;
         $post->post_excerpt = $request->post_excerpt;
         $post->post_status = $request->post_status;
-        $post->post_name = Str::slug($request->post_title);
+        // Ensure unique slug
+        $slug = Str::slug($request->post_title);
+        $base = $slug;
+        $i = 1;
+        while (NewsPost::where('post_name', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+        $post->post_name = $slug;
         $post->post_modified = now();
         $post->post_modified_gmt = now();
         $post->save();
+
+        // Handle thumbnail upload (store as postmeta _thumbnail)
+        if ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('images/posts', 'public');
+            NewsPostmeta::create([
+                'news_post_id' => $post->ID,
+                'meta_key' => '_thumbnail',
+                'meta_value' => $path,
+            ]);
+        }
 
         // Handle Categories
         if ($request->has('categories')) {
@@ -170,6 +189,7 @@ class PostController extends Controller
             'post_content' => 'required|string',
             'post_excerpt' => 'nullable|string',
             'post_status' => 'required|in:publish,draft',
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $post = NewsPost::findOrFail($id);
@@ -181,6 +201,18 @@ class PostController extends Controller
         $post->post_modified = now();
         $post->post_modified_gmt = now();
         $post->save();
+
+        // Handle thumbnail upload: replace or create postmeta _thumbnail
+        if ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('images/posts', 'public');
+            // Remove existing thumbnail meta if exists
+            NewsPostmeta::where('news_post_id', $post->ID)->where('meta_key', '_thumbnail')->delete();
+            NewsPostmeta::create([
+                'news_post_id' => $post->ID,
+                'meta_key' => '_thumbnail',
+                'meta_value' => $path,
+            ]);
+        }
 
         // Handle Categories
         // Sync categories: detach all categories then attach new ones
@@ -275,16 +307,18 @@ class PostController extends Controller
 
         $data = [];
         foreach ($posts as $post) {
+            $deleteForm = '<form action="' . route('admin.posts.destroy', $post->ID) . '" method="POST" style="display:inline;">';
+            $deleteForm .= csrf_field();
+            $deleteForm .= method_field('DELETE');
+            $deleteForm .= '<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Bạn có chắc chắn muốn xóa?\')">Xóa</button>';
+            $deleteForm .= '</form>';
+
             $data[] = [
                 'ID' => $post->ID,
                 'post_title' => $post->post_title,
                 'post_status' => $post->post_status,
-                'post_date' => $post->post_date->format('Y-m-d H:i:s'),
-                'actions' => '<a href="' . route('admin.posts.edit', $post->ID) . '" class="btn btn-sm btn-primary">Sửa</a> ' .
-                             '<form action="' . route('admin.posts.destroy', $post->ID) . '" method="POST" style="display:inline;">' .
-                             '@csrf @method("DELETE")' .
-                             '<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Bạn có chắc chắn muốn xóa?\')">Xóa</button>' .
-                             '</form>'
+                'post_date' => optional($post->post_date)->format('Y-m-d H:i:s'),
+                'actions' => '<a href="' . route('admin.posts.edit', $post->ID) . '" class="btn btn-sm btn-primary">Sửa</a> ' . $deleteForm
             ];
         }
 

@@ -9,7 +9,7 @@
                     <h4>Thêm bài viết mới</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.posts.store') }}" method="POST">
+                    <form action="{{ route('admin.posts.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <div class="mb-3">
@@ -40,6 +40,14 @@
                                 <option value="draft" {{ old('post_status') == 'draft' ? 'selected' : '' }}>Bản nháp</option>
                             </select>
                             @error('post_status')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="thumbnail" class="form-label">Ảnh đại diện</label>
+                            <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
+                            @error('thumbnail')
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
