@@ -20,8 +20,6 @@ class PostController extends Controller
     {
         $posts = NewsPost::where('post_type', 'post')->orderBy('post_date', 'desc')->paginate(10);
 
-
-
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
             ->with('term')
             ->get()
@@ -89,8 +87,6 @@ class PostController extends Controller
         $post->save();
 
         // Handle thumbnail upload (store as postmeta _thumbnail)
-
-        // thumbnail handling
         if ($request->hasFile('thumbnail')) {
             $path = $request->file('thumbnail')->store('images/posts', 'public');
             NewsPostmeta::create([
@@ -202,10 +198,7 @@ class PostController extends Controller
             'post_content' => 'required|string',
             'post_excerpt' => 'nullable|string',
             'post_status' => 'required|in:publish,draft',
-
-
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-
         ]);
 
         $post = NewsPost::findOrFail($id);
@@ -317,15 +310,18 @@ class PostController extends Controller
         $offset = request('start', 0);
         $limit = request('length', 10);
 
-        // DataTables sends search as an array ['value' => '...']
+        // Standard DataTables search
         $search = null;
         $searchInput = request()->input('search');
         if (is_array($searchInput)) {
             $search = $searchInput['value'] ?? null;
         }
-        // support a custom search_text param from the client
-        if (!$search) {
-            $search = request('search_text');
+
+        // Custom search param from the client (overrides standard if standard is empty,
+        // or just acts as the primary search source since standard input might be hidden)
+        $searchText = request('search_text');
+        if (empty($search) && !empty($searchText)) {
+            $search = $searchText;
         }
 
         $query = NewsPost::where('post_type', 'post');
@@ -334,16 +330,6 @@ class PostController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('post_title', 'LIKE', "%{$search}%")
                   ->orWhere('post_content', 'LIKE', "%{$search}%");
-            });
-        }
-
-
-        // support legacy custom search param for external inputs
-        $searchText = request('search_text');
-        if (!$search && $searchText) {
-            $query->where(function($q) use ($searchText) {
-                $q->where('post_title', 'LIKE', "%{$searchText}%")
-                  ->orWhere('post_content', 'LIKE', "%{$searchText}%");
             });
         }
 
@@ -359,7 +345,9 @@ class PostController extends Controller
             $query->where('post_status', $status);
         }
 
-        $totalRecords = $query->count();
+        $totalRecords = NewsPost::where('post_type', 'post')->count(); // Total records without filter
+        $filteredRecords = $query->count(); // Total records with filter
+
         $posts = $query->orderBy('post_date', 'desc')
                       ->skip($offset)
                       ->take($limit)
@@ -393,7 +381,7 @@ class PostController extends Controller
         return response()->json([
             'draw' => intval(request('draw')),
             'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
             'data' => $data
         ]);
     }

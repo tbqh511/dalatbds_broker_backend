@@ -10,14 +10,14 @@
                         <a href="{{ route('admin.posts.create') }}" class="btn btn-primary float-end">Thêm bài viết mới</a>
                     </h4>
                 </div>
-                            <div class="card-body">
-                                @if(session('success'))
-                                    <div class="alert alert-success">{{ session('success') }}</div>
-                                @endif
+                <div class="card-body">
+                    @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
 
                     <div class="row mb-3" id="posts-filters">
                         <div class="col-md-4">
-                            <input id="post_search" type="text" class="form-control" placeholder="Tìm tiêu đề hoặc nội dung">
+                            <input id="post_search" type="text" class="form-control" placeholder="Tìm tiêu đề về nội dung">
                         </div>
                         <div class="col-md-4">
                             <select id="post_category" class="form-select">
@@ -95,45 +95,50 @@
 
 @section('script')
 <script>
-jQuery(document).ready(function() {
-    var table = jQuery('#posts-table').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '{{ route("admin.posts.list") }}',
-            data: function(d) {
-                d.category = jQuery('#post_category').val();
-                d.status = jQuery('#post_status_filter').val();
-                d.search_text = jQuery('#post_search').val();
-                console.log('Posts list request params:', d);
+(function($) {
+    "use strict";
+    $(document).ready(function() {
+        if (!$.fn.DataTable) {
+            console.warn('DataTables library is not loaded. Filtering may not work.');
+            return;
+        }
+
+        var table = $('#posts-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("admin.posts.list") }}',
+                data: function(d) {
+                    d.category = $('#post_category').val();
+                    d.status = $('#post_status_filter').val();
+                    d.search_text = $('#post_search').val();
+                }
+            },
+            columns: [
+                { data: 'ID', name: 'ID' },
+                { data: 'post_title', name: 'post_title' },
+                { data: 'post_status', name: 'post_status' },
+                { data: 'thumbnail', name: 'thumbnail', orderable: false, searchable: false },
+                { data: 'post_date', name: 'post_date' },
+                { data: 'actions', name: 'actions', orderable: false, searchable: false }
+            ]
+        });
+
+        // Log XHR errors for debugging
+        $('#posts-table').on('xhr.dt', function(e, settings, json, xhr) {
+            if (xhr && xhr.status && xhr.status !== 200) {
+                console.error('Posts list XHR error', xhr.status, xhr.responseText);
             }
-        },
-        columns: [
-            { data: 'ID', name: 'ID' },
-            { data: 'post_title', name: 'post_title' },
-            { data: 'post_status', name: 'post_status' },
-            { data: 'thumbnail', name: 'thumbnail', orderable: false, searchable: false },
-            { data: 'post_date', name: 'post_date' },
-            { data: 'actions', name: 'actions', orderable: false, searchable: false }
-        ]
-    });
+        });
 
-    // Log XHR errors for debugging
-    jQuery('#posts-table').on('xhr.dt', function(e, settings, json, xhr) {
-        if (xhr && xhr.status && xhr.status !== 200) {
-            console.error('Posts list XHR error', xhr.status, xhr.responseText);
-        }
-    });
-
-    jQuery('#post_category, #post_status_filter').on('change', function() {
-        table.ajax.reload();
-    });
-
-    jQuery('#post_search').on('keyup', function(e) {
-        if (e.key === 'Enter' || jQuery(this).val().length === 0) {
+        $('#post_category, #post_status_filter').on('change', function() {
             table.ajax.reload();
-        }
+        });
+
+        $('#post_search').on('keyup', function(e) {
+            table.ajax.reload();
+        });
     });
-});
+})(jQuery);
 </script>
 @endsection
