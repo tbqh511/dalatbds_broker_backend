@@ -401,21 +401,62 @@
                 @endif
             </div> --}}
             <div class="pagination">
-                @if ($properties->previousPageUrl())
-                    <a href="{{ $properties->previousPageUrl() }}" class="prevposts-link"><i class="fa fa-caret-left"></i></a>
-                @else
+                @php
+                    $current = $properties->currentPage();
+                    // Ensure lastPage covers currentPage to avoid "no highlight" issues if total count is off
+                    $end = max($properties->lastPage(), $current);
+                    $window = 2;
+                @endphp
+
+                @if ($properties->onFirstPage())
                     <a href="#" class="prevposts-link disabled"><i class="fa fa-caret-left"></i></a>
+                @else
+                    <a href="{{ $properties->previousPageUrl() }}" class="prevposts-link"><i class="fa fa-caret-left"></i></a>
                 @endif
-            
-                @foreach ($properties->getUrlRange(1, $properties->lastPage()) as $page => $url)
-                    @if ($page == $properties->currentPage())
-                        <a href="#" class="current-page">{{ $page }}</a>
-                    @else
-                        <a href="{{ $url }}">{{ $page }}</a>
-                    @endif
-                @endforeach
-            
-                @if ($properties->nextPageUrl())
+
+                @if ($end <= 7)
+                    @foreach (range(1, $end) as $page)
+                        @if ($page == $current)
+                            <a href="#" class="current-page">{{ $page }}</a>
+                        @else
+                            <a href="{{ $properties->url($page) }}">{{ $page }}</a>
+                        @endif
+                    @endforeach
+                @else
+                    @php
+                        $pages = [];
+                        $pages[] = 1;
+                        $rangeStart = max(2, $current - $window);
+                        $rangeEnd = min($end - 1, $current + $window);
+
+                        if ($rangeStart > 2) {
+                            $pages[] = '...';
+                        }
+                        for ($i = $rangeStart; $i <= $rangeEnd; $i++) {
+                            $pages[] = $i;
+                        }
+                        if ($rangeEnd < $end - 1) {
+                            $pages[] = '...';
+                        }
+                        if ($end > 1) {
+                            $pages[] = $end;
+                        }
+                    @endphp
+
+                    @foreach ($pages as $page)
+                        @if ($page === '...')
+                            <a href="#" class="disabled">...</a>
+                        @else
+                            @if ($page == $current)
+                                <a href="#" class="current-page">{{ $page }}</a>
+                            @else
+                                <a href="{{ $properties->url($page) }}">{{ $page }}</a>
+                            @endif
+                        @endif
+                    @endforeach
+                @endif
+
+                @if ($properties->hasMorePages())
                     <a href="{{ $properties->nextPageUrl() }}" class="nextposts-link"><i class="fa fa-caret-right"></i></a>
                 @else
                     <a href="#" class="nextposts-link disabled"><i class="fa fa-caret-right"></i></a>
