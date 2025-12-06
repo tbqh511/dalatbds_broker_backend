@@ -20,7 +20,8 @@ class PostController extends Controller
     {
         $posts = NewsPost::where('post_type', 'post')->orderBy('post_date', 'desc')->paginate(10);
 
-        // categories for filter dropdown
+
+
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
             ->with('term')
             ->get()
@@ -62,7 +63,14 @@ class PostController extends Controller
             'post_content' => 'required|string',
             'post_excerpt' => 'nullable|string',
             'post_status' => 'required|in:publish,draft',
+
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+
+
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+
         ]);
 
         $post = new NewsPost();
@@ -74,7 +82,7 @@ class PostController extends Controller
         $post->post_title = $request->post_title;
         $post->post_excerpt = $request->post_excerpt;
         $post->post_status = $request->post_status;
-        // Ensure unique slug
+
         $slug = Str::slug($request->post_title);
         $base = $slug;
         $i = 1;
@@ -82,11 +90,14 @@ class PostController extends Controller
             $slug = $base . '-' . $i++;
         }
         $post->post_name = $slug;
+
         $post->post_modified = now();
         $post->post_modified_gmt = now();
         $post->save();
 
         // Handle thumbnail upload (store as postmeta _thumbnail)
+
+        // thumbnail handling
         if ($request->hasFile('thumbnail')) {
             $path = $request->file('thumbnail')->store('images/posts', 'public');
             NewsPostmeta::create([
@@ -198,7 +209,10 @@ class PostController extends Controller
             'post_content' => 'required|string',
             'post_excerpt' => 'nullable|string',
             'post_status' => 'required|in:publish,draft',
-            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+
+
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+
         ]);
 
         $post = NewsPost::findOrFail($id);
@@ -206,15 +220,27 @@ class PostController extends Controller
         $post->post_title = $request->post_title;
         $post->post_excerpt = $request->post_excerpt;
         $post->post_status = $request->post_status;
-        $post->post_name = Str::slug($request->post_title);
+
+        // keep or regenerate a unique slug if title changed
+        $newSlug = Str::slug($request->post_title);
+        if ($newSlug !== $post->post_name) {
+            $base = $newSlug;
+            $i = 1;
+            while (NewsPost::where('post_name', $newSlug)->where('ID', '!=', $post->ID)->exists()) {
+                $newSlug = $base . '-' . $i++;
+            }
+            $post->post_name = $newSlug;
+        }
+
         $post->post_modified = now();
         $post->post_modified_gmt = now();
         $post->save();
 
-        // Handle thumbnail upload: replace or create postmeta _thumbnail
+
+        // thumbnail handling: replace existing meta
         if ($request->hasFile('thumbnail')) {
             $path = $request->file('thumbnail')->store('images/posts', 'public');
-            // Remove existing thumbnail meta if exists
+
             NewsPostmeta::where('news_post_id', $post->ID)->where('meta_key', '_thumbnail')->delete();
             NewsPostmeta::create([
                 'news_post_id' => $post->ID,
@@ -297,7 +323,17 @@ class PostController extends Controller
     {
         $offset = request('start', 0);
         $limit = request('length', 10);
-        $search = request('search.value');
+
+        // DataTables sends search as an array ['value' => '...']
+        $search = null;
+        $searchInput = request()->input('search');
+        if (is_array($searchInput)) {
+            $search = $searchInput['value'] ?? null;
+        }
+        // support a custom search_text param from the client
+        if (!$search) {
+            $search = request('search_text');
+        }
 
         $query = NewsPost::where('post_type', 'post');
 
@@ -308,6 +344,7 @@ class PostController extends Controller
             });
         }
 
+
         // support legacy custom search param for external inputs
         $searchText = request('search_text');
         if (!$search && $searchText) {
@@ -317,7 +354,6 @@ class PostController extends Controller
             });
         }
 
-        // filter by category (term_id)
         $category = request('category');
         if ($category) {
             $query->whereHas('taxonomies', function ($q) use ($category) {
@@ -325,7 +361,6 @@ class PostController extends Controller
             });
         }
 
-        // filter by post_status
         $status = request('status');
         if ($status) {
             $query->where('post_status', $status);

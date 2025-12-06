@@ -20,6 +20,30 @@ class NewsPost extends Model
     ];
 
     /**
+     * Date attributes
+     *
+     * @var array
+     */
+    protected $dates = [
+        'post_date',
+        'post_date_gmt',
+        'post_modified',
+        'post_modified_gmt',
+    ];
+
+    /**
+     * Date attributes
+     *
+     * @var array
+     */
+    protected $dates = [
+        'post_date',
+        'post_date_gmt',
+        'post_modified',
+        'post_modified_gmt',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>

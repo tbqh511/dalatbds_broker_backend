@@ -74,6 +74,14 @@
                             <input type="text" class="form-control" id="tags" name="tags" value="{{ old('tags') }}" placeholder="Ví dụ: tin tức, công nghệ, bất động sản">
                         </div>
 
+                        <div class="mb-3">
+                            <label for="thumbnail" class="form-label">Ảnh đại diện</label>
+                            <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
+                            @error('thumbnail')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <button type="submit" class="btn btn-primary">Tạo bài viết</button>
                         <a href="{{ route('admin.posts.index') }}" class="btn btn-secondary">Hủy</a>
                     </form>
