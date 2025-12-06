@@ -102,6 +102,7 @@ $(document).ready(function() {
                 d.category = $('#post_category').val();
                 d.status = $('#post_status_filter').val();
                 d.search_text = $('#post_search').val();
+                console.log('Posts list request params:', d);
             }
         },
         columns: [
@@ -112,6 +113,13 @@ $(document).ready(function() {
             { data: 'post_date', name: 'post_date' },
             { data: 'actions', name: 'actions', orderable: false, searchable: false }
         ]
+    });
+
+    // Log XHR errors for debugging
+    $('#posts-table').on('xhr.dt', function(e, settings, json, xhr) {
+        if (xhr.status !== 200) {
+            console.error('Posts list XHR error', xhr.status, xhr.responseText);
+        }
     });
 
     $('#post_category, #post_status_filter').on('change', function() {

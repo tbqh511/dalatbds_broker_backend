@@ -63,14 +63,7 @@ class PostController extends Controller
             'post_content' => 'required|string',
             'post_excerpt' => 'nullable|string',
             'post_status' => 'required|in:publish,draft',
-
-            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-
-
-            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-
         ]);
 
         $post = new NewsPost();
