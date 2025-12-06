@@ -14,9 +14,7 @@
                                 @if(session('success'))
                                     <div class="alert alert-success">{{ session('success') }}</div>
                                 @endif
-<<<<<<< Updated upstream
 
-<<<<<<< Updated upstream
                     <div class="row mb-3" id="posts-filters">
                         <div class="col-md-4">
                             <input id="post_search" type="text" class="form-control" placeholder="Tìm tiêu đề hoặc nội dung">
@@ -126,10 +124,7 @@
                                     <tbody>
                                     </tbody>
                                 </table>
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
                 </div>
             </div>
         </div>
@@ -159,13 +154,6 @@ $(document).ready(function() {
         ]
     });
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    // Filters
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     $('#post_category, #post_status_filter').on('change', function() {
         table.ajax.reload();
     });
