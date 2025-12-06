@@ -26,8 +26,31 @@
                             </tr>
                         </thead>
                         <tbody>
+                        @if(isset($posts) && $posts->count())
+                            @foreach($posts as $post)
+                                <tr>
+                                    <td>{{ $post->ID }}</td>
+                                    <td>{{ $post->post_title }}</td>
+                                    <td>{{ $post->post_status }}</td>
+                                    <td>{{ optional($post->post_date)->format('Y-m-d H:i:s') ?? '—' }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.posts.edit', $post->ID) }}" class="btn btn-sm btn-primary">Sửa</a>
+                                        <form action="{{ route('admin.posts.destroy', $post->ID) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa?')">Xóa</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
                         </tbody>
                     </table>
+                    @if(isset($posts))
+                        <div class="mt-2">
+                            {{ $posts->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
