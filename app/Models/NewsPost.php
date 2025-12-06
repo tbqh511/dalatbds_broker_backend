@@ -12,25 +12,6 @@ class NewsPost extends Model
     protected $table = 'news_posts';
     protected $primaryKey = 'ID';
 
-    protected $dates = [
-        'post_date',
-        'post_date_gmt',
-        'post_modified',
-        'post_modified_gmt',
-    ];
-
-    /**
-     * Date attributes
-     *
-     * @var array
-     */
-    protected $dates = [
-        'post_date',
-        'post_date_gmt',
-        'post_modified',
-        'post_modified_gmt',
-    ];
-
     /**
      * Date attributes
      *
