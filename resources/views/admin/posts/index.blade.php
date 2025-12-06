@@ -91,17 +91,20 @@
     </div>
 </div>
 
+@endsection
+
+@section('script')
 <script>
-$(document).ready(function() {
-    var table = $('#posts-table').DataTable({
+jQuery(document).ready(function() {
+    var table = jQuery('#posts-table').DataTable({
         processing: true,
         serverSide: true,
         ajax: {
             url: '{{ route("admin.posts.list") }}',
             data: function(d) {
-                d.category = $('#post_category').val();
-                d.status = $('#post_status_filter').val();
-                d.search_text = $('#post_search').val();
+                d.category = jQuery('#post_category').val();
+                d.status = jQuery('#post_status_filter').val();
+                d.search_text = jQuery('#post_search').val();
                 console.log('Posts list request params:', d);
             }
         },
@@ -116,18 +119,18 @@ $(document).ready(function() {
     });
 
     // Log XHR errors for debugging
-    $('#posts-table').on('xhr.dt', function(e, settings, json, xhr) {
-        if (xhr.status !== 200) {
+    jQuery('#posts-table').on('xhr.dt', function(e, settings, json, xhr) {
+        if (xhr && xhr.status && xhr.status !== 200) {
             console.error('Posts list XHR error', xhr.status, xhr.responseText);
         }
     });
 
-    $('#post_category, #post_status_filter').on('change', function() {
+    jQuery('#post_category, #post_status_filter').on('change', function() {
         table.ajax.reload();
     });
 
-    $('#post_search').on('keyup', function(e) {
-        if (e.key === 'Enter' || $(this).val().length === 0) {
+    jQuery('#post_search').on('keyup', function(e) {
+        if (e.key === 'Enter' || jQuery(this).val().length === 0) {
             table.ajax.reload();
         }
     });
