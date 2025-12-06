@@ -73,6 +73,7 @@ Route::get('/nha-ban', [FrontEndPropertiesController::class, 'index']);
 Route::get('/dat-ban', [FrontEndPropertiesController::class, 'index']);
 
 
+
 //News Layout
 // Route::get('/new/{id}', [FrontEndNewsController::class,'show'])->name('new.showid');
 // Route::get('/news', [FrontEndNewsController::class,'index'])->name('news.index');
@@ -82,6 +83,7 @@ Route::get('/tin-tuc/danh-muc/{slug}', [FrontEndNewsController::class, 'category
 Route::get('/tin-tuc/tag/{slug}', [FrontEndNewsController::class, 'tag'])->name('news.tag');
 Route::get('/tin-tuc/{slug}', [FrontEndNewsController::class, 'show'])->name('news.show');
 Route::get('/tin-tuc/nam/{year}/thang/{month}', [FrontEndNewsController::class, 'month'])->name('news.month');
+
 
 //agent layout
 Route::get('/agent/{id}', [FrontEndAgentsController::class, 'getAgentById'])->name('agent.showid');

@@ -66,7 +66,9 @@ class PostController extends Controller
 
         $post = new NewsPost();
         $post->post_author = auth()->id() ?? 0;
+
         $post->post_type = 'post';
+
         $post->post_date = now();
         $post->post_date_gmt = now();
         $post->post_content = $request->post_content;
@@ -86,15 +88,7 @@ class PostController extends Controller
         $post->post_modified_gmt = now();
         $post->save();
 
-        // Handle thumbnail upload (store as postmeta _thumbnail)
-        if ($request->hasFile('thumbnail')) {
-            $path = $request->file('thumbnail')->store('images/posts', 'public');
-            NewsPostmeta::create([
-                'news_post_id' => $post->ID,
-                'meta_key' => '_thumbnail',
-                'meta_value' => $path,
-            ]);
-        }
+
 
         // Handle Categories
         if ($request->has('categories')) {
@@ -223,6 +217,7 @@ class PostController extends Controller
         $post->save();
 
 
+
         // thumbnail handling: replace existing meta
         if ($request->hasFile('thumbnail')) {
             $path = $request->file('thumbnail')->store('images/posts', 'public');
@@ -234,6 +229,7 @@ class PostController extends Controller
                 'meta_value' => $path,
             ]);
         }
+
 
         // Handle Categories
         // Sync categories: detach all categories then attach new ones

@@ -56,6 +56,7 @@
                             <input type="text" class="form-control" id="tags" name="tags" value="{{ $tags ?? '' }}" placeholder="Ví dụ: tin tức, công nghệ, bất động sản">
                         </div>
 
+
                         <div class="mb-3">
                             <label for="thumbnail" class="form-label">Ảnh đại diện</label>
                             @php
@@ -71,6 +72,7 @@
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
+
 
                         <button type="submit" class="btn btn-primary">Cập nhật bài viết</button>
                         <a href="{{ route('admin.posts.index') }}" class="btn btn-secondary">Hủy</a>

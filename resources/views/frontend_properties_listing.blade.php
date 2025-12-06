@@ -401,12 +401,19 @@
                 @endif
             </div> --}}
             <div class="pagination">
-                @if ($properties->previousPageUrl())
-                    <a href="{{ $properties->previousPageUrl() }}" class="prevposts-link"><i class="fa fa-caret-left"></i></a>
-                @else
+                @php
+                    $current = $properties->currentPage();
+                    // Ensure lastPage covers currentPage to avoid "no highlight" issues if total count is off
+                    $end = max($properties->lastPage(), $current);
+                    $window = 2;
+                @endphp
+
+                @if ($properties->onFirstPage())
                     <a href="#" class="prevposts-link disabled"><i class="fa fa-caret-left"></i></a>
+                @else
+                    <a href="{{ $properties->previousPageUrl() }}" class="prevposts-link"><i class="fa fa-caret-left"></i></a>
                 @endif
-            
+           
                 @php
                     $endPage = min($properties->lastPage(), 5);
                 @endphp
@@ -419,6 +426,7 @@
                 @endforeach
             
                 @if ($properties->nextPageUrl())
+
                     <a href="{{ $properties->nextPageUrl() }}" class="nextposts-link"><i class="fa fa-caret-right"></i></a>
                 @else
                     <a href="#" class="nextposts-link disabled"><i class="fa fa-caret-right"></i></a>

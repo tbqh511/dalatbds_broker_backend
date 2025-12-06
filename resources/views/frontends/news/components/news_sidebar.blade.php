@@ -1,4 +1,6 @@
+
 <div class="col-md-4">
+
                     <div class="box-widget-wrap fl-wrap fixed-bar">
                         <!--box-widget-->
                         <div class="box-widget fl-wrap">
