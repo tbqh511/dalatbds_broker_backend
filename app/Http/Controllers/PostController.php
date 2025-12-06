@@ -19,7 +19,16 @@ class PostController extends Controller
     public function index()
     {
         $posts = NewsPost::where('post_type', 'post')->orderBy('post_date', 'desc')->paginate(10);
-        return view('admin.posts.index', compact('posts'));
+
+        // categories for filter dropdown
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->with('term')
+            ->get()
+            ->map(function ($tax) {
+                return $tax->term;
+            });
+
+        return view('admin.posts.index', compact('posts', 'categories'));
     }
 
     /**
@@ -299,6 +308,29 @@ class PostController extends Controller
             });
         }
 
+        // support legacy custom search param for external inputs
+        $searchText = request('search_text');
+        if (!$search && $searchText) {
+            $query->where(function($q) use ($searchText) {
+                $q->where('post_title', 'LIKE', "%{$searchText}%")
+                  ->orWhere('post_content', 'LIKE', "%{$searchText}%");
+            });
+        }
+
+        // filter by category (term_id)
+        $category = request('category');
+        if ($category) {
+            $query->whereHas('taxonomies', function ($q) use ($category) {
+                $q->where('taxonomy', 'category')->where('term_id', $category);
+            });
+        }
+
+        // filter by post_status
+        $status = request('status');
+        if ($status) {
+            $query->where('post_status', $status);
+        }
+
         $totalRecords = $query->count();
         $posts = $query->orderBy('post_date', 'desc')
                       ->skip($offset)
@@ -313,10 +345,18 @@ class PostController extends Controller
             $deleteForm .= '<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Bạn có chắc chắn muốn xóa?\')">Xóa</button>';
             $deleteForm .= '</form>';
 
+            // thumbnail
+            $thumbMeta = $post->meta()->where('meta_key', '_thumbnail')->first();
+            $thumbHtml = '';
+            if ($thumbMeta && $thumbMeta->meta_value) {
+                $thumbHtml = '<img src="' . asset('storage/' . $thumbMeta->meta_value) . '" style="max-width:80px; height:auto;"/>';
+            }
+
             $data[] = [
                 'ID' => $post->ID,
                 'post_title' => $post->post_title,
                 'post_status' => $post->post_status,
+                'thumbnail' => $thumbHtml,
                 'post_date' => optional($post->post_date)->format('Y-m-d H:i:s'),
                 'actions' => '<a href="' . route('admin.posts.edit', $post->ID) . '" class="btn btn-sm btn-primary">Sửa</a> ' . $deleteForm
             ];
