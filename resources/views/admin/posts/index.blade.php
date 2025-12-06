@@ -83,47 +83,7 @@
                             {{ $posts->links() }}
                         </div>
                     @endif
-=======
-=======
 
->>>>>>> Stashed changes
-                                <div class="row mb-3" id="posts-filters">
-                                    <div class="col-md-4">
-                                        <input id="post_search" type="text" class="form-control" placeholder="Tìm tiêu đề hoặc nội dung">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <select id="post_category" class="form-select">
-                                            <option value="">-- Chọn danh mục --</option>
-                                            @if(isset($categories))
-                                                @foreach($categories as $cat)
-                                                    <option value="{{ $cat->term_id }}">{{ $cat->name }}</option>
-                                                @endforeach
-                                            @endif
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <select id="post_status_filter" class="form-select">
-                                            <option value="">-- Chọn trạng thái --</option>
-                                            <option value="publish">Xuất bản</option>
-                                            <option value="draft">Bản nháp</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <table id="posts-table" class="table table-bordered table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Tiêu đề</th>
-                                            <th>Trạng thái</th>
-                                            <th>Ảnh</th>
-                                            <th>Ngày tạo</th>
-                                            <th>Hành động</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    </tbody>
-                                </table>
 
                 </div>
             </div>
