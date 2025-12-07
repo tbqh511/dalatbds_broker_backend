@@ -1,6 +1,8 @@
 @extends('layouts.main')
 
 @section('content')
+<link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
 <div class="container">
     <div class="row">
         <div class="col-md-12">
@@ -94,6 +96,8 @@
 @endsection
 
 @section('script')
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 <script>
 (function($) {
     "use strict";
