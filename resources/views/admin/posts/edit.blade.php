@@ -56,15 +56,16 @@
                             <input type="text" class="form-control" id="tags" name="tags" value="{{ $tags ?? '' }}" placeholder="Ví dụ: tin tức, công nghệ, bất động sản">
                         </div>
 
-
                         <div class="mb-3">
                             <label for="thumbnail" class="form-label">Ảnh đại diện</label>
                             @php
-                                $thumb = optional($post->meta->where('meta_key', '_thumbnail')->first())->meta_value;
+                                // Logic hiển thị ảnh cũ
+                                $thumbMeta = $post->meta->where('meta_key', '_thumbnail')->first();
+                                $thumb = optional($thumbMeta)->meta_value;
                             @endphp
                             @if($thumb)
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/' . $thumb) }}" alt="thumbnail" style="max-width:200px;">
+                                    <img src="{{ asset('storage/' . $thumb) }}" alt="Ảnh đại diện hiện tại" style="max-width:200px;">
                                 </div>
                             @endif
                             <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
@@ -72,7 +73,6 @@
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
-
 
                         <button type="submit" class="btn btn-primary">Cập nhật bài viết</button>
                         <a href="{{ route('admin.posts.index') }}" class="btn btn-secondary">Hủy</a>

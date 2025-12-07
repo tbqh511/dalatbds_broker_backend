@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\Api\NewsPostApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -43,10 +44,20 @@ Route::get('get_payment_settings', [ApiController::class, 'get_payment_settings'
 Route::get('get_count_by_cities_categoris', [ApiController::class, 'get_count_by_cities_categoris']);
 Route::get('get_report_reasons', [ApiController::class, 'get_report_reasons']);
 Route::get('get_slider', [ApiController::class, 'get_slider']);
+
+// Public News Posts Routes (Read-only)
+Route::get('news_posts', [NewsPostApiController::class, 'index']);
+Route::get('news_posts/{id}', [NewsPostApiController::class, 'show']);
+
 //Play Integrity
 //Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
+    // News Posts Routes (Write access)
+    Route::post('news_posts', [NewsPostApiController::class, 'store']);
+    Route::put('news_posts/{id}', [NewsPostApiController::class, 'update']);
+    Route::delete('news_posts/{id}', [NewsPostApiController::class, 'destroy']);
+
     Route::post('get_property', [ApiController::class, 'get_property']);
 
     Route::post('update_profile', [ApiController::class, 'update_profile']);

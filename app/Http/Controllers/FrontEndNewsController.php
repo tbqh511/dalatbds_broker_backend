@@ -16,7 +16,6 @@ class FrontEndNewsController extends Controller
      */
     public function index()
     {
-
         $q = request('se');
         $newsQuery = NewsPost::with('tags')
             ->where('post_type', 'post')
@@ -54,7 +53,6 @@ class FrontEndNewsController extends Controller
             ->get();
 
         return view('frontends.news.index', compact('news', 'categories', 'tags', 'months'));
-
     }
 
     /**
@@ -69,13 +67,11 @@ class FrontEndNewsController extends Controller
 
         $q = request('se');
         $newsQuery = NewsPost::whereHas('taxonomies', function ($query) use ($term) {
-
                 $query->where('taxonomy', 'category')
                       ->where('news_term_taxonomy.term_id', $term->term_id);
             })
             ->with('tags')
             ->where('post_type', 'post')
-
             ->where('post_status', 'publish');
 
         if (!empty($q)) {
@@ -110,7 +106,6 @@ class FrontEndNewsController extends Controller
             ->get();
 
         return view('frontends.news.index', compact('news', 'categories', 'tags', 'months'));
-
     }
 
     /**
@@ -125,13 +120,11 @@ class FrontEndNewsController extends Controller
 
         $q = request('se');
         $newsQuery = NewsPost::whereHas('taxonomies', function ($query) use ($term) {
-
                 $query->where('taxonomy', 'post_tag')
                       ->where('news_term_taxonomy.term_id', $term->term_id);
             })
             ->with('tags')
             ->where('post_type', 'post')
-
             ->where('post_status', 'publish');
 
         if (!empty($q)) {
@@ -145,13 +138,10 @@ class FrontEndNewsController extends Controller
         $news = $newsQuery->orderBy('post_date', 'desc')->paginate(10);
         $news->appends(request()->query());
 
-
         // Fetch Categories with counts
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
             ->with('term')
-
             ->withCount(['posts as count'])
-
             ->get();
 
         // Fetch Tags
@@ -210,7 +200,6 @@ class FrontEndNewsController extends Controller
             ->get();
 
         return view('frontends.news.index', compact('news', 'categories', 'tags'));
-
     }
 
     /**
@@ -225,7 +214,6 @@ class FrontEndNewsController extends Controller
             ->where('post_type', 'post')
             ->where('post_status', 'publish')
             ->firstOrFail();
-
 
         // Increment view counter (stored in comment_count) once per session
         try {
@@ -262,7 +250,6 @@ class FrontEndNewsController extends Controller
             ->get();
 
         return view('frontends.news.show', compact('post','categories', 'tags', 'months'));
-
     }
 
     /**

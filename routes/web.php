@@ -73,7 +73,6 @@ Route::get('/nha-ban', [FrontEndPropertiesController::class, 'index']);
 Route::get('/dat-ban', [FrontEndPropertiesController::class, 'index']);
 
 
-
 //News Layout
 // Route::get('/new/{id}', [FrontEndNewsController::class,'show'])->name('new.showid');
 // Route::get('/news', [FrontEndNewsController::class,'index'])->name('news.index');

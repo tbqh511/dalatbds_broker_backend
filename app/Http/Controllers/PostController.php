@@ -66,8 +66,7 @@ class PostController extends Controller
 
         $post = new NewsPost();
         $post->post_author = auth()->id() ?? 0;
-
-        $post->post_type = 'post';
+        $post->post_type = 'post'; // Giữ lại từ HEAD
 
         $post->post_date = now();
         $post->post_date_gmt = now();
@@ -88,7 +87,15 @@ class PostController extends Controller
         $post->post_modified_gmt = now();
         $post->save();
 
-
+        // Thumbnail handling (Giữ lại từ HEAD)
+        if ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('images/posts', 'public');
+            NewsPostmeta::create([
+                'news_post_id' => $post->ID,
+                'meta_key' => '_thumbnail',
+                'meta_value' => $path,
+            ]);
+        }
 
         // Handle Categories
         if ($request->has('categories')) {
@@ -98,7 +105,7 @@ class PostController extends Controller
                 ->pluck('term_taxonomy_id');
             $post->taxonomies()->attach($taxonomyIds);
 
-            // Update counts (simplified)
+            // Update counts
             foreach ($taxonomyIds as $tid) {
                 NewsTermTaxonomy::where('term_taxonomy_id', $tid)->increment('count');
             }
@@ -216,9 +223,7 @@ class PostController extends Controller
         $post->post_modified_gmt = now();
         $post->save();
 
-
-
-        // thumbnail handling: replace existing meta
+        // Thumbnail handling: replace existing meta (Giữ lại từ HEAD)
         if ($request->hasFile('thumbnail')) {
             $path = $request->file('thumbnail')->store('images/posts', 'public');
 
@@ -229,7 +234,6 @@ class PostController extends Controller
                 'meta_value' => $path,
             ]);
         }
-
 
         // Handle Categories
         // Sync categories: detach all categories then attach new ones
