@@ -21,15 +21,15 @@ use Illuminate\Support\Facades\Route;
 
 // Artisan::call('migrate');
 Route::post('get_system_settings', [ApiController::class, 'get_system_settings']);
+// Server-to-server login for automation (requires API_LOGIN_SECRET in .env)
+Route::post('login', [ApiController::class, 'login']);
+
 Route::post('user_signup', [ApiController::class, 'user_signup']);
 Route::post('get_languages', [ApiController::class, 'get_languages']);
 Route::get('app_payment_status', [ApiController::class, 'app_payment_status']);
 
-
-
 // Route::get('paypal', [ApiController::class, 'paypal']);
 // Route::get('paypal1', [ApiController::class, 'paypal']);
-
 
 //HuyTBQH: Add Guest Mode
 Route::get('get_facilities', [ApiController::class, 'get_facilities']);
@@ -51,7 +51,6 @@ Route::get('news_posts/{id}', [NewsPostApiController::class, 'show']);
 
 //Play Integrity
 //Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
-
 Route::group(['middleware' => ['jwt.verify']], function () {
     // News Posts Routes (Write access)
     Route::post('news_posts', [NewsPostApiController::class, 'store']);
@@ -59,9 +58,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::delete('news_posts/{id}', [NewsPostApiController::class, 'destroy']);
 
     Route::post('get_property', [ApiController::class, 'get_property']);
-
     Route::post('update_profile', [ApiController::class, 'update_profile']);
-    
     Route::post('post_property', [ApiController::class, 'post_property']);
     Route::post('update_post_property', [ApiController::class, 'update_post_property']);
     Route::post('delete_property', [ApiController::class, 'delete_property']);
@@ -81,9 +78,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('delete_chat_message', [ApiController::class, 'delete_chat_message']);
     Route::post('store_advertisement', [ApiController::class, 'store_advertisement']);
     Route::post('add_reports', [ApiController::class, 'add_reports']);
-
-    
-   
+  
     Route::get('get_user_by_id', [ApiController::class, 'get_user_by_id']);
     Route::get('get_property_inquiry', [ApiController::class, 'get_property_inquiry']);
     Route::get('get_notification_list', [ApiController::class, 'get_notification_list']);
@@ -100,10 +95,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     
     Route::get('paypal', [ApiController::class, 'paypal']);
     Route::get('get_agents_details', [ApiController::class, 'get_agents_details']);
-   
-    
-
-    
+       
     Route::get('get_crm_hosts', [ApiController::class, 'get_crm_hosts']);
     // CRM Customers
     Route::get('customers', [ApiController::class, 'get_customers']);

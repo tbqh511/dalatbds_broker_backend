@@ -32,12 +32,14 @@ use Carbon\CarbonInterface;
 use App\Models\UserPurchasedPackage;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Schema;
 // use GuzzleHttp\Client;
 use App\Models\report_reasons;
 use App\Models\user_reports;
@@ -149,18 +151,18 @@ class ApiController extends Controller
             $mobile = $request->filled('mobile') ? $request->input('mobile') : null;
 
             $user = Customer::where(function ($query) use ($firebase_id, $mobile) {
-                    $query->where('firebase_id', $firebase_id);
-                    
-                    // Chỉ thêm điều kiện mobile nếu giá trị này không null
-                    if (!is_null($mobile)) {
-                        $query->orWhere('mobile', $mobile);
-                    }
-                })
+                $query->where('firebase_id', $firebase_id);
+
+                // Chỉ thêm điều kiện mobile nếu giá trị này không null
+                if (!is_null($mobile)) {
+                    $query->orWhere('mobile', $mobile);
+                }
+            })
                 ->where('logintype', $type)
                 ->first();
 
             // $user = Customer::where('firebase_id', $firebase_id)->where('logintype', $type)->first();
-          
+
             //dd($user);
             if (!$user) {
                 $saveCustomer = new Customer();
@@ -276,8 +278,118 @@ class ApiController extends Controller
         }
         return response()->json($response);
     }
+
+    /**
+     * Server-to-server login to issue JWT for a Customer.
+     * Requires a server secret to be provided in the request (env: API_LOGIN_SECRET).
+     * This avoids exposing token issuance publicly since customers don't have passwords in this app.
+     */
+    public function login(Request $request)
+    {
+        // 1. Validate dữ liệu đầu vào
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required',
+            'secret' => 'required',
+            'telegram_id' => 'nullable',
+            'first_name' => 'nullable'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Thiếu số điện thoại hoặc secret',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // 2. Kiểm tra Secret
+        $secret = env('API_LOGIN_SECRET');
+        if (empty($secret) || $request->input('secret') !== $secret) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Secret key không hợp lệ'
+            ], 401);
+        }
+
+        // 3. Chuẩn hóa số điện thoại
+        $rawPhone = $request->input('phone');
+        $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
+
+        $phoneVariants = [];
+        if (substr($cleanPhone, 0, 1) === '0') {
+            $phone84 = '84' . substr($cleanPhone, 1);
+            $phoneVariants[] = $phone84;
+            $phoneVariants[] = $cleanPhone; // 0xxx
+        } elseif (substr($cleanPhone, 0, 2) === '84') {
+            $phone0 = '0' . substr($cleanPhone, 2);
+            $phoneVariants[] = $cleanPhone; // 84...
+            $phoneVariants[] = $phone0; // 0...
+        } else {
+            $phoneVariants[] = $cleanPhone;
+            $phoneVariants[] = '0' . $cleanPhone;
+            $phoneVariants[] = '84' . $cleanPhone;
+        }
+
+        // remove duplicates
+        $phoneVariants = array_values(array_unique($phoneVariants));
+
+        // 4. Tìm user: ưu tiên cột 'mobile' (hiện có trong DB). Nếu bảng có cột 'phone', tìm cả hai.
+        $query = Customer::query();
+        $query->where(function ($q) use ($phoneVariants) {
+            $q->whereIn('mobile', $phoneVariants);
+            if (Schema::hasColumn('customers', 'phone')) {
+                $q->orWhereIn('phone', $phoneVariants);
+            }
+        });
+
+        $customer = $query->first();
+
+        if (!$customer) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Số điện thoại này chưa đăng ký tài khoản BDS.'
+            ], 404);
+        }
+
+        // 5. Kiểm tra trạng thái tài khoản
+        if (isset($customer->isActive) && $customer->isActive == 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Tài khoản đã bị khóa.'
+            ], 401);
+        }
+
+        // 6. Cập nhật telegram_id / first_name nếu có
+        if ($request->has('telegram_id')) {
+            $customer->telegram_id = $request->input('telegram_id');
+            if ($request->has('first_name') && empty($customer->name)) {
+                $customer->name = $request->input('first_name');
+            }
+            $customer->save();
+        }
+
+        // 7. Cấp JWT
+        try {
+            $token = JWTAuth::fromUser($customer);
+            if (!$token) {
+                return response()->json(['error' => true, 'message' => 'Tạo token thất bại'], 500);
+            }
+            $customer->api_token = $token;
+            $customer->save();
+        } catch (JWTException $e) {
+            return response()->json(['error' => true, 'message' => 'Tạo token thất bại'], 500);
+        }
+
+        return response()->json([
+            'error' => false,
+            'message' => 'Đăng nhập thành công',
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'data' => $customer
+        ]);
+    }
     //* START :: get_slider   *//
-    
+
 
     public function get_slider(Request $request)
     {
@@ -1409,7 +1521,7 @@ class ApiController extends Controller
                 }
             } else {
                 $response['error'] = true;
-                $response['message'] = 'No Data Found: id = ' . $id . ' user ='  . $current_user.' ,property: '.$property;
+                $response['message'] = 'No Data Found: id = ' . $id . ' user ='  . $current_user . ' ,property: ' . $property;
             }
         } else {
             $response['error'] = true;
@@ -1480,7 +1592,6 @@ class ApiController extends Controller
             $response['error'] = false;
             $response['message'] = 'Property deleted successfully';
             return response()->json($response);
-
         } catch (Exception $e) {
             DB::rollback();
             $response = array(
@@ -2661,7 +2772,7 @@ class ApiController extends Controller
                 // $tempRow['property_id'] = $row->property_id;
                 // $tempRow['title'] = $row->property->title;
                 // $tempRow['title_image'] = $row->property->title_image;
-                 // Kiểm tra xem mối quan hệ property có tồn tại không
+                // Kiểm tra xem mối quan hệ property có tồn tại không
                 if ($row->property) {
                     $tempRow['title'] = $row->property->title;
                     $tempRow['title_image'] = $row->property->title_image;
