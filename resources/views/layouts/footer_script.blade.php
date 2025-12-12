@@ -24,6 +24,8 @@
 <script src="https://bevacqua.github.io/dragula/dist/dragula.js"></script>
 
 
+<!-- Load Toastify BEFORE app.js and custom scripts that might use it -->
+<script src="{{ url('assets/extensions/toastify-js/src/toastify.js') }}"></script>
 
 <script src="{{ url('assets/js/app.js') }}"></script>
 <script src="{{ url('assets/extensions/tinymce/tinymce.min.js') }}"></script>
@@ -41,7 +43,7 @@
 
 
 
-<script src="{{ url('assets/extensions/toastify-js/src/toastify.js') }}"></script>
+
 <script src="{{ url('assets/extensions/parsleyjs/parsley.min.js') }}"></script>
 <script src="{{ url('assets/js/pages/parsley.js') }}"></script>
 <script src="{{ url('assets/extensions/bootstrap-table/bootstrap-table.min.js') }}"></script>
@@ -75,23 +77,31 @@
 
 @if (Session::has('success'))
     <script type="text/javascript">
-        Toastify({
-            text: '{{ Session::get('success') }}',
-            duration: 6000,
-            close: !0,
-            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-        }).showToast()
+        if (typeof Toastify !== 'undefined') {
+            Toastify({
+                text: '{{ Session::get('success') }}',
+                duration: 6000,
+                close: !0,
+                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+            }).showToast();
+        } else {
+            console.warn('Toastify library not loaded for success message');
+        }
     </script>
 @endif
 
 
 @if (Session::has('error'))
     <script type="text/javascript">
-        Toastify({
-            text: '{{ Session::get('error') }}',
-            duration: 6000,
-            close: !0,
-            backgroundColor: '#dc3545' //"linear-gradient(to right, #dc3545, #96c93d)"
-        }).showToast()
+        if (typeof Toastify !== 'undefined') {
+            Toastify({
+                text: '{{ Session::get('error') }}',
+                duration: 6000,
+                close: !0,
+                backgroundColor: '#dc3545' //"linear-gradient(to right, #dc3545, #96c93d)"
+            }).showToast();
+        } else {
+            console.warn('Toastify library not loaded for error message');
+        }
     </script>
 @endif
