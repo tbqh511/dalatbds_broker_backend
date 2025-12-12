@@ -32,14 +32,12 @@
             <!-- content -->
             @yield('content')
             <!-- content end -->
-            @hasSection('hide_newsletter')
-            @else
+            <!-- subscribe-wrap -->
             @include('frontends.newsletter')
-            @endif
-            @hasSection('hide_footer')
-            @else
+            <!-- subscribe-wrap end -->
+            <!-- footer -->
             @include('frontends.footer')
-            @endif
+            <!-- footer end -->
         </div>
         <!-- wrapper end -->
         <!--register form -->
