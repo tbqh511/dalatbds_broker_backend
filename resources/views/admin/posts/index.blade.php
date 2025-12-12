@@ -67,7 +67,12 @@
                                         @php
                                             $thumbUrl = null;
                                             if (!empty($thumb)) {
-                                                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumb)) {
+                                                // Prefer public assets copy if exists (for environments without storage:link)
+                                                $filename = basename($thumb);
+                                                $publicCopy = public_path('assets/images/posts/' . $filename);
+                                                if (file_exists($publicCopy)) {
+                                                    $thumbUrl = asset('assets/images/posts/' . $filename);
+                                                } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumb)) {
                                                     $thumbUrl = \Illuminate\Support\Facades\Storage::url($thumb);
                                                 }
                                             }

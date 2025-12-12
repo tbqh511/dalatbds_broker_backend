@@ -8,6 +8,7 @@ use App\Models\NewsTerm;
 use App\Models\NewsTermTaxonomy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 
 class PostController extends Controller
 {
@@ -95,6 +96,23 @@ class PostController extends Controller
                 'meta_key' => '_thumbnail',
                 'meta_value' => $path,
             ]);
+
+            // Ensure a public-copy exists so files are accessible even when `public/storage` symlink is not present.
+            try {
+                $filename = basename($path);
+                $publicDir = public_path('assets/images/posts');
+                if (!File::isDirectory($publicDir)) {
+                    File::makeDirectory($publicDir, 0755, true);
+                }
+                $source = storage_path('app/public/' . $path);
+                $dest = $publicDir . '/' . $filename;
+                if (File::exists($source) && !File::exists($dest)) {
+                    File::copy($source, $dest);
+                }
+            } catch (\Exception $e) {
+                // Non-fatal: log and continue. Storage link recommended.
+                // logger()->error('Thumbnail publish failed: '.$e->getMessage());
+            }
         }
 
         // Handle Categories
@@ -233,6 +251,22 @@ class PostController extends Controller
                 'meta_key' => '_thumbnail',
                 'meta_value' => $path,
             ]);
+
+            // Also copy to public assets folder for direct serving when storage link is missing
+            try {
+                $filename = basename($path);
+                $publicDir = public_path('assets/images/posts');
+                if (!File::isDirectory($publicDir)) {
+                    File::makeDirectory($publicDir, 0755, true);
+                }
+                $source = storage_path('app/public/' . $path);
+                $dest = $publicDir . '/' . $filename;
+                if (File::exists($source) && !File::exists($dest)) {
+                    File::copy($source, $dest);
+                }
+            } catch (\Exception $e) {
+                // logger()->error('Thumbnail publish failed: '.$e->getMessage());
+            }
         }
 
         // Handle Categories
@@ -365,7 +399,19 @@ class PostController extends Controller
             $thumbMeta = $post->meta()->where('meta_key', '_thumbnail')->first();
             $thumbHtml = '';
             if ($thumbMeta && $thumbMeta->meta_value) {
-                $thumbHtml = '<img src="' . asset('storage/' . $thumbMeta->meta_value) . '" style="max-width:80px; height:auto;"/>';
+                $filename = basename($thumbMeta->meta_value);
+                $publicCopyPath = public_path('assets/images/posts/' . $filename);
+                if (file_exists($publicCopyPath)) {
+                    $thumbUrl = asset('assets/images/posts/' . $filename);
+                } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumbMeta->meta_value)) {
+                    $thumbUrl = \Illuminate\Support\Facades\Storage::url($thumbMeta->meta_value);
+                } else {
+                    $thumbUrl = null;
+                }
+
+                if ($thumbUrl) {
+                    $thumbHtml = '<img src="' . $thumbUrl . '" style="max-width:80px; height:auto;"/>';
+                }
             }
 
             $data[] = [

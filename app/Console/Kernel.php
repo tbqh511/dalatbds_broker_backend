@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         ClearRedisCache::class,
+        \App\Console\Commands\PublishPostThumbnails::class,
     ];
 
     /**
