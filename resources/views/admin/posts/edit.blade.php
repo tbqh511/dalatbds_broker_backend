@@ -100,21 +100,37 @@
         </div>
     </div>
 </div>
+@endsection
 
+@section('script')
 <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
 <script>
-    CKEDITOR.replace('post_content', {
-        versionCheck: false
-    });
+    // Wrap all jQuery dependent code in a ready block or IIFE
+    (function($) {
+        "use strict";
+        $(document).ready(function() {
+            // Initialize CKEditor
+            if (typeof CKEDITOR !== 'undefined') {
+                CKEDITOR.replace('post_content', {
+                    versionCheck: false
+                });
+            } else {
+                console.warn('CKEditor library not loaded.');
+            }
 
-    $(document).ready(function() {
-        $('#tags').select2({
-            tags: true,
-            tokenSeparators: [','],
-            placeholder: "Chọn hoặc nhập thẻ...",
-            allowClear: true,
-            width: '100%'
+            // Initialize Select2 for Tags
+            if ($.fn.select2) {
+                $('#tags').select2({
+                    tags: true,
+                    tokenSeparators: [','],
+                    placeholder: "Chọn hoặc nhập thẻ...",
+                    allowClear: true,
+                    width: '100%'
+                });
+            } else {
+                console.warn('Select2 library not loaded.');
+            }
         });
-    });
+    })(jQuery);
 </script>
 @endsection
