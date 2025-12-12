@@ -32,12 +32,14 @@
             <!-- content -->
             @yield('content')
             <!-- content end -->
-            <!-- subscribe-wrap -->
+            @hasSection('hide_newsletter')
+            @else
             @include('frontends.newsletter')
-            <!-- subscribe-wrap end -->
-            <!-- footer -->
+            @endif
+            @hasSection('hide_footer')
+            @else
             @include('frontends.footer')
-            <!-- footer end -->
+            @endif
         </div>
         <!-- wrapper end -->
         <!--register form -->
@@ -64,7 +66,6 @@
             </a>
         </div>
         <!-- Floating Call Button End -->
-
     </div>
     <!-- Main end -->
     <!--=============== scripts  ===============-->
