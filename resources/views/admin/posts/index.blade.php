@@ -57,7 +57,11 @@
                                 @endphp
                                 <tr>
                                     <td>{{ $post->ID }}</td>
-                                    <td>{{ $post->post_title }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.posts.edit', $post->ID) }}" class="text-primary">
+                                            {{ $post->post_title }}
+                                        </a>
+                                    </td>
                                     <td>{{ $post->post_status }}</td>
                                     <td>
                                         @if($thumb)
