@@ -16,5 +16,5 @@ This change was added to support `resources/views/frontend_webapp_home.blade.php
 ## Third-party Libraries Updates
 
 ### CKEditor
-- Upgraded to CKEditor 4.25.1-LTS (Standard Edition) to address security vulnerabilities in version 4.16.2.
-- The editor is now loaded via CDN in `create.blade.php` and `edit.blade.php` with `versionCheck: false` to prevent version warnings for LTS.
+- Downgraded to CKEditor 4.22.1 (Standard Edition) to avoid license key requirement in LTS versions (4.23.0+).
+- The editor is now loaded via CDN in `create.blade.php` and `edit.blade.php` with `versionCheck: false`.
