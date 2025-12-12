@@ -51,9 +51,27 @@
                             </div>
                         </div>
 
+                        {{-- TAGS FIELD - UPDATED TO SELECT2 --}}
                         <div class="mb-3">
-                            <label for="tags" class="form-label">Thẻ (phân cách bằng dấu phẩy)</label>
-                            <input type="text" class="form-control" id="tags" name="tags" value="{{ $tags ?? '' }}" placeholder="Ví dụ: tin tức, công nghệ, bất động sản">
+                            <label for="tags" class="form-label">Thẻ</label>
+                            <select class="form-control" id="tags" name="tags[]" multiple="multiple">
+                                @if(isset($allTags))
+                                    @foreach($allTags as $tag)
+                                        <option value="{{ $tag->name }}"
+                                            {{ in_array($tag->name, $currentTags ?? []) ? 'selected' : '' }}
+                                        >{{ $tag->name }}</option>
+                                    @endforeach
+                                @endif
+                                {{-- Add tags that are attached to post but not in allTags list (just in case) --}}
+                                @if(isset($currentTags))
+                                    @foreach($currentTags as $tagName)
+                                        @if(isset($allTags) && !$allTags->contains('name', $tagName))
+                                             <option value="{{ $tagName }}" selected>{{ $tagName }}</option>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </select>
+                            <small class="text-muted">Nhập tên thẻ mới và nhấn Enter hoặc chọn từ danh sách.</small>
                         </div>
 
                         <div class="mb-3">
@@ -87,6 +105,16 @@
 <script>
     CKEDITOR.replace('post_content', {
         versionCheck: false
+    });
+
+    $(document).ready(function() {
+        $('#tags').select2({
+            tags: true,
+            tokenSeparators: [','],
+            placeholder: "Chọn hoặc nhập thẻ...",
+            allowClear: true,
+            width: '100%'
+        });
     });
 </script>
 @endsection

@@ -38,7 +38,7 @@ class PostController extends Controller
      */
     public function create()
     {
-        // Get all categories (terms with 'category' taxonomy)
+        // Get all categories
         $categories = NewsTermTaxonomy::where('taxonomy', 'category')
             ->with('term')
             ->get()
@@ -46,7 +46,15 @@ class PostController extends Controller
                 return $tax->term;
             });
 
-        return view('admin.posts.create', compact('categories'));
+        // Get all existing tags for suggestions
+        $allTags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
+            ->with('term')
+            ->get()
+            ->map(function ($tax) {
+                return $tax->term;
+            });
+
+        return view('admin.posts.create', compact('categories', 'allTags'));
     }
 
     /**
@@ -67,7 +75,7 @@ class PostController extends Controller
 
         $post = new NewsPost();
         $post->post_author = auth()->id() ?? 0;
-        $post->post_type = 'post'; // Giữ lại từ HEAD
+        $post->post_type = 'post';
 
         $post->post_date = now();
         $post->post_date_gmt = now();
@@ -88,7 +96,7 @@ class PostController extends Controller
         $post->post_modified_gmt = now();
         $post->save();
 
-        // Thumbnail handling (Giữ lại từ HEAD)
+        // Thumbnail handling
         if ($request->hasFile('thumbnail')) {
             $path = $request->file('thumbnail')->store('images/posts', 'public');
             NewsPostmeta::create([
@@ -97,7 +105,6 @@ class PostController extends Controller
                 'meta_value' => $path,
             ]);
 
-            // Ensure a public-copy exists so files are accessible even when `public/storage` symlink is not present.
             try {
                 $filename = basename($path);
                 $publicDir = public_path('assets/images/posts');
@@ -109,21 +116,16 @@ class PostController extends Controller
                 if (File::exists($source) && !File::exists($dest)) {
                     File::copy($source, $dest);
                 }
-            } catch (\Exception $e) {
-                // Non-fatal: log and continue. Storage link recommended.
-                // logger()->error('Thumbnail publish failed: '.$e->getMessage());
-            }
+            } catch (\Exception $e) {}
         }
 
         // Handle Categories
         if ($request->has('categories')) {
-            // Find taxonomy IDs for selected category term IDs
             $taxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
                 ->whereIn('term_id', $request->categories)
                 ->pluck('term_taxonomy_id');
             $post->taxonomies()->attach($taxonomyIds);
 
-            // Update counts
             foreach ($taxonomyIds as $tid) {
                 NewsTermTaxonomy::where('term_taxonomy_id', $tid)->increment('count');
             }
@@ -131,7 +133,14 @@ class PostController extends Controller
 
         // Handle Tags
         if ($request->has('tags')) {
-            $tags = explode(',', $request->tags);
+            // Check if tags is array (select2) or string (old input)
+            $tagsInput = $request->tags;
+            if (is_string($tagsInput)) {
+                $tags = explode(',', $tagsInput);
+            } else {
+                $tags = $tagsInput; // Already an array from select2
+            }
+
             $tagTaxonomyIds = [];
             foreach ($tags as $tagName) {
                 $tagName = trim($tagName);
@@ -195,12 +204,20 @@ class PostController extends Controller
         // Get selected categories
         $selectedCategories = $post->categories->pluck('term_id')->toArray();
 
-        // Get tags as comma separated string
-        $tags = $post->tags->map(function ($tax) {
+        // Get current post tags as array of names
+        $currentTags = $post->tags->map(function ($tax) {
             return $tax->term->name;
-        })->implode(', ');
+        })->toArray();
 
-        return view('admin.posts.edit', compact('post', 'categories', 'selectedCategories', 'tags'));
+        // Get all existing tags for suggestions
+        $allTags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
+            ->with('term')
+            ->get()
+            ->map(function ($tax) {
+                return $tax->term;
+            });
+
+        return view('admin.posts.edit', compact('post', 'categories', 'selectedCategories', 'currentTags', 'allTags'));
     }
 
     /**
@@ -226,7 +243,6 @@ class PostController extends Controller
         $post->post_excerpt = $request->post_excerpt;
         $post->post_status = $request->post_status;
 
-        // keep or regenerate a unique slug if title changed
         $newSlug = Str::slug($request->post_title);
         if ($newSlug !== $post->post_name) {
             $base = $newSlug;
@@ -241,7 +257,6 @@ class PostController extends Controller
         $post->post_modified_gmt = now();
         $post->save();
 
-        // Thumbnail handling: replace existing meta (Giữ lại từ HEAD)
         if ($request->hasFile('thumbnail')) {
             $path = $request->file('thumbnail')->store('images/posts', 'public');
 
@@ -252,7 +267,6 @@ class PostController extends Controller
                 'meta_value' => $path,
             ]);
 
-            // Also copy to public assets folder for direct serving when storage link is missing
             try {
                 $filename = basename($path);
                 $publicDir = public_path('assets/images/posts');
@@ -264,14 +278,10 @@ class PostController extends Controller
                 if (File::exists($source) && !File::exists($dest)) {
                     File::copy($source, $dest);
                 }
-            } catch (\Exception $e) {
-                // logger()->error('Thumbnail publish failed: '.$e->getMessage());
-            }
+            } catch (\Exception $e) {}
         }
 
         // Handle Categories
-        // Sync categories: detach all categories then attach new ones
-        // First get current category taxonomy IDs to decrement count
         $currentCatTaxIds = $post->categories()->pluck('news_term_taxonomy.term_taxonomy_id');
         $post->taxonomies()->detach($currentCatTaxIds);
         NewsTermTaxonomy::whereIn('term_taxonomy_id', $currentCatTaxIds)->decrement('count');
@@ -285,13 +295,19 @@ class PostController extends Controller
         }
 
         // Handle Tags
-        // Sync tags
         $currentTagTaxIds = $post->tags()->pluck('news_term_taxonomy.term_taxonomy_id');
         $post->taxonomies()->detach($currentTagTaxIds);
         NewsTermTaxonomy::whereIn('term_taxonomy_id', $currentTagTaxIds)->decrement('count');
 
         if ($request->has('tags')) {
-            $tags = explode(',', $request->tags);
+            // Check if tags is array (select2) or string
+            $tagsInput = $request->tags;
+            if (is_string($tagsInput)) {
+                $tags = explode(',', $tagsInput);
+            } else {
+                $tags = $tagsInput; // Already an array
+            }
+
             $tagTaxonomyIds = [];
             foreach ($tags as $tagName) {
                 $tagName = trim($tagName);
@@ -351,8 +367,7 @@ class PostController extends Controller
             $search = $searchInput['value'] ?? null;
         }
 
-        // Custom search param from the client (overrides standard if standard is empty,
-        // or just acts as the primary search source since standard input might be hidden)
+        // Custom search param from the client
         $searchText = request('search_text');
         if (empty($search) && !empty($searchText)) {
             $search = $searchText;
@@ -379,8 +394,8 @@ class PostController extends Controller
             $query->where('post_status', $status);
         }
 
-        $totalRecords = NewsPost::where('post_type', 'post')->count(); // Total records without filter
-        $filteredRecords = $query->count(); // Total records with filter
+        $totalRecords = NewsPost::where('post_type', 'post')->count();
+        $filteredRecords = $query->count();
 
         $posts = $query->orderBy('post_date', 'desc')
                       ->skip($offset)

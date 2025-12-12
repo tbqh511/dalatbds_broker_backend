@@ -44,7 +44,6 @@
                             @enderror
                         </div>
 
-                        {{-- THUMBNAIL FIELD (Đã hợp nhất từ HEAD) --}}
                         <div class="mb-3">
                             <label for="thumbnail" class="form-label">Ảnh đại diện</label>
                             <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
@@ -53,7 +52,6 @@
                             @enderror
                         </div>
 
-                        {{-- CATEGORIES FIELD (Đã hợp nhất từ news-post-api-crud) --}}
                         <div class="mb-3">
                             <label class="form-label">Danh mục</label>
                             <div class="card p-3">
@@ -71,10 +69,17 @@
                             </div>
                         </div>
 
-                        {{-- TAGS FIELD --}}
+                        {{-- TAGS FIELD - UPDATED TO SELECT2 --}}
                         <div class="mb-3">
-                            <label for="tags" class="form-label">Thẻ (phân cách bằng dấu phẩy)</label>
-                            <input type="text" class="form-control" id="tags" name="tags" value="{{ old('tags') }}" placeholder="Ví dụ: tin tức, công nghệ, bất động sản">
+                            <label for="tags" class="form-label">Thẻ</label>
+                            <select class="form-control" id="tags" name="tags[]" multiple="multiple">
+                                @if(isset($allTags))
+                                    @foreach($allTags as $tag)
+                                        <option value="{{ $tag->name }}">{{ $tag->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                            <small class="text-muted">Nhập tên thẻ mới và nhấn Enter hoặc chọn từ danh sách.</small>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Tạo bài viết</button>
@@ -90,6 +95,16 @@
 <script>
     CKEDITOR.replace('post_content', {
         versionCheck: false
+    });
+
+    $(document).ready(function() {
+        $('#tags').select2({
+            tags: true,
+            tokenSeparators: [','],
+            placeholder: "Chọn hoặc nhập thẻ...",
+            allowClear: true,
+            width: '100%'
+        });
     });
 </script>
 @endsection
