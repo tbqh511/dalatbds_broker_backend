@@ -1,5 +1,8 @@
 @extends('frontends.master')
 
+@section('hide_newsletter')@endsection
+@section('hide_footer')@endsection
+
 @section('content')
     @include('frontends.components.dashboard_home')
 @endsection

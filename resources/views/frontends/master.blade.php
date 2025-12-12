@@ -33,12 +33,13 @@
             <!-- content -->
             @yield('content')
             <!-- content end -->
-            <!-- subscribe-wrap -->
-            @include('frontends.newsletter')
-            <!-- subscribe-wrap end -->
-            <!-- footer -->
-            @include('frontends.footer')
-            <!-- footer end -->
+            @unless(View::hasSection('hide_newsletter'))
+                @include('frontends.newsletter')
+            @endunless
+
+            @unless(View::hasSection('hide_footer'))
+                @include('frontends.footer')
+            @endunless
         </div>
         <!-- wrapper end -->
         <!--register form -->
