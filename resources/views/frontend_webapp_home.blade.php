@@ -1,9 +1,14 @@
 @extends('frontends.master')
 
 @section('content')
-<div class="content">
-    @include('frontends.components.home_breadcrumb', ['title' => 'WebApp'])
-    @include('frontends.components.webapp_main')
-    <div class="limit-box fl-wrap"></div>
-</div>
+    @include('frontends.components.dashboard_home')
 @endsection
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/dashboard-style.css') }}">
+@endpush
+
+@push('scripts')
+    <script src="{{ asset('js/charts.js') }}"></script>
+    <script src="{{ asset('js/dashboard.js') }}"></script>
+@endpush
