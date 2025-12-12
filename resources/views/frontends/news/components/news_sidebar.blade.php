@@ -31,13 +31,18 @@
                                 <div class="widget-posts-img">
                                     <a href="{{ route('news.show', $recent->post_name) }}">
                                         @php
-                                            $thumbUrl = asset('images/all/blog/1.jpg');
+                                            // Thumbnail logic - UPDATED PRIORITY FOR SIDEBAR
+                                            $thumbUrl = asset('images/all/blog/1.jpg'); // Default fallback
                                             $thumbMeta = $recent->meta->where('meta_key', '_thumbnail')->first();
+
                                             if ($thumbMeta && $thumbMeta->meta_value) {
-                                                if (Storage::disk('public')->exists($thumbMeta->meta_value)) {
-                                                    $thumbUrl = Storage::url($thumbMeta->meta_value);
-                                                } elseif (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
+                                                // PRIORITY 1: Check direct public asset copy (most reliable if symlink fails)
+                                                if (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
                                                     $thumbUrl = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
+                                                }
+                                                // PRIORITY 2: Check storage via symlink
+                                                elseif (Storage::disk('public')->exists($thumbMeta->meta_value)) {
+                                                    $thumbUrl = Storage::url($thumbMeta->meta_value);
                                                 }
                                             }
                                         @endphp
