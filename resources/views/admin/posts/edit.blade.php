@@ -77,14 +77,17 @@
                         <div class="mb-3">
                             <label for="thumbnail" class="form-label">Ảnh đại diện</label>
                             @php
-                                // Standardized thumbnail display logic
+                                // Standardized thumbnail display logic - UPDATED PRIORITY
                                 $thumbUrl = null;
                                 $thumbMeta = $post->meta->where('meta_key', '_thumbnail')->first();
                                 if ($thumbMeta && $thumbMeta->meta_value) {
-                                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumbMeta->meta_value)) {
-                                        $thumbUrl = \Illuminate\Support\Facades\Storage::url($thumbMeta->meta_value);
-                                    } elseif (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
+                                    // PRIORITY 1: Check direct public asset copy (most reliable if symlink fails)
+                                    if (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
                                         $thumbUrl = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
+                                    }
+                                    // PRIORITY 2: Check storage via symlink
+                                    elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumbMeta->meta_value)) {
+                                        $thumbUrl = \Illuminate\Support\Facades\Storage::url($thumbMeta->meta_value);
                                     }
                                 }
                             @endphp
