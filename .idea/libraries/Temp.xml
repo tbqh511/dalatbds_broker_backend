@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Temp">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Temp/dalatbds.xyz.zip!/" />
+      <root url="jar://$PROJECT_DIR$/Temp/dalatbds.com.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
