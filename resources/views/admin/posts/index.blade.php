@@ -1,177 +1,159 @@
 @extends('layouts.main')
 
+@section('title')
+    {{ __('Quản lý bài viết') }}
+@endsection
+
+@section('page-title')
+    <div class="page-title">
+        <div class="row">
+            <div class="col-12 col-md-6 order-md-1 order-last">
+                <h4>@yield('title')</h4>
+            </div>
+            <div class="col-12 col-md-6 order-md-2 order-first">
+                <!-- Breadcrumb could go here -->
+            </div>
+        </div>
+    </div>
+@endsection
+
 @section('content')
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Quản lý bài viết
-                        <a href="{{ route('admin.posts.create') }}" class="btn btn-primary float-end">Thêm bài viết mới</a>
-                    </h4>
+<section class="section">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-12 d-flex justify-content-end">
+                    <a href="{{ route('admin.posts.create') }}" class="btn btn-primary">{{ __('Thêm bài viết mới') }}</a>
                 </div>
-                <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
-                    @endif
+            </div>
+        </div>
 
-                    <div class="row mb-3" id="posts-filters">
-                        <div class="col-md-4">
-                            <input id="post_search" type="text" class="form-control" placeholder="Tìm tiêu đề hoặc nội dung...">
-                        </div>
-                        <div class="col-md-4">
-                            <select id="post_category" class="form-select">
-                                <option value="">-- Tất cả danh mục --</option>
-                                @if(isset($categories))
-                                    @foreach($categories as $cat)
-                                        <option value="{{ $cat->term_id }}">{{ $cat->name }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <select id="post_status_filter" class="form-select">
-                                <option value="">-- Tất cả trạng thái --</option>
-                                <option value="publish">Xuất bản</option>
-                                <option value="draft">Bản nháp</option>
-                            </select>
-                        </div>
-                    </div>
+        <hr>
 
-                    <div class="table-responsive">
-                        <table id="posts-table" class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Tiêu đề</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ảnh</th>
-                                    <th>Ngày tạo</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{-- Data will be loaded via AJAX --}}
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="card-body">
+            <!-- Toolbar for filters -->
+            <div class="row" id="toolbar">
+                <div class="col-sm-4 mb-2">
+                    <input id="post_search" type="text" class="form-control form-control-sm" placeholder="Tìm tiêu đề hoặc nội dung...">
+                </div>
+                <div class="col-sm-4 mb-2">
+                    <select id="post_category" class="form-select form-control-sm">
+                        <option value="">{{ __('-- Tất cả danh mục --') }}</option>
+                        @if(isset($categories))
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->term_id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                <div class="col-sm-4 mb-2">
+                    <select id="post_status_filter" class="form-select form-control-sm">
+                        <option value="">{{ __('-- Tất cả trạng thái --') }}</option>
+                        <option value="publish">{{ __('Xuất bản') }}</option>
+                        <option value="draft">{{ __('Bản nháp') }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bootstrap Table -->
+            <div class="row">
+                <div class="col-12">
+                    <table class="table-light table-striped"
+                           id="table_list"
+                           data-toggle="table"
+                           data-url="{{ route('admin.posts.list') }}"
+                           data-click-to-select="true"
+                           data-side-pagination="server"
+                           data-pagination="true"
+                           data-page-list="[10, 20, 50, 100, 200]"
+                           data-search="false"
+                           data-toolbar="#toolbar"
+                           data-show-columns="true"
+                           data-show-refresh="true"
+                           data-fixed-columns="true"
+                           data-fixed-number="1"
+                           data-fixed-right-number="1"
+                           data-trim-on-search="false"
+                           data-responsive="true"
+                           data-sort-name="id"
+                           data-sort-order="desc"
+                           data-query-params="queryParams"
+                           data-response-handler="responseHandler">
+                        <thead>
+                            <tr>
+                                <th data-field="ID" data-sortable="true" data-width="50">{{ __('ID') }}</th>
+                                <th data-field="post_title" data-sortable="true" data-formatter="titleFormatter">{{ __('Tiêu đề') }}</th>
+                                <th data-field="post_status" data-sortable="true" data-formatter="statusFormatter" data-width="100">{{ __('Trạng thái') }}</th>
+                                <th data-field="thumbnail" data-sortable="false" data-width="100">{{ __('Ảnh') }}</th>
+                                <th data-field="post_date" data-sortable="true" data-width="150">{{ __('Ngày tạo') }}</th>
+                                <th data-field="actions" data-sortable="false" data-width="100">{{ __('Hành động') }}</th>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
+</section>
 @endsection
 
 @section('css')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<!-- Inherit Bootstrap Table CSS from main layout includes if present, or add here if missing -->
 @endsection
 
 @section('script')
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 <script>
-(function($) {
-    "use strict";
+    // Custom Formatter for Title (Link to Edit)
+    function titleFormatter(value, row, index) {
+        var editUrl = '{{ route("admin.posts.edit", ":id") }}'.replace(':id', row.ID);
+        return '<a href="' + editUrl + '" class="fw-bold">' + value + '</a>';
+    }
+
+    // Custom Formatter for Status
+    function statusFormatter(value, row, index) {
+        if (value === 'publish') {
+            return '<span class="badge bg-success">Xuất bản</span>';
+        } else if (value === 'draft') {
+            return '<span class="badge bg-secondary">Bản nháp</span>';
+        }
+        return value;
+    }
+
+    // Map DataTables response format to Bootstrap Table format
+    function responseHandler(res) {
+        return {
+            "rows": res.data,
+            "total": res.recordsTotal
+        };
+    }
+
+    // Query Params to send to server
+    function queryParams(p) {
+        return {
+            start: p.offset,
+            length: p.limit,
+            search_text: $('#post_search').val(), // Custom search input
+            category: $('#post_category').val(),
+            status: $('#post_status_filter').val(),
+            sort: p.sort,
+            order: p.order
+        };
+    }
+
     $(document).ready(function() {
-        if (!$.fn.DataTable) {
-            console.warn('DataTables library is not loaded. Filtering may not work.');
-            return;
-        }
+        // Refresh table on filter change
+        $('#post_category, #post_status_filter').on('change', function() {
+            $('#table_list').bootstrapTable('refresh');
+        });
 
-        try {
-            var table = $('#posts-table').DataTable({
-                processing: true,
-                serverSide: true,
-                // Hide default search box since we have a custom one
-                dom: 'lrtip',
-                ajax: {
-                    url: '{{ route("admin.posts.list") }}',
-                    data: function(d) {
-                        d.category = $('#post_category').val();
-                        d.status = $('#post_status_filter').val();
-                        d.search_text = $('#post_search').val();
-                    },
-                    error: function(xhr, error, code) {
-                        console.error('DataTables error:', error, code);
-                        console.log('Response:', xhr.responseText);
-                        alert('Không thể tải dữ liệu bài viết. Vui lòng thử lại sau.');
-                    }
-                },
-                columns: [
-                    { data: 'ID', name: 'ID' },
-                    {
-                        data: 'post_title',
-                        name: 'post_title',
-                        render: function(data, type, row) {
-                            // Create link to edit page
-                            var editUrl = '{{ route("admin.posts.edit", ":id") }}'.replace(':id', row.ID);
-                            return '<a href="' + editUrl + '" class="text-primary fw-bold">' + data + '</a>';
-                        }
-                    },
-                    {
-                        data: 'post_status',
-                        name: 'post_status',
-                        render: function(data) {
-                            if (data === 'publish') {
-                                return '<span class="badge bg-success">Xuất bản</span>';
-                            } else if (data === 'draft') {
-                                return '<span class="badge bg-secondary">Bản nháp</span>';
-                            }
-                            return data;
-                        }
-                    },
-                    { data: 'thumbnail', name: 'thumbnail', orderable: false, searchable: false },
-                    { data: 'post_date', name: 'post_date' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false }
-                ],
-                order: [[4, 'desc']], // Default sort by post_date desc
-                language: {
-                    processing: "Đang xử lý...",
-                    search: "Tìm kiếm:",
-                    lengthMenu: "Hiển thị _MENU_ mục",
-                    info: "Đang hiển thị _START_ đến _END_ trong tổng số _TOTAL_ mục",
-                    infoEmpty: "Đang hiển thị 0 đến 0 trong tổng số 0 mục",
-                    infoFiltered: "(được lọc từ tổng số _MAX_ mục)",
-                    infoPostFix: "",
-                    loadingRecords: "Đang tải...",
-                    zeroRecords: "Không tìm thấy kết quả nào",
-                    emptyTable: "Không có dữ liệu trong bảng",
-                    paginate: {
-                        first: "Đầu",
-                        previous: "Trước",
-                        next: "Tiếp",
-                        last: "Cuối"
-                    },
-                    aria: {
-                        sortAscending: ": kích hoạt để sắp xếp cột tăng dần",
-                        sortDescending: ": kích hoạt để sắp xếp cột giảm dần"
-                    }
-                }
-            });
-
-            // Custom Filter Events
-            $('#post_category').on('change', function() {
-                table.ajax.reload(); // Reload table data with new category param
-            });
-
-            $('#post_status_filter').on('change', function() {
-                table.ajax.reload(); // Reload table data with new status param
-            });
-
-            // Debounce search input
-            var searchTimeout;
-            $('#post_search').on('keyup', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(function() {
-                    table.ajax.reload();
-                }, 500);
-            });
-
-        } catch (e) {
-            console.error('Error initializing DataTables:', e);
-        }
+        // Debounce search input
+        var searchTimeout;
+        $('#post_search').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                $('#table_list').bootstrapTable('refresh');
+            }, 500);
+        });
     });
-})(jQuery);
 </script>
 @endsection
