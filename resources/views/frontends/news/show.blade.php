@@ -67,39 +67,51 @@
                                     </ul>
                                 </div>
                                 <span class="fw-separator fl-wrap"></span>
-                                
+
                                 <div class="clearfix"></div>
                                 <div class="post-content">
-                                    <?php
-                                        // Try to extract first image from post content to use as featured image
+                                    @php
+                                        // Priority 1: Check metadata _thumbnail
+                                        $featured = null;
+                                        $thumbMeta = $post->meta->where('meta_key', '_thumbnail')->first();
+
+                                        if ($thumbMeta && $thumbMeta->meta_value) {
+                                            // Check direct public asset copy first
+                                            if (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
+                                                $featured = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
+                                            }
+                                            // Check storage via symlink
+                                            elseif (Storage::disk('public')->exists($thumbMeta->meta_value)) {
+                                                $featured = Storage::url($thumbMeta->meta_value);
+                                            }
+                                        }
+
+                                        // Priority 2: Extract from content if no metadata thumbnail
                                         $content = $post->post_content ?? '';
-                                        $featured = '';
-                                        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $m)) {
+                                        if (empty($featured) && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $m)) {
                                             $raw = $m[1];
-                                            // If relative path (not starting with http or /), convert via asset()
                                             if (preg_match('/^(https?:)?\/\//', $raw) || str_starts_with($raw, '/')) {
                                                 $featured = $raw;
                                             } else {
                                                 $featured = asset($raw);
                                             }
-                                            // remove first img tag from content to avoid duplicate display
-                                            $content = preg_replace('/<img[^>]*>/i', '', $content, 1);
                                         }
-                                        // fallback to default image
+
+                                        // Priority 3: Fallback default
                                         if (empty($featured)) {
                                             $featured = asset('images/all/blog/1.jpg');
                                         }
-                                    ?>
+                                    @endphp
 
                                     <div class="list-single-main-media fl-wrap">
-                                        <img src="{{ $featured }}" alt="{{ $post->post_title }}">
+                                        <img src="{{ $featured }}" alt="{{ $post->post_title }}" class="resp-img">
                                     </div>
 
                                     {!! $content !!}
                                 </div>
 
                                 <span class="fw-separator fl-wrap"></span>
-                                
+
                             </div>
                         </article>
                     </div>
