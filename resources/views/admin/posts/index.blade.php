@@ -64,8 +64,18 @@
                                     </td>
                                     <td>{{ $post->post_status }}</td>
                                     <td>
-                                        @if($thumb)
-                                            <img src="{{ asset('storage/' . $thumb) }}" alt="thumb" style="max-width:80px; height:auto;" />
+                                        @php
+                                            $thumbUrl = null;
+                                            if (!empty($thumb)) {
+                                                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumb)) {
+                                                    $thumbUrl = \Illuminate\Support\Facades\Storage::url($thumb);
+                                                }
+                                            }
+                                        @endphp
+                                        @if($thumbUrl)
+                                            <img src="{{ $thumbUrl }}" alt="thumb" style="max-width:80px; height:auto;" />
+                                        @else
+                                            <img src="{{ asset('images/all/blog/1.jpg') }}" alt="no-thumb" style="max-width:80px; height:auto;" />
                                         @endif
                                     </td>
                                     <td>{{ optional($post->post_date)->format('Y-m-d H:i:s') ?? '—' }}</td>
