@@ -44,7 +44,7 @@
                                 </div>
                                 <div class="post-opt">
                                     <ul class="no-list-style">
-                                        <li><i class="fal fa-calendar"></i> <span>{{ $post->created_at->format('d M Y') }}</span></li>
+                                        <li><i class="fal fa-calendar"></i> <span>{{ $post->created_at->format('d/m/Y') }}</span></li>
                                         <li><i class="fal fa-eye"></i> <span>{{ $post->comment_count ?? 0 }}</span></li>
                                         <li><i class="fal fa-folder"></i>
                                             @if($post->categories && $post->categories->count() > 0)

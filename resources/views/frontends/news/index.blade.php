@@ -75,7 +75,7 @@
                                         </div>
                                         <div class="post-opt">
                                             <ul class="no-list-style">
-                                                <li><i class="fal fa-calendar"></i> <span>{{ $new->created_at ? $new->created_at->format('d M Y') : '' }}</span></li>
+                                                <li><i class="fal fa-calendar"></i> <span>{{ $new->created_at ? $new->created_at->format('d/m/Y') : '' }}</span></li>
                                                 <li><i class="fal fa-eye"></i> <span>{{ $new->comment_count ?? 0 }}</span></li>
                                                 @if($new->tags->count() > 0)
                                                     <li><i class="fal fa-tags"></i>

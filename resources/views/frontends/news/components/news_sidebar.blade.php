@@ -52,7 +52,7 @@
                                 <div class="widget-posts-descr">
                                     <h4><a href="{{ route('news.show', $recent->post_name) }}">{{ $recent->post_title }}</a></h4>
                                     <div class="geodir-category-location fl-wrap">
-                                        <a href="#"><i class="fal fa-calendar"></i> {{ $recent->created_at ? $recent->created_at->format('d M Y') : '' }}</a>
+                                        <a href="#"><i class="fal fa-calendar"></i> {{ $recent->created_at ? $recent->created_at->format('d/m/Y') : '' }}</a>
                                     </div>
                                 </div>
                             </li>
