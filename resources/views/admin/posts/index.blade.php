@@ -123,14 +123,17 @@
     function responseHandler(res) {
         return {
             "rows": res.data,
-            "total": res.recordsTotal
+            // Use recordsFiltered instead of recordsTotal so pagination works correctly with filters
+            "total": res.recordsFiltered
         };
     }
 
     // Query Params to send to server
     function queryParams(p) {
         return {
+            // Map 'offset' (bootstrap-table) to 'start' (controller expected)
             start: p.offset,
+            // Map 'limit' (bootstrap-table) to 'length' (controller expected)
             length: p.limit,
             search_text: $('#post_search').val(), // Custom search input
             category: $('#post_category').val(),
