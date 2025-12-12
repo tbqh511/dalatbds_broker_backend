@@ -56,18 +56,12 @@
                                 <!-- article> -->
                                 <article class="post-article fl-wrap">
                                     <div class="list-single-main-media fl-wrap">
-                                        <div class="single-slider-wrapper carousel-wrap fl-wrap">
-                                            <div class="single-slider fl-wrap carousel lightgallery">
-                                                <!--  slick-slide-item -->
-                                                <div class="slick-slide-item">
-                                                    <div class="box-item">
-                                                        <a href="{{ $thumbUrl }}" class="gal-link popup-image"><i class="fal fa-search"></i></a>
-                                                        <img src="{{ $thumbUrl }}" alt="{{ $new->post_title }}">
-                                                    </div>
-                                                </div>
-                                                <!--  slick-slide-item end -->
+                                        <!-- Simplified image display: removed slider structure to fix layout issues -->
+                                        <div class="single-slider-wrapper fl-wrap">
+                                            <div class="box-item">
+                                                <a href="{{ $thumbUrl }}" class="gal-link popup-image"><i class="fal fa-search"></i></a>
+                                                <img src="{{ $thumbUrl }}" alt="{{ $new->post_title }}" class="resp-img">
                                             </div>
-                                            <!-- Removed slider arrows as we only show one featured image per post in list view -->
                                         </div>
                                     </div>
                                     <div class="list-single-main-item fl-wrap block_box">
