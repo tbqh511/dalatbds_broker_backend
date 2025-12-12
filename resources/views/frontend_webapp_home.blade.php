@@ -9,6 +9,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/dashboard-style.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/webapp.css') }}">
 @endpush
 
 @push('scripts')
