@@ -37,18 +37,18 @@
                         @if ($news->count() > 0)
                             @foreach ($news as $new)
                                 @php
-                                    // Thumbnail logic
+                                    // Thumbnail logic - UPDATED PRIORITY
                                     $thumbUrl = asset('images/all/blog/1.jpg'); // Default fallback
                                     $thumbMeta = $new->meta->where('meta_key', '_thumbnail')->first();
 
                                     if ($thumbMeta && $thumbMeta->meta_value) {
-                                        // Check if file exists in storage symlink (public/storage)
-                                        if (Storage::disk('public')->exists($thumbMeta->meta_value)) {
-                                            $thumbUrl = Storage::url($thumbMeta->meta_value);
-                                        }
-                                        // Or fallback to direct assets/images/posts copy if available (from admin logic)
-                                        elseif (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
+                                        // PRIORITY 1: Check direct public asset copy (most reliable if symlink fails)
+                                        if (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
                                             $thumbUrl = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
+                                        }
+                                        // PRIORITY 2: Check storage via symlink
+                                        elseif (Storage::disk('public')->exists($thumbMeta->meta_value)) {
+                                            $thumbUrl = Storage::url($thumbMeta->meta_value);
                                         }
                                     }
                                 @endphp
