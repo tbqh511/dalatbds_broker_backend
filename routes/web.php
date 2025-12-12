@@ -32,6 +32,7 @@ use App\Http\Controllers\FrontEndHomeController;
 use App\Http\Controllers\FrontEndPropertiesController;
 use App\Http\Controllers\FrontEndAgentsController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\TelegramWebAppController;
 use App\Models\Payments;
 use App\Models\PropertysInquiry;
 use Illuminate\Support\Facades\Artisan;
@@ -55,6 +56,8 @@ use Illuminate\Support\Facades\Artisan;
 // });
 
 Route::get('/', [FrontEndHomeController::class, 'index'])->name('index');
+
+Route::get('/webapp', [TelegramWebAppController::class, 'index'])->name('webapp');
 
 //property controller
 Route::get('/property/{id}', [FrontEndPropertiesController::class, 'getPropertyById'])->name('property.showid');
