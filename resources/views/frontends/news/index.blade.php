@@ -36,6 +36,23 @@
                     <div class="post-container fl-wrap">
                         @if ($news->count() > 0)
                             @foreach ($news as $new)
+                                @php
+                                    // Thumbnail logic
+                                    $thumbUrl = asset('images/all/blog/1.jpg'); // Default fallback
+                                    $thumbMeta = $new->meta->where('meta_key', '_thumbnail')->first();
+
+                                    if ($thumbMeta && $thumbMeta->meta_value) {
+                                        // Check if file exists in storage symlink (public/storage)
+                                        if (Storage::disk('public')->exists($thumbMeta->meta_value)) {
+                                            $thumbUrl = Storage::url($thumbMeta->meta_value);
+                                        }
+                                        // Or fallback to direct assets/images/posts copy if available (from admin logic)
+                                        elseif (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
+                                            $thumbUrl = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
+                                        }
+                                    }
+                                @endphp
+
                                 <!-- article> -->
                                 <article class="post-article fl-wrap">
                                     <div class="list-single-main-media fl-wrap">
@@ -44,14 +61,13 @@
                                                 <!--  slick-slide-item -->
                                                 <div class="slick-slide-item">
                                                     <div class="box-item">
-                                                        <a href="{{ asset('images/all/blog/1.jpg') }}" class="gal-link popup-image"><i class="fal fa-search"></i></a>
-                                                        <img src="{{ asset('images/all/blog/1.jpg') }}" alt="dalat-bds">
+                                                        <a href="{{ $thumbUrl }}" class="gal-link popup-image"><i class="fal fa-search"></i></a>
+                                                        <img src="{{ $thumbUrl }}" alt="{{ $new->post_title }}">
                                                     </div>
                                                 </div>
                                                 <!--  slick-slide-item end -->
                                             </div>
-                                            <div class="swiper-button-prev ssw-btn"><i class="fas fa-caret-left"></i></div>
-                                            <div class="swiper-button-next ssw-btn"><i class="fas fa-caret-right"></i></div>
+                                            <!-- Removed slider arrows as we only show one featured image per post in list view -->
                                         </div>
                                     </div>
                                     <div class="list-single-main-item fl-wrap block_box">
@@ -60,19 +76,17 @@
                                         <span class="fw-separator fl-wrap"></span>
                                         <div class="post-author">
                                             @if ($new->author)
-                                                <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="author"><span>By , {{ $new->author->name }}</span></a>
+                                                <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="author"><span>By , {{ $new->author->name ?? 'Admin' }}</span></a>
                                             @endif
                                         </div>
                                         <div class="post-opt">
                                             <ul class="no-list-style">
-                                                <li><i class="fal fa-calendar"></i> <span>{{ $new->created_at->format('d M Y') }}</span></li>
-                                                <li><i class="fal fa-eye"></i> <span>{{ $new->comment_count }}</span></li>
+                                                <li><i class="fal fa-calendar"></i> <span>{{ $new->created_at ? $new->created_at->format('d M Y') : '' }}</span></li>
+                                                <li><i class="fal fa-eye"></i> <span>{{ $new->comment_count ?? 0 }}</span></li>
                                                 @if($new->tags->count() > 0)
                                                     <li><i class="fal fa-tags"></i>
                                                         @foreach($new->tags as $index => $tag)
-
                                                             <a href="{{ route('news.tag', $tag->term->slug) }}">{{ $tag->term->name }}</a>{{ $index < $new->tags->count() - 1 ? ' ,' : '' }}
-
                                                         @endforeach
                                                     </li>
                                                 @endif
@@ -84,7 +98,7 @@
                                 <!-- article end -->
                             @endforeach
                         @else
-                            <p>No news posts found.</p>
+                            <p>Không có bài viết nào.</p>
                         @endif
 
                         <!-- pagination-->
