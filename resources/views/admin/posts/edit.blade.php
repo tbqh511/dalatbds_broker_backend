@@ -77,13 +77,20 @@
                         <div class="mb-3">
                             <label for="thumbnail" class="form-label">Ảnh đại diện</label>
                             @php
-                                // Logic hiển thị ảnh cũ
+                                // Standardized thumbnail display logic
+                                $thumbUrl = null;
                                 $thumbMeta = $post->meta->where('meta_key', '_thumbnail')->first();
-                                $thumb = optional($thumbMeta)->meta_value;
+                                if ($thumbMeta && $thumbMeta->meta_value) {
+                                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumbMeta->meta_value)) {
+                                        $thumbUrl = \Illuminate\Support\Facades\Storage::url($thumbMeta->meta_value);
+                                    } elseif (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
+                                        $thumbUrl = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
+                                    }
+                                }
                             @endphp
-                            @if($thumb)
+                            @if($thumbUrl)
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/' . $thumb) }}" alt="Ảnh đại diện hiện tại" style="max-width:200px;">
+                                    <img src="{{ $thumbUrl }}" alt="Ảnh đại diện hiện tại" style="max-width:200px;">
                                 </div>
                             @endif
                             <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
