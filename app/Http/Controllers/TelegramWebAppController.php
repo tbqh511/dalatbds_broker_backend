@@ -8,7 +8,7 @@ class TelegramWebAppController extends Controller
 {
     public function index(Request $request)
     {
-        return view('telegram.webapp');
+        return view('frontend_webapp_home');
     }
 }
 
