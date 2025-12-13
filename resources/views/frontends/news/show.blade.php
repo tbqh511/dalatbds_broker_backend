@@ -40,95 +40,133 @@
 
 @section('content')
 <div class="content">
-    <!--  section  -->
-    <section class="hidden-section single-par2" data-scrollax-parent="true">
-        <div class="bg-wrap bg-parallax-wrap-gradien">
-            <div class="bg par-elem" data-bg="{{ $featuredImageUrl }}" data-scrollax="properties: { translateY: '30%' }"></div>
-        </div>
-        <div class="container">
-            <div class="section-title center-align big-title">
-                <h1><span>{{ $post->post_title }}</span></h1>
-                <h4>Bất Động Sản Đà Lạt</h4>
-            </div>
-            <div class="scroll-down-wrap">
-                <div class="mousey">
-                    <div class="scroller"></div>
-                </div>
-                <span>Scroll Down To Discover</span>
-            </div>
-        </div>
-    </section>
-    <!--  section  end-->
     <!-- breadcrumbs-->
-    @include('frontends.components.home_breadcrumb', [
-    'title' => $post->post_title,
-    'nodes' => [
-            ['title' => 'Trang chủ', 'url' => route('index')],
-            ['title' => 'Tin tức', 'url' => route('news.index')],
-        ]
-    ])
+    <div class="breadcrumbs fw-breadcrumbs sp-brd fl-wrap top-smpar">
+        <div class="container">
+            <div class="breadcrumbs-list">
+                <a href="{{ route('index') }}">Trang chủ</a>
+                <a href="{{ route('news.index') }}">Tin tức</a>
+                <span>{{ $post->post_title }}</span>
+            </div>
+            <div class="share-holder hid-share">
+                <a href="#" class="share-btn showshare sfcs">  <i class="fas fa-share-alt"></i>  Share   </a>
+                <div class="share-container isShare"></div>
+            </div>
+        </div>
+    </div>
     <!-- breadcrumbs end -->
+
     <!-- col-list-wrap -->
     <div class="gray-bg small-padding fl-wrap">
         <div class="container">
             <div class="row">
                 <div class="col-md-8">
                     <div class="post-container fl-wrap">
+                        <!-- article> -->
                         <article class="post-article fl-wrap">
+                            <div class="list-single-main-media fl-wrap">
+                                <img src="{{ $featuredImageUrl }}" alt="{{ $post->post_title }}" class="resp-img" loading="lazy">
+                            </div>
                             <div class="list-single-main-item fl-wrap block_box">
-                                <div class="post-author">
-                                    @if ($post->author)
-                                        <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="author"><span>By , {{ $post->author->name }}</span></a>
-                                    @endif
-                                </div>
-                                <div class="post-opt">
-                                    <ul class="no-list-style">
-                                        <li><i class="fal fa-calendar"></i> <span>{{ $post->created_at->format('d/m/Y') }}</span></li>
-                                        <li><i class="fal fa-eye"></i> <span>{{ $post->comment_count ?? 0 }}</span></li>
-                                        <li><i class="fal fa-folder"></i>
-                                            @if($post->categories && $post->categories->count() > 0)
+                                <div class="single-article-header fl-wrap">
+                                    <h1 class="post-opt-title">{{ $post->post_title }}</h1>
+                                    <span class="fw-separator"></span>
+                                    <div class="clearfix"></div>
+                                    <div class="post-author">
+                                        @if ($post->author)
+                                            <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="{{ $post->author->name }}"><span>By, {{ $post->author->name }}</span></a>
+                                        @endif
+                                    </div>
+                                    <div class="post-opt">
+                                        <ul class="no-list-style">
+                                            <li><i class="fal fa-calendar"></i> <span>{{ $post->created_at ? $post->created_at->format('d/m/Y') : '' }}</span></li>
+                                            <li><i class="fal fa-eye"></i> <span>{{ $post->comment_count ?? 0 }}</span></li>
+                                            @if($post->categories->count() > 0)
+                                                <li><i class="fal fa-folder"></i>
                                                 @foreach($post->categories as $idx => $cat)
                                                     @if($cat->term)
-                                                        <a href="{{ route('news.category', $cat->term->slug) }}">{{ $cat->term->name }}</a>{{ $idx < $post->categories->count() - 1 ? ' ,' : '' }}
+                                                        <a href="{{ route('news.category', $cat->term->slug) }}">{{ $cat->term->name }}</a>@if(!$loop->last),@endif
                                                     @endif
                                                 @endforeach
+                                                </li>
                                             @endif
-                                        </li>
-                                        <li><i class="fal fa-tags"></i>
-                                            @if($post->tags && $post->tags->count() > 0)
-                                                @foreach($post->tags as $index => $tag)
-                                                    @if($tag->term)
-                                                        <a href="{{ route('news.tag', $tag->term->slug) }}">{{ $tag->term->name }}</a>{{ $index < $post->tags->count() - 1 ? ' ,' : '' }}
-                                                    @endif
-                                                @endforeach
-                                            @endif
-                                        </li>
-                                    </ul>
+                                        </ul>
+                                    </div>
                                 </div>
                                 <span class="fw-separator fl-wrap"></span>
 
-                                <div class="clearfix"></div>
-                                <div class="post-content">
-                                    <div class="list-single-main-media fl-wrap">
-                                        <img src="{{ $featuredImageUrl }}" alt="{{ $post->post_title }}" class="resp-img" loading="lazy" style="max-width: 100%; height: auto; object-fit: cover;">
-                                    </div>
-
-                                    <style>
-                                        .post-content img {
-                                            max-width: 100%;
-                                            height: auto;
-                                            object-fit: cover;
-                                            margin: 15px 0;
-                                        }
-                                    </style>
-
+                                <div class="post-content fl-wrap">
                                     {!! $post->post_content !!}
                                 </div>
 
                                 <span class="fw-separator fl-wrap"></span>
 
+                                @if($post->tags->count() > 0)
+                                    <div class="list-single-tags tags-stylwrap">
+                                        <span class="tags-title">  Tags : </span>
+                                        @foreach($post->tags as $tag)
+                                            @if($tag->term)
+                                                <a href="{{ route('news.tag', $tag->term->slug) }}">{{ $tag->term->name }}</a>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </article>
+                        <!-- article end -->
+
+                        <!-- author-bio -->
+                        <div class="author-bio-wrap fl-wrap block_box">
+                            <div class="author-bio-img">
+                                <img src="{{ asset('images/avatar/1.jpg') }}" alt="{{ $post->author->name ?? '' }}" class="resp-img">
+                            </div>
+                            <div class="author-bio-content">
+                                <h4><a>{{ $post->author->name ?? 'Admin' }}</a></h4>
+                                <p>Thông tin về tác giả sẽ được cập nhật sớm. Cảm ơn sự quan tâm của bạn!</p>
+                            </div>
+                            <a href="#" class="author-bio-link">Xem tất cả bài viết</a>
+                        </div>
+                        <!-- author-bio end -->
+
+                        <!-- Post-nav -->
+                        {{-- You can add logic for Next/Prev post here if needed --}}
+
+                        <!-- list-single-main-item -->
+                        <div class="list-single-main-item fl-wrap" id="sec-comments">
+                            <div class="list-single-main-item-title">
+                                <h3>Bình luận <span>0</span></h3>
+                            </div>
+                            <div class="list-single-main-item_content fl-wrap">
+                                {{-- Comment list can be implemented here --}}
+                            </div>
+                        </div>
+                        <!-- list-single-main-item end -->
+
+                        <!-- list-single-main-item -->
+                        <div class="list-single-main-item fl-wrap" id="sec-add-comment">
+                            <div class="list-single-main-item-title fl-wrap">
+                                <h3>Để lại bình luận</h3>
+                            </div>
+                            <div id="add-review" class="add-review-box">
+                                <form class="add-comment custom-form">
+                                    <fieldset>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label>Tên* <span class="dec-icon"><i class="fas fa-user"></i></span></label>
+                                                <input name="name" type="text" onClick="this.select()" value="">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Email* <span class="dec-icon"><i class="fas fa-envelope"></i></span></label>
+                                                <input name="email" type="text" onClick="this.select()" value="">
+                                            </div>
+                                        </div>
+                                        <textarea cols="40" rows="3" placeholder="Nội dung bình luận:"></textarea>
+                                    </fieldset>
+                                    <button class="btn big-btn color-bg float-btn">Gửi bình luận <i class="fa fa-paper-plane-o"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- list-single-main-item end -->
                     </div>
                 </div>
                 <!-- col-md 8 end -->
@@ -145,7 +183,7 @@
 </div>
 @endsection
 
-@push('scripts')
+@push('head_scripts')
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
