@@ -109,10 +109,24 @@
                                             <li><i class="fal fa-eye"></i> <span>{{ $post->view_count ?? $post->views ?? 0 }}</span></li>
                                             <li><i class="fal fa-tags"></i>
                                                 @if(isset($post->tags) && count($post->tags))
-                                                    @foreach($post->tags as $t)
-                                                        <a href="{{ (function_exists('route') ? (Route::has('news.tag') ? route('news.tag', $t->slug ?? $t->id) : url('/tin-tuc/tag/' . ($t->slug ?? $t->id))) : url('/tin-tuc/tag/' . ($t->slug ?? $t->id))) }}">{{ $t->name ?? $t->tag }}</a>@if(!$loop->last), @endif
-                                                    @endforeach
-                                                @else
+                                                        @foreach($post->tags as $t)
+                                                            @php
+                                                                // Determine slug or id from possible structures
+                                                                $slug = $t->slug ?? data_get($t, 'term.slug') ?? data_get($t, 'term_id') ?? data_get($t, 'id');
+                                                                $label = $t->name ?? data_get($t, 'term.name') ?? $t->tag ?? ($slug ?? 'Tag');
+                                                                if ($slug) {
+                                                                    if (function_exists('route') && (Route::has('news.tag'))) {
+                                                                        $tagUrl = route('news.tag', $slug);
+                                                                    } else {
+                                                                        $tagUrl = url('/tin-tuc/tag/' . $slug);
+                                                                    }
+                                                                } else {
+                                                                    $tagUrl = '#';
+                                                                }
+                                                            @endphp
+                                                            <a href="{{ $tagUrl }}">{{ $label }}</a>@if(!$loop->last), @endif
+                                                        @endforeach
+                                                    @else
                                                     @if(isset($post->meta))
                                                         @php
                                                             $tagMeta = $post->meta->where('meta_key','_tags')->first();
