@@ -247,9 +247,19 @@ class FrontEndNewsController extends Controller
         $months = NewsPost::where('post_type', 'post')->where('post_status', 'publish')->selectRaw('YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count')->groupBy('year', 'month')->orderBy('year', 'desc')->orderBy('month', 'desc')->get();
         $recent_news = self::getRecentNews(5);
 
-        // Get Previous and Next Post for navigation
-        $prevPost = NewsPost::where('id', '<', $post->id)->where('post_type', 'post')->where('post_status', 'publish')->orderBy('id', 'desc')->first();
-        $nextPost = NewsPost::where('id', '>', $post->id)->where('post_type', 'post')->where('post_status', 'publish')->orderBy('id', 'asc')->first();
+        // Get Previous and Next Post for navigation — use model primary key (handles custom PK names)
+        $pk = $post->getKeyName();
+        $pkValue = $post->getKey();
+        $prevPost = NewsPost::where($pk, '<', $pkValue)
+            ->where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->orderBy($pk, 'desc')
+            ->first();
+        $nextPost = NewsPost::where($pk, '>', $pkValue)
+            ->where('post_type', 'post')
+            ->where('post_status', 'publish')
+            ->orderBy($pk, 'asc')
+            ->first();
 
         return view('frontends.news.show', compact('post', 'categories', 'tags', 'months', 'recent_news', 'prevPost', 'nextPost'));
     }
