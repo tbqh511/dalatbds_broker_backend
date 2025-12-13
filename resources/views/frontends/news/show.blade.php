@@ -104,8 +104,16 @@
                                     @endphp
 
                                     <div class="list-single-main-media fl-wrap">
-                                        <img src="{{ $featured }}" alt="{{ $post->post_title }}" class="resp-img">
+                                        <img src="{{ $featured }}" alt="{{ $post->post_title }}" class="resp-img" style="max-width: 100%; height: auto; object-fit: cover;">
                                     </div>
+
+                                    <style>
+                                        .post-content img {
+                                            max-width: 100%;
+                                            height: auto;
+                                            object-fit: cover;
+                                        }
+                                    </style>
 
                                     {!! $content !!}
                                 </div>
