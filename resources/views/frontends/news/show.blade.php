@@ -65,7 +65,7 @@
                         <!-- article> -->
                         <article class="post-article fl-wrap">
                             <div class="list-single-main-media fl-wrap">
-                                <img src="{{ $featuredImageUrl }}" alt="{{ $post->post_title }}" class="resp-img" loading="lazy">
+                                <img src="{{ $featuredImageUrl }}" alt="{{ $post->post_title }}" class="resp-img" loading="lazy" style="width: 100%; height: auto;">
                             </div>
                             <div class="list-single-main-item fl-wrap block_box">
                                 <div class="single-article-header fl-wrap">
@@ -118,11 +118,11 @@
                         <!-- author-bio -->
                         <div class="author-bio-wrap fl-wrap block_box">
                             <div class="author-bio-img">
-                                <img src="{{ asset('images/avatar/1.jpg') }}" alt="{{ $post->author->name ?? '' }}" class="resp-img">
+                                <img src="{{ asset('images/avatar/1.jpg') }}" alt="{{ $post->author->name ?? 'Admin' }}" class="resp-img">
                             </div>
                             <div class="author-bio-content">
                                 <h4><a>{{ $post->author->name ?? 'Admin' }}</a></h4>
-                                <p>Thông tin về tác giả sẽ được cập nhật sớm. Cảm ơn sự quan tâm của bạn!</p>
+                                <p>Đội ngũ biên tập viên chuyên nghiệp của Đà Lạt BDS, mang đến những thông tin thị trường nhanh chóng và chính xác nhất.</p>
                             </div>
                             <a href="#" class="author-bio-link">Xem tất cả bài viết</a>
                         </div>
@@ -138,6 +138,7 @@
                             </div>
                             <div class="list-single-main-item_content fl-wrap">
                                 {{-- Comment list can be implemented here --}}
+                                <p>Chưa có bình luận nào. Hãy là người đầu tiên bình luận!</p>
                             </div>
                         </div>
                         <!-- list-single-main-item end -->

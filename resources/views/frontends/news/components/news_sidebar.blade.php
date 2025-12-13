@@ -6,8 +6,10 @@
             <div class="search-widget fl-wrap">
                 <form action="{{ route('news.index') }}" method="GET" class="fl-wrap custom-form">
                     <input name="se" id="se" type="text" class="search" placeholder="Tìm kiếm tin tức..."
-                        value="{{ request('se') }}" />
-                    <button class="search-submit" id="submit_btn"><i class="far fa-search"></i></button>
+                        value="{{ request('se') }}" style="width: 100%; padding-right: 50px;" />
+                    <button class="search-submit" id="submit_btn" style="position: absolute; right: 0; top: 0; height: 100%; width: 50px; background: transparent; border: none; cursor: pointer;">
+                        <i class="far fa-search"></i>
+                    </button>
                 </form>
             </div>
         </div>
