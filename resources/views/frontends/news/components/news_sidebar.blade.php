@@ -80,7 +80,7 @@
         <div class="box-widget fl-wrap">
             <div class="banner-widget fl-wrap">
                 <div class="bg-wrap bg-parallax-wrap-gradien">
-                    <div class="bg" data-bg="https://bds.dalat.vn/hinh-anh/quang-cao/mua-nha-da-lat-gia-re.jpg"></div>
+                    <div class="bg" data-bg="{{ asset('assets/images/posts/sidebar_banner.png') }}"></div>
                 </div>
                 <div class="banner-widget_content">
                     <h5>Bạn có muốn tham gia mạng lưới thổ địa cùng Đà Lạt BDS?</h5>
