@@ -4,11 +4,17 @@
 <head>
     <!-- basic   -->
     <meta charset="UTF-8">
-    <meta name="zalo-platform-site-verification" content="E_E22Fdm52aStev_d_nVUsY8YNk4_budD3Cu" />
-    <title>Đà Lạt BDS - Mạng lưới thổ địa Đà Lạt</title>
+    <title>@yield('title', 'Đà Lạt BDS - Mạng lưới thổ địa Đà Lạt')</title>
     <meta name="robots" content="index, follow" />
-    <meta name="keywords" content="" />
-    <meta name="description" content="" />
+    <meta name="keywords" content="@yield('meta_keywords', 'bất động sản, đà lạt, mua bán nhà đất, thổ địa')" />
+    <meta name="description" content="@yield('meta_description', 'Tìm kiếm và đầu tư bất động sản tại Đà Lạt. Mạng lưới thổ địa uy tín, thông tin chính xác.')" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ url()->current() }}" />
+
+    <!-- Social Media Meta -->
+    @yield('social_meta')
+
     <!-- css   -->
     <link type="text/css" rel="stylesheet" href="{{asset('css/plugins.css')}}">
     <link type="text/css" rel="stylesheet" href="{{asset('css/style.css')}}">
@@ -16,7 +22,8 @@
     @stack('styles')
     <!--  favicons  -->
     <link rel="shortcut icon" href="{{asset('images/favicon.ico')}}">
-    <!--  push componet scripts  -->
+
+    @stack('head_scripts')
 </head>
 
 <body>

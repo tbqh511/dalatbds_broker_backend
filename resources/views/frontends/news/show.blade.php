@@ -1,14 +1,53 @@
 @extends('frontends.master')
+
+@php
+    // Prepare SEO and Social data
+    $pageTitle = $post->post_title ?? 'Tin tức';
+    $pageDescription = Str::limit(strip_tags($post->post_excerpt ?? $post->post_content), 155);
+
+    // Prepare featured image URL
+    $featuredImageUrl = asset('images/all/blog/1.jpg'); // Default
+    $thumbMeta = $post->meta->where('meta_key', '_thumbnail')->first();
+    if ($thumbMeta && $thumbMeta->meta_value) {
+        if (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
+            $featuredImageUrl = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
+        } elseif (Storage::disk('public')->exists($thumbMeta->meta_value)) {
+            $featuredImageUrl = Storage::url($thumbMeta->meta_value);
+        }
+    }
+@endphp
+
+@section('title', $pageTitle)
+@section('meta_description', $pageDescription)
+
+@section('social_meta')
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $pageDescription }}">
+    <meta property="og:image" content="{{ $featuredImageUrl }}">
+    <meta property="article:published_time" content="{{ $post->created_at->toIso8601String() }}" />
+    <meta property="article:modified_time" content="{{ $post->updated_at->toIso8601String() }}" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ url()->current() }}">
+    <meta property="twitter:title" content="{{ $pageTitle }}">
+    <meta property="twitter:description" content="{{ $pageDescription }}">
+    <meta property="twitter:image" content="{{ $featuredImageUrl }}">
+@endsection
+
 @section('content')
 <div class="content">
     <!--  section  -->
-    <section class="hidden-section single-par2  " data-scrollax-parent="true">
+    <section class="hidden-section single-par2" data-scrollax-parent="true">
         <div class="bg-wrap bg-parallax-wrap-gradien">
-            <div class="bg par-elem " data-bg="{{ asset('images/bg/1.jpg') }}" data-scrollax="properties: { translateY: '30%' }"></div>
+            <div class="bg par-elem" data-bg="{{ $featuredImageUrl }}" data-scrollax="properties: { translateY: '30%' }"></div>
         </div>
         <div class="container">
             <div class="section-title center-align big-title">
-                <h2><span>{{ $post->post_title }}</span></h2>
+                <h1><span>{{ $post->post_title }}</span></h1>
                 <h4>Bất Động Sản Đà Lạt</h4>
             </div>
             <div class="scroll-down-wrap">
@@ -70,41 +109,8 @@
 
                                 <div class="clearfix"></div>
                                 <div class="post-content">
-                                    @php
-                                        // Priority 1: Check metadata _thumbnail
-                                        $featured = null;
-                                        $thumbMeta = $post->meta->where('meta_key', '_thumbnail')->first();
-
-                                        if ($thumbMeta && $thumbMeta->meta_value) {
-                                            // Check direct public asset copy first
-                                            if (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
-                                                $featured = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
-                                            }
-                                            // Check storage via symlink
-                                            elseif (Storage::disk('public')->exists($thumbMeta->meta_value)) {
-                                                $featured = Storage::url($thumbMeta->meta_value);
-                                            }
-                                        }
-
-                                        // Priority 2: Extract from content if no metadata thumbnail
-                                        $content = $post->post_content ?? '';
-                                        if (empty($featured) && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $m)) {
-                                            $raw = $m[1];
-                                            if (preg_match('/^(https?:)?\/\//', $raw) || str_starts_with($raw, '/')) {
-                                                $featured = $raw;
-                                            } else {
-                                                $featured = asset($raw);
-                                            }
-                                        }
-
-                                        // Priority 3: Fallback default
-                                        if (empty($featured)) {
-                                            $featured = asset('images/all/blog/1.jpg');
-                                        }
-                                    @endphp
-
                                     <div class="list-single-main-media fl-wrap">
-                                        <img src="{{ $featured }}" alt="{{ $post->post_title }}" class="resp-img" style="max-width: 100%; height: auto; object-fit: cover;">
+                                        <img src="{{ $featuredImageUrl }}" alt="{{ $post->post_title }}" class="resp-img" loading="lazy" style="max-width: 100%; height: auto; object-fit: cover;">
                                     </div>
 
                                     <style>
@@ -112,10 +118,11 @@
                                             max-width: 100%;
                                             height: auto;
                                             object-fit: cover;
+                                            margin: 15px 0;
                                         }
                                     </style>
 
-                                    {!! $content !!}
+                                    {!! $post->post_content !!}
                                 </div>
 
                                 <span class="fw-separator fl-wrap"></span>
@@ -137,3 +144,32 @@
     <div class="limit-box fl-wrap"></div>
 </div>
 @endsection
+
+@push('scripts')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "{{ $pageTitle }}",
+  "image": [
+    "{{ $featuredImageUrl }}"
+   ],
+  "datePublished": "{{ $post->created_at->toIso8601String() }}",
+  "dateModified": "{{ $post->updated_at->toIso8601String() }}",
+  "author": [{
+      "@type": "Person",
+      "name": "{{ $post->author->name ?? 'Admin' }}",
+      "url": "{{ route('index') }}"
+    }],
+  "publisher": {
+      "@type": "Organization",
+      "name": "{{ config('app.name', 'Đà Lạt BDS') }}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ asset('images/logo.png') }}"
+      }
+  },
+  "description": "{{ $pageDescription }}"
+}
+</script>
+@endpush
