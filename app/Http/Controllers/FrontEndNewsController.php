@@ -236,44 +236,22 @@ class FrontEndNewsController extends Controller
             ->where('post_status', 'publish')
             ->firstOrFail();
 
-        // Increment view counter (stored in comment_count) once per session
+        // Increment view counter
         try {
-            $viewed = session()->get('viewed_news_posts', []);
-            $postKey = $post->getKey();
-            if (!in_array($postKey, $viewed, true)) {
-                $post->increment('comment_count');
-                $post->refresh();
-                $viewed[] = $postKey;
-                session()->put('viewed_news_posts', $viewed);
-            }
-        } catch (\Throwable $e) {
-            // If increment fails for any reason, ignore to avoid breaking the page
-        }
+            $post->increment('comment_count');
+        } catch (\Throwable $e) {}
 
-        // Fetch Categories with counts
-        $categories = NewsTermTaxonomy::where('taxonomy', 'category')
-            ->with('term')
-            ->withCount(['posts as count'])
-            ->get();
-
-        // Fetch Tags
-        $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')
-            ->with('term')
-            ->get();
-
-        // Fetch months
-        $months = NewsPost::where('post_type', 'post')
-            ->where('post_status', 'publish')
-            ->selectRaw('YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count')
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
-            ->get();
-
-        // Recent news for sidebar
+        // Get common sidebar data
+        $categories = NewsTermTaxonomy::where('taxonomy', 'category')->with('term')->withCount(['posts as count'])->get();
+        $tags = NewsTermTaxonomy::where('taxonomy', 'post_tag')->with('term')->get();
+        $months = NewsPost::where('post_type', 'post')->where('post_status', 'publish')->selectRaw('YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count')->groupBy('year', 'month')->orderBy('year', 'desc')->orderBy('month', 'desc')->get();
         $recent_news = self::getRecentNews(5);
 
-        return view('frontends.news.show', compact('post','categories', 'tags', 'months', 'recent_news'));
+        // Get Previous and Next Post for navigation
+        $prevPost = NewsPost::where('id', '<', $post->id)->where('post_type', 'post')->where('post_status', 'publish')->orderBy('id', 'desc')->first();
+        $nextPost = NewsPost::where('id', '>', $post->id)->where('post_type', 'post')->where('post_status', 'publish')->orderBy('id', 'asc')->first();
+
+        return view('frontends.news.show', compact('post', 'categories', 'tags', 'months', 'recent_news', 'prevPost', 'nextPost'));
     }
 
     /**
