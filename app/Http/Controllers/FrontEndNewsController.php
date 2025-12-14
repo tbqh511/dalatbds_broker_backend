@@ -234,6 +234,7 @@ class FrontEndNewsController extends Controller
         $post = NewsPost::where('post_name', $slug)
             ->where('post_type', 'post')
             ->where('post_status', 'publish')
+            ->with('tags')
             ->firstOrFail();
 
         // Increment view counter

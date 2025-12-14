@@ -144,20 +144,18 @@
                                 <span class="fw-separator fl-wrap"></span>
                                 {{-- Post content --}}
                                 {!! $post->post_content !!}
-                                <blockquote>
-                                    <p>Vestibulum id ligula porta felis euismod semper. Sed posuere consectetur est at lobortis. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper.</p>
-                                </blockquote>
-                                <p>Ut nec hinc dolor possim. An eros argumentum vel, elit diceret duo eu, quo et aliquid ornatus delicatissimi. Cu nam tale ferri utroque, eu habemus albucius mel, cu vidit possit ornatus eum. Eu ius postulant salutatus definitionem, an e trud erroribus explicari. Graeci viderer qui ut, at habeo facer solet usu. Pri choro pertinax indoctum ne, ad partiendo persecuti forensibus est.</p>
-                                <div class="clearfix"></div>
                                 <span class="fw-separator fl-wrap"></span>
                                 <div class="list-single-tags tags-stylwrap">
-                                    <span class="tags-title">  Tags : </span>
-                                    <a href="#">Hotel</a>
-                                    <a href="#">Hostel</a>
-                                    <a href="#">Room</a>
-                                    <a href="#">Spa</a>
-                                    <a href="#">Restourant</a>
-                                    <a href="#">Parking</a>
+                                    <span class="tags-title">Tags:</span>
+                                    @if(isset($post->tags) && $post->tags->count() > 0)
+                                        @foreach($post->tags as $tag)
+                                            @if(isset($tag->term))
+                                                <a href="{{ route('news.tag', $tag->term->slug) }}">{{ $tag->term->name }}</a>
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        <span>Không có tags</span>
+                                    @endif
                                 </div>
                             </div>
                         </article>
