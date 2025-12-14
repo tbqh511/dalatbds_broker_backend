@@ -16,7 +16,7 @@
                 </form>
                 <div class="clearfix"></div>
                 <p>Hoặc</p>
-                <a href="index.html" class="btn   color-bg">Quay về lại trang chủ</a>
+                <a href="{{ url('/') }}" class="btn   color-bg">Quay về lại trang chủ</a>
             </div>
         </div>
         <div class="pwh_bg fw-pwh">
