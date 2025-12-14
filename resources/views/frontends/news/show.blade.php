@@ -203,7 +203,7 @@
                                 <ul>
                                     <li>
                                         @if($prevPost)
-                                            <a href="{{ $makeNewsUrl($prevPost->post_name ?? $prevPost->slug) }}" class="ln"><i class="fal fa-long-arrow-left"></i><span>Trước <strong>- {{ Str::limit($prevPost->post_title ?? ($prevPost->title ?? ''), 40) }}</strong></span></a>
+                                            <a href="{{ $makeNewsUrl($prevPost->post_name ?? $prevPost->slug) }}" class="ln"><i class="fal fa-long-arrow-left"></i><span>Trước</span></a>
                                             <div class="content-nav-media">
                                                 <div class="bg" data-bg="{{ asset('assets/images/posts/sidebar_banner.png') }}"></div>
                                             </div>
@@ -213,7 +213,7 @@
                                     </li>
                                     <li>
                                         @if($nextPost)
-                                            <a href="{{ $makeNewsUrl($nextPost->post_name ?? $nextPost->slug) }}" class="rn"><span>Sau <strong>- {{ Str::limit($nextPost->post_title ?? ($nextPost->title ?? ''), 40) }}</strong></span> <i class="fal fa-long-arrow-right"></i></a>
+                                            <a href="{{ $makeNewsUrl($nextPost->post_name ?? $nextPost->slug) }}" class="rn"><span>Sau</span> <i class="fal fa-long-arrow-right"></i></a>
                                             <div class="content-nav-media">
                                                 <div class="bg" data-bg="{{ asset('assets/images/posts/sidebar_banner.png') }}"></div>
                                             </div>
