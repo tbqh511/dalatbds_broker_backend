@@ -248,19 +248,37 @@ class FrontEndNewsController extends Controller
         $months = NewsPost::where('post_type', 'post')->where('post_status', 'publish')->selectRaw('YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count')->groupBy('year', 'month')->orderBy('year', 'desc')->orderBy('month', 'desc')->get();
         $recent_news = self::getRecentNews(5);
 
-        // Get Previous and Next Post for navigation — use model primary key (handles custom PK names)
-        $pk = $post->getKeyName();
-        $pkValue = $post->getKey();
-        $prevPost = NewsPost::where($pk, '<', $pkValue)
+        // Get Previous and Next Post for navigation
+        // Using 'post_date' or 'ID' for ordering makes sense for blog posts navigation
+        // If $pk is 'ID' (default), it works. If it's something else, ensure it's comparable.
+        $prevPost = NewsPost::where('post_date', '<', $post->post_date)
             ->where('post_type', 'post')
             ->where('post_status', 'publish')
-            ->orderBy($pk, 'desc')
+            ->orderBy('post_date', 'desc')
             ->first();
-        $nextPost = NewsPost::where($pk, '>', $pkValue)
+
+        if (!$prevPost) {
+             // fallback to ID if dates are same or for stability
+             $prevPost = NewsPost::where('ID', '<', $post->ID)
+                ->where('post_type', 'post')
+                ->where('post_status', 'publish')
+                ->orderBy('ID', 'desc')
+                ->first();
+        }
+
+        $nextPost = NewsPost::where('post_date', '>', $post->post_date)
             ->where('post_type', 'post')
             ->where('post_status', 'publish')
-            ->orderBy($pk, 'asc')
+            ->orderBy('post_date', 'asc')
             ->first();
+
+        if (!$nextPost) {
+             $nextPost = NewsPost::where('ID', '>', $post->ID)
+                ->where('post_type', 'post')
+                ->where('post_status', 'publish')
+                ->orderBy('ID', 'asc')
+                ->first();
+        }
 
         return view('frontends.news.show', compact('post', 'categories', 'tags', 'months', 'recent_news', 'prevPost', 'nextPost'));
     }
