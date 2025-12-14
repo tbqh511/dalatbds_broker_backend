@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Api\NewsPostApiController;
+use App\Http\Controllers\Api\NewsCategoryApiController;
+use App\Http\Controllers\Api\NewsTagApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +51,14 @@ Route::get('get_slider', [ApiController::class, 'get_slider']);
 Route::get('news_posts', [NewsPostApiController::class, 'index']);
 Route::get('news_posts/{id}', [NewsPostApiController::class, 'show']);
 
+// Public News Categories Routes (Read-only)
+Route::get('news_categories', [NewsCategoryApiController::class, 'index']);
+Route::get('news_categories/{id}', [NewsCategoryApiController::class, 'show']);
+
+// Public News Tags Routes (Read-only)
+Route::get('news_tags', [NewsTagApiController::class, 'index']);
+Route::get('news_tags/{id}', [NewsTagApiController::class, 'show']);
+
 //Play Integrity
 //Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
 Route::group(['middleware' => ['jwt.verify']], function () {
@@ -56,6 +66,16 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('news_posts', [NewsPostApiController::class, 'store']);
     Route::put('news_posts/{id}', [NewsPostApiController::class, 'update']);
     Route::delete('news_posts/{id}', [NewsPostApiController::class, 'destroy']);
+
+    // News Categories Routes (Write access)
+    Route::post('news_categories', [NewsCategoryApiController::class, 'store']);
+    Route::put('news_categories/{id}', [NewsCategoryApiController::class, 'update']);
+    Route::delete('news_categories/{id}', [NewsCategoryApiController::class, 'destroy']);
+
+    // News Tags Routes (Write access)
+    Route::post('news_tags', [NewsTagApiController::class, 'store']);
+    Route::put('news_tags/{id}', [NewsTagApiController::class, 'update']);
+    Route::delete('news_tags/{id}', [NewsTagApiController::class, 'destroy']);
 
     Route::post('get_property', [ApiController::class, 'get_property']);
     Route::post('update_profile', [ApiController::class, 'update_profile']);
