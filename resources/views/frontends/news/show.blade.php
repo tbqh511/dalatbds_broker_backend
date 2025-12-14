@@ -164,13 +164,9 @@
                         <div class="content-nav_holder fl-wrap color-bg">
                             <div class="content-nav">
                                 @php
-                                    // Prefer controller-provided $prevPost / $nextPost. Fallback to simple DB query using the same table as the current model.
-                                    $prevPost = $prevPost ?? (is_object($post) && method_exists($post,'getTable') ? \DB::table($post->getTable())->where('id','<',$post->id)->orderBy('id','desc')->first() : null);
-                                    $nextPost = $nextPost ?? (is_object($post) && method_exists($post,'getTable') ? \DB::table($post->getTable())->where('id','>',$post->id)->orderBy('id','asc')->first() : null);
-
                                     $makeNewsUrl = function ($p) {
                                         if (!$p) return '#';
-                                        $slug = $p->post_slug ?? $p->slug ?? $p->id;
+                                        $slug = $p->post_slug ?? $p->slug ?? $p->ID ?? $p->id;
                                         return url('/tin-tuc/' . $slug);
                                     };
                                 @endphp
@@ -180,7 +176,7 @@
                                         @if($prevPost)
                                             <a href="{{ $makeNewsUrl($prevPost) }}" class="ln"><i class="fal fa-long-arrow-left"></i><span>Prev <strong>- {{ Str::limit($prevPost->post_title ?? ($prevPost->title ?? ''), 50) }}</strong></span></a>
                                             <div class="content-nav-media">
-                                                <div class="bg" data-bg="{{ isset($prevPost->id) ? (asset('assets/images/posts/' . basename(optional($prevPost)->_thumbnail ?? '') ) ) : '' }}"></div>
+                                                <div class="bg" data-bg="{{ isset($prevPost->ID) ? (asset('assets/images/posts/' . basename(optional($prevPost)->_thumbnail ?? '') ) ) : '' }}"></div>
                                             </div>
                                         @else
                                             <a href="#" class="ln disabled"><i class="fal fa-long-arrow-left"></i><span>Prev <strong>-</strong></span></a>
@@ -190,7 +186,7 @@
                                         @if($nextPost)
                                             <a href="{{ $makeNewsUrl($nextPost) }}" class="rn"><span>Next <strong>- {{ Str::limit($nextPost->post_title ?? ($nextPost->title ?? ''), 50) }}</strong></span> <i class="fal fa-long-arrow-right"></i></a>
                                             <div class="content-nav-media">
-                                                <div class="bg" data-bg="{{ isset($nextPost->id) ? (asset('assets/images/posts/' . basename(optional($nextPost)->_thumbnail ?? '') ) ) : '' }}"></div>
+                                                <div class="bg" data-bg="{{ isset($nextPost->ID) ? (asset('assets/images/posts/' . basename(optional($nextPost)->_thumbnail ?? '') ) ) : '' }}"></div>
                                             </div>
                                         @else
                                             <a href="#" class="rn disabled"><span>Next <strong>-</strong></span> <i class="fal fa-long-arrow-right"></i></a>
