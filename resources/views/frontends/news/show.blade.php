@@ -164,29 +164,9 @@
                         <div class="content-nav_holder fl-wrap color-bg">
                             <div class="content-nav">
                                 @php
-                                    $makeNewsUrl = function ($p) {
-                                        if (!$p) return '#';
-                                        $slug = $p->post_slug ?? $p->slug ?? $p->ID ?? $p->id;
+                                    $makeNewsUrl = function ($slug) {
+                                        if (!$slug) return '#';
                                         return url('/tin-tuc/' . $slug);
-                                    };
-
-                                    $getThumbnailUrl = function ($p) {
-                                        if (!$p) return '';
-                                        $thumb = $p->_thumbnail ?? null;
-                                        if (!$thumb) return '';
-                                        
-                                        // Check if public file exists
-                                        $publicPath = 'assets/images/posts/' . basename($thumb);
-                                        if (file_exists(public_path($publicPath))) {
-                                            return asset($publicPath);
-                                        }
-                                        
-                                        // Check storage
-                                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumb)) {
-                                            return \Illuminate\Support\Facades\Storage::url($thumb);
-                                        }
-
-                                        return '';
                                     };
                                 @endphp
                                 <style>
@@ -223,9 +203,9 @@
                                 <ul>
                                     <li>
                                         @if($prevPost)
-                                            <a href="{{ $makeNewsUrl($prevPost) }}" class="ln"><i class="fal fa-long-arrow-left"></i><span>Trước <strong>- {{ Str::limit($prevPost->post_title ?? ($prevPost->title ?? ''), 40) }}</strong></span></a>
+                                            <a href="{{ $makeNewsUrl($prevPost->post_name ?? $prevPost->slug) }}" class="ln"><i class="fal fa-long-arrow-left"></i><span>Trước <strong>- {{ Str::limit($prevPost->post_title ?? ($prevPost->title ?? ''), 40) }}</strong></span></a>
                                             <div class="content-nav-media">
-                                                <div class="bg" data-bg="{{ $getThumbnailUrl($prevPost) }}"></div>
+                                                <div class="bg" data-bg="{{ asset('assets/images/posts/sidebar_banner.png') }}"></div>
                                             </div>
                                         @else
                                             <a href="#" class="ln disabled"><i class="fal fa-long-arrow-left"></i><span>Trước <strong>-</strong></span></a>
@@ -233,9 +213,9 @@
                                     </li>
                                     <li>
                                         @if($nextPost)
-                                            <a href="{{ $makeNewsUrl($nextPost) }}" class="rn"><span>Sau <strong>- {{ Str::limit($nextPost->post_title ?? ($nextPost->title ?? ''), 40) }}</strong></span> <i class="fal fa-long-arrow-right"></i></a>
+                                            <a href="{{ $makeNewsUrl($nextPost->post_name ?? $nextPost->slug) }}" class="rn"><span>Sau <strong>- {{ Str::limit($nextPost->post_title ?? ($nextPost->title ?? ''), 40) }}</strong></span> <i class="fal fa-long-arrow-right"></i></a>
                                             <div class="content-nav-media">
-                                                <div class="bg" data-bg="{{ $getThumbnailUrl($nextPost) }}"></div>
+                                                <div class="bg" data-bg="{{ asset('assets/images/posts/sidebar_banner.png') }}"></div>
                                             </div>
                                         @else
                                             <a href="#" class="rn disabled"><span>Sau <strong>-</strong></span> <i class="fal fa-long-arrow-right"></i></a>
