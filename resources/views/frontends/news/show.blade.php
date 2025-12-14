@@ -99,7 +99,7 @@
                                     <div class="clearfix"></div>
                                     <div class="post-author">
                                         <a href="#">
-                                            <img src="{{ optional($post->author)->avatar ? asset(optional($post->author)->avatar) : asset('images/bg/1.jpg') }}" alt="{{ optional($post->author)->name ?? 'Admin' }}">
+                                            <img src="{{ optional($post->author)->avatar ? asset(optional($post->author)->avatar) : asset('images/users/1734711963.6052.jpg') }}" alt="{{ optional($post->author)->name ?? 'Admin' }}">
                                             <span>By {{ optional($post->author)->name ?? 'Admin' }}</span>
                                         </a>
                                     </div>
