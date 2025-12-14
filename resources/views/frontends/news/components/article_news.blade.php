@@ -21,7 +21,9 @@
     $authorAvatar = optional($post->author)->avatar ? asset(optional($post->author)->avatar) : asset('images/avatar/1.jpg');
 
     // Date
-    $date = $post->created_at ? $post->created_at->format('d F Y') : '';
+    // HuyTBQ: Format date to d/m/Y (Vietnamese standard) and add fallback to post_date if created_at is null
+    $dateObj = $post->created_at ?? $post->post_date;
+    $date = $dateObj ? \Carbon\Carbon::parse($dateObj)->format('d/m/Y') : '';
 
     // Views
     $views = $post->view_count ?? $post->views ?? $post->comment_count ?? 0;
