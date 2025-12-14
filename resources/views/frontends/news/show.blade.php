@@ -169,27 +169,76 @@
                                         $slug = $p->post_slug ?? $p->slug ?? $p->ID ?? $p->id;
                                         return url('/tin-tuc/' . $slug);
                                     };
+
+                                    $getThumbnailUrl = function ($p) {
+                                        if (!$p) return '';
+                                        $thumb = $p->_thumbnail ?? null;
+                                        if (!$thumb) return '';
+                                        
+                                        // Check if public file exists
+                                        $publicPath = 'assets/images/posts/' . basename($thumb);
+                                        if (file_exists(public_path($publicPath))) {
+                                            return asset($publicPath);
+                                        }
+                                        
+                                        // Check storage
+                                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumb)) {
+                                            return \Illuminate\Support\Facades\Storage::url($thumb);
+                                        }
+
+                                        return '';
+                                    };
                                 @endphp
+                                <style>
+                                    .content-nav li a {
+                                        max-width: 100%;
+                                        display: block;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        white-space: nowrap;
+                                        transition: all 0.3s ease;
+                                        padding-right: 15px; /* space for arrow */
+                                    }
+                                    .content-nav li a.rn {
+                                        padding-left: 15px;
+                                        padding-right: 0;
+                                        text-align: right;
+                                    }
+                                    .content-nav li a:hover {
+                                        color: #3270FC; /* Theme color */
+                                        transform: translateX(5px);
+                                    }
+                                    .content-nav li a.ln:hover {
+                                        transform: translateX(-5px);
+                                    }
+                                    .content-nav-media .bg {
+                                        background-color: #f5f7fb; /* Fallback color */
+                                        transition: transform 0.4s ease;
+                                    }
+                                    .content-nav li:hover .content-nav-media .bg {
+                                        transform: scale(1.1);
+                                    }
+                                </style>
 
                                 <ul>
                                     <li>
                                         @if($prevPost)
-                                            <a href="{{ $makeNewsUrl($prevPost) }}" class="ln"><i class="fal fa-long-arrow-left"></i><span>Prev <strong>- {{ Str::limit($prevPost->post_title ?? ($prevPost->title ?? ''), 50) }}</strong></span></a>
+                                            <a href="{{ $makeNewsUrl($prevPost) }}" class="ln"><i class="fal fa-long-arrow-left"></i><span>Trước <strong>- {{ Str::limit($prevPost->post_title ?? ($prevPost->title ?? ''), 40) }}</strong></span></a>
                                             <div class="content-nav-media">
-                                                <div class="bg" data-bg="{{ isset($prevPost->ID) ? (asset('assets/images/posts/' . basename(optional($prevPost)->_thumbnail ?? '') ) ) : '' }}"></div>
+                                                <div class="bg" data-bg="{{ $getThumbnailUrl($prevPost) }}"></div>
                                             </div>
                                         @else
-                                            <a href="#" class="ln disabled"><i class="fal fa-long-arrow-left"></i><span>Prev <strong>-</strong></span></a>
+                                            <a href="#" class="ln disabled"><i class="fal fa-long-arrow-left"></i><span>Trước <strong>-</strong></span></a>
                                         @endif
                                     </li>
                                     <li>
                                         @if($nextPost)
-                                            <a href="{{ $makeNewsUrl($nextPost) }}" class="rn"><span>Next <strong>- {{ Str::limit($nextPost->post_title ?? ($nextPost->title ?? ''), 50) }}</strong></span> <i class="fal fa-long-arrow-right"></i></a>
+                                            <a href="{{ $makeNewsUrl($nextPost) }}" class="rn"><span>Sau <strong>- {{ Str::limit($nextPost->post_title ?? ($nextPost->title ?? ''), 40) }}</strong></span> <i class="fal fa-long-arrow-right"></i></a>
                                             <div class="content-nav-media">
-                                                <div class="bg" data-bg="{{ isset($nextPost->ID) ? (asset('assets/images/posts/' . basename(optional($nextPost)->_thumbnail ?? '') ) ) : '' }}"></div>
+                                                <div class="bg" data-bg="{{ $getThumbnailUrl($nextPost) }}"></div>
                                             </div>
                                         @else
-                                            <a href="#" class="rn disabled"><span>Next <strong>-</strong></span> <i class="fal fa-long-arrow-right"></i></a>
+                                            <a href="#" class="rn disabled"><span>Sau <strong>-</strong></span> <i class="fal fa-long-arrow-right"></i></a>
                                         @endif
                                     </li>
                                 </ul>
