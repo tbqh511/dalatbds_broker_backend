@@ -230,14 +230,14 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
         /// END :: ARTICLE ROUTE
 
         /// START :: POSTS ROUTE
-        Route::resource('posts', PostController::class)->names('admin.posts');
-        Route::get('posts-list', [PostController::class, 'getPostsList'])->name('admin.posts.list');
-        
-        // Post Categories
+        // Post Categories - Must be defined BEFORE posts resource to avoid conflict with posts/{id}
         Route::resource('posts/categories', PostCategoryController::class)->names('admin.posts.categories');
 
-        // Post Tags
+        // Post Tags - Must be defined BEFORE posts resource
         Route::resource('posts/tags', PostTagController::class)->names('admin.posts.tags');
+
+        Route::resource('posts', PostController::class)->names('admin.posts');
+        Route::get('posts-list', [PostController::class, 'getPostsList'])->name('admin.posts.list');
         /// END :: POSTS ROUTE
 
         /// START :: ADVERTISEMENT ROUTE
