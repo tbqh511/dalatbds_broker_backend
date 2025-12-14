@@ -77,9 +77,9 @@
             <span class="fw-separator fl-wrap"></span>
         @endif
 
-        <div class="post-author">
+        {{-- <div class="post-author">
             <a href="#"><img src="{{ $authorAvatar }}" alt="{{ $authorName }}"><span>By , {{ $authorName }}</span></a>
-        </div>
+        </div> --}}
         <div class="post-opt">
             <ul class="no-list-style">
                 <li><i class="fal fa-calendar"></i> <span>{{ $date }}</span></li>
