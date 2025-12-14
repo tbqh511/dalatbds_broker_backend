@@ -32,6 +32,8 @@ use App\Http\Controllers\FrontEndHomeController;
 use App\Http\Controllers\FrontEndPropertiesController;
 use App\Http\Controllers\FrontEndAgentsController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\PostCategoryController;
+use App\Http\Controllers\PostTagController;
 use App\Http\Controllers\TelegramWebAppController;
 use App\Models\Payments;
 use App\Models\PropertysInquiry;
@@ -228,9 +230,14 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
         /// END :: ARTICLE ROUTE
 
         /// START :: POSTS ROUTE
-
         Route::resource('posts', PostController::class)->names('admin.posts');
         Route::get('posts-list', [PostController::class, 'getPostsList'])->name('admin.posts.list');
+        
+        // Post Categories
+        Route::resource('posts/categories', PostCategoryController::class)->names('admin.posts.categories');
+
+        // Post Tags
+        Route::resource('posts/tags', PostTagController::class)->names('admin.posts.tags');
         /// END :: POSTS ROUTE
 
         /// START :: ADVERTISEMENT ROUTE

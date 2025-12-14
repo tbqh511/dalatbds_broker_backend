@@ -124,11 +124,25 @@
                             <span class="menu-item">{{ __('Article') }}</span>
                         </a>
                     </li>
-                    <li class="sidebar-item">
-                        <a href="{{ route('admin.posts.index') }}" class='sidebar-link'>
+                    <li class="sidebar-item has-sub">
+                        <a href="#" class='sidebar-link'>
                             <i class="bi bi-newspaper"></i>
                             <span class="menu-item">{{ __('Posts') }}</span>
                         </a>
+                        <ul class="submenu" style="padding-left: 0rem">
+                            <li class="submenu-item">
+                                <a href="{{ route('admin.posts.index') }}">{{ __('All Posts') }}</a>
+                            </li>
+                            <li class="submenu-item">
+                                <a href="{{ route('admin.posts.create') }}">{{ __('Add New Post') }}</a>
+                            </li>
+                            <li class="submenu-item">
+                                <a href="{{ route('admin.posts.categories.index') }}">{{ __('Categories') }}</a>
+                            </li>
+                            <li class="submenu-item">
+                                <a href="{{ route('admin.posts.tags.index') }}">{{ __('Tags') }}</a>
+                            </li>
+                        </ul>
                     </li>
                     <li class="sidebar-item">
                         <a href="{{ url('featured_properties') }}" class='sidebar-link'>
