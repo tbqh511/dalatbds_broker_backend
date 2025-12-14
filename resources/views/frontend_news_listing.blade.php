@@ -37,42 +37,7 @@
                         @if ($news->count() > 0)
                             @foreach ($news as $new)
                                 <!-- article> -->
-                                <article class="post-article fl-wrap">
-                                    <div class="list-single-main-media fl-wrap">
-                                        <div class="single-slider-wrapper carousel-wrap fl-wrap">
-                                            <div class="single-slider fl-wrap carousel lightgallery">
-                                                <!--  slick-slide-item -->
-                                                <div class="slick-slide-item">
-                                                    <div class="box-item">
-                                                        <a href="{{ asset('images/all/blog/1.jpg') }}" class="gal-link popup-image"><i class="fal fa-search"></i></a>
-                                                        <img src="{{ asset('images/all/blog/1.jpg') }}" alt="dalat-bds">
-                                                    </div>
-                                                </div>
-                                                <!--  slick-slide-item end -->
-                                            </div>
-                                            <div class="swiper-button-prev ssw-btn"><i class="fas fa-caret-left"></i></div>
-                                            <div class="swiper-button-next ssw-btn"><i class="fas fa-caret-right"></i></div>
-                                        </div>
-                                    </div>
-                                    <div class="list-single-main-item fl-wrap block_box">
-                                        <h2 class="post-opt-title"><a href="{{ route('new.showid', $new->id) }}">{{ $new->post_title }}</a></h2>
-                                        <p>{{ $new->post_excerpt }}</p>
-                                        <span class="fw-separator fl-wrap"></span>
-                                        <div class="post-author">
-                                                @if ($new->author)
-                                                <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="author"><span>By , {{ $new->author->name }}</span></a>
-                                            @endif
-                                        </div>
-                                        <div class="post-opt">
-                                            <ul class="no-list-style">
-                                                <li><i class="fal fa-calendar"></i> <span>{{ $new->created_at->format('d M Y') }}</span></li>
-                                                <li><i class="fal fa-eye"></i> <span>164</span></li>
-                                                <li><i class="fal fa-tags"></i> <a href="#">Shop</a> , <a href="#">Hotels</a></li>
-                                            </ul>
-                                        </div>
-                                        <a href="{{ route('new.showid', $new->id) }}" class="btn color-bg float-btn small-btn">Read more</a>
-                                    </div>
-                                </article>
+                                @include('frontends.news.components.article_news', ['post' => $new, 'type' => 'list'])
                                 <!-- article end -->
                             @endforeach
                         @else

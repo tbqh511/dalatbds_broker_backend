@@ -36,59 +36,8 @@
                     <div class="post-container fl-wrap">
                         @if ($news->count() > 0)
                             @foreach ($news as $new)
-                                @php
-                                    // Thumbnail logic - UPDATED PRIORITY
-                                    $thumbUrl = asset('images/all/blog/1.jpg'); // Default fallback
-                                    $thumbMeta = $new->meta->where('meta_key', '_thumbnail')->first();
-
-                                    if ($thumbMeta && $thumbMeta->meta_value) {
-                                        // PRIORITY 1: Check direct public asset copy (most reliable if symlink fails)
-                                        if (file_exists(public_path('assets/images/posts/' . basename($thumbMeta->meta_value)))) {
-                                            $thumbUrl = asset('assets/images/posts/' . basename($thumbMeta->meta_value));
-                                        }
-                                        // PRIORITY 2: Check storage via symlink
-                                        elseif (Storage::disk('public')->exists($thumbMeta->meta_value)) {
-                                            $thumbUrl = Storage::url($thumbMeta->meta_value);
-                                        }
-                                    }
-                                @endphp
-
                                 <!-- article> -->
-                                <article class="post-article fl-wrap">
-                                    <div class="list-single-main-media fl-wrap">
-                                        <!-- Simplified image display: removed slider structure to fix layout issues -->
-                                        <div class="single-slider-wrapper fl-wrap">
-                                            <div class="box-item">
-                                                <a href="{{ $thumbUrl }}" class="gal-link popup-image"><i class="fal fa-search"></i></a>
-                                                <img src="{{ $thumbUrl }}" alt="{{ $new->post_title }}" class="resp-img">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="list-single-main-item fl-wrap block_box">
-                                        <h2 class="post-opt-title"><a href="{{ route('news.show', $new->post_name) }}">{{ $new->post_title }}</a></h2>
-                                        <p>{{ $new->post_excerpt }}</p>
-                                        <span class="fw-separator fl-wrap"></span>
-                                        <div class="post-author">
-                                            @if ($new->author)
-                                                <a href="#"><img src="{{ asset('images/avatar/1.jpg') }}" alt="author"><span>By , {{ $new->author->name ?? 'Admin' }}</span></a>
-                                            @endif
-                                        </div>
-                                        <div class="post-opt">
-                                            <ul class="no-list-style">
-                                                <li><i class="fal fa-calendar"></i> <span>{{ $new->created_at ? $new->created_at->format('d/m/Y') : '' }}</span></li>
-                                                <li><i class="fal fa-eye"></i> <span>{{ $new->comment_count ?? 0 }}</span></li>
-                                                @if($new->tags->count() > 0)
-                                                    <li><i class="fal fa-tags"></i>
-                                                        @foreach($new->tags as $index => $tag)
-                                                            <a href="{{ route('news.tag', $tag->term->slug) }}">{{ $tag->term->name }}</a>{{ $index < $new->tags->count() - 1 ? ' ,' : '' }}
-                                                        @endforeach
-                                                    </li>
-                                                @endif
-                                            </ul>
-                                        </div>
-                                        <a href="{{ route('news.show', $new->post_name) }}" class="btn color-bg float-btn small-btn">Xem thêm</a>
-                                    </div>
-                                </article>
+                                @include('frontends.news.components.article_news', ['post' => $new, 'type' => 'list'])
                                 <!-- article end -->
                             @endforeach
                         @else
