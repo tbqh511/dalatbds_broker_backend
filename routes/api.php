@@ -62,20 +62,21 @@ Route::get('news_tags/{id}', [NewsTagApiController::class, 'show']);
 //Play Integrity
 //Route::post('verify_integrity', [ApiController::class, 'verifyIntegrity']);
 Route::group(['middleware' => ['jwt.verify']], function () {
-    // News Posts Routes (Write access)
-    Route::post('news_posts', [NewsPostApiController::class, 'store']);
-    Route::put('news_posts/{id}', [NewsPostApiController::class, 'update']);
-    Route::delete('news_posts/{id}', [NewsPostApiController::class, 'destroy']);
+    // News Posts Routes (Write access) - with Role Permission
+    // Admin, Editor can publish. Sales, Customer forced to draft.
+    Route::post('news_posts', [NewsPostApiController::class, 'store'])->middleware('role:admin,editor,sales,customer');
+    Route::put('news_posts/{id}', [NewsPostApiController::class, 'update'])->middleware('role:admin,editor,sales,customer');
+    Route::delete('news_posts/{id}', [NewsPostApiController::class, 'destroy'])->middleware('role:admin,editor');
 
-    // News Categories Routes (Write access)
-    Route::post('news_categories', [NewsCategoryApiController::class, 'store']);
-    Route::put('news_categories/{id}', [NewsCategoryApiController::class, 'update']);
-    Route::delete('news_categories/{id}', [NewsCategoryApiController::class, 'destroy']);
+    // News Categories Routes (Write access) - Admin/Editor Only
+    Route::post('news_categories', [NewsCategoryApiController::class, 'store'])->middleware('role:admin,editor');
+    Route::put('news_categories/{id}', [NewsCategoryApiController::class, 'update'])->middleware('role:admin,editor');
+    Route::delete('news_categories/{id}', [NewsCategoryApiController::class, 'destroy'])->middleware('role:admin,editor');
 
-    // News Tags Routes (Write access)
-    Route::post('news_tags', [NewsTagApiController::class, 'store']);
-    Route::put('news_tags/{id}', [NewsTagApiController::class, 'update']);
-    Route::delete('news_tags/{id}', [NewsTagApiController::class, 'destroy']);
+    // News Tags Routes (Write access) - Admin/Editor Only
+    Route::post('news_tags', [NewsTagApiController::class, 'store'])->middleware('role:admin,editor');
+    Route::put('news_tags/{id}', [NewsTagApiController::class, 'update'])->middleware('role:admin,editor');
+    Route::delete('news_tags/{id}', [NewsTagApiController::class, 'destroy'])->middleware('role:admin,editor');
 
     Route::post('get_property', [ApiController::class, 'get_property']);
     Route::post('update_profile', [ApiController::class, 'update_profile']);

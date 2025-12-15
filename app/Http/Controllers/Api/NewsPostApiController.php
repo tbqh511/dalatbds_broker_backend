@@ -127,6 +127,16 @@ class NewsPostApiController extends Controller
 
         try {
             DB::beginTransaction();
+            
+            // Get Current User Role
+            $user = auth()->user();
+            $role = $user->role ?? 'customer';
+            
+            // Determine Post Status based on Role
+            $status = $request->post_status ?? 'publish';
+            if (in_array($role, ['sales', 'customer'])) {
+                $status = 'draft';
+            }
 
             $post = new NewsPost();
             $post->post_author = auth()->id() ?? 0;
@@ -135,7 +145,7 @@ class NewsPostApiController extends Controller
             $post->post_content = $request->post_content;
             $post->post_title = $request->post_title;
             $post->post_excerpt = $request->post_excerpt;
-            $post->post_status = $request->post_status ?? 'publish';
+            $post->post_status = $status;
             $post->post_name = Str::slug($request->post_title);
             $post->post_modified = now();
             $post->post_modified_gmt = now();
@@ -225,6 +235,18 @@ class NewsPostApiController extends Controller
             ]);
         }
 
+        // Check ownership or permission
+        $user = auth()->user();
+        $role = $user->role ?? 'customer';
+        
+        // Sales/Customer can only update their own posts
+        if (in_array($role, ['sales', 'customer']) && $post->post_author != $user->id) {
+             return response()->json([
+                'error' => true,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'post_title' => 'nullable|string|max:255',
             'post_content' => 'nullable|string',
@@ -251,7 +273,18 @@ class NewsPostApiController extends Controller
             }
             if ($request->has('post_content')) $post->post_content = $request->post_content;
             if ($request->has('post_excerpt')) $post->post_excerpt = $request->post_excerpt;
-            if ($request->has('post_status')) $post->post_status = $request->post_status;
+            
+            // Handle Post Status update permission
+            if ($request->has('post_status')) {
+                if (in_array($role, ['sales', 'customer']) && $request->post_status == 'publish') {
+                    // Prevent sales/customer from publishing directly
+                    // Keep existing status or force draft if logic requires
+                    // For now, ignore publish request or set to draft
+                    $post->post_status = 'draft'; 
+                } else {
+                    $post->post_status = $request->post_status;
+                }
+            }
 
             $post->post_modified = now();
             $post->post_modified_gmt = now();

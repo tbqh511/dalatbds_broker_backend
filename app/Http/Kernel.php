@@ -48,5 +48,6 @@ class Kernel extends HttpKernel
         'checklogin' => \App\Http\Middleware\CheckLogin::class,
         'jwt.verify' => \App\Http\Middleware\JwtMiddleware::class,
         'language' => \App\Http\Middleware\LanguageManager::class,
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
 }
