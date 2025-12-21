@@ -36,6 +36,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -345,10 +346,44 @@ class ApiController extends Controller
         $customer = $query->first();
 
         if (!$customer) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Số điện thoại này chưa đăng ký tài khoản BDS.'
-            ], 404);
+            // Tự động đăng ký khách hàng mới
+            try {
+                $customer = new Customer();
+                // Sử dụng số điện thoại đã chuẩn hóa
+                $customer->mobile = $cleanPhone;
+                // Nếu bảng có cột phone thì cũng lưu vào để đồng bộ
+                if (Schema::hasColumn('customers', 'phone')) {
+                    $customer->phone = $cleanPhone;
+                }
+                
+                // Các thông tin cơ bản
+                $customer->name = $request->input('first_name', 'Khách hàng Mới');
+                $customer->telegram_id = $request->input('telegram_id');
+                
+                // Giá trị mặc định
+                $customer->isActive = 1;
+                $customer->logintype = 1; // Mobile login
+                $customer->notification = 1;
+                
+                // Các trường optional khác (để tránh lỗi null nếu DB yêu cầu)
+                $customer->email = $request->input('email', '');
+                $customer->firebase_id = $request->input('firebase_id', '');
+                $customer->address = '';
+                $customer->fcm_id = '';
+                
+                $customer->save();
+                
+                Log::info("Auto-registered new customer via API Login: ID {$customer->id}, Phone: {$customer->mobile}");
+                
+            } catch (\Exception $e) {
+                Log::error("Auto-registration failed: " . $e->getMessage());
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Tự động đăng ký thất bại. Vui lòng thử lại sau.'
+                ], 500);
+            }
+        } else {
+             Log::info("Customer login: ID {$customer->id}, Phone: {$customer->mobile}");
         }
 
         // 5. Kiểm tra trạng thái tài khoản
