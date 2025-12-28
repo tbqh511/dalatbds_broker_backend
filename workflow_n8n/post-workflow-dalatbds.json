@@ -2,7 +2,7 @@
   "nodes": [
     {
       "parameters": {
-        "operation": "upsert",
+        "operation": "get",
         "dataTableId": {
           "__rl": true,
           "value": "uBE0vfx8AjxdX8gT",
@@ -12,46 +12,210 @@
         },
         "filters": {
           "conditions": [
-            {}
+            {
+              "keyName": "telegram_id",
+              "keyValue": "={{ $('Callback Commands').item.json.callback_query.from.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -256
+      ],
+      "id": "c55ade15-9368-4f78-892d-e9db008a8ab1",
+      "name": "Get JWT"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "QU1RdOBw4LHts3Qp",
+          "mode": "list",
+          "cachedResultName": "dalatbds_customer_flow_state",
+          "cachedResultUrl": "/projects/yBT9VjklbcIIfxSf/datatables/QU1RdOBw4LHts3Qp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $json.callback_query.from.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -256
+      ],
+      "id": "b7647053-a161-4892-82d3-2408b6b509da",
+      "name": "Get Flow"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot8336517232:AAHebMHn7Zh0v9jOyG1H1dRtcQ63-w7z64g/getFile",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ JSON.parse($('Get Flow').item.json.draft_data).file_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b86bda4f-b61c-4e6b-b2b3-0754f1205ac2",
+      "name": "Get Telegram File Path",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        736,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot8336517232:AAHebMHn7Zh0v9jOyG1H1dRtcQ63-w7z64g/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "4e89e304-e657-40b8-ab58-8f45ada18799",
+      "name": "Download Telegram File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        976,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of items) {\n  if (item.binary && item.binary.data) {\n    item.binary.data.mimeType = 'image/jpeg';\n    item.binary.data.fileExtension = 'jpg';\n    item.binary.data.fileName = 'telegram_image.jpg';\n  }\n}\nreturn items;"
+      },
+      "id": "fix-mime-type",
+      "name": "Fix Binary Mime",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dalatbds.com/api/news_posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get JWT').item.json.api_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "post_title",
+              "value": "={{ JSON.parse($('Get Flow').item.json.draft_data).post_title }}"
+            },
+            {
+              "name": "post_content",
+              "value": "={{ JSON.parse($('Get Flow').item.json.draft_data).post_content }}"
+            },
+            {
+              "name": "post_status",
+              "value": "publish"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "thumbnail",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "post_excerpt",
+              "value": "={{ JSON.parse($('Get Flow').item.json.draft_data).post_excerpt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1c3fa730-1c77-49b8-a5f6-1ae20b9b9b81",
+      "name": "HTTP Request - Create Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1400,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "QU1RdOBw4LHts3Qp",
+          "mode": "list",
+          "cachedResultName": "dalatbds_customer_flow_state",
+          "cachedResultUrl": "/projects/yBT9VjklbcIIfxSf/datatables/QU1RdOBw4LHts3Qp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $json.callback_query.from.id }}"
+            }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "db_id": "={{ $json.body.data.id }}",
-            "name": "={{ $json.body.data.name }}",
-            "firebase_id": "={{ $json.body.data.firebase_id }}",
-            "email": "={{ $json.body.data.email }}",
-            "mobile": "={{ $json.body.data.mobile }}",
-            "profile": "={{ $json.body.data.profile }}",
-            "address": "={{ $json.body.data.address }}",
-            "fcm_id": "={{ $json.body.data.fcm_id }}",
-            "logintype": "={{ $json.body.data.logintype }}",
-            "isActive": "={{ $json.body.data.isActive }}",
-            "api_token": "={{ $json.body.access_token }}",
-            "telegram_id": "={{ $json.body.data.telegram_id }}",
-            "notification": "={{ $json.body.data.notification }}",
-            "subscription": "={{ $json.body.data.subscription }}",
-            "created_at": "={{ $json.body.data.created_at }}",
-            "updated_at": "={{ $json.body.data.updated_at }}"
+            "status": "Completed"
           },
-          "matchingColumns": [
-            "db_id"
-          ],
+          "matchingColumns": [],
           "schema": [
             {
-              "id": "db_id",
-              "displayName": "db_id",
+              "id": "chat_id",
+              "displayName": "chat_id",
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "number",
+              "type": "string",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
-              "id": "name",
-              "displayName": "name",
+              "id": "flow_type",
+              "displayName": "flow_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "current_step",
+              "displayName": "current_step",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -60,142 +224,32 @@
               "removed": false
             },
             {
-              "id": "firebase_id",
-              "displayName": "firebase_id",
+              "id": "draft_data",
+              "displayName": "draft_data",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
-              "id": "email",
-              "displayName": "email",
+              "id": "last_bot_msg_id",
+              "displayName": "last_bot_msg_id",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
-              "id": "mobile",
-              "displayName": "mobile",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "profile",
-              "displayName": "profile",
+              "id": "status",
+              "displayName": "status",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "address",
-              "displayName": "address",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "fcm_id",
-              "displayName": "fcm_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "logintype",
-              "displayName": "logintype",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "isActive",
-              "displayName": "isActive",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "api_token",
-              "displayName": "api_token",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "telegram_id",
-              "displayName": "telegram_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "notification",
-              "displayName": "notification",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "subscription",
-              "displayName": "subscription",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "created_at",
-              "displayName": "created_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "updated_at",
-              "displayName": "updated_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
               "readOnly": false,
               "removed": false
             }
@@ -208,17 +262,111 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -4576,
-        2000
+        1600,
+        -224
       ],
-      "id": "2e9affa0-80d1-476f-900b-76237e479398",
-      "name": "Upsert row(s)"
+      "id": "5433b87c-4dfd-4a06-988f-a3cc02874d82",
+      "name": "Set steps and status"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $json.callback_query.from.id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1800,
+        -224
+      ],
+      "id": "7b6c5c0e-fb95-4741-a9b9-bc298d1315a2",
+      "name": "Susscessfull Publish",
+      "webhookId": "1883381b-933f-4817-9f63-5b9824c0b32b",
+      "credentials": {
+        "telegramApi": {
+          "id": "H6zRLLVG8Gn938Be",
+          "name": "Trợ lý của Huy Đẹp Zai"
+        }
+      }
     }
   ],
   "connections": {
-    "Upsert row(s)": {
+    "Get JWT": {
       "main": [
-        []
+        [
+          {
+            "node": "Get Telegram File Path",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Flow": {
+      "main": [
+        [
+          {
+            "node": "Get JWT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Telegram File Path": {
+      "main": [
+        [
+          {
+            "node": "Download Telegram File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Telegram File": {
+      "main": [
+        [
+          {
+            "node": "Fix Binary Mime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fix Binary Mime": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Create Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Create Post": {
+      "main": [
+        [
+          {
+            "node": "Set steps and status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set steps and status": {
+      "main": [
+        [
+          {
+            "node": "Susscessfull Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
