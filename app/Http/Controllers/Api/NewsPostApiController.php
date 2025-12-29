@@ -126,8 +126,9 @@ class NewsPostApiController extends Controller
             'post_excerpt' => 'nullable|string',
             'post_status' => 'nullable|in:publish,draft',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'category_id' => 'nullable|integer|exists:news_term_taxonomy,term_taxonomy_id',
             'categories' => 'nullable|array',
-            'tags' => 'nullable|array',
+            'tags' => 'nullable', // Allow string or array
             'meta' => 'nullable|array'
         ]);
 
@@ -187,8 +188,12 @@ class NewsPostApiController extends Controller
                 } catch (\Exception $e) {}
             }
 
-            // Handle Categories
-            if ($request->has('categories') && !empty($request->categories)) {
+            // Handle Category (Single ID)
+            if ($request->has('category_id') && !empty($request->category_id)) {
+                $post->taxonomies()->attach($request->category_id);
+                NewsTermTaxonomy::where('term_taxonomy_id', $request->category_id)->increment('count');
+            } elseif ($request->has('categories') && !empty($request->categories)) {
+                // Backward compatibility for array of term_ids
                 $taxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
                     ->whereIn('term_id', $request->categories)
                     ->pluck('term_taxonomy_id');
@@ -200,29 +205,37 @@ class NewsPostApiController extends Controller
 
             // Handle Tags
             if ($request->has('tags') && !empty($request->tags)) {
-                $tagTaxonomyIds = [];
-                foreach ($request->tags as $tagName) {
-                    $tagName = trim($tagName);
-                    if (empty($tagName)) continue;
-
-                    $slug = Str::slug($tagName);
-
-                    $term = NewsTerm::firstOrCreate(
-                        ['slug' => $slug],
-                        ['name' => $tagName]
-                    );
-
-                    $taxonomy = NewsTermTaxonomy::firstOrCreate(
-                        ['term_id' => $term->term_id, 'taxonomy' => 'post_tag']
-                    );
-
-                    $tagTaxonomyIds[] = $taxonomy->term_taxonomy_id;
+                $tagNames = $request->tags;
+                if (is_string($tagNames)) {
+                    $tagNames = explode(',', $tagNames);
                 }
 
-                if (!empty($tagTaxonomyIds)) {
-                    $post->taxonomies()->attach($tagTaxonomyIds);
-                    foreach ($tagTaxonomyIds as $tid) {
-                        NewsTermTaxonomy::where('term_taxonomy_id', $tid)->increment('count');
+                $tagTaxonomyIds = [];
+                if (is_array($tagNames)) {
+                    foreach ($tagNames as $tagName) {
+                        $tagName = trim($tagName);
+                        if (empty($tagName)) continue;
+
+                        $slug = Str::slug($tagName);
+
+                        $term = NewsTerm::firstOrCreate(
+                            ['slug' => $slug],
+                            ['name' => $tagName]
+                        );
+
+                        $taxonomy = NewsTermTaxonomy::firstOrCreate(
+                            ['term_id' => $term->term_id, 'taxonomy' => 'post_tag'],
+                            ['description' => '', 'parent' => 0, 'count' => 0]
+                        );
+
+                        $tagTaxonomyIds[] = $taxonomy->term_taxonomy_id;
+                    }
+
+                    if (!empty($tagTaxonomyIds)) {
+                        $post->taxonomies()->attach($tagTaxonomyIds);
+                        foreach ($tagTaxonomyIds as $tid) {
+                            NewsTermTaxonomy::where('term_taxonomy_id', $tid)->increment('count');
+                        }
                     }
                 }
             }
@@ -278,8 +291,9 @@ class NewsPostApiController extends Controller
             'post_content' => 'required|string',
             'post_excerpt' => 'nullable|string',
             'post_status' => 'nullable|in:publish,draft',
+            'category_id' => 'nullable|integer|exists:news_term_taxonomy,term_taxonomy_id',
             'categories' => 'nullable|array',
-            'tags' => 'nullable|array'
+            'tags' => 'nullable' // Allow string or array
         ]);
 
         if ($validator->fails()) {
@@ -303,8 +317,18 @@ class NewsPostApiController extends Controller
             $post->post_modified_gmt = now();
             $post->save();
 
-            // Handle Categories
-            if ($request->has('categories')) {
+            // Handle Category
+            if ($request->has('category_id')) {
+                 // Detach old categories
+                $post->taxonomies()->wherePivot('term_taxonomy_id', function ($q) {
+                    $q->select('term_taxonomy_id')->from('news_term_taxonomy')->where('taxonomy', 'category');
+                })->detach(); // Ideally verify which relationship table is used. Assuming standard pivot.
+
+                if (!empty($request->category_id)) {
+                    $post->taxonomies()->attach($request->category_id);
+                    NewsTermTaxonomy::where('term_taxonomy_id', $request->category_id)->increment('count');
+                }
+            } elseif ($request->has('categories')) {
                 $post->taxonomies()->wherePivot('term_taxonomy_id', function ($q) {
                     $q->select('term_taxonomy_id')->from('news_term_taxonomy')->where('taxonomy', 'category');
                 })->detach();
@@ -324,11 +348,21 @@ class NewsPostApiController extends Controller
             // Handle Tags
             if ($request->has('tags')) {
                  // Detach old tags
-                 $post->tags()->detach();
+                 // Need to know which relation to detach. Assuming 'tags' relation or manual pivot query.
+                 // In store method, we used $post->taxonomies()->attach().
+                 // To detach only tags, we should filter by taxonomy 'post_tag'.
+                 $post->taxonomies()->wherePivot('term_taxonomy_id', function ($q) {
+                    $q->select('term_taxonomy_id')->from('news_term_taxonomy')->where('taxonomy', 'post_tag');
+                 })->detach();
 
-                if (!empty($request->tags)) {
+                $tagNames = $request->tags;
+                if (is_string($tagNames)) {
+                    $tagNames = explode(',', $tagNames);
+                }
+
+                if (is_array($tagNames) && !empty($tagNames)) {
                     $tagTaxonomyIds = [];
-                    foreach ($request->tags as $tagName) {
+                    foreach ($tagNames as $tagName) {
                         $tagName = trim($tagName);
                         if (empty($tagName)) continue;
 
@@ -340,7 +374,8 @@ class NewsPostApiController extends Controller
                         );
 
                         $taxonomy = NewsTermTaxonomy::firstOrCreate(
-                            ['term_id' => $term->term_id, 'taxonomy' => 'post_tag']
+                            ['term_id' => $term->term_id, 'taxonomy' => 'post_tag'],
+                            ['description' => '', 'parent' => 0, 'count' => 0]
                         );
 
                         $tagTaxonomyIds[] = $taxonomy->term_taxonomy_id;
