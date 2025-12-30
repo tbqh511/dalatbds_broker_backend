@@ -127,8 +127,9 @@ class NewsPostApiController extends Controller
             'post_status' => 'nullable|in:publish,draft',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
             'category_id' => 'nullable|integer|exists:news_term_taxonomy,term_taxonomy_id',
+
             'categories' => 'nullable|array',
-            'tags' => 'nullable', // Allow string or array
+            'tags' => 'nullable|array', // Allow string or array of tags
             'meta' => 'nullable|array'
         ]);
 
@@ -148,9 +149,9 @@ class NewsPostApiController extends Controller
             
             // Determine Post Status based on Role
             $status = $request->post_status ?? 'publish';
-            if (in_array($role, ['sales', 'customer'])) {
-                $status = 'draft';
-            }
+            // if (in_array($role, ['sales', 'customer'])) {
+            //     $status = 'draft';
+            // }
 
             $post = new NewsPost();
             $post->post_author = auth()->id() ?? 0;
@@ -188,80 +189,12 @@ class NewsPostApiController extends Controller
                 } catch (\Exception $e) {}
             }
 
-            // Handle Category (Single ID)
-            if ($request->has('category_id') && !empty($request->category_id)) {
-                $post->taxonomies()->attach($request->category_id);
-                NewsTermTaxonomy::where('term_taxonomy_id', $request->category_id)->increment('count');
-            } elseif ($request->has('categories') && !empty($request->categories)) {
-                // Backward compatibility for array of term_ids
-                $taxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
-                    ->whereIn('term_id', $request->categories)
-                    ->pluck('term_taxonomy_id');
+            // Handle Categories
+            $this->processCategories($post, $request);
 
-                $post->taxonomies()->attach($taxonomyIds);
+            // Handle Tags (Unified 'tags' and 'tags_input')
+            $this->processTags($post, $request);
 
-                NewsTermTaxonomy::whereIn('term_taxonomy_id', $taxonomyIds)->increment('count');
-            }
-
-            // Handle category_ids (from n8n - comma separated string or array)
-            if ($request->has('category_ids')) {
-                $catIds = is_array($request->category_ids) 
-                          ? $request->category_ids 
-                          : explode(',', $request->category_ids);
-                
-                // Filter empty values
-                $catIds = array_filter($catIds, function($value) { return !empty(trim($value)); });
-
-                if (!empty($catIds)) {
-                    // Assuming these are term_ids
-                    $taxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
-                        ->whereIn('term_id', $catIds)
-                        ->pluck('term_taxonomy_id');
-                    
-                    if ($taxonomyIds->isNotEmpty()) {
-                        $post->taxonomies()->attach($taxonomyIds);
-                        NewsTermTaxonomy::whereIn('term_taxonomy_id', $taxonomyIds)->increment('count');
-                    }
-                }
-            }    
-
-            // Handle Tags
-            if ($request->has('tags') && !empty($request->tags)) {
-                $tagNames = $request->tags;
-                if (is_string($tagNames)) {
-                    $tagNames = explode(',', $tagNames);
-                }
-
-                $tagTaxonomyIds = [];
-                if (is_array($tagNames)) {
-                    foreach ($tagNames as $tagName) {
-                        $tagName = trim($tagName);
-                        if (empty($tagName)) continue;
-
-                        $slug = Str::slug($tagName);
-
-                        $term = NewsTerm::firstOrCreate(
-                            ['slug' => $slug],
-                            ['name' => $tagName]
-                        );
-
-                        $taxonomy = NewsTermTaxonomy::firstOrCreate(
-                            ['term_id' => $term->term_id, 'taxonomy' => 'post_tag'],
-                            ['description' => '', 'parent' => 0, 'count' => 0]
-                        );
-
-                        $tagTaxonomyIds[] = $taxonomy->term_taxonomy_id;
-                    }
-
-                    if (!empty($tagTaxonomyIds)) {
-                        $post->taxonomies()->attach($tagTaxonomyIds);
-                        foreach ($tagTaxonomyIds as $tid) {
-                            NewsTermTaxonomy::where('term_taxonomy_id', $tid)->increment('count');
-                        }
-                    }
-                }
-            }
-            
             // Handle Meta
              if ($request->has('meta') && !empty($request->meta)) {
                 foreach ($request->meta as $key => $value) {
@@ -470,6 +403,160 @@ class NewsPostApiController extends Controller
                 'error' => true,
                 'message' => $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Process Categories for Post
+     * 
+     * @param NewsPost $post
+     * @param Request $request
+     */
+    private function processCategories(NewsPost $post, Request $request)
+    {
+        $catInput = [];
+        
+        // Merge inputs
+        if ($request->has('categories') && !empty($request->categories)) {
+            $catInput = array_merge($catInput, (array)$request->categories);
+        }
+        if ($request->has('category_ids') && !empty($request->category_ids)) {
+             $ids = is_array($request->category_ids) ? $request->category_ids : explode(',', $request->category_ids);
+             $catInput = array_merge($catInput, $ids);
+        }
+        
+        if (empty($catInput)) return;
+
+        // Normalize: trim and unique
+        $catInput = array_unique(array_filter(array_map('trim', $catInput), function($value) { return !empty($value); }));
+        
+        if (empty($catInput)) return;
+
+        Log::info('API Store Post - Consolidated Category IDs', ['ids' => $catInput]);
+
+        // 1. Try to resolve term_ids to term_taxonomy_ids
+        $taxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->whereIn('term_id', $catInput)
+            ->pluck('term_taxonomy_id');
+        
+        // 2. Also consider inputs that might already be term_taxonomy_ids
+        $directTaxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
+            ->whereIn('term_taxonomy_id', $catInput)
+            ->pluck('term_taxonomy_id');
+            
+        // Merge and unique
+        $finalTaxonomyIds = $taxonomyIds->merge($directTaxonomyIds)->unique();
+        Log::info('API Store Post - Final Taxonomy IDs to Attach', ['ids' => $finalTaxonomyIds]);
+
+        if ($finalTaxonomyIds->isNotEmpty()) {
+            $post->taxonomies()->syncWithoutDetaching($finalTaxonomyIds);
+            NewsTermTaxonomy::whereIn('term_taxonomy_id', $finalTaxonomyIds)->increment('count');
+            Log::info('API Store Post - Attached Categories');
+        } else {
+            Log::warning('API Store Post - No valid categories found for IDs', ['input_ids' => $catInput]);
+        }
+    }
+
+    /**
+     * Process Tags for Post
+     * Optimized for batch processing
+     * 
+     * @param NewsPost $post
+     * @param Request $request
+     */
+    private function processTags(NewsPost $post, Request $request)
+    {
+        $tagNames = [];
+
+        // 1. Collect from 'tags'
+        if ($request->has('tags') && !empty($request->tags)) {
+            $input = $request->tags;
+            if (is_string($input)) {
+                $input = explode(',', $input);
+            }
+            if (is_array($input)) {
+                $tagNames = array_merge($tagNames, $input);
+            }
+        }
+
+        // 2. Collect from 'tags_input'
+        if ($request->has('tags_input') && !empty($request->tags_input)) {
+            $input = explode(',', $request->tags_input);
+            $tagNames = array_merge($tagNames, $input);
+        }
+
+        // Normalize
+        $tagNames = array_unique(array_filter(array_map('trim', $tagNames), function($value) { return !empty($value); }));
+
+        if (empty($tagNames)) return;
+
+        Log::info('API Store Post - Processing Tags', ['count' => count($tagNames)]);
+
+        $slugMap = [];
+        foreach ($tagNames as $name) {
+            $slug = Str::slug($name);
+            if (empty($slug)) $slug = $name;
+            $slugMap[$slug] = $name;
+        }
+        $slugs = array_keys($slugMap);
+
+        // Batch Process Terms
+        $existingTerms = NewsTerm::whereIn('slug', $slugs)->get();
+        $existingSlugs = $existingTerms->pluck('slug')->toArray();
+        $missingSlugs = array_diff($slugs, $existingSlugs);
+
+        if (!empty($missingSlugs)) {
+            $insertData = [];
+            $now = now();
+            foreach ($missingSlugs as $slug) {
+                $insertData[] = [
+                    'name' => $slugMap[$slug],
+                    'slug' => $slug,
+                    'term_group' => 0,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            NewsTerm::insert($insertData);
+        }
+
+        // Re-fetch all terms to get IDs
+        $allTerms = NewsTerm::whereIn('slug', $slugs)->get();
+        $termIds = $allTerms->pluck('term_id');
+
+        // Batch Process Taxonomies
+        $existingTaxonomies = NewsTermTaxonomy::whereIn('term_id', $termIds)
+            ->where('taxonomy', 'post_tag')
+            ->get();
+        $existingTermIdsWithTax = $existingTaxonomies->pluck('term_id')->toArray();
+        $missingTermIds = $termIds->diff($existingTermIdsWithTax);
+
+        if ($missingTermIds->isNotEmpty()) {
+            $taxInsertData = [];
+            $now = now();
+            foreach ($missingTermIds as $termId) {
+                $taxInsertData[] = [
+                    'term_id' => $termId,
+                    'taxonomy' => 'post_tag',
+                    'description' => '',
+                    'parent' => 0,
+                    'count' => 0,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            NewsTermTaxonomy::insert($taxInsertData);
+        }
+
+        // Get Final Taxonomy IDs
+        $finalTaxonomyIds = NewsTermTaxonomy::whereIn('term_id', $termIds)
+            ->where('taxonomy', 'post_tag')
+            ->pluck('term_taxonomy_id');
+
+        if ($finalTaxonomyIds->isNotEmpty()) {
+            $post->taxonomies()->syncWithoutDetaching($finalTaxonomyIds);
+            NewsTermTaxonomy::whereIn('term_taxonomy_id', $finalTaxonomyIds)->increment('count');
+            Log::info('API Store Post - Attached Tags', ['count' => $finalTaxonomyIds->count()]);
         }
     }
 }
