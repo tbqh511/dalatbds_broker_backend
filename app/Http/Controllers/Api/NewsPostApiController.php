@@ -418,7 +418,13 @@ class NewsPostApiController extends Controller
         
         // Merge inputs
         if ($request->has('categories') && !empty($request->categories)) {
-            $catInput = array_merge($catInput, (array)$request->categories);
+            $input = $request->categories;
+            if (is_string($input)) {
+                $input = explode(',', $input);
+            }
+            if (is_array($input)) {
+                 $catInput = array_merge($catInput, $input);
+            }
         }
         if ($request->has('category_ids') && !empty($request->category_ids)) {
              $ids = is_array($request->category_ids) ? $request->category_ids : explode(',', $request->category_ids);
