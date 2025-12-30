@@ -203,6 +203,28 @@ class NewsPostApiController extends Controller
                 NewsTermTaxonomy::whereIn('term_taxonomy_id', $taxonomyIds)->increment('count');
             }
 
+            // Handle category_ids (from n8n - comma separated string or array)
+            if ($request->has('category_ids')) {
+                $catIds = is_array($request->category_ids) 
+                          ? $request->category_ids 
+                          : explode(',', $request->category_ids);
+                
+                // Filter empty values
+                $catIds = array_filter($catIds, function($value) { return !empty(trim($value)); });
+
+                if (!empty($catIds)) {
+                    // Assuming these are term_ids
+                    $taxonomyIds = NewsTermTaxonomy::where('taxonomy', 'category')
+                        ->whereIn('term_id', $catIds)
+                        ->pluck('term_taxonomy_id');
+                    
+                    if ($taxonomyIds->isNotEmpty()) {
+                        $post->taxonomies()->attach($taxonomyIds);
+                        NewsTermTaxonomy::whereIn('term_taxonomy_id', $taxonomyIds)->increment('count');
+                    }
+                }
+            }    
+
             // Handle Tags
             if ($request->has('tags') && !empty($request->tags)) {
                 $tagNames = $request->tags;
