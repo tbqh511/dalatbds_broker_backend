@@ -25,4 +25,24 @@ class TelegramWebAppController extends Controller
     {
         return view('frontend_dashboard_listings');
     }
+
+    public function agents(Request $request)
+    {
+        return view('frontend_dashboard_agents');
+    }
+
+    public function bookings(Request $request)
+    {
+        return view('frontend_dashboard_bookings');
+    }
+
+    public function reviews(Request $request)
+    {
+        return view('frontend_dashboard_reviews');
+    }
+
+    public function addListing(Request $request)
+    {
+        return view('frontend_dashboard_add_listing');
+    }
 }

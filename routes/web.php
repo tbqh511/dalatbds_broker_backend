@@ -63,6 +63,10 @@ Route::get('/webapp', [TelegramWebAppController::class, 'index'])->name('webapp'
 Route::get('/webapp/profile', [TelegramWebAppController::class, 'profile'])->name('webapp.profile');
 Route::get('/webapp/messages', [TelegramWebAppController::class, 'messages'])->name('webapp.messages');
 Route::get('/webapp/listings', [TelegramWebAppController::class, 'listings'])->name('webapp.listings');
+Route::get('/webapp/agents', [TelegramWebAppController::class, 'agents'])->name('webapp.agents');
+Route::get('/webapp/bookings', [TelegramWebAppController::class, 'bookings'])->name('webapp.bookings');
+Route::get('/webapp/reviews', [TelegramWebAppController::class, 'reviews'])->name('webapp.reviews');
+Route::get('/webapp/add-listing', [TelegramWebAppController::class, 'addListing'])->name('webapp.add_listing');
 
 //property controller
 Route::get('/property/{id}', [FrontEndPropertiesController::class, 'getPropertyById'])->name('property.showid');

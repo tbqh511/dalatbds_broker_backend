@@ -1,58 +1,13 @@
 <div class="content">
     <div class="dashbard-menu-overlay"></div>
-    <div class="dashbard-menu-wrap">
-        <div class="dashbard-menu-close"><i class="fal fa-times"></i></div>
-        <div class="dashbard-menu-container">
-            <!-- user-profile-menu-->
-            <div class="user-profile-menu">
-                <h3>Menu Chính</h3>
-                <ul class="no-list-style">
-                    <li><a href="{{ route('webapp') }}"><i class="fal fa-chart-line"></i>Tổng quan</a></li>
-                    <li><a href="{{ route('webapp.profile') }}"><i class="fal fa-user-edit"></i> Chỉnh sửa hồ sơ</a></li>
-                    <li><a href="{{ route('webapp.messages') }}"><i class="fal fa-envelope"></i> Tin nhắn <span>3</span></a></li>
-                    <li><a href="#"><i class="fal fa-users"></i> Danh sách môi giới</a></li>
-                </ul>
-            </div>
-            <!-- user-profile-menu end-->
-            <!-- user-profile-menu-->
-            <div class="user-profile-menu">
-                <h3>Quản lý tin</h3>
-                <ul class="no-list-style">
-                    <li><a href="{{ route('webapp.listings') }}" class="user-profile-act"><i class="fal fa-th-list"></i> Tin đăng của tôi</a></li>
-                    <li><a href="#"> <i class="fal fa-calendar-check"></i> Lịch hẹn <span>2</span></a></li>
-                    <li><a href="#"><i class="fal fa-comments-alt"></i> Đánh giá </a></li>
-                    <li><a href="#"><i class="fal fa-file-plus"></i> Đăng tin mới</a></li>
-                </ul>
-            </div>
-            <!-- user-profile-menu end-->
-        </div>
-        <div class="dashbard-menu-footer">© Đà Lạt BDS 2022 . Đã đăng ký bản quyền.</div>
-    </div>
+    @include('components.dashboard.sidebar')
 
     <!-- dashboard content -->
     <div class="dashboard-content">
-        <div class="dashboard-menu-btn color-bg"><span><i class="fas fa-bars"></i></span>Menu quản lý</div>
+        @include('components.dashboard.mobile_btn')
         <div class="container dasboard-container">
             <!-- dashboard-title -->
-            <div class="dashboard-title fl-wrap">
-                <div class="dashboard-title-item"><span>Tin đăng của bạn</span></div>
-                <div class="dashbard-menu-header">
-                    <div class="dashbard-menu-avatar fl-wrap">
-                        <img src="{{ asset('images/avatar/1.jpg') }}" alt="">
-                        <h4>Xin chào, <span>{{ auth()->check() ? auth()->user()->name : 'User' }}</span></h4>
-                    </div>
-                    <a href="{{ url('/') }}" class="log-out-btn tolt" data-microtip-position="bottom" data-tooltip="Đăng xuất"><i class="far fa-power-off"></i></a>
-                </div>
-                <!--Tariff Plan menu-->
-                <div class="tfp-det-container">
-                    <div class="tfp-btn"><span>Gói dịch vụ : </span> <strong>Cao cấp</strong></div>
-                    <div class="tfp-det">
-                        <p>Bạn đang sử dụng gói <a href="#">Cao cấp</a> . Nhấn vào link bên dưới để xem chi tiết hoặc nâng cấp. </p>
-                        <a href="#" class="tfp-det-btn color-bg">Chi tiết</a>
-                    </div>
-                </div>
-                <!--Tariff Plan menu end-->
-            </div>
+            @include('components.dashboard.header', ['title' => 'Tin đăng của bạn'])
             <!-- dashboard-title end -->
             
             <div class="dasboard-wrapper fl-wrap">
@@ -214,19 +169,7 @@
             </div>
             
             <!-- dashboard-footer -->
-            <div class="dashboard-footer">
-                <div class="dashboard-footer-links fl-wrap">
-                    <span>Liên kết hữu ích:</span>
-                    <ul>
-                        <li><a href="#">Giới thiệu</a></li>
-                        <li><a href="#">Tin tức</a></li>
-                        <li><a href="#">Bảng giá</a></li>
-                        <li><a href="#">Liên hệ</a></li>
-                        <li><a href="#">Trung tâm trợ giúp</a></li>
-                    </ul>
-                </div>
-                <a href="#main" class="dashbord-totop custom-scroll-link"><i class="fas fa-caret-up"></i></a>
-            </div>
+            @include('components.dashboard.footer')
             <!-- dashboard-footer end -->
         </div>
     </div>
