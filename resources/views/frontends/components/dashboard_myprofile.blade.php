@@ -18,7 +18,7 @@
             <div class="user-profile-menu">
                 <h3>Quản lý tin</h3>
                 <ul class="no-list-style">
-                    <li><a href="#"><i class="fal fa-th-list"></i> Tin đăng của tôi</a></li>
+                    <li><a href="{{ route('webapp.listings') }}"><i class="fal fa-th-list"></i> Tin đăng của tôi</a></li>
                     <li><a href="#"> <i class="fal fa-calendar-check"></i> Lịch hẹn <span>2</span></a></li>
                     <li><a href="#"><i class="fal fa-comments-alt"></i> Đánh giá </a></li>
                     <li><a href="#"><i class="fal fa-file-plus"></i> Đăng tin mới</a></li>
