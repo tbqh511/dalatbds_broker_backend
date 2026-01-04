@@ -60,6 +60,7 @@ use Illuminate\Support\Facades\Artisan;
 Route::get('/', [FrontEndHomeController::class, 'index'])->name('index');
 
 Route::get('/webapp', [TelegramWebAppController::class, 'index'])->name('webapp');
+Route::get('/webapp/profile', [TelegramWebAppController::class, 'profile'])->name('webapp.profile');
 
 //property controller
 Route::get('/property/{id}', [FrontEndPropertiesController::class, 'getPropertyById'])->name('property.showid');

@@ -8,6 +8,11 @@ class TelegramWebAppController extends Controller
 {
     public function index(Request $request)
     {
-        return view('frontend_webapp_home');
+        return view('frontend_dashboard');
+    }
+
+    public function profile(Request $request)
+    {
+        return view('frontend_dashboard_myprofile');
     }
 }
