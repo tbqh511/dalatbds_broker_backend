@@ -7,12 +7,14 @@
 /*-------------Fonts---------------------------------------*/
 @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&display=swap&subset=vietnamese');
 
+/*
 @font-face {
 	font-family: 'Jost';
 	font-style: normal;
 	font-display: swap;
 	src: url('../fonts/Jost-Regular.woff2') format('woff2');
   }
+*/
 /*-------------General Style---------------------------------------*/
 
 html {
