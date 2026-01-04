@@ -272,11 +272,11 @@
 	margin-bottom: 30px;
 }
 .dashboard-stats {
-	padding: 10px 60px 10px 20px;
+	padding: 20px 60px 20px 20px;
 	background: #fff;
 	border-radius: 4px;
-	border: 1px solid #eee;
- 
+	border: none;
+	box-shadow: 0px 10px 30px 0px rgba(59, 77, 129, 0.07);
 }
 .dashboard-stats i {
 	position: absolute;
@@ -300,7 +300,8 @@
 .dashboard-stats-count {
 	font-size: 24px;
 	float: left;
- 	font-weight: 500;
+ 	font-weight: 700;
+	color: #333;
 }
 .dashboard-stats-count span {
 	font-size: 11px;
@@ -315,7 +316,8 @@
 	background: #fff;
  
 	border-radius: 4px;
-	border: 1px solid #eee;
+	border: none;
+	box-shadow: 0px 10px 30px 0px rgba(59, 77, 129, 0.07);
 }
 
 

@@ -31,10 +31,12 @@ var config = {
                 animation: false,
                 backgroundColor: "rgba(94, 207, 177, 0.2)",
                 borderColor: "#3270FC",
+                borderWidth: 3,
 				pointBackgroundColor:"#fff",
-                pointBorderWidth: 1,
+                pointBorderWidth: 3,
 				pointBorderColor: "#3270FC",
-                pointHoverBorderWidth: 1,
+                pointHoverBorderWidth: 3,
+                lineTension: 0.4,
                 data: [16, 12, 37, 33, 44, 98, 20]
             },
             {
@@ -43,12 +45,12 @@ var config = {
                 animation: false,
                 backgroundColor: "rgba(77, 183, 254, 0.2)",
                 borderColor: "#40B69E",
+                borderWidth: 3,
 				pointBackgroundColor:"#fff",
-                pointBorderWidth: 1,
+                pointBorderWidth: 3,
 				pointBorderColor: "#40B69E",
-                pointBorderWidth: 1,
-                pointHoverBorderWidth: 1,
-
+                pointHoverBorderWidth: 3,
+                lineTension: 0.4,
                 data: [12, 32, 62, 12, 49, 12, 92]
             },
 

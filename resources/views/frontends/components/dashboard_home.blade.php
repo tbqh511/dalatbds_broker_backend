@@ -147,7 +147,7 @@
                         <div class="box-widget fl-wrap">
                             <div class="banner-widget fl-wrap">
                                 <div class="bg-wrap bg-parallax-wrap-gradien">
-                                    <div class="bg" data-bg="{{ asset('images/all/blog/1.jpg') }}"></div>
+                                    <div class="bg" data-bg="{{ asset('images/bg/1.jpg') }}"></div>
                                 </div>
                                 <div class="banner-widget_content">
                                     <h5>Participate in our loyalty program. Refer a friend and get a discount.</h5>
