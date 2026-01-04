@@ -5,16 +5,43 @@
   Version: 1.0
   Last change: 17/12/2020 ]
 /*-------------Fonts---------------------------------------*/
-@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&display=swap&subset=vietnamese');
+/* @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&display=swap&subset=vietnamese'); */
 
-/*
+/* 1. Regular (400) */
 @font-face {
-	font-family: 'Jost';
-	font-style: normal;
-	font-display: swap;
-	src: url('../fonts/Jost-Regular.woff2') format('woff2');
-  }
-*/
+    font-family: 'Jost';
+    src: url('../fonts/Jost-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 2. Medium (500) */
+@font-face {
+    font-family: 'Jost';
+    src: url('../fonts/Jost-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 3. SemiBold (600) */
+@font-face {
+    font-family: 'Jost';
+    src: url('../fonts/Jost-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 4. Bold (700) */
+@font-face {
+    font-family: 'Jost';
+    src: url('../fonts/Jost-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
 /*-------------General Style---------------------------------------*/
 
 html {
