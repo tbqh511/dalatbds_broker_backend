@@ -9,7 +9,7 @@
                 <ul class="no-list-style">
                     <li><a href="{{ route('webapp') }}" class="user-profile-act"><i class="fal fa-chart-line"></i>Tổng quan</a></li>
                     <li><a href="{{ route('webapp.profile') }}"><i class="fal fa-user-edit"></i> Chỉnh sửa hồ sơ</a></li>
-                    <li><a href="#"><i class="fal fa-envelope"></i> Tin nhắn <span>3</span></a></li>
+                    <li><a href="{{ route('webapp.messages') }}"><i class="fal fa-envelope"></i> Tin nhắn <span>3</span></a></li>
                     <li><a href="#"><i class="fal fa-users"></i> Danh sách môi giới</a></li>
                 </ul>
             </div>
