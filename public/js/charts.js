@@ -24,9 +24,9 @@ function legendClickCallback(event) {
 var config = {
     type: 'line',
     data: {
-        labels: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        labels: ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'],
         datasets: [{
-                label: 'Listings Views',
+                label: 'Lượt xem tin',
                 fill: true,
                 animation: false,
                 backgroundColor: "rgba(94, 207, 177, 0.2)",
@@ -40,7 +40,7 @@ var config = {
                 data: [16, 12, 37, 33, 44, 98, 20]
             },
             {
-                label: 'Bookings',
+                label: 'Lượt đặt lịch',
                 fill: true,
                 animation: false,
                 backgroundColor: "rgba(77, 183, 254, 0.2)",
