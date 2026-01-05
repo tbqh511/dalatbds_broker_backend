@@ -8,7 +8,7 @@
 
 @push('styles')
     <style>
-        .main-header, .main-footer, .subscribe-wrap {
+        .main-footer, .subscribe-wrap {
             display: none;
         }
     </style>

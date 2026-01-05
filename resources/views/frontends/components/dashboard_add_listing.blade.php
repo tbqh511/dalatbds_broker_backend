@@ -479,7 +479,6 @@
                 <a href="#" class="btn  color-bg float-btn">Lưu thay đổi </a>
             </div>
         </div>
-        <div class="limit-box fl-wrap"></div>
         <!-- dashboard-footer -->
         @include('components.dashboard.footer')
         <!-- dashboard-footer end -->
