@@ -7,9 +7,5 @@
 @endsection
 
 @push('styles')
-    <style>
-        .main-footer, .subscribe-wrap {
-            display: none;
-        }
-    </style>
+    
 @endpush
