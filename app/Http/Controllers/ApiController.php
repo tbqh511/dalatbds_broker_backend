@@ -423,6 +423,100 @@ class ApiController extends Controller
             'data' => $customer
         ]);
     }
+
+    public function check_telegram_user(Request $request)
+    {
+        // 1. Validate dữ liệu đầu vào
+        $validator = Validator::make($request->all(), [
+            'telegram_id' => 'required|numeric',
+            'secret' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Thiếu telegram_id hoặc secret',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // 2. Kiểm tra Secret
+        $secret = env('API_LOGIN_SECRET');
+        if (empty($secret) || $request->input('secret') !== $secret) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Secret key không hợp lệ'
+            ], 401);
+        }
+
+        $telegramId = $request->telegram_id;
+
+        // 3. Tìm user trong Database
+        $customer = Customer::where('telegram_id', $telegramId)->first();
+
+        // --- TRƯỜNG HỢP A: ĐÃ CÓ USER (NGƯỜI QUEN) ---
+        if ($customer) {
+            // Kiểm tra trạng thái tài khoản
+            if (isset($customer->isActive) && $customer->isActive == 0) {
+                return response()->json([
+                    'status' => 'blocked',
+                    'message' => 'Tài khoản đã bị khóa.'
+                ], 401);
+            }
+
+            // Xử lý JWT Token
+            $token = $customer->api_token;
+            $needsNewToken = true;
+
+            // 1. Kiểm tra token hiện tại có tồn tại và hợp lệ không
+            if (!empty($token)) {
+                try {
+                    // Set token để kiểm tra
+                    JWTAuth::setToken($token);
+                    // Nếu token hợp lệ (không hết hạn, signature đúng)
+                    if (JWTAuth::check()) {
+                        $needsNewToken = false;
+                    }
+                } catch (\Exception $e) {
+                    // Token lỗi hoặc hết hạn -> sẽ tạo mới
+                    $needsNewToken = true;
+                }
+            }
+
+            // 2. Nếu cần tạo token mới (do chưa có hoặc đã hết hạn/lỗi)
+            if ($needsNewToken) {
+                try {
+                    $token = JWTAuth::fromUser($customer);
+                    if (!$token) {
+                        return response()->json(['error' => true, 'message' => 'Tạo token thất bại'], 500);
+                    }
+
+                    // Cập nhật token vào DB
+                    $customer->api_token = $token;
+                    $customer->save();
+                } catch (JWTException $e) {
+                    return response()->json(['error' => true, 'message' => 'Tạo token thất bại'], 500);
+                }
+            }
+
+            return response()->json([
+                'status' => 'authenticated',
+                'message' => 'Người dùng đã tồn tại.',
+                'user' => [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $customer->mobile, 
+                ],
+                'access_token' => $token,
+            ], 200);
+        }
+
+        // --- TRƯỜNG HỢP B: CHƯA CÓ USER (KHÁCH VÃNG LAI) ---
+        return response()->json([
+            'status' => 'guest',
+            'message' => 'Người dùng chưa tồn tại. Vui lòng gửi Contact.',
+        ], 200);
+    }
     //* START :: get_slider   *//
 
 
