@@ -4003,4 +4003,128 @@ class ApiController extends Controller
         return response()->json($response);
     }
     //* END :: get_customers_statistics *//
+
+    //HuyTBQ: Telegram WebApp Login
+    public function loginViaMiniApp(Request $request)
+    {
+        // 1. Nhận initData từ Frontend gửi lên
+        $initData = $request->input('initData');
+        
+        if (!$initData) {
+            return response()->json(['error' => true, 'message' => 'Không tìm thấy initData'], 400);
+        }
+
+        // 2. Phân tách chuỗi dữ liệu thành mảng
+        parse_str($initData, $data);
+
+        // Kiểm tra chữ ký hash
+        if (!isset($data['hash'])) {
+            return response()->json(['error' => true, 'message' => 'Dữ liệu không hợp lệ (thiếu hash)'], 401);
+        }
+
+        $receivedHash = $data['hash'];
+        unset($data['hash']); // QUAN TRỌNG: Phải bỏ hash ra trước khi sắp xếp
+
+        // 3. Sắp xếp dữ liệu theo key (a-z) theo quy chuẩn Telegram
+        ksort($data);
+
+        // 4. Tạo chuỗi đối chiếu (Data Check String)
+        $dataCheckArr = [];
+        foreach ($data as $key => $value) {
+            $dataCheckArr[] = $key . '=' . $value;
+        }
+        $dataCheckString = implode("\n", $dataCheckArr);
+
+        // 5. Tạo Secret Key từ Bot Token
+        // Theo tài liệu: HMAC-SHA256 của Bot Token với key là "WebAppData"
+        $botToken = env('TELEGRAM_BOT_TOKEN');
+        if (!$botToken) {
+            return response()->json(['error' => true, 'message' => 'Server chưa cấu hình Bot Token'], 500);
+        }
+        
+        $secretKey = hash_hmac('sha256', $botToken, "WebAppData", true);
+
+        // 6. Tính toán Hash
+        $calculatedHash = bin2hex(hash_hmac('sha256', $dataCheckString, $secretKey, true));
+
+        // 7. SO SÁNH CHỮ KÝ
+        if (strcmp($calculatedHash, $receivedHash) !== 0) {
+            return response()->json(['error' => true, 'message' => 'Xác thực thất bại! Chữ ký không khớp.'], 403);
+        }
+
+        // --- ĐẾN ĐÂY LÀ HÀNG THẬT 100% ---
+
+        // 8. Kiểm tra thời hạn (Optional: ví dụ 24h)
+        if (isset($data['auth_date']) && (time() - $data['auth_date'] > 86400)) {
+             return response()->json(['error' => true, 'message' => 'Phiên đăng nhập đã hết hạn, vui lòng tải lại trang'], 401);
+        }
+
+        // 9. Lấy thông tin User
+        // initData chứa field 'user' dạng JSON String -> Cần decode
+        $telegramUserData = json_decode($data['user'], true);
+        $telegramId = $telegramUserData['id'];
+
+        // 10. Tìm Customer trong Database
+        $customer = Customer::where('telegram_id', $telegramId)->first();
+
+        if ($customer) {
+            // Logic tái sử dụng hoặc tạo mới JWT
+            $token = $this->handleJwtToken($customer);
+            
+            if (!$token) {
+                return response()->json(['error' => true, 'message' => 'Lỗi tạo Token'], 500);
+            }
+
+            return response()->json([
+                'status' => 'authenticated',
+                'message' => 'Đăng nhập thành công qua WebApp',
+                'user' => [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $customer->mobile,
+                ],
+                'access_token' => $token,
+            ]);
+        } else {
+            // Chưa có user -> Trả về Guest để Frontend điều hướng
+            return response()->json([
+                'status' => 'guest',
+                'message' => 'User chưa đăng ký hệ thống',
+                'telegram_user' => $telegramUserData // Trả về để frontend có thể hiển thị tên
+            ]);
+        }
+    }
+
+    // Hàm phụ trợ xử lý JWT (Tách ra cho gọn)
+    private function handleJwtToken($customer)
+    {
+        if (isset($customer->isActive) && $customer->isActive == 0) {
+            return null; // Tài khoản bị khóa
+        }
+
+        $token = $customer->api_token;
+        $needsNewToken = true;
+
+        if (!empty($token)) {
+            try {
+                JWTAuth::setToken($token);
+                if (JWTAuth::check()) {
+                    $needsNewToken = false;
+                }
+            } catch (\Exception $e) {
+                $needsNewToken = true;
+            }
+        }
+
+        if ($needsNewToken) {
+            try {
+                $token = JWTAuth::fromUser($customer);
+                $customer->api_token = $token;
+                $customer->save();
+            } catch (JWTException $e) {
+                return null;
+            }
+        }
+        return $token;
+    }
 }
