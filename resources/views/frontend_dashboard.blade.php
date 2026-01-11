@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="{{ asset('css/webapp.css') }}">
     <style>
         /* Hide Web elements for Telegram Mini App */
-        .main-header, .footer-inner, .to-top, .chat-zalo, .call-button {
+        /* .main-header, .footer-inner, .to-top, .chat-zalo, .call-button {
             display: none !important;
-        }
+        } */
         #main {
             padding-top: 0 !important;
         }
