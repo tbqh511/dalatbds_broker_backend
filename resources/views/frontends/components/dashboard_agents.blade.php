@@ -208,4 +208,5 @@
             <!-- dashboard-footer end -->
         </div>
     </div>
+    <div class="dashbard-bg gray-bg"></div>
 </div>
