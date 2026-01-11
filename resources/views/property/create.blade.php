@@ -277,7 +277,7 @@
 @endsection
 @section('script')
     <script type="text/javascript"
-        src="https://maps.googleapis.com/maps/api/js?libraries=places&key={{ config('services.google_maps.place_api_key') }}&callback=initMap"
+        src="https://maps.googleapis.com/maps/api/js?libraries=places&key={{ config('services.google_maps.place_api_key') }}&callback=initMap&loading=async"
         async defer></script>
     <script type="text/javascript">
         $(document).ready(function() {
@@ -363,35 +363,42 @@
 
         });
 
-        function initMap() {
-            var map = new google.maps.Map(document.getElementById('map'), {
+        async function initMap() {
+            // Request needed libraries.
+            const { Map } = await google.maps.importLibrary("maps");
+            const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+            const { Autocomplete } = await google.maps.importLibrary("places");
+
+            var map = new Map(document.getElementById('map'), {
                 center: {
                     lat: -33.8688,
                     lng: 151.2195
                 },
-                zoom: 13
+                zoom: 13,
+                mapId: "DEMO_MAP_ID" // Required for AdvancedMarkerElement
             });
             var input = document.getElementById('searchInput');
             map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
-            var autocomplete = new google.maps.places.Autocomplete(input);
+            var autocomplete = new Autocomplete(input);
             autocomplete.bindTo('bounds', map);
 
             var infowindow = new google.maps.InfoWindow();
-            var marker = new google.maps.Marker({
-                draggable: true,
-
+            var marker = new AdvancedMarkerElement({
+                map: map,
                 position: {
                     lat: -33.8688,
                     lng: 151.2195
                 },
-                map: map,
-                anchorPoint: new google.maps.Point(0, -29)
+                gmpDraggable: true,
+                title: "Drag to select location"
             });
-            google.maps.event.addListener(marker, 'dragend', function(event) {
+
+            marker.addListener('dragend', function(event) {
+                var position = event.latLng;
                 var geocoder = new google.maps.Geocoder();
                 geocoder.geocode({
-                    'latLng': event.latLng
+                    'latLng': position
                 }, function(results, status) {
                     if (status == google.maps.GeocoderStatus.OK) {
                         if (results[0]) {
@@ -411,14 +418,12 @@
 
                             full_address = results[0].formatted_address;
 
-                            // Do something with the city, state, country, and full address
-
                             $('#city').val(city);
                             $('#country').val(state);
                             $('#state').val(country);
                             $('#address').val(full_address);
-                            $('#latitude').val(event.latLng.lat());
-                            $('#longitude').val(event.latLng.lng());
+                            $('#latitude').val(position.lat);
+                            $('#longitude').val(position.lng);
 
                         } else {
                             console.log('No results found');
@@ -428,15 +433,15 @@
                     }
                 });
             });
+
             autocomplete.addListener('place_changed', function() {
                 infowindow.close();
-                marker.setVisible(false);
+                marker.map = null; // Hide marker
                 var place = autocomplete.getPlace();
                 if (!place.geometry) {
                     window.alert("Autocomplete's returned place contains no geometry");
                     return;
                 }
-
 
                 if (place.geometry.viewport) {
                     map.fitBounds(place.geometry.viewport);
@@ -444,15 +449,10 @@
                     map.setCenter(place.geometry.location);
                     map.setZoom(17);
                 }
-                marker.setIcon(({
-                    url: place.icon,
-                    size: new google.maps.Size(71, 71),
-                    origin: new google.maps.Point(0, 0),
-                    anchor: new google.maps.Point(17, 34),
-                    scaledSize: new google.maps.Size(35, 35)
-                }));
-                marker.setPosition(place.geometry.location);
-                marker.setVisible(true);
+                
+                // Re-create marker at new position
+                marker.map = map;
+                marker.position = place.geometry.location;
 
                 var address = '';
                 if (place.address_components) {
@@ -468,35 +468,20 @@
 
                 // Location details
                 for (var i = 0; i < place.address_components.length; i++) {
-                    console.log(place);
-
                     if (place.address_components[i].types[0] == 'locality') {
                         $('#city').val(place.address_components[i].long_name);
-
-
                     }
                     if (place.address_components[i].types[0] == 'country') {
                         $('#country').val(place.address_components[i].long_name);
-
-
                     }
                     if (place.address_components[i].types[0] == 'administrative_area_level_1') {
-                        console.log(place.address_components[i].long_name);
                         $('#state').val(place.address_components[i].long_name);
-
-
                     }
                 }
 
-
-                var latitude = place.geometry.location.lat();
-                var longitude = place.geometry.location.lng();
                 $('#address').val(place.formatted_address);
-
-
                 $('#latitude').val(place.geometry.location.lat());
                 $('#longitude').val(place.geometry.location.lng());
-
             });
         }
         jQuery(document).ready(function() {

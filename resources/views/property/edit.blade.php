@@ -343,7 +343,7 @@
 @endsection
 @section('script')
     <script type="text/javascript"
-        src="https://maps.googleapis.com/maps/api/js?libraries=places&key={{ config('services.google_maps.place_api_key') }}&callback=initMap"
+        src="https://maps.googleapis.com/maps/api/js?libraries=places&key={{ config('services.google_maps.place_api_key') }}&callback=initMap&loading=async"
         async defer></script>
 
     <script>
