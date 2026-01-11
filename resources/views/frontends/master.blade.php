@@ -79,7 +79,7 @@
     <script src="{{asset('js/jquery.min.js')}}"></script>
     <script src="{{asset('js/plugins.js')}}"></script>
     <script src="{{asset('js/scripts.js')}}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxEHw0sJRjvQtF50i3y2vxFTr3qkx728k&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=places"></script>
     <script src="{{asset('js/map-single.js')}}"></script>
     @stack('scripts')
 </body>

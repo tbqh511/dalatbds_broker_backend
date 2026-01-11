@@ -65,3 +65,27 @@ API này được sử dụng để kiểm tra người dùng Telegram và cấp
     "message": "Người dùng chưa tồn tại. Vui lòng gửi Contact."
 }
 ```
+
+## Configuration
+
+### Google Maps API
+
+Ứng dụng sử dụng Google Maps Platform cho các tính năng bản đồ và địa điểm. Để kích hoạt, bạn cần:
+
+1.  Tạo project trên Google Cloud Console.
+2.  Kích hoạt **Maps JavaScript API** và **Places API**.
+3.  Tạo API Key.
+4.  Thêm key vào file `.env`:
+    ```
+    PLACE_API_KEY=your_api_key_here
+    ```
+
+### Security Best Practices
+
+Để bảo vệ API Key của bạn khỏi việc sử dụng trái phép (tránh mất quota/tiền):
+
+1.  Truy cập Google Cloud Console > Credentials.
+2.  Chọn API Key của bạn.
+3.  Tại phần **Application restrictions**, chọn **HTTP referrers (web sites)**.
+4.  Thêm domain của ứng dụng vào danh sách (ví dụ: `https://dalatbds.com/*`, `http://localhost:8000/*`).
+5.  Tại phần **API restrictions**, chọn **Restrict key** và chỉ chọn `Maps JavaScript API` và `Places API`.
