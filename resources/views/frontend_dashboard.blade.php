@@ -38,7 +38,8 @@
 @endpush
 
 @section('content')
-    <!-- Telegram Loading Overlay -->
+    @include('frontends.components.dashboard_home')
+    {{-- <!-- Telegram Loading Overlay -->
     <div id="webapp-loading">
         <div class="loader-inner">
             <div class="loader-line-wrap">
@@ -64,7 +65,7 @@
     <!-- Main Content (Initially Hidden) -->
     <div id="webapp-main" class="hidden">
         @include('frontends.components.dashboard_home')
-    </div>
+    </div> --}}
 @endsection
 
 @push('head_scripts')
@@ -82,7 +83,7 @@
         tg.expand();
         
         // Define Main Color based on theme
-        tg.setHeaderColor('#384F95'); 
+        tg.setHeaderColor('#3270FC'); 
 
         async function initWebApp() {
             const initData = tg.initData;
