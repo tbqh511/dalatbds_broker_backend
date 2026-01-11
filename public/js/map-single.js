@@ -164,6 +164,6 @@ $(".map-modal-close , .map-modal-wrap-overlay").on("click", function () {
 }
 var single_map = document.getElementById('singleMap');
 if (typeof (single_map) != 'undefined' && single_map != null) {
-    google.maps.event.addDomListener(window, 'load', singleMap);
+    window.addEventListener('load', singleMap);
 }
  
