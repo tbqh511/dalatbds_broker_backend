@@ -55,7 +55,8 @@ class TelegramWebAppController extends Controller
             })->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count();
         }
 
-        return view('frontend_dashboard', compact('customer', 'stats'));
+        //return view('frontend_dashboard', compact('customer', 'stats'));
+        return view('frontend_dashboard_temp', compact('customer', 'stats'));
     }
 
     public function profile(Request $request)
