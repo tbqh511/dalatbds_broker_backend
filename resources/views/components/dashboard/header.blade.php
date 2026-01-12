@@ -21,10 +21,38 @@
             <img src="{{ $userAvatar }}" alt="{{ $userName }}" style="object-fit: cover;">
             <h4>Xin chào, <span>{{ $userName }}</span></h4>
         </div>
-        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="log-out-btn tolt" data-microtip-position="bottom" data-tooltip="Đăng xuất"><i class="far fa-power-off"></i></a>
+        <a href="{{ route('logout') }}" onclick="event.preventDefault(); (window.handleLogoutClick ? window.handleLogoutClick(event) : document.getElementById('logout-form').submit());" class="log-out-btn tolt" data-microtip-position="bottom" data-tooltip="Đăng xuất"><i class="far fa-power-off"></i></a>
         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
             @csrf
         </form>
+
+        <script>
+            (function () {
+                window.handleLogoutClick = function (e) {
+                    try {
+                        if (window && window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.close === 'function') {
+                            try {
+                                window.Telegram.WebApp.close();
+                                return;
+                            } catch (innerErr) {
+                                console.error('Telegram.WebApp.close() failed:', innerErr);
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Telegram WebApp detection error:', err);
+                    }
+
+                    var form = document.getElementById('logout-form');
+                    if (form) {
+                        try {
+                            form.submit();
+                        } catch (submitErr) {
+                            console.error('Logout form submit failed:', submitErr);
+                        }
+                    }
+                };
+            })();
+        </script>
     </div>
     <!--Tariff Plan menu-->
     <div class="tfp-det-container">
