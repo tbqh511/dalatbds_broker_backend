@@ -166,9 +166,7 @@
                     <a href="#" class="nextposts-link"><i class="fa fa-caret-right"></i></a>
                 </div>
                 <!-- pagination end-->
-            </div>
-            
-            
+            </div>    
         </div>
         <!-- dashboard-footer -->
         @include('components.dashboard.footer')
