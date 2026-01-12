@@ -1,4 +1,4 @@
-<div class="content">
+{{-- <div class="content"> --}}
     <div class="dashbard-menu-overlay"></div>
     @include('components.dashboard.sidebar')
 
@@ -127,4 +127,4 @@
         <!-- dashboard-footer end -->
     </div>
     <div class="dashbard-bg gray-bg"></div>
-</div>
+{{-- </div> --}}

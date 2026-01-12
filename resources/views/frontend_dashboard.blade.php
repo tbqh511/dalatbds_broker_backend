@@ -21,7 +21,7 @@
 @endpush
 
 @section('content')
-    //HuyTBQ: add ! for test 
+    {{-- HuyTBQ: add ! for test  --}}
     @if(!Auth::guard('webapp')->check())
         {{-- User is authenticated via Session --}}
         @include('frontends.components.dashboard_home')
