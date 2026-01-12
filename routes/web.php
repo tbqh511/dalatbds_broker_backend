@@ -40,6 +40,8 @@ use App\Models\PropertysInquiry;
 use Illuminate\Support\Facades\Artisan;
 
 
+use App\Http\Controllers\ApiController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -50,6 +52,9 @@ use Illuminate\Support\Facades\Artisan;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+// Telegram WebApp Login (Moved from API to support Session)
+Route::post('/api/webapp/login', [ApiController::class, 'loginViaMiniApp']);
 
 
 //HuyTBQ: Route for Frontend Page

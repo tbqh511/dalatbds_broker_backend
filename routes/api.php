@@ -28,7 +28,8 @@ Route::post('login', [ApiController::class, 'login']);
 // Check Telegram User for n8n bot
 Route::post('check_telegram_user', [ApiController::class, 'check_telegram_user']);
 // Route Telegram Web App Login
-Route::post('/webapp/login', [ApiController::class, 'loginViaMiniApp']);
+// Moved to web.php to support Session
+// Route::post('/webapp/login', [ApiController::class, 'loginViaMiniApp']);
 
 Route::post('user_signup', [ApiController::class, 'user_signup']);
 Route::post('get_languages', [ApiController::class, 'get_languages']);
