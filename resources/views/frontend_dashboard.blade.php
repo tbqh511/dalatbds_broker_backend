@@ -23,10 +23,6 @@
 @section('content')
     @if(Auth::guard('webapp')->check())
         {{-- User is authenticated via Session --}}
-        <script>
-            // Reset reload count on successful login
-            sessionStorage.removeItem('tg_auth_reload_count');
-        </script>
         @include('frontends.components.dashboard_home')
     @else
         {{-- User is NOT authenticated, show loader and run JS --}}
@@ -83,25 +79,6 @@
                 const data = response.data;
                 if (data.status === 'authenticated') {
                     // Success
-                    
-                    // Check for infinite reload loop
-                    let reloadCount = parseInt(sessionStorage.getItem('tg_auth_reload_count') || 0);
-                    if (reloadCount >= 3) {
-                        document.getElementById('webapp-loading').classList.add('hidden'); // Hide loader to show error
-                        // Show Error UI
-                        const statusEl = document.getElementById('webapp-status');
-                        statusEl.innerText = "Lỗi xác thực: Trình duyệt chặn cookie. Vui lòng thử mở bằng trình duyệt ngoài hoặc cập nhật ứng dụng Telegram.";
-                        statusEl.style.color = 'red';
-                        statusEl.style.padding = '20px';
-                        statusEl.style.textAlign = 'center';
-                        
-                        console.error("Infinite reload loop detected. Stopping.");
-                        return;
-                    }
-
-                    // Increment reload count
-                    sessionStorage.setItem('tg_auth_reload_count', reloadCount + 1);
-                    
                     // Reload to let Server-side Middleware handle the rest
                     window.location.reload();
                 } else if (data.status === 'guest') {
