@@ -52,7 +52,7 @@
                     </div>
                 </div>
                 <div class="clearfix"></div>
-                <div class="row">
+                {{-- <div class="row">
                     <div class="col-md-8">
                         <div class="notification success-notif  fl-wrap">
                             <p>Tin đăng <a href="#">Nhà phố tại Phường 1</a> của bạn đã được duyệt!</p>
@@ -119,7 +119,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
             </div>
 
             <!-- dashboard-footer -->
