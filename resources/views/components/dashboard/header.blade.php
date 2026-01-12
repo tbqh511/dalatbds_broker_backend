@@ -21,14 +21,12 @@
             <img src="{{ $userAvatar }}" alt="{{ $userName }}" style="object-fit: cover;">
             <h4>Xin chào, <span>{{ $userName }}</span></h4>
         </div>
-        <a href="{{ route('logout') }}" onclick="event.preventDefault(); (window.handleLogoutClick ? window.handleLogoutClick(event) : document.getElementById('logout-form').submit());" class="log-out-btn tolt" data-microtip-position="bottom" data-tooltip="Đăng xuất"><i class="far fa-power-off"></i></a>
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
-        </form>
+        <!-- Shutdown button: always shown. Attempts Telegram.WebApp.close(), then window.close(), then fallback redirect -->
+        <a href="javascript:void(0)" onclick="event.preventDefault(); (window.handleShutdownClick ? window.handleShutdownClick(event) : null);" class="log-out-btn tolt" data-microtip-position="bottom" data-tooltip="Tắt ứng dụng"><i class="far fa-power-off"></i></a>
 
         <script>
             (function () {
-                window.handleLogoutClick = function (e) {
+                window.handleShutdownClick = function (e) {
                     try {
                         if (window && window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.close === 'function') {
                             try {
@@ -42,13 +40,17 @@
                         console.error('Telegram WebApp detection error:', err);
                     }
 
-                    var form = document.getElementById('logout-form');
-                    if (form) {
-                        try {
-                            form.submit();
-                        } catch (submitErr) {
-                            console.error('Logout form submit failed:', submitErr);
-                        }
+                    try {
+                        // Try to close the browser window (may be blocked by browsers)
+                        window.close();
+                        // Some browsers won't close; give a short delay then fallback
+                        setTimeout(function () {
+                            // Fallback: redirect to home. Adjust if you have a dedicated shutdown route.
+                            window.location.href = "{{ url('/') }}";
+                        }, 250);
+                    } catch (closeErr) {
+                        console.error('window.close() failed:', closeErr);
+                        window.location.href = "{{ url('/') }}";
                     }
                 };
             })();
