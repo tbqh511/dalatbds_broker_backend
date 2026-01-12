@@ -300,8 +300,8 @@
 .dashboard-stats-count {
 	font-size: 24px;
 	float: left;
- 	font-weight: 700;
-	color: #333;
+ 	font-weight: 500;
+
 }
 .dashboard-stats-count span {
 	font-size: 11px;
