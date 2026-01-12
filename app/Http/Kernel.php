@@ -49,5 +49,6 @@ class Kernel extends HttpKernel
         'jwt.verify' => \App\Http\Middleware\JwtMiddleware::class,
         'language' => \App\Http\Middleware\LanguageManager::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'telegram.webapp' => \App\Http\Middleware\TelegramWebAppAuth::class,
     ];
 }

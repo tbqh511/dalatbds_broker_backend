@@ -4068,6 +4068,9 @@ class ApiController extends Controller
         $customer = Customer::where('telegram_id', $telegramId)->first();
 
         if ($customer) {
+            // Log in the user to the session for Blade views
+            Auth::guard('webapp')->login($customer, true);
+
             // Logic tái sử dụng hoặc tạo mới JWT
             $token = $this->handleJwtToken($customer);
             
@@ -4082,6 +4085,7 @@ class ApiController extends Controller
                     'id' => $customer->id,
                     'name' => $customer->name,
                     'phone' => $customer->mobile,
+                    'profile' => $customer->profile,
                 ],
                 'access_token' => $token,
             ]);
