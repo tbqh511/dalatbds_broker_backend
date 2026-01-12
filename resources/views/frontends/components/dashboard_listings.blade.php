@@ -17,7 +17,7 @@
                             <input type="text" onclick="this.select()" placeholder="Tìm kiếm..." value="">
                             <button type="submit"><i class="far fa-search"></i></button>
                         </div>
-                        <a href="#" class="gradient-bg dashboard-addnew_btn">Đăng tin mới <i class="fal fa-plus"></i></a>
+                        <a href="{{ route('webapp.add_listing') }}" class="gradient-bg dashboard-addnew_btn">Đăng tin mới <i class="fal fa-plus"></i></a>
                         <!-- price-opt-->
                         <div class="price-opt">
                             <span class="price-opt-title">Sắp xếp theo:</span>
@@ -25,9 +25,8 @@
                                 <select data-placeholder="Mới nhất" class="chosen-select no-search-select" >
                                     <option>Mới nhất</option>
                                     <option>Cũ nhất</option>
-                                    <option>Đánh giá trung bình</option>
-                                    <option>Tên: A-Z</option>
-                                    <option>Tên: Z-A</option>
+                                    <option>Giá: Thấp đến Cao</option>
+                                    <option>Giá: Cao đến Thấp</option>
                                 </select>
                             </div>
                         </div>

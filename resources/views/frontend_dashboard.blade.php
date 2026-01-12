@@ -45,16 +45,11 @@
 @push('scripts')
     <script src="{{ asset('js/charts.js') }}"></script>
     <script src="{{ asset('js/dashboard.js') }}"></script>
-    
     <script>
         // Global Telegram WebApp Logic (Run on every page load)
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             tg.expand();
-            
-            // Set Header Color explicitly
-            // Use setHeaderColor if supported, otherwise fallback or check version
-            // Telegram WebApp 6.1+ supports setHeaderColor
             try {
                 tg.setHeaderColor('#3270FC');
                 tg.setBackgroundColor('#ffffff'); // Set background color to match
@@ -63,7 +58,6 @@
             }
         }
     </script>
-
     @if(!Auth::guard('webapp')->check())
     <script>
         // Auth-specific Logic
