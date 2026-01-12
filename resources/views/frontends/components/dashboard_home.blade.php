@@ -17,28 +17,28 @@
                             <div class="dashboard-stats fl-wrap">
                                 <i class="fal fa-map-marked"></i>
                                 <h4>Tin đang hiển thị</h4>
-                                <div class="dashboard-stats-count">124</div>
+                                <div class="dashboard-stats-count">{{ $stats['properties_count'] ?? 0 }}</div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="dashboard-stats fl-wrap">
                                 <i class="fal fa-chart-bar"></i>
                                 <h4>Lượt xem tin</h4>
-                                <div class="dashboard-stats-count">1056<span>(<strong>+356</strong> tuần này)</span></div>
+                                <div class="dashboard-stats-count">{{ $stats['views_count'] ?? 0 }}</div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="dashboard-stats fl-wrap">
                                 <i class="fal fa-comments-alt"></i>
                                 <h4>Đánh giá của bạn</h4>
-                                <div class="dashboard-stats-count">357<span>(<strong>+12</strong> tuần này)</span></div>
+                                <div class="dashboard-stats-count">{{ $stats['reviews_count'] ?? 0 }}</div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="dashboard-stats fl-wrap">
                                 <i class="fal fa-heart"></i>
                                 <h4>Lượt quan tâm</h4>
-                                <div class="dashboard-stats-count">2329<span>(<strong>+234</strong> tuần này)</span></div>
+                                <div class="dashboard-stats-count">{{ $stats['favourites_count'] ?? 0 }}</div>
                             </div>
                         </div>
                     </div>
