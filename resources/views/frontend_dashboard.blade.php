@@ -46,14 +46,31 @@
     <script src="{{ asset('js/charts.js') }}"></script>
     <script src="{{ asset('js/dashboard.js') }}"></script>
     
+    <script>
+        // Global Telegram WebApp Logic (Run on every page load)
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            
+            // Set Header Color explicitly
+            // Use setHeaderColor if supported, otherwise fallback or check version
+            // Telegram WebApp 6.1+ supports setHeaderColor
+            try {
+                tg.setHeaderColor('#3270FC');
+                tg.setBackgroundColor('#ffffff'); // Set background color to match
+            } catch (e) {
+                console.warn('Telegram WebApp setHeaderColor failed:', e);
+            }
+        }
+    </script>
+
     @if(!Auth::guard('webapp')->check())
     <script>
-        // Telegram WebApp Logic
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.setHeaderColor('#3270FC');
-        
+        // Auth-specific Logic
         async function initWebApp() {
+            const tg = window.Telegram.WebApp;
+            // ... (rest of logic)
+
             // Set a timeout to show error if loading takes too long (e.g. 15 seconds)
             setTimeout(() => {
                 const statusEl = document.getElementById('webapp-status');
