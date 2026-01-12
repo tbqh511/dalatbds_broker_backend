@@ -131,8 +131,14 @@
 	line-height: 56px;
 	right: 0;
 	top: 0;
-	color: #fff;
+	color: #3270FC;
+	background: #fff;
 	border-left: 1px solid #eee;
+	transition: all 0.3s ease;
+}
+.log-out-btn:hover {
+	background: #3270FC;
+	color: #fff;
 }
  
 .dashbard-menu-avatar img {
