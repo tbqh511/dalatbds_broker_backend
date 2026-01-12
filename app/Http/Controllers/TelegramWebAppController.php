@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Property;
 use App\Models\PropertysInquiry;
 use App\Models\Favourite;
+use Carbon\Carbon;
 
 class TelegramWebAppController extends Controller
 {
@@ -20,6 +21,9 @@ class TelegramWebAppController extends Controller
             'views_count' => 0,
             'reviews_count' => 0,
             'favourites_count' => 0,
+            'views_count_week' => 0,
+            'reviews_count_week' => 0,
+            'favourites_count_week' => 0,
         ];
 
         if ($customer) {
@@ -34,11 +38,21 @@ class TelegramWebAppController extends Controller
                 $query->select('id')->from('propertys')->where('added_by', $customer->id);
             })->count();
 
+            // Count reviews/inquiries this week
+            $stats['reviews_count_week'] = PropertysInquiry::whereIn('propertys_id', function($query) use ($customer) {
+                $query->select('id')->from('propertys')->where('added_by', $customer->id);
+            })->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count();
+
             // Count favourites (properties interested by others or favourited by user)
             // Assuming we want to show how many people favourited this user's properties
             $stats['favourites_count'] = Favourite::whereIn('property_id', function($query) use ($customer) {
                 $query->select('id')->from('propertys')->where('added_by', $customer->id);
             })->count();
+
+            // Count favourites this week
+            $stats['favourites_count_week'] = Favourite::whereIn('property_id', function($query) use ($customer) {
+                $query->select('id')->from('propertys')->where('added_by', $customer->id);
+            })->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count();
         }
 
         return view('frontend_dashboard', compact('customer', 'stats'));
