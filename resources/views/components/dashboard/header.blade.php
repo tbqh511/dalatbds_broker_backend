@@ -24,6 +24,8 @@
         <!-- Shutdown button: always shown. Attempts Telegram.WebApp.close(), then window.close(), then fallback redirect -->
         <a href="javascript:void(0)" onclick="event.preventDefault(); (window.handleShutdownClick ? window.handleShutdownClick(event) : null);" class="log-out-btn tolt" data-microtip-position="bottom" data-tooltip="Tắt ứng dụng"><i class="far fa-power-off"></i></a>
 
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
         <script>
             (function () {
                 window.handleShutdownClick = function (e) {
