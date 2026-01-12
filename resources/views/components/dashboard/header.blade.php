@@ -20,33 +20,3 @@
     </div>
     <!--Tariff Plan menu end-->
 </div>
-<style>
-    /* Fix header overlap issue */
-    .dashboard-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    .dashboard-title-item {
-        flex: 1;
-        min-width: 200px;
-    }
-    .dashbard-menu-header {
-        display: flex;
-        align-items: center;
-    }
-    @media (max-width: 768px) {
-        .dashboard-title {
-            margin-bottom: 20px;
-        }
-        .dashboard-title-item {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .dashbard-menu-header {
-            width: 100%;
-            justify-content: space-between;
-        }
-    }
-</style>
