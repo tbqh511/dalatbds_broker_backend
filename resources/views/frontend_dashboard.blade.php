@@ -7,9 +7,6 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard-style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/webapp.css') }}">
     <style>
-        /* #main { padding-top: 0 !important; }
-        .dashboard-content { margin-top: 0 !important; padding-top: 20px; } */
-        
         /* Loading Overlay */
         #webapp-loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;

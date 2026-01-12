@@ -106,5 +106,6 @@
         <!-- dashboard-footer end -->
     </div>
     <!-- content end -->
+    
     <div class="dashbard-bg gray-bg"></div>
 </div>
