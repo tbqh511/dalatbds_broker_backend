@@ -6,9 +6,9 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/dashboard-style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/webapp.css') }}">
-    {{-- <style>
-        #main { padding-top: 0 !important; }
-        .dashboard-content { margin-top: 0 !important; padding-top: 20px; }
+    <style>
+        /* #main { padding-top: 0 !important; }
+        .dashboard-content { margin-top: 0 !important; padding-top: 20px; } */
         
         /* Loading Overlay */
         #webapp-loading {
@@ -17,7 +17,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .hidden { display: none !important; }
-    </style> --}}
+    </style>
 @endpush
 
 @section('content')
