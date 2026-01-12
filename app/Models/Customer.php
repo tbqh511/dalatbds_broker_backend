@@ -32,7 +32,8 @@ class Customer extends Authenticatable implements JWTSubject
     ];
 
     protected $hidden = [
-        'api_token'
+        'api_token',
+        'remember_token',
     ];
 
     protected $appends = [
