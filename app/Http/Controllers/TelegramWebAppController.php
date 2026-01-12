@@ -71,7 +71,56 @@ class TelegramWebAppController extends Controller
 
     public function listings(Request $request)
     {
-        return view('frontend_dashboard_listings');
+        try {
+            $customer = Auth::guard('webapp')->user();
+
+            // Validate input params
+            $data = $request->validate([
+                'search' => ['nullable', 'string', 'max:255'],
+                'sort' => ['nullable', 'in:latest,oldest,views'],
+                'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            ]);
+
+            $perPage = $data['per_page'] ?? 10;
+
+            $query = Property::query()->with(['category'])
+                ->select('id', 'title', 'address', 'title_image', 'total_click', 'added_by', 'propery_type', 'price', 'slug', 'rentduration');
+
+            if ($customer) {
+                $query->where('added_by', $customer->id);
+            }
+
+            if (!empty($data['search'])) {
+                $query->where(function ($q) use ($data) {
+                    $q->where('title', 'like', '%' . $data['search'] . '%')
+                      ->orWhere('address', 'like', '%' . $data['search'] . '%');
+                });
+            }
+
+            if (!empty($data['sort'])) {
+                switch ($data['sort']) {
+                    case 'oldest':
+                        $query->orderBy('created_at', 'asc');
+                        break;
+                    case 'views':
+                        $query->orderBy('total_click', 'desc');
+                        break;
+                    default:
+                        $query->orderBy('created_at', 'desc');
+                }
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+
+            $properties = $query->paginate($perPage)->appends($request->query());
+
+            return view('frontend_dashboard_listings', compact('customer', 'properties'));
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return redirect()->back()->withErrors($ve->errors());
+        } catch (\Exception $e) {
+            report($e);
+            return redirect()->back()->with('error', 'Không thể tải danh sách tin đăng, vui lòng thử lại sau.');
+        }
     }
 
     public function agents(Request $request)
