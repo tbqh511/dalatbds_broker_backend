@@ -31,13 +31,13 @@ class TelegramWebAppController extends Controller
             
             // Count reviews/inquiries
             $stats['reviews_count'] = PropertysInquiry::whereIn('property_id', function($query) use ($customer) {
-                $query->select('id')->from('properties')->where('added_by', $customer->id);
+                $query->select('id')->from('propertys')->where('added_by', $customer->id);
             })->count();
 
             // Count favourites (properties interested by others or favourited by user)
             // Assuming we want to show how many people favourited this user's properties
             $stats['favourites_count'] = Favourite::whereIn('property_id', function($query) use ($customer) {
-                $query->select('id')->from('properties')->where('added_by', $customer->id);
+                $query->select('id')->from('propertys')->where('added_by', $customer->id);
             })->count();
         }
 
