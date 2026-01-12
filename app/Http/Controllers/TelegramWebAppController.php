@@ -30,7 +30,7 @@ class TelegramWebAppController extends Controller
             $stats['views_count'] = Property::where('added_by', $customer->id)->sum('total_click');
             
             // Count reviews/inquiries
-            $stats['reviews_count'] = PropertysInquiry::whereIn('property_id', function($query) use ($customer) {
+            $stats['reviews_count'] = PropertysInquiry::whereIn('propertys_id', function($query) use ($customer) {
                 $query->select('id')->from('propertys')->where('added_by', $customer->id);
             })->count();
 
