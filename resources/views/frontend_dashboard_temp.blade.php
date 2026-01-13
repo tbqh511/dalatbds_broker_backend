@@ -40,6 +40,7 @@
                 // DATA MODEL
                 formData: {
                     // Step 1
+                    transactionType: 'sale', // 'sale' hoặc 'rent'
                     type: 'dato', 
                     ward: '', 
                     street: '', 
@@ -53,19 +54,17 @@
                     description: '',
                     
                     // Step 3 (Technical)
-                    floors: 1,      // Số tầng
-                    bedrooms: 2,    // Phòng ngủ
-                    bathrooms: 2,   // Toilet
-                    floorArea: 0,   // Diện tích sàn (cho nhà)
-                    frontage: 0,    // Mặt tiền (cho đất)
-                    length: 0,      // Chiều dài (cho đất)
-                    roadWidth: 0,   // Lộ giới
-                    direction: 'DongNam', // Hướng
+                    floors: 1,      
+                    bedrooms: 2,    
+                    bathrooms: 2,   
+                    floorArea: 0,   
+                    frontage: 0,    
+                    length: 0,      
+                    roadWidth: 0,   
+                    direction: 'DongNam',
                     
-                    // Step 4 (Amenities)
-                    distMarket: '',
-                    distSchool: '',
-                    distHospital: ''
+                    // Step 4 (Amenities - Lưu dạng Object { 'market': '2km', ... })
+                    amenities: {} 
                 },
 
                 // DỮ LIỆU DANH SÁCH
@@ -108,6 +107,18 @@
                     {id: 'xxuantho', name: 'Xã Xuân Thọ', icon: 'fa-tree'},
                     {id: 'xtramhanh', name: 'Xã Trạm Hành', icon: 'fa-mountain-sun'},
                 ],
+                // Danh sách tiện ích động (Bước 4)
+                amenitiesList: [
+                    {id: 'market', name: 'Chợ', icon: 'fa-basket-shopping'},
+                    {id: 'school', name: 'Trường học', icon: 'fa-graduation-cap'},
+                    {id: 'hospital', name: 'Bệnh viện', icon: 'fa-hospital'},
+                    {id: 'park', name: 'Công viên', icon: 'fa-tree'},
+                    {id: 'supermarket', name: 'Siêu thị', icon: 'fa-cart-shopping'},
+                    {id: 'airport', name: 'Sân bay', icon: 'fa-plane'},
+                    {id: 'ho_xuan_huong', name: 'Hồ Xuân Hương', icon: 'fa-water'},
+                    {id: 'quang_truong', name: 'Quảng trường', icon: 'fa-users'},
+                ],
+
                 directions: ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'],
                 
                 locationText: 'Chưa xác định vị trí',
@@ -140,6 +151,28 @@
                     this.isWardExpanded = false;
                 },
                 
+                // LOGIC TIỆN ÍCH (BƯỚC 4) - Đã thêm lại các hàm helper bị thiếu
+                toggleAmenity(id) {
+                    if (id in this.formData.amenities) {
+                        let temp = {...this.formData.amenities};
+                        delete temp[id];
+                        this.formData.amenities = temp;
+                    } else {
+                        this.formData.amenities = { ...this.formData.amenities, [id]: '' };
+                    }
+                },
+                isAmenitySelected(id) {
+                    return id in this.formData.amenities;
+                },
+                getAmenityIcon(id) {
+                    const am = this.amenitiesList.find(a => a.id === id);
+                    return am ? am.icon : 'fa-circle';
+                },
+                getAmenityName(id) {
+                    const am = this.amenitiesList.find(a => a.id === id);
+                    return am ? am.name : id;
+                },
+
                 // LOGIC TIỀN TỆ
                 handlePriceInput(e) {
                     let value = e.target.value.replace(/[^0-9]/g, '');
@@ -236,8 +269,8 @@
         .input-field:focus { border-color: #3270FC; ring: 2px; ring-color: #3270FC; }
         
         /* Custom number input controls */
-        .btn-counter { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: #F3F4F6; color: #4B5563; font-weight: bold; transition: all 0.2s; }
-        .btn-counter:hover { background-color: #E5E7EB; }
+        .btn-counter { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: #F0F5FF; color: #3270FC; font-weight: bold; transition: all 0.2s; border: 1px solid transparent; }
+        .btn-counter:hover { background-color: #3270FC; color: white; }
         .btn-counter:active { transform: scale(0.95); }
     </style>
 </head>
@@ -263,6 +296,23 @@
             <!-- === BƯỚC 1: VỊ TRÍ & LOẠI BĐS === -->
             <div x-show="step === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 
+                <!-- Hình thức giao dịch (Bán / Cho Thuê) -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-800 mb-3">Hình thức giao dịch</label>
+                    <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
+                        <button type="button" @click="formData.transactionType = 'sale'"
+                            :class="formData.transactionType === 'sale' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-tag mr-2"></i> Cần Bán
+                        </button>
+                        <button type="button" @click="formData.transactionType = 'rent'"
+                            :class="formData.transactionType === 'rent' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-key mr-2"></i> Cho Thuê
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Loại BĐS - Collapsible Logic -->
                 <div class="mb-6">
                     <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
@@ -350,7 +400,17 @@
                     <!-- Chọn Đường -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tên đường</label>
-                        <select id="select-street" x-model="formData.street" placeholder="Tìm tên đường..." autocomplete="off">
+                        <select id="select-street" x-model="formData.street" 
+                                x-init="$nextTick(() => {
+                                    new TomSelect($el, {
+                                        create: false,
+                                        sortField: { field: 'text', direction: 'asc' },
+                                        plugins: ['dropdown_input'],
+                                        maxOptions: null,
+                                        onChange: (value) => { formData.street = value; }
+                                    });
+                                })"
+                                placeholder="Tìm tên đường..." autocomplete="off">
                             <option value="">Chọn đường...</option>
                             <template x-for="st in streets" :key="st.id">
                                 <option :value="st.id" x-text="st.name"></option>
@@ -383,23 +443,24 @@
                 </div>
             </div>
 
-            <!-- === BƯỚC 2: GIÁ & PHÁP LÝ & MÔ TẢ === -->
+            <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
             <div x-show="step === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Giá & Pháp lý</h2>
 
-                <!-- Thông tin chủ nhà -->
+                <!-- Thông tin chủ nhà (Căn giữa Radio) -->
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
                     <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center">
                         <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Chủ sở hữu
                     </h3>
-                    <div class="flex gap-4 mb-3">
-                        <label class="flex items-center space-x-2 cursor-pointer">
+                    <!-- Canh giữa Radio buttons -->
+                    <div class="flex justify-center gap-8 mb-4 border-b border-gray-100 pb-3">
+                        <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
                             <input type="radio" name="gender" value="ong" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
-                            <span class="text-sm font-medium">Ông</span>
+                            <span class="text-sm font-bold text-gray-700">Ông</span>
                         </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
+                        <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
                             <input type="radio" name="gender" value="ba" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
-                            <span class="text-sm font-medium">Bà</span>
+                            <span class="text-sm font-bold text-gray-700">Bà</span>
                         </label>
                     </div>
                     <div class="space-y-3">
@@ -409,7 +470,7 @@
                     </div>
                 </div>
 
-                <!-- Giá bán -->
+                <!-- Giá bán (Căn phải + Màu Primary) -->
                 <div class="mb-5">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Giá mong muốn (VNĐ)</label>
                     <div class="relative">
@@ -418,60 +479,59 @@
                             +000
                         </button>
                     </div>
-                    <!-- TEXT GREEN -->
-                    <p class="text-sm text-success font-bold mt-1.5 flex items-center">
+                    <p class="text-sm text-success font-bold mt-1.5 flex justify-end items-center">
                         <i class="fa-solid fa-tag mr-1.5 text-xs"></i> <span x-text="priceInWords"></span>
                     </p>
                 </div>
 
-                <!-- Hoa hồng -->
+                <!-- Hoa hồng (Màu Primary) -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Mức hoa hồng (%)</label>
                     <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                         <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
                             <button type="button" 
                                 @click="formData.commissionRate = rate"
-                                :class="formData.commissionRate === rate ? 'bg-green-50 text-success border-success ring-1 ring-success' : 'bg-white border-gray-200 text-gray-600'"
+                                :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
                                 class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[60px]">
                                 <span x-text="rate + '%'"></span>
                             </button>
                         </template>
                     </div>
-                    <!-- TEXT GREEN -->
                     <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
                         <span>Nhận về:</span>
                         <span class="font-bold text-success text-sm" x-text="calculateCommission()"></span>
                     </div>
                 </div>
 
-                <!-- Diện tích -->
+                <!-- Diện tích (Căn phải + Màu Primary) -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Diện tích (m²)</label>
                     <div class="relative">
                         <input type="number" x-model="formData.area" placeholder="0" class="input-field pr-10">
                         <span class="absolute right-3 top-3 text-gray-400 font-bold text-sm">m²</span>
                     </div>
-                    <!-- TEXT GREEN -->
-                    <p class="text-xs text-gray-500 mt-2 flex justify-between px-1" x-show="formData.area > 0 && price > 0">
-                        <span>Đơn giá:</span>
+                    <p class="text-xs text-gray-500 mt-2 flex justify-end px-1" x-show="formData.area > 0 && price > 0">
+                        <span class="mr-2">Đơn giá:</span>
                         <span class="font-bold text-success"><span x-text="calculatePricePerM2()"></span> / m²</span>
                     </p>
                 </div>
 
-                <!-- Giấy tờ -->
+                <!-- Giấy tờ & Mô tả -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Loại giấy tờ</label>
-                    <select x-model="formData.legal" class="input-field bg-white appearance-none">
-                        <option value="">Chọn loại giấy tờ...</option>
-                        <option>Sổ riêng xây dựng</option>
-                        <option>Sổ riêng nông nghiệp</option>
-                        <option>Sổ phân quyền xây dựng</option>
-                        <option>Sổ phân quyền nông nghiệp</option>
-                        <option>Giấy tay / Vi bằng</option>
-                    </select>
+                    <div class="relative">
+                        <select x-model="formData.legal" class="input-field bg-white appearance-none">
+                            <option value="">Chọn loại giấy tờ...</option>
+                            <option>Sổ riêng xây dựng</option>
+                            <option>Sổ riêng nông nghiệp</option>
+                            <option>Sổ phân quyền xây dựng</option>
+                            <option>Sổ phân quyền nông nghiệp</option>
+                            <option>Giấy tay / Vi bằng</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                    </div>
                 </div>
 
-                <!-- Mô tả -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Mô tả chi tiết</label>
                     <textarea x-model="formData.description" class="input-field h-32 resize-none" placeholder="Mô tả về đường đi, view, nội thất, tiện ích..."></textarea>
@@ -479,7 +539,7 @@
 
                 <!-- Upload Ảnh -->
                 <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-gray-800">Hình ảnh & Giấy tờ</h3>
+                    <h3 class="text-sm font-bold text-gray-800 border-l-4 border-primary pl-2">Hình ảnh & Giấy tờ</h3>
                     
                     <!-- Ảnh chính -->
                     <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group">
@@ -492,17 +552,17 @@
                     
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Ảnh giấy tờ -->
-                        <div class="border-2 border-dashed border-yellow-300 rounded-xl p-4 text-center hover:bg-yellow-50 transition-colors cursor-pointer bg-white group">
-                            <div class="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group">
+                            <div class="w-8 h-8 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
                                 <i class="fa-solid fa-file-shield"></i>
                             </div>
                             <p class="text-xs font-bold text-gray-700">Sổ đỏ/Pháp lý</p>
-                            <p class="text-[10px] text-yellow-600 mt-1"><i class="fa-solid fa-lock mr-1"></i>Bảo mật</p>
+                            <p class="text-[10px] text-gray-400 mt-1"><i class="fa-solid fa-lock mr-1"></i>Bảo mật</p>
                         </div>
 
                         <!-- Ảnh khác -->
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group">
-                            <div class="w-8 h-8 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group">
+                            <div class="w-8 h-8 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
                                 <i class="fa-regular fa-images"></i>
                             </div>
                             <p class="text-xs font-bold text-gray-700">Ảnh khác</p>
@@ -512,58 +572,76 @@
                 </div>
             </div>
 
-            <!-- === BƯỚC 3: CHI TIẾT KỸ THUẬT (Dynamic) === -->
+            <!-- === BƯỚC 3: CHI TIẾT KỸ THUẬT (TRANG TRÍ LẠI) === -->
             <div x-show="step === 3" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                <h2 class="text-xl font-bold text-gray-800 mb-1">Chi tiết kỹ thuật</h2>
-                <div class="bg-blue-50 text-primary text-xs px-3 py-2 rounded-lg mb-6 border border-blue-100 inline-block">
-                    Đang nhập cho: <strong x-text="getPropertyName()"></strong>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Chi tiết kỹ thuật</h2>
+                
+                <div class="bg-blue-50 text-primary px-4 py-3 rounded-xl mb-6 border border-blue-100 flex items-center shadow-sm">
+                    <i :class="['fa-solid', getSelectedType().icon, 'mr-3 text-lg']"></i>
+                    <div>
+                        <p class="text-xs text-blue-400 uppercase font-bold tracking-wide">Loại BĐS</p>
+                        <p class="font-bold text-gray-800 text-lg" x-text="getPropertyName()"></p>
+                    </div>
                 </div>
                 
-                <!-- FORM CHO NHÀ / BIỆT THỰ / CHUNG CƯ -->
+                <!-- FORM CHO NHÀ -->
                 <template x-if="isHouseType()">
-                    <div class="space-y-5">
+                    <div class="space-y-6">
                         <!-- Diện tích sàn -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Diện tích sàn (m²)</label>
-                            <input type="number" x-model="formData.floorArea" class="input-field" placeholder="0">
+                        <div class="relative group">
+                            <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Diện tích sàn</label>
+                            <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary group-focus-within:ring-1 group-focus-within:ring-primary transition-all">
+                                <div class="w-10 h-10 flex items-center justify-center text-gray-400 bg-gray-50 border-r border-gray-100">
+                                    <i class="fa-solid fa-ruler-combined"></i>
+                                </div>
+                                <input type="number" x-model="formData.floorArea" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
+                                <span class="pr-4 text-sm font-bold text-gray-400">m²</span>
+                            </div>
                         </div>
 
                         <!-- Số tầng & Hướng -->
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Số tầng</label>
-                                <div class="flex items-center space-x-2">
+                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Số tầng</label>
+                                <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
                                     <button type="button" @click="if(formData.floors > 1) formData.floors--" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
-                                    <input type="number" x-model="formData.floors" class="w-full text-center font-bold bg-transparent outline-none">
+                                    <span class="font-bold text-lg text-gray-800" x-text="formData.floors"></span>
                                     <button type="button" @click="formData.floors++" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Hướng</label>
-                                <select x-model="formData.direction" class="input-field bg-white py-2">
-                                    <template x-for="d in directions">
-                                        <option :value="d" x-text="d"></option>
-                                    </template>
-                                </select>
+                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Hướng nhà</label>
+                                <div class="relative">
+                                    <select x-model="formData.direction" class="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-bold text-gray-700 outline-none focus:border-primary appearance-none h-[44px]">
+                                        <template x-for="d in directions">
+                                            <option :value="d" x-text="d"></option>
+                                        </template>
+                                    </select>
+                                    <i class="fa-solid fa-compass absolute right-3 top-3.5 text-gray-400 pointer-events-none"></i>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Phòng ngủ & Toilet -->
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Phòng ngủ</label>
-                                <div class="flex items-center space-x-2">
-                                    <button type="button" @click="if(formData.bedrooms > 0) formData.bedrooms--" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
-                                    <input type="number" x-model="formData.bedrooms" class="w-full text-center font-bold bg-transparent outline-none">
-                                    <button type="button" @click="formData.bedrooms++" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
+                            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                <div class="flex items-center mb-2 text-gray-500">
+                                    <i class="fa-solid fa-bed mr-2"></i> <span class="text-xs font-bold uppercase">Phòng ngủ</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <button type="button" @click="if(formData.bedrooms > 0) formData.bedrooms--" class="text-gray-400 hover:text-primary text-xl"><i class="fa-solid fa-circle-minus"></i></button>
+                                    <span class="text-2xl font-bold text-gray-800" x-text="formData.bedrooms"></span>
+                                    <button type="button" @click="formData.bedrooms++" class="text-primary hover:text-blue-600 text-xl"><i class="fa-solid fa-circle-plus"></i></button>
                                 </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Toilet</label>
-                                <div class="flex items-center space-x-2">
-                                    <button type="button" @click="if(formData.bathrooms > 0) formData.bathrooms--" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
-                                    <input type="number" x-model="formData.bathrooms" class="w-full text-center font-bold bg-transparent outline-none">
-                                    <button type="button" @click="formData.bathrooms++" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
+                            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                <div class="flex items-center mb-2 text-gray-500">
+                                    <i class="fa-solid fa-bath mr-2"></i> <span class="text-xs font-bold uppercase">Toilet</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <button type="button" @click="if(formData.bathrooms > 0) formData.bathrooms--" class="text-gray-400 hover:text-primary text-xl"><i class="fa-solid fa-circle-minus"></i></button>
+                                    <span class="text-2xl font-bold text-gray-800" x-text="formData.bathrooms"></span>
+                                    <button type="button" @click="formData.bathrooms++" class="text-primary hover:text-blue-600 text-xl"><i class="fa-solid fa-circle-plus"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -572,85 +650,114 @@
 
                 <!-- FORM CHO ĐẤT -->
                 <template x-if="!isHouseType()">
-                    <div class="space-y-5">
+                    <div class="space-y-6">
                         <!-- Kích thước đất -->
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Mặt tiền (m)</label>
-                                <input type="number" x-model="formData.frontage" class="input-field" placeholder="0">
+                            <div class="relative group">
+                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Mặt tiền</label>
+                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary transition-all">
+                                    <input type="number" x-model="formData.frontage" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
+                                    <span class="pr-3 text-sm font-bold text-gray-400">m</span>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Chiều dài (m)</label>
-                                <input type="number" x-model="formData.length" class="input-field" placeholder="0">
+                            <div class="relative group">
+                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Chiều dài</label>
+                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary transition-all">
+                                    <input type="number" x-model="formData.length" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
+                                    <span class="pr-3 text-sm font-bold text-gray-400">m</span>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Lộ giới & Hướng -->
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Lộ giới (m)</label>
-                                <input type="number" x-model="formData.roadWidth" class="input-field" placeholder="Xe hơi?">
+                            <div class="relative group">
+                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Lộ giới</label>
+                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary transition-all">
+                                    <div class="pl-3 text-gray-400"><i class="fa-solid fa-road"></i></div>
+                                    <input type="number" x-model="formData.roadWidth" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
+                                    <span class="pr-3 text-sm font-bold text-gray-400">m</span>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Hướng</label>
-                                <select x-model="formData.direction" class="input-field bg-white py-2">
-                                    <template x-for="d in directions">
-                                        <option :value="d" x-text="d"></option>
-                                    </template>
-                                </select>
+                            <div class="relative group">
+                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Hướng</label>
+                                <div class="relative">
+                                    <select x-model="formData.direction" class="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-bold text-gray-700 outline-none focus:border-primary appearance-none h-[42px]">
+                                        <template x-for="d in directions">
+                                            <option :value="d" x-text="d"></option>
+                                        </template>
+                                    </select>
+                                    <i class="fa-solid fa-compass absolute right-3 top-3.5 text-gray-400 pointer-events-none"></i>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-                             <label class="flex items-center space-x-2 text-sm text-yellow-800">
-                                <input type="checkbox" class="text-yellow-600 rounded focus:ring-yellow-500">
-                                <span>Đất nở hậu?</span>
-                            </label>
+                        <div class="p-3 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                             <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mr-3">
+                                    <i class="fa-solid fa-maximize"></i>
+                                </div>
+                                <span class="font-bold text-gray-700">Đất nở hậu?</span>
+                             </div>
+                             <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                              </label>
                         </div>
                     </div>
                 </template>
             </div>
 
-            <!-- === BƯỚC 4: TIỆN ÍCH XUNG QUANH === -->
+            <!-- === BƯỚC 4: TIỆN ÍCH XUNG QUANH (LOGIC MỚI - GRID BUTTON) === -->
             <div x-show="step === 4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 <h2 class="text-xl font-bold text-gray-800 mb-1">Tiện ích xung quanh</h2>
-                <p class="text-sm text-gray-500 mb-6">Khoảng cách đến các địa điểm quan trọng.</p>
+                <p class="text-sm text-gray-500 mb-6">Chọn các địa điểm gần BĐS của bạn.</p>
                 
-                <div class="space-y-4">
-                    <!-- Cách Chợ -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Cách Chợ Đà Lạt / Chợ gần nhất</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-3 text-lg">🏪</span>
-                            <input type="number" x-model="formData.distMarket" class="input-field pl-10" placeholder="Nhập khoảng cách (Km)">
-                        </div>
-                    </div>
-
-                    <!-- Cách Trường Học -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Cách Trường Học</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-3 text-lg">🏫</span>
-                            <input type="number" x-model="formData.distSchool" class="input-field pl-10" placeholder="Nhập khoảng cách (Km)">
-                        </div>
-                    </div>
-
-                    <!-- Cách Bệnh Viện -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Cách Bệnh Viện / Trạm Y Tế</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-3 text-lg">🏥</span>
-                            <input type="number" x-model="formData.distHospital" class="input-field pl-10" placeholder="Nhập khoảng cách (Km)">
-                        </div>
-                    </div>
+                <!-- GRID TIỆN ÍCH (4 Cột) -->
+                <div class="grid grid-cols-4 gap-2 mb-6">
+                    <template x-for="am in amenitiesList" :key="am.id">
+                        <button type="button" 
+                            @click="toggleAmenity(am.id)"
+                            :class="isAmenitySelected(am.id) 
+                                ? 'bg-primary text-white border-primary shadow-md transform scale-105' 
+                                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'"
+                            class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
+                            <i :class="['fa-solid', am.icon, 'text-lg mb-1']"></i>
+                            <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
+                        </button>
+                    </template>
                 </div>
 
-                <div class="mt-8 p-6 bg-green-50 rounded-2xl border border-green-100 text-center">
-                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fa-solid fa-check text-xl"></i>
-                    </div>
-                    <p class="text-sm text-green-800 font-bold">Thông tin đã đầy đủ!</p>
-                    <p class="text-xs text-green-600 mt-1">Vui lòng kiểm tra lại trước khi gửi.</p>
+                <!-- LIST INPUT KHOẢNG CÁCH (Chỉ hiện cái đã chọn) -->
+                <div class="space-y-3" x-show="Object.keys(formData.amenities).length > 0" x-transition>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Nhập khoảng cách (km)</h3>
+                    
+                    <template x-for="(dist, id) in formData.amenities" :key="id">
+                        <div class="flex items-center bg-white border border-gray-200 rounded-xl p-2 pr-4 shadow-sm animate-fade-in-up">
+                            <!-- Icon & Name -->
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center mr-3 flex-shrink-0">
+                                <i :class="['fa-solid', getAmenityIcon(id)]"></i>
+                            </div>
+                            <div class="flex-1 mr-3">
+                                <p class="text-xs font-bold text-gray-500 uppercase" x-text="getAmenityName(id)"></p>
+                                <p class="text-sm font-bold text-gray-800">Cách bao xa?</p>
+                            </div>
+                            <!-- Input -->
+                            <div class="relative w-24">
+                                <input type="number" x-model="formData.amenities[id]" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-2 pr-6 text-right font-bold text-gray-800 text-sm focus:border-primary outline-none" placeholder="0">
+                                <span class="absolute right-2 top-1.5 text-xs text-gray-400 font-bold">km</span>
+                            </div>
+                            <!-- Remove Btn -->
+                            <button type="button" @click="toggleAmenity(id)" class="ml-3 text-gray-300 hover:text-red-500">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
+                <div x-show="Object.keys(formData.amenities).length === 0" class="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
+                    <i class="fa-solid fa-map-location-dot text-4xl mb-2 text-gray-200"></i>
+                    <p class="text-xs">Chưa chọn tiện ích nào</p>
                 </div>
             </div>
 
@@ -661,7 +768,7 @@
             <div class="w-full max-w-md flex justify-between gap-3">
                 <!-- Nút Quay lại -->
                 <button type="button" x-show="step > 1" @click="prevStep" 
-                    class="flex-1 bg-gray-100 text-gray-600 px-4 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
+                    class="flex-1 bg-gray-100 text-gray-600 px-4. py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
                     Quay lại
                 </button>
                 
@@ -674,7 +781,7 @@
 
                 <!-- Nút Hoàn tất -->
                 <button type="button" x-show="step === 4" @click="submitForm" 
-                    class="flex-[2] bg-green-500 text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
+                    class="flex-[2] bg-success text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
                     Đăng Tin <i class="fa-solid fa-paper-plane ml-2"></i>
                 </button>
             </div>
