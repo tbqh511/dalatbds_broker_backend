@@ -334,34 +334,28 @@
 
             <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
             <div x-show="step === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                <h2 class="text-xl font-bold text-gray-700 mb-4 text-left">Giá & Pháp lý</h2>
+                <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2>
 
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
                     <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center">
                         <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Chủ sở hữu
                     </h3>
-                    <!-- Gender Buttons -->
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <button type="button" @click="formData.contact.gender = 'ong'"
-                            :class="formData.contact.gender === 'ong' 
-                                ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105' 
-                                : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
-                            class="flex items-center justify-center p-3 border rounded-xl transition-all duration-200">
-                            <span class="text-sm font-bold">Ông</span>
-                        </button>
-                        <button type="button" @click="formData.contact.gender = 'ba'"
-                            :class="formData.contact.gender === 'ba' 
-                                ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105' 
-                                : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
-                            class="flex items-center justify-center p-3 border rounded-xl transition-all duration-200">
-                            <span class="text-sm font-bold">Bà</span>
-                        </button>
+                    <!-- Canh giữa Radio buttons -->
+                    <div class="flex justify-center gap-8 mb-4 border-b border-gray-100 pb-3">
+                        <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+                            <input type="radio" name="gender" value="ong" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
+                            <span class="text-sm font-bold text-gray-700">Ông</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+                            <input type="radio" name="gender" value="ba" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
+                            <span class="text-sm font-bold text-gray-700">Bà</span>
+                        </label>
                     </div>
                     <div class="space-y-3">
-                        <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field">
-                        <input type="tel" x-model="formData.contact.phone" placeholder="Số điện thoại" class="input-field">
-                        <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
+                        <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field bg-gray-50">
+                        <input type="tel" x-model="formData.contact.phone" placeholder="Số điện thoại" class="input-field bg-gray-50">
+                        <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field bg-gray-50 h-20 resize-none"></textarea>
                     </div>
                 </div>
 
