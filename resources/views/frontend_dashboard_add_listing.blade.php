@@ -212,7 +212,7 @@
                     </label>
 
                     <!-- STATE 1: DANH SÁCH MỞ RỘNG -->
-                    <div x-show="isTypeExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-3 gap-3">
+                    <div x-show="isTypeExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-4 gap-3">
                         <template x-for="item in propertyTypes" :key="item.id">
                             <button type="button" 
                                 @click="selectPropertyType(item.id)"
@@ -255,7 +255,7 @@
                         </label>
 
                         <!-- STATE 1: DANH SÁCH MỞ RỘNG (Grid 3 cột) -->
-                        <div x-show="isWardExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-3 gap-2">
+                        <div x-show="isWardExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-4 gap-2">
                             <template x-for="ward in wards" :key="ward.id">
                                 <button type="button" 
                                     @click="selectWard(ward.id)"
@@ -454,7 +454,7 @@
                             <div class="w-8 h-8 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
                                 <i class="fa-regular fa-images"></i>
                             </div>
-                            <p class="text-xs font-bold text-gray-700 text_center">Ảnh khác</p>
+                            <p class="text-xs font-bold text-gray-700 text-center">Ảnh khác</p>
                             <p class="text-[10px] text-gray-400 text-center">Nội thất, đường đi...</p>
                         </div>
                     </div>
