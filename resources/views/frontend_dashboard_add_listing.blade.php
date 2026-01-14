@@ -187,7 +187,7 @@
                 
                 <!-- Hình thức giao dịch (Bán / Cho Thuê) -->
                 <div class="mb-6">
-                    <label class="block text-sm font-bold text-gray-800 mb-3">Hình thức giao dịch</label>
+                    {{-- <label class="block text-sm font-bold text-gray-800 mb-3">Hình thức giao dịch</label> --}}
                     <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
                         <button type="button" @click="formData.transactionType = 'sale'"
                             :class="formData.transactionType === 'sale' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
@@ -288,7 +288,7 @@
 
                     <!-- Chọn Đường -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tên đường</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-right">Tên đường</label>
                         <select id="select-street" x-model="formData.street" 
                                 x-init="$nextTick(() => {
                                     new TomSelect($el, {
@@ -309,7 +309,7 @@
 
                     <!-- Số nhà -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Số nhà</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-right">Số nhà</label>
                         <input type="text" x-model="formData.houseNumber" @input="updateMapLocation" placeholder="VD: 123/4" class="input-field">
                     </div>
 
