@@ -337,7 +337,7 @@
                 <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2>
 
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
-                <div class="bg-gray-100 p-4 rounded-xl border border-gray-800 shadow-sm mb-6">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-800 shadow-sm mb-6">
                     <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center">
                         <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Chủ sở hữu
                     </h3>
@@ -353,9 +353,9 @@
                         </label>
                     </div>
                     <div class="space-y-3">
-                        <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field bg-gray-50">
-                        <input type="tel" x-model="formData.contact.phone" placeholder="Số điện thoại" class="input-field bg-gray-50">
-                        <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field bg-gray-50 h-20 resize-none"></textarea>
+                        <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field ">
+                        <input type="tel" x-model="formData.contact.phone" placeholder="Số điện thoại" class="input-field ">
+                        <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
                     </div>
                 </div>
 
