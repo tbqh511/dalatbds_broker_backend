@@ -288,7 +288,7 @@
 
                     <!-- Chọn Đường -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-right">Tên đường</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-left">Tên đường</label>
                         <select id="select-street" x-model="formData.street" 
                                 x-init="$nextTick(() => {
                                     new TomSelect($el, {
@@ -309,7 +309,7 @@
 
                     <!-- Số nhà -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-right">Số nhà</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-left">Số nhà</label>
                         <input type="text" x-model="formData.houseNumber" @input="updateMapLocation" placeholder="VD: 123/4" class="input-field">
                     </div>
 
@@ -334,7 +334,7 @@
 
             <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
             <div x-show="step === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Giá & Pháp lý</h2>
+                <h2 class="text-xl font-bold text-gray-700 mb-4 text-left">Giá & Pháp lý</h2>
 
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
@@ -361,7 +361,7 @@
 
                 <!-- Giá bán (Căn phải + Màu Primary) -->
                 <div class="mb-5">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Giá mong muốn (VNĐ)</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Giá mong muốn (VNĐ)</label>
                     <div class="relative">
                         <input type="text" x-model="formattedPrice" @input="handlePriceInput" placeholder="0" class="input-field pr-16 font-bold text-gray-800 text-xl tracking-wide">
                         <button type="button" @click="addZeros" class="absolute right-2 top-2 bg-gray-100 px-2 py-1.5 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-200 border border-gray-200 shadow-sm active:scale-95 transition-transform">
@@ -375,7 +375,7 @@
 
                 <!-- Hoa hồng (Màu Primary) -->
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Mức hoa hồng (%)</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
                     <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                         <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
                             <button type="button" 
@@ -394,7 +394,7 @@
 
                 <!-- Diện tích (Căn phải + Màu Primary) -->
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Diện tích (m²)</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Diện tích (m²)</label>
                     <div class="relative">
                         <input type="number" x-model="formData.area" placeholder="0" class="input-field pr-10">
                         <span class="absolute right-3 top-3 text-gray-400 font-bold text-sm">m²</span>
@@ -407,7 +407,7 @@
 
                 <!-- Giấy tờ & Mô tả -->
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Loại giấy tờ</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Loại giấy tờ</label>
                     <div class="relative">
                         <select x-model="formData.legal" class="input-field bg-white appearance-none">
                             <option value="">Chọn loại giấy tờ...</option>
@@ -428,15 +428,15 @@
 
                 <!-- Upload Ảnh -->
                 <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-gray-800 border-l-4 border-primary pl-2">Hình ảnh & Giấy tờ</h3>
+                    <h3 class="text-sm font-bold text-gray-800 border-l-4 border-primary pl-2 text-left">Hình ảnh & Giấy tờ</h3>
                     
                     <!-- Ảnh chính -->
                     <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group">
                         <div class="w-10 h-10 bg-blue-100 text-primary rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                             <i class="fa-solid fa-camera"></i>
                         </div>
-                        <p class="text-sm font-bold text-gray-700">Ảnh đại diện</p>
-                        <p class="text-xs text-gray-400">Bắt buộc 1 tấm đẹp nhất</p>
+                        <p class="text-sm font-bold text-gray-700 text-center">Ảnh đại diện</p>
+                        <p class="text-xs text-gray-400 text-center">Bắt buộc 1 tấm đẹp nhất</p>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -445,8 +445,8 @@
                             <div class="w-8 h-8 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
                                 <i class="fa-solid fa-file-shield"></i>
                             </div>
-                            <p class="text-xs font-bold text-gray-700">Sổ đỏ/Pháp lý</p>
-                            <p class="text-[10px] text-gray-400 mt-1"><i class="fa-solid fa-lock mr-1"></i>Bảo mật</p>
+                            <p class="text-xs font-bold text-gray-700 text-center">Sổ đỏ/Pháp lý</p>
+                            <p class="text-[10px] text-gray-400 text-center"><i class="fa-solid fa-lock mr-1"></i>Bảo mật</p>
                         </div>
 
                         <!-- Ảnh khác -->
@@ -454,8 +454,8 @@
                             <div class="w-8 h-8 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
                                 <i class="fa-regular fa-images"></i>
                             </div>
-                            <p class="text-xs font-bold text-gray-700">Ảnh khác</p>
-                            <p class="text-[10px] text-gray-400 mt-1">Nội thất, đường đi...</p>
+                            <p class="text-xs font-bold text-gray-700 text_center">Ảnh khác</p>
+                            <p class="text-[10px] text-gray-400 text-center">Nội thất, đường đi...</p>
                         </div>
                     </div>
                 </div>
