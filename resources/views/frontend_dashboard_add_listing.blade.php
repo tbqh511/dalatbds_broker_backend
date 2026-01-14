@@ -108,20 +108,11 @@
                     {id: 'datgiaytay', name: 'Đất GT', icon: 'fa-note-sticky', isHouse: false},
                 ],
                 wards: [
-                    {id: 'p1', name: 'Phường 1', icon: 'fa-map-pin'},
-                    {id: 'p2', name: 'Phường 2', icon: 'fa-map-pin'},
-                    {id: 'p3', name: 'Phường 3', icon: 'fa-map-pin'},
-                    {id: 'p4', name: 'Phường 4', icon: 'fa-map-pin'},
-                    {id: 'p5', name: 'Phường 5', icon: 'fa-map-pin'},
-                    {id: 'p6', name: 'Phường 6', icon: 'fa-map-pin'},
-                    {id: 'p7', name: 'Phường 7', icon: 'fa-map-pin'},
-                    {id: 'p8', name: 'Phường 8', icon: 'fa-map-pin'},
-                    {id: 'p9', name: 'Phường 9', icon: 'fa-map-pin'},
-                    {id: 'p10', name: 'Phường 10', icon: 'fa-map-pin'},
-                    {id: 'p11', name: 'Phường 11', icon: 'fa-map-pin'},
-                    {id: 'p12', name: 'Phường 12', icon: 'fa-map-pin'},
-                    {id: 'xxuantho', name: 'Xã Xuân Thọ', icon: 'fa-tree'},
-                    {id: 'xtramhanh', name: 'Xã Trạm Hành', icon: 'fa-mountain-sun'},
+                    {id: 'p1', name: 'Phường Xuân Hương', icon: 'fa-map-pin'},
+                    {id: 'p2', name: 'Phường Cam Ly', icon: 'fa-map-pin'},
+                    {id: 'p3', name: 'Phường Phường Langbian', icon: 'fa-map-pin'},
+                    {id: 'p4', name: 'Phường Xuân Trường', icon: 'fa-map-pin'},
+                    {id: 'p5', name: 'Phường Tà Nung', icon: 'fa-map-pin'},
                 ],
                 amenitiesList: [
                     {id: 'market', name: 'Chợ', icon: 'fa-basket-shopping'},
@@ -334,7 +325,7 @@
 
             <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
             <div x-show="step === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2>
+                {{-- <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2> --}}
 
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
                 <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group">
@@ -463,7 +454,7 @@
 
             <!-- === BƯỚC 3: CHI TIẾT KỸ THUẬT (TRANG TRÍ LẠI) === -->
             <div x-show="step === 3" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Chi tiết kỹ thuật</h2>
+                {{-- <h2 class="text-xl font-bold text-gray-800 mb-4">Chi tiết kỹ thuật</h2> --}}
                 
                 <div class="bg-blue-50 text-primary px-4 py-3 rounded-xl mb-6 border border-blue-100 flex items-center shadow-sm">
                     <i :class="['fa-solid', getSelectedType().icon, 'mr-3 text-lg']"></i>
