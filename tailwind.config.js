@@ -5,7 +5,13 @@ module.exports = {
     "./resources/**/*.vue",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#3270FC',
+        bglo: '#F5F7FB',
+        success: '#16A34A'
+      }
+    },
   },
   plugins: [],
 };
