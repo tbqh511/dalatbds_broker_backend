@@ -59,6 +59,12 @@ class TelegramWebAppController extends Controller
         //return view('frontend_dashboard_temp', compact('customer', 'stats'));
     }
 
+    
+
+    public function tempui(Request $request)
+    {
+        return view('frontend_dashboard_temp');
+    }
     public function profile(Request $request)
     {
         return view('frontend_dashboard_myprofile');

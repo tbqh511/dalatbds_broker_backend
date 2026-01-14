@@ -63,7 +63,7 @@ Route::post('/api/webapp/login', [ApiController::class, 'loginViaMiniApp']);
 // });
 
 Route::get('/', [FrontEndHomeController::class, 'index'])->name('index');
-
+Route::get('/webapp/temp', [TelegramWebAppController::class, 'tempui'])->name('webapp');
 Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp', [TelegramWebAppController::class, 'index'])->name('webapp');
     Route::get('/webapp/profile', [TelegramWebAppController::class, 'profile'])->name('webapp.profile');
