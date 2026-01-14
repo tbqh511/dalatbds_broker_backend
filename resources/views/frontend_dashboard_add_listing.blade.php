@@ -337,7 +337,7 @@
                 <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2>
 
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
-                <div class="border-2 border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group">
+                <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group">
                     <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center">
                         <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Chủ sở hữu
                     </h3>
