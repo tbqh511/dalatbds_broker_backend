@@ -9,6 +9,11 @@ use App\Models\PropertysInquiry;
 use App\Models\Favourite;
 use Carbon\Carbon;
 
+use App\Models\Category;
+use App\Models\LocationsWard;
+use App\Models\LocationsStreet;
+use Illuminate\Support\Str;
+
 class TelegramWebAppController extends Controller
 {
     public function index(Request $request)
@@ -146,6 +151,57 @@ class TelegramWebAppController extends Controller
 
     public function addListing(Request $request)
     {
-        return view('frontend_dashboard_add_listing');
+        // 1. Property Types (Categories)
+        $dbCategories = Category::where('status', '1')->orderBy('order', 'asc')->get();
+        $propertyTypes = $dbCategories->map(function ($cat) {
+            $isHouse = !Str::contains(Str::lower($cat->category), ['đất', 'land']);
+            
+            // Icon mapping (basic heuristic)
+            $icon = 'fa-house';
+            $lowerName = Str::lower($cat->category);
+            if (Str::contains($lowerName, 'biệt thự')) $icon = 'fa-hotel';
+            elseif (Str::contains($lowerName, 'khách sạn')) $icon = 'fa-bell-concierge';
+            elseif (Str::contains($lowerName, 'chung cư')) $icon = 'fa-building';
+            elseif (Str::contains($lowerName, 'đất')) $icon = 'fa-map-location-dot';
+            
+            return [
+                'id' => $cat->id, // Use DB ID
+                'name' => $cat->category,
+                'icon' => $icon,
+                'isHouse' => $isHouse
+            ];
+        });
+
+        // 2. Wards
+        $districtCode = config('location.district_code');
+        $wards = LocationsWard::select('code', 'full_name')
+            ->where('district_code', $districtCode)
+            ->orderByRaw("CASE
+                            WHEN full_name LIKE 'phường%' THEN 1
+                            WHEN full_name LIKE 'Xã%' THEN 2
+                            ELSE 3 END,
+                          CAST(SUBSTRING_INDEX(full_name, ' ', -1) AS UNSIGNED),
+                          full_name")
+            ->get()
+            ->map(function($w) {
+                return [
+                    'id' => $w->code,
+                    'name' => $w->full_name,
+                    'icon' => 'fa-map-pin'
+                ];
+            });
+
+        // 3. Streets
+        $streets = LocationsStreet::select('code', 'street_name')
+            ->where('district_code', $districtCode)
+            ->get()
+            ->map(function($s) {
+                return [
+                    'id' => $s->code,
+                    'name' => $s->street_name
+                ];
+            });
+
+        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets'));
     }
 }

@@ -65,7 +65,7 @@
                 // DATA MODEL
                 formData: {
                     transactionType: 'sale',
-                    type: 'dato',
+                    type: @json($propertyTypes->isNotEmpty() ? $propertyTypes->first()['id'] : ''),
                     ward: '',
                     street: '',
                     houseNumber: '',
@@ -85,35 +85,9 @@
                     amenities: {}
                 },
 
-                streets: [
-                    {id: '1', name: 'Đường Phù Đổng Thiên Vương'},
-                    {id: '2', name: 'Đường Bùi Thị Xuân'},
-                    {id: '3', name: 'Đường Phan Đình Phùng'},
-                    {id: '4', name: 'Đường Mai Anh Đào'},
-                    {id: '5', name: 'Đường Trần Phú'},
-                    {id: '6', name: 'Đường Hai Bà Trưng'},
-                    {id: '7', name: 'Đường Ba Tháng Tư'},
-                    {id: '8', name: 'Đường Yersin'}
-                ],
-                propertyTypes: [
-                    {id: 'nha', name: 'Nhà ở', icon: 'fa-house', isHouse: true},
-                    {id: 'bietthu', name: 'Biệt thự', icon: 'fa-hotel', isHouse: true},
-                    {id: 'khachsan', name: 'Khách sạn', icon: 'fa-bell-concierge', isHouse: true},
-                    {id: 'chungcu', name: 'Chung cư', icon: 'fa-building', isHouse: true},
-                    {id: 'dato', name: 'Đất ở', icon: 'fa-map-location-dot', isHouse: false},
-                    {id: 'datnn', name: 'Đất NN', icon: 'fa-seedling', isHouse: false}, 
-                    {id: 'nhaphanq', name: 'Nhà PQ', icon: 'fa-file-signature', isHouse: true}, 
-                    {id: 'datphanq', name: 'Đất PQ', icon: 'fa-file-contract', isHouse: false},
-                    {id: 'nhagiaytay', name: 'Nhà GT', icon: 'fa-file-pen', isHouse: true}, 
-                    {id: 'datgiaytay', name: 'Đất GT', icon: 'fa-note-sticky', isHouse: false},
-                ],
-                wards: [
-                    {id: 'p1', name: 'Phường Xuân Hương', icon: 'fa-map-pin'},
-                    {id: 'p2', name: 'Phường Cam Ly', icon: 'fa-map-pin'},
-                    {id: 'p3', name: 'Phường Phường Langbian', icon: 'fa-map-pin'},
-                    {id: 'p4', name: 'Phường Xuân Trường', icon: 'fa-map-pin'},
-                    {id: 'p5', name: 'Phường Tà Nung', icon: 'fa-map-pin'},
-                ],
+                streets: @json($streets),
+                propertyTypes: @json($propertyTypes),
+                wards: @json($wards),
                 amenitiesList: [
                     {id: 'market', name: 'Chợ', icon: 'fa-basket-shopping'},
                     {id: 'school', name: 'Trường học', icon: 'fa-graduation-cap'},
