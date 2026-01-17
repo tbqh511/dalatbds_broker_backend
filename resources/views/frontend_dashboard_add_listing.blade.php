@@ -82,9 +82,7 @@
                     length: 0,
                     roadWidth: 0,
                     direction: 'DongNam',
-                    amenities: {},
-                    latitude: null,
-                    longitude: null
+                    amenities: {}
                 },
 
                 streets: @json($streets),
@@ -119,93 +117,7 @@
                 calculateCommission() { if(!this.price) return '0 VNĐ'; const commission = this.price * (this.formData.commissionRate / 100); return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(commission); },
                 calculatePricePerM2() { if(!this.price || !this.formData.area) return '0'; const perM2 = this.price / this.formData.area; if(perM2 >= 1000000) { return (perM2 / 1000000).toFixed(1) + ' Triệu'; } return new Intl.NumberFormat('vi-VN').format(perM2); },
                 getCurrentLocation() { this.locationText = "Đang lấy vị trí..."; setTimeout(() => { this.locationText = "📍 Đã ghim: " + (this.formData.street ? this.getStreetName(this.formData.street) : "Vị trí hiện tại của bạn"); }, 1000); },
-                // MAP PICKER
-                mapModalOpen: false,
-                mapInstance: null,
-                mapMarker: null,
-                tempLat: null,
-                tempLng: null,
-                // Open the picker modal
-                openMapPicker() {
-                    this.mapModalOpen = true;
-                    // small delay for modal to render
-                    setTimeout(() => { this.initMapPicker(); }, 150);
-                },
-                // Initialize the google map inside modal
-                initMapPicker() {
-                    if (this.mapInstance) return; // already init
-                    // fallback center: Da Lat
-                    const defaultCenter = { lat: 11.9416, lng: 108.4583 };
-                    const el = document.getElementById('mapModalCanvas');
-                    if (!el) return;
-                    try {
-                        this.mapInstance = new google.maps.Map(el, { center: defaultCenter, zoom: 15, mapTypeControl: false });
-                        this.mapMarker = new google.maps.Marker({ map: this.mapInstance, draggable: true });
-                        // if previously chosen location exists, show it
-                        if (this.formData.latitude && this.formData.longitude) {
-                            this.setMarker(parseFloat(this.formData.latitude), parseFloat(this.formData.longitude));
-                            this.mapInstance.setCenter({ lat: parseFloat(this.formData.latitude), lng: parseFloat(this.formData.longitude) });
-                        }
-                        // click on map to set marker
-                        this.mapInstance.addListener('click', (e) => {
-                            const lat = e.latLng.lat(); const lng = e.latLng.lng();
-                            this.setMarker(lat, lng);
-                        });
-                        // when dragging marker, update temp coords
-                        this.mapMarker.addListener('dragend', (e) => {
-                            const pos = this.mapMarker.getPosition();
-                            this.tempLat = pos.lat(); this.tempLng = pos.lng();
-                        });
-
-                        // Setup Places Autocomplete for search box
-                        const input = document.getElementById('mapSearchInput');
-                        if (input && google.maps.places) {
-                            const autocomplete = new google.maps.places.Autocomplete(input, { componentRestrictions: { country: 'vn' } });
-                            autocomplete.addListener('place_changed', () => {
-                                const place = autocomplete.getPlace();
-                                if (!place.geometry) return;
-                                const lat = place.geometry.location.lat();
-                                const lng = place.geometry.location.lng();
-                                this.mapInstance.setCenter({ lat, lng });
-                                this.setMarker(lat, lng);
-                            });
-                        }
-                        // Also wire local street selection (TomSelect)
-                        const streetSelect = document.getElementById('map-street-select');
-                        if (streetSelect) {
-                            streetSelect.addEventListener('change', (ev) => {
-                                const id = ev.target.value; const st = this.streets.find(s => String(s.id) === String(id));
-                                if (!st) return;
-                                const address = st.name + ', Đà Lạt, Việt Nam';
-                                const geocoder = new google.maps.Geocoder();
-                                geocoder.geocode({ address }, (results, status) => {
-                                    if (status === 'OK' && results[0]) {
-                                        const loc = results[0].geometry.location;
-                                        this.mapInstance.setCenter(loc);
-                                        this.setMarker(loc.lat(), loc.lng());
-                                    }
-                                });
-                            });
-                        }
-                    } catch (err) {
-                        console.error('Google Maps init error', err);
-                    }
-                },
-                setMarker(lat, lng) {
-                    this.tempLat = lat; this.tempLng = lng;
-                    if (this.mapMarker) {
-                        this.mapMarker.setPosition({ lat, lng });
-                        this.mapMarker.setMap(this.mapInstance);
-                    }
-                },
-                confirmMapLocation() {
-                    if (this.tempLat && this.tempLng) {
-                        this.formData.latitude = this.tempLat; this.formData.longitude = this.tempLng;
-                        this.locationText = `📍 Đã chọn: ${this.tempLat.toFixed(6)}, ${this.tempLng.toFixed(6)}`;
-                    }
-                    this.mapModalOpen = false;
-                },
-                closeMapPicker() { this.mapModalOpen = false; },
+                
                 getStreetName(id) { const st = this.streets.find(s => s.id == id); return st ? st.name : 'Đường đã chọn'; },
                 updateMapLocation() { if(this.formData.street && this.formData.houseNumber) { const streetName = this.getStreetName(this.formData.street); this.locationText = `📍 Đã ghim: ${this.formData.houseNumber}, ${streetName}`; } },
                 readMoney(number) { if (number === 0) return '0 VNĐ'; if (number >= 1000000000) { return (number / 1000000000).toFixed(2).replace('.00', '') + ' Tỷ VNĐ'; } if (number >= 1000000) { return (number / 1000000).toFixed(0) + ' Triệu VNĐ'; } return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(number); },
@@ -375,7 +287,7 @@
                                 <i class="fa-solid fa-crosshairs mr-1"></i> Vị trí của tôi
                             </button>
                         </div>
-                        <div id="map" @click="openMapPicker" class="w-full h-40 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border border-dashed border-gray-300">
+                        <div id="map" class="w-full h-40 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border border-dashed border-gray-300">
                             <div class="absolute inset-0 bg-cover bg-center opacity-60" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/Map_of_Dalat.jpg');"></div>
                             <span class="z-10 bg-white/90 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200">
                                 Chạm để chọn vị trí
@@ -383,29 +295,7 @@
                         </div>
                         <p class="text-xs text-gray-500 mt-2 truncate" x-text="locationText"></p>
                         
-                        <!-- Map Picker Modal -->
-                        <div x-show="mapModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-60 flex items-center justify-center">
-                            <div class="absolute inset-0 bg-black/40" @click="closeMapPicker"></div>
-                            <div class="relative w-full max-w-3xl mx-4 bg-white rounded-xl overflow-hidden shadow-xl">
-                                <div class="flex items-center justify-between p-3 border-b">
-                                    <div class="flex items-center gap-3">
-                                        <button type="button" @click="closeMapPicker" class="p-2 rounded-md hover:bg-gray-100">✕</button>
-                                        <input id="mapSearchInput" type="text" placeholder="Tìm địa điểm hoặc đường..." class="input-field w-96" />
-                                        <select id="map-street-select" class="ts-control">
-                                            <option value="">Chọn đường (hoặc tìm kiếm)...</option>
-                                            @foreach($streets as $s)
-                                                <option value="{{ $s['id'] }}">{{ $s['name'] }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <button type="button" @click="confirmMapLocation" class="bg-primary text-white px-4 py-2 rounded-md">Chọn vị trí này</button>
-                                    </div>
-                                </div>
-                                <div id="mapModalCanvas" class="w-full h-96"></div>
-                                <div class="p-3 text-xs text-gray-600">Kích vào bản đồ để ghim điểm; kéo chấm đỏ để tinh chỉnh. Tìm kiếm bằng tên đường hoặc địa chỉ.</div>
-                            </div>
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -784,12 +674,7 @@
 
 @push('scripts')
     <script src="{{ asset('js/dashboard.js') }}"></script>
-    <!-- Google Maps (replace YOUR_API_KEY with a valid API key) -->
-    <script>
-        // Callback for Google Maps API load
-        function __dalatMapsInit() { window.__dalatMapsReady = true; }
-    </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=__dalatMapsInit"></script>
+    
     <script>
         // Global Telegram WebApp Logic (Run on every page load)
         if (window.Telegram && window.Telegram.WebApp) {
@@ -803,16 +688,5 @@
             }
         }
     </script>
-    <script>
-        // Initialize TomSelect for the modal street select when DOM ready
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                try {
-                    if (document.getElementById('map-street-select') && typeof TomSelect !== 'undefined') {
-                        new TomSelect('#map-street-select', { create: false, sortField: { field: 'text', direction: 'asc' } });
-                    }
-                } catch (e) { console.warn('TomSelect for map-street-select failed', e); }
-            }, 300);
-        });
-    </script>
+    
 @endpush
