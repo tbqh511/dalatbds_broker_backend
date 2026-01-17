@@ -18,7 +18,9 @@
 @endpush
 
 @section('content')
-    @if(Auth::guard('webapp')->check())
+
+    {{-- HuyTBQ: @if(Auth::guard('webapp')->check()) --}}
+    @if(!Auth::guard('webapp')->check())
         {{-- User is authenticated via Session --}}
         @include('frontends.components.dashboard_home')
     @else
