@@ -33,6 +33,8 @@ return [
 
     'google_maps' => [
         'place_api_key' => env('PLACE_API_KEY'),
+        // Key used specifically for web app (picker). Falls back to PLACE_API_KEY when not set.
+        'place_api_key_web' => env('PLACE_API_KEY_WEB_APP', env('PLACE_API_KEY')),
     ],
 
 ];

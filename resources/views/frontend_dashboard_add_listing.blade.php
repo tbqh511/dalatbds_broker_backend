@@ -117,6 +117,114 @@
                 calculateCommission() { if(!this.price) return '0 VNĐ'; const commission = this.price * (this.formData.commissionRate / 100); return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(commission); },
                 calculatePricePerM2() { if(!this.price || !this.formData.area) return '0'; const perM2 = this.price / this.formData.area; if(perM2 >= 1000000) { return (perM2 / 1000000).toFixed(1) + ' Triệu'; } return new Intl.NumberFormat('vi-VN').format(perM2); },
                 getCurrentLocation() { this.locationText = "Đang lấy vị trí..."; setTimeout(() => { this.locationText = "📍 Đã ghim: " + (this.formData.street ? this.getStreetName(this.formData.street) : "Vị trí hiện tại của bạn"); }, 1000); },
+                // --- MAP PICKER STATE ---
+                showMapPicker: false,
+                pickerMap: null,
+                pickerGeocoder: null,
+                pickerAddress: '',
+                pickerLat: null,
+                pickerLng: null,
+                isMapDragging: false,
+                searchBox: null,
+
+                // Open fullscreen map picker
+                openMapPicker() {
+                    this.showMapPicker = true;
+                    this.$nextTick(() => {
+                        if (!this.pickerMap && window.google) {
+                            this.initGoogleMap();
+                        }
+                    });
+                },
+
+                // Initialize Google Map inside picker
+                initGoogleMap() {
+                    const defaultPos = { lat: 11.940419, lng: 108.458313 };
+                    this.pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
+                        center: defaultPos,
+                        zoom: 15,
+                        disableDefaultUI: true,
+                        clickableIcons: false,
+                        gestureHandling: "greedy",
+                    });
+
+                    this.pickerGeocoder = new google.maps.Geocoder();
+
+                    this.pickerMap.addListener("dragstart", () => {
+                        this.isMapDragging = true;
+                        this.pickerAddress = "Đang di chuyển...";
+                    });
+
+                    this.pickerMap.addListener("idle", () => {
+                        this.isMapDragging = false;
+                        const center = this.pickerMap.getCenter();
+                        this.pickerLat = center.lat();
+                        this.pickerLng = center.lng();
+                        this.reverseGeocode(center);
+                    });
+
+                    const input = document.getElementById("map-search-box");
+                    try {
+                        this.searchBox = new google.maps.places.Autocomplete(input);
+                        this.searchBox.bindTo("bounds", this.pickerMap);
+                        this.searchBox.addListener("place_changed", () => {
+                            const place = this.searchBox.getPlace();
+                            if (!place.geometry || !place.geometry.location) return;
+                            if (place.geometry.viewport) {
+                                this.pickerMap.fitBounds(place.geometry.viewport);
+                            } else {
+                                this.pickerMap.setCenter(place.geometry.location);
+                                this.pickerMap.setZoom(17);
+                            }
+                        });
+                    } catch (e) {
+                        console.warn('Places Autocomplete init failed', e);
+                    }
+                },
+
+                // Reverse geocode
+                reverseGeocode(latlng) {
+                    if (!this.pickerGeocoder) return;
+                    this.pickerGeocoder.geocode({ location: latlng }, (results, status) => {
+                        if (status === "OK" && results[0]) {
+                            let address = results[0].formatted_address.replace(', Vietnam', '');
+                            this.pickerAddress = address;
+                            const route = results[0].address_components.find(c => c.types.includes('route'));
+                            if (route) console.log('Đường:', route.long_name);
+                        } else {
+                            this.pickerAddress = "Vị trí chưa xác định tên";
+                        }
+                    });
+                },
+
+                // Pan to current GPS location inside picker
+                panToCurrentLocation() {
+                    if (navigator.geolocation) {
+                        this.isMapDragging = true;
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                                if (this.pickerMap) {
+                                    this.pickerMap.setCenter(pos);
+                                    this.pickerMap.setZoom(17);
+                                } else {
+                                    // update quick preview text if picker not open
+                                    this.locationText = `📍 Đã ghim: Vị trí hiện tại của bạn`;
+                                }
+                                this.isMapDragging = false;
+                            },
+                            () => { this.isMapDragging = false; alert("Không lấy được vị trí."); }
+                        );
+                    }
+                },
+
+                // Confirm pick and close
+                confirmMapLocation() {
+                    this.locationText = this.pickerAddress || this.locationText;
+                    // Optional: save lat/lng to formData
+                    // this.formData.latitude = this.pickerLat; this.formData.longitude = this.pickerLng;
+                    this.showMapPicker = false;
+                },
                 
                 getStreetName(id) { const st = this.streets.find(s => s.id == id); return st ? st.name : 'Đường đã chọn'; },
                 updateMapLocation() { if(this.formData.street && this.formData.houseNumber) { const streetName = this.getStreetName(this.formData.street); this.locationText = `📍 Đã ghim: ${this.formData.houseNumber}, ${streetName}`; } },
@@ -283,14 +391,14 @@
                     <div class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-sm font-bold text-gray-700">📍 Vị trí trên bản đồ</label>
-                            <button type="button" @click="getCurrentLocation" class="text-xs text-primary font-bold flex items-center bg-blue-50 px-2 py-1 rounded">
+                            <button type="button" @click="panToCurrentLocation" class="text-xs text-primary font-bold flex items-center bg-blue-50 px-2 py-1 rounded">
                                 <i class="fa-solid fa-crosshairs mr-1"></i> Vị trí của tôi
                             </button>
                         </div>
-                        <div id="map" class="w-full h-40 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border border-dashed border-gray-300">
+                        <div id="map-preview" @click="openMapPicker" class="w-full h-40 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border border-dashed border-gray-300 group hover:border-primary transition-colors">
                             <div class="absolute inset-0 bg-cover bg-center opacity-60" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/Map_of_Dalat.jpg');"></div>
-                            <span class="z-10 bg-white/90 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200">
-                                Chạm để chọn vị trí
+                            <span class="z-10 bg-white/90 px-4 py-2 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200 group-hover:text-primary group-hover:scale-105 transition-all">
+                                🗺️ Chạm để chọn vị trí
                             </span>
                         </div>
                         <p class="text-xs text-gray-500 mt-2 truncate" x-text="locationText"></p>
@@ -646,6 +754,74 @@
 
     </div>
 
+    <!-- Fullscreen Map Picker -->
+    <div x-show="showMapPicker" x-cloak 
+         class="fixed inset-0 z-[100] bg-white flex flex-col w-full h-full transition-transform duration-300"
+         x-transition:enter="transform transition ease-in-out duration-300"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transform transition ease-in-out duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full">
+
+        <div class="absolute top-0 left-0 right-0 z-10 p-4 pt-safe-top bg-gradient-to-b from-white/90 to-transparent pointer-events-none">
+            <div class="flex items-center gap-3 pointer-events-auto">
+                <button @click="showMapPicker = false" class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                
+                <div class="flex-1 bg-white rounded-full shadow-md flex items-center px-4 h-10 border border-gray-100">
+                    <i class="fa-solid fa-search text-gray-400 mr-2"></i>
+                    <input id="map-search-box" type="text" placeholder="Tìm tên đường, khu vực..." 
+                           class="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400">
+                </div>
+            </div>
+        </div>
+
+        <div class="relative flex-1 w-full h-full bg-gray-100">
+            <div id="picker-map" class="w-full h-full"></div>
+
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-4 pointer-events-none z-0 flex flex-col items-center justify-center">
+                <i class="fa-solid fa-location-dot text-4xl text-red-500 drop-shadow-md animate-bounce-short"></i>
+                <div class="w-3 h-1.5 bg-black/20 rounded-[100%] mt-1 blur-[1px]"></div>
+            </div>
+
+            <button @click="panToCurrentLocation" class="absolute bottom-6 right-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-primary active:bg-gray-50">
+                <i class="fa-solid fa-crosshairs text-lg"></i>
+            </button>
+        </div>
+
+        <div class="bg-white p-4 pb-safe-bottom rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-10 border-t border-gray-100">
+            <div class="mb-4">
+                <p class="text-xs text-gray-400 uppercase font-bold tracking-wide mb-1">Vị trí đã chọn</p>
+                <div class="flex items-start">
+                    <i class="fa-solid fa-map-pin text-primary mt-1 mr-2"></i>
+                    <p class="text-sm font-medium text-gray-800 line-clamp-2" x-text="pickerAddress || 'Đang xác định vị trí...'"></p>
+                </div>
+            </div>
+
+            <button @click="confirmMapLocation" 
+                    :disabled="!pickerLat || isMapDragging"
+                    :class="(!pickerLat || isMapDragging) ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary shadow-lg shadow-blue-200 active:scale-[0.98]'"
+                    class="w-full text-white py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center">
+                <span x-show="!isMapDragging">Xác nhận vị trí này</span>
+                <span x-show="isMapDragging"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải...</span>
+            </button>
+        </div>
+    </div>
+
+    <style>
+        /* Ẩn các thành phần thừa của Google Map để giao diện sạch như App */
+        .gmnoprint, .gm-control-active, .gm-style-cc { display: none !important; }
+        
+        /* Animation cho cái ghim nhảy nhảy */
+        @keyframes bounce-short {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-short { animation: bounce-short 1s infinite; }
+    </style>
+
     <!-- Tom Select Init -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -674,6 +850,8 @@
 
 @push('scripts')
     <script src="{{ asset('js/dashboard.js') }}"></script>
+    <!-- Google Maps JS (from env: PLACE_API_KEY_WEB_APP -> falls back to PLACE_API_KEY) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key_web') }}&libraries=places"></script>
     
     <script>
         // Global Telegram WebApp Logic (Run on every page load)
