@@ -752,8 +752,6 @@
             </div>
         </div>
 
-    </div>
-
     <!-- Fullscreen Map Picker -->
     <div x-show="showMapPicker" x-cloak 
          class="fixed inset-0 z-[100] bg-white flex flex-col w-full h-full transition-transform duration-300"
@@ -810,6 +808,8 @@
         </div>
     </div>
 
+    </div>
+
     <style>
         /* Ẩn các thành phần thừa của Google Map để giao diện sạch như App */
         .gmnoprint, .gm-control-active, .gm-style-cc { display: none !important; }
@@ -821,31 +821,6 @@
         }
         .animate-bounce-short { animation: bounce-short 1s infinite; }
     </style>
-
-    <!-- Tom Select Init -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                new TomSelect("#select-street",{
-                    create: false,
-                    sortField: { field: "text", direction: "asc" },
-                    plugins: ['dropdown_input'],
-                    maxOptions: null
-                });
-            }, 100);
-        });
-    </script>
-    <script>
-        // Ensure footer is appended to body so position:fixed behaves correctly
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                const footer = document.getElementById('floating-footer');
-                if (footer && footer.parentElement !== document.body) {
-                    document.body.appendChild(footer);
-                }
-            } catch (e) { console.warn('Move footer failed', e); }
-        });
-    </script>
 @endsection
 
 @push('scripts')
