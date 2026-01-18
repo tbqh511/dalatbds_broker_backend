@@ -1,6 +1,17 @@
- async function singleMap() {
-    const { Map } = await google.maps.importLibrary("maps");
-    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+async function singleMap() {
+    if (!window.google || !google.maps || !google.maps.importLibrary) {
+        console.warn('Google Maps importLibrary is not available.');
+        return;
+    }
+
+    let Map, AdvancedMarkerElement;
+    try {
+        ({ Map } = await google.maps.importLibrary("maps"));
+        ({ AdvancedMarkerElement } = await google.maps.importLibrary("marker"));
+    } catch (e) {
+        console.error('Google Maps importLibrary failed', e);
+        return;
+    }
 
     var myLatLng = {
         lng: $('#singleMap').data('longitude'),
@@ -78,62 +89,71 @@ function ZoomControl(controlDiv, single_map) {
         single_map.setZoom(single_map.getZoom() - 1);
     });
 }
-if ($(".mapC_vis2").length > 0) {
+if ($(".mapC_vis2").length > 0 && window.google && google.maps && google.maps.places && google.maps.places.SearchBox) {
     var input = document.getElementById('pac-input');
-    var searchBox = new google.maps.places.SearchBox(input);
-    single_map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-    single_map.addListener('bounds_changed', function () {
-        searchBox.setBounds(single_map.getBounds());
-    });
-    var infowindow = new google.maps.InfoWindow({});
-    var markers = [];
-    searchBox.addListener('places_changed', function () {
-        var places = searchBox.getPlaces();
-
-        if (places.length == 0) {
-            return;
-        }
-        markers.forEach(function (marker) {
-            marker.setMap(null);
-        });
-        markers = [];
-        var bounds = new google.maps.LatLngBounds();
-        places.forEach(function (place) {
-            var icon = {
-                url: place.icon,
-                size: new google.maps.Size(31, 31),
-                origin: new google.maps.Point(0, 0),
-                anchor: new google.maps.Point(17, 34),
-                scaledSize: new google.maps.Size(25, 25)
-            };
-            var marker = new google.maps.Marker({
-                map: single_map,
-                icon: icon,
-                title: place.name,
-                position: place.geometry.location
+    if (input) {
+        try {
+            var searchBox = new google.maps.places.SearchBox(input);
+            single_map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+            single_map.addListener('bounds_changed', function () {
+                searchBox.setBounds(single_map.getBounds());
             });
-            markers.push(marker);
-            (function (marker, place) {
-                marker.addListener('click', function () {
-                    var content = "<h1>" + place.name + "</h1>";
-                    content += "<p>" + place.formatted_address + "</p>";
-                    if (place.formatted_phone_number) {
-                        content += "<p>Phone:&nbsp;" + place.formatted_phone_number + "</p>";
-                    }
-                    infowindow.setContent(content);
-                    infowindow.open(single_map, marker);
-                });
-            })(marker, place);
+            var infowindow = new google.maps.InfoWindow({});
+            var markers = [];
+            searchBox.addListener('places_changed', function () {
+                var places = searchBox.getPlaces();
 
-            if (place.geometry.viewport) {
-                bounds.union(place.geometry.viewport);
-            } else {
-                bounds.extend(place.geometry.location);
-            }
-        });
-        single_map.fitBounds(bounds);
-        single_map.setZoom(12);
-    });
+                if (!places || places.length == 0) {
+                    return;
+                }
+                markers.forEach(function (marker) {
+                    marker.setMap(null);
+                });
+                markers = [];
+                var bounds = new google.maps.LatLngBounds();
+                places.forEach(function (place) {
+                    if (!place.geometry || !place.geometry.location) {
+                        return;
+                    }
+                    var icon = {
+                        url: place.icon,
+                        size: new google.maps.Size(31, 31),
+                        origin: new google.maps.Point(0, 0),
+                        anchor: new google.maps.Point(17, 34),
+                        scaledSize: new google.maps.Size(25, 25)
+                    };
+                    var marker = new google.maps.Marker({
+                        map: single_map,
+                        icon: icon,
+                        title: place.name,
+                        position: place.geometry.location
+                    });
+                    markers.push(marker);
+                    (function (marker, place) {
+                        marker.addListener('click', function () {
+                            var content = "<h1>" + place.name + "</h1>";
+                            content += "<p>" + place.formatted_address + "</p>";
+                            if (place.formatted_phone_number) {
+                                content += "<p>Phone:&nbsp;" + place.formatted_phone_number + "</p>";
+                            }
+                            infowindow.setContent(content);
+                            infowindow.open(single_map, marker);
+                        });
+                    })(marker, place);
+
+                    if (place.geometry.viewport) {
+                        bounds.union(place.geometry.viewport);
+                    } else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                single_map.fitBounds(bounds);
+                single_map.setZoom(12);
+            });
+        } catch (e) {
+            console.warn('Google Maps SearchBox init failed', e);
+        }
+    }
 }
 $(".single-map-item").on("click", function (e) {
     e.preventDefault();
@@ -166,4 +186,3 @@ var single_map = document.getElementById('singleMap');
 if (typeof (single_map) != 'undefined' && single_map != null) {
     window.addEventListener('load', singleMap);
 }
- 
