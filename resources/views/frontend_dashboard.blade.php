@@ -18,10 +18,10 @@
 @endpush
 
 @section('content')
-
+    {{-- TEMPORARY: Dev mode flag to allow running WebApp outside Telegram --}}
     {{-- HuyTBQ: @if(Auth::guard('webapp')->check()) --}}
-    @if(!Auth::guard('webapp')->check())
-        {{-- User is authenticated via Session --}}
+    @php($webappDevMode = env('WEBAPP_DEV_MODE', false))
+    @if($webappDevMode || Auth::guard('webapp')->check())
         @include('frontends.components.dashboard_home')
     @else
         {{-- User is NOT authenticated, show loader and run JS --}}
@@ -60,7 +60,7 @@
             }
         }
     </script>
-    @if(!Auth::guard('webapp')->check())
+    @if(!env('WEBAPP_DEV_MODE', false) && !Auth::guard('webapp')->check())
     <script>
         // Auth-specific Logic
         async function initWebApp() {
