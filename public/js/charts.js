@@ -107,9 +107,11 @@ var config = {
 var ctx = document.getElementById("canvas-chart");
 var myLegendContainer = document.getElementById("myChartLegend");
 
-var myChart = new Chart(ctx, config);
-myLegendContainer.innerHTML = myChart.generateLegend();
-var legendItems = myLegendContainer.getElementsByTagName('li');
-for (var i = 0; i < legendItems.length; i += 1) {
-    legendItems[i].addEventListener("click", legendClickCallback, false);
+if (ctx && myLegendContainer) {
+    var myChart = new Chart(ctx, config);
+    myLegendContainer.innerHTML = myChart.generateLegend();
+    var legendItems = myLegendContainer.getElementsByTagName('li');
+    for (var i = 0; i < legendItems.length; i += 1) {
+        legendItems[i].addEventListener("click", legendClickCallback, false);
+    }
 }
