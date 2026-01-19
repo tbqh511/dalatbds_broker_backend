@@ -33,9 +33,7 @@
     <!-- main -->
     <div id="main">
         <!-- header -->
-        @unless(View::hasSection('hide_header'))
-            @include('frontends.header')
-        @endunless
+        @include('frontends.header')
         <!-- header end  -->
         <!-- wrapper  -->
         <div id="wrapper">
