@@ -825,8 +825,6 @@
 
 @push('scripts')
     <script src="{{ asset('js/dashboard.js') }}"></script>
-    <!-- Google Maps JS (from env: PLACE_API_KEY_WEB_APP -> falls back to PLACE_API_KEY) -->
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key_web') }}&libraries=places"></script>
     
     <script>
         // Global Telegram WebApp Logic (Run on every page load)
