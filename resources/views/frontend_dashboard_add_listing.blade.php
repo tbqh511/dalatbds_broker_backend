@@ -136,7 +136,6 @@
                 pickerLat: null,
                 pickerLng: null,
                 isMapDragging: false,
-                searchBox: null,
                 pickerMarker: null,
 
                 // Open fullscreen map picker
@@ -191,24 +190,7 @@
                         this.reverseGeocode(center);
                     });
 
-                    const input = document.getElementById("map-search-box");
-                    try {
-                        this.searchBox = new google.maps.places.Autocomplete(input);
-                        this.searchBox.bindTo("bounds", this.pickerMap);
-                        this.searchBox.addListener("place_changed", () => {
-                            const place = this.searchBox.getPlace();
-                            if (!place.geometry || !place.geometry.location) return;
-                            this.pickerMarker.setPosition(place.geometry.location);
-                            if (place.geometry.viewport) {
-                                this.pickerMap.fitBounds(place.geometry.viewport);
-                            } else {
-                                this.pickerMap.setCenter(place.geometry.location);
-                                this.pickerMap.setZoom(17);
-                            }
-                        });
-                    } catch (e) {
-                        console.warn('Places Autocomplete init failed', e);
-                    }
+
                 },
 
                 // Reverse geocode
@@ -393,26 +375,7 @@
                         </div>
                     </div>
 
-                    <!-- Chọn Đường -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-left">Tên đường</label>
-                        <select id="select-street" x-model="formData.street" 
-                                x-init="$nextTick(() => {
-                                    new TomSelect($el, {
-                                        create: false,
-                                        sortField: { field: 'text', direction: 'asc' },
-                                        plugins: ['dropdown_input'],
-                                        maxOptions: null,
-                                        onChange: (value) => { formData.street = value; }
-                                    });
-                                })"
-                                placeholder="Tìm tên đường..." autocomplete="off">
-                            <option value="">Chọn đường...</option>
-                            <template x-for="st in streets" :key="st.id">
-                                <option :value="st.id" x-text="st.name"></option>
-                            </template>
-                        </select>
-                    </div>
+
 
                     <!-- Số nhà -->
                     <div>
@@ -795,16 +758,21 @@
          x-transition:leave-start="translate-x-0"
          x-transition:leave-end="translate-x-full">
 
-        <div class="absolute top-0 left-0 right-0 z-10 p-4 pt-safe-top bg-gradient-to-b from-white/90 to-transparent pointer-events-none">
+        <div class="absolute top-0 left-0 right-0 z-[1000] p-4 pt-safe-top bg-gradient-to-b from-white/90 to-transparent pointer-events-none">
             <div class="flex items-center gap-3 pointer-events-auto">
-                <button @click="showMapPicker = false" class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform">
+                <button @click="showMapPicker = false" class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform z-50">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
                 
-                <div class="flex-1 bg-white rounded-full shadow-md flex items-center px-4 h-10 border border-gray-100">
-                    <i class="fa-solid fa-search text-gray-400 mr-2"></i>
-                    <input id="map-search-box" type="text" placeholder="Tìm tên đường, khu vực..." 
-                           class="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400">
+                <div class="flex-1 pointer-events-auto shadow-lg">
+                    <select id="select-street" x-model="formData.street"
+                            x-init="$watch('showMapPicker', (value) => { if (value) { $nextTick(() => { new TomSelect($el, { create: false, sortField: { field: 'text', direction: 'asc' }, plugins: ['dropdown_input'], maxOptions: null, onChange: (value) => { formData.street = value; } }); }); } })"
+                            placeholder="Tìm tên đường..." autocomplete="off">
+                        <option value="">Chọn đường...</option>
+                        <template x-for="st in streets" :key="st.id">
+                            <option :value="st.id" x-text="st.name"></option>
+                        </template>
+                    </select>
                 </div>
             </div>
         </div>
