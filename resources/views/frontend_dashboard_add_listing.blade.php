@@ -393,7 +393,7 @@
                         </div>
                         <div id="map-preview" @click="openMapPicker" class="w-full h-40 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border border-dashed border-gray-300 group hover:border-primary transition-colors">
                             <div class="absolute inset-0 bg-cover bg-center opacity-60" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/Map_of_Dalat.jpg');"></div>
-                            <span class="z-10 bg-white/90 px-4 py-2 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200 group-hover:text-primary group-hover:scale-105 transition-all">
+                            <span class="bg-white/90 px-4 py-2 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200 group-hover:text-primary group-hover:scale-105 transition-all">
                                 🗺️ Chạm để chọn vị trí
                             </span>
                         </div>
