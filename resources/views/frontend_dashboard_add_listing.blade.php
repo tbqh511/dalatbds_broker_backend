@@ -240,7 +240,8 @@
 @endpush
 
 @section('content')
-    <div x-data="realEstateForm" class="w-full max-w-md bg-white min-h-screen shadow-2xl relative flex flex-col pb-24">
+    <div class="flex items-center justify-center min-h-screen w-full py-10 px-4">
+    <div x-data="realEstateForm" class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh]">
         
         <!-- HEADER -->
         <div class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 px-5 py-4">
@@ -809,7 +810,7 @@
     </div>
 
     </div>
-
+    </div>
     <style>
         /* Ẩn các thành phần thừa của Google Map để giao diện sạch như App */
         .gmnoprint, .gm-control-active, .gm-style-cc { display: none !important; }
