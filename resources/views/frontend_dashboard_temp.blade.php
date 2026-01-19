@@ -274,10 +274,10 @@
         .btn-counter:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="flex justify-center min-h-screen">
+<body class="flex justify-center min-h-screen items-center py-10">
 
     <!-- APP CONTAINER -->
-    <div x-data="realEstateForm" class="w-full max-w-md bg-white min-h-screen shadow-2xl relative flex flex-col pb-24">
+    <div x-data="realEstateForm" class="w-full max-w-md bg-white h-[85vh] rounded-3xl shadow-2xl relative flex flex-col overflow-hidden">
         
         <!-- HEADER -->
         <div class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 px-5 py-4">
@@ -764,8 +764,8 @@
         </form>
 
         <!-- FOOTER: FIXED BOTTOM NAVIGATION -->
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center">
-            <div class="w-full max-w-md flex justify-between gap-3">
+        <div class="w-full p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center shrink-0">
+            <div class="w-full flex justify-between gap-3">
                 <!-- Nút Quay lại -->
                 <button type="button" x-show="step > 1" @click="prevStep" 
                     class="flex-1 bg-gray-100 text-gray-600 px-4. py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
