@@ -55,6 +55,7 @@
         <!--secondary-nav -->
         @include('frontends.secondary_nav')
         <!--secondary-nav end -->
+        @unless(request()->routeIs('webapp.add_listing'))
         <a class="to-top color-bg"><i class="fas fa-caret-up"></i></a>
         <!--map-modal -->
         @include('frontends.map_model')
@@ -73,6 +74,7 @@
             </a>
         </div>
         <!-- Floating Call Button End -->
+        @endunless
     </div>
     <!-- Main end -->
     <!--=============== scripts  ===============-->
