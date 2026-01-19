@@ -24,7 +24,7 @@
             font-size: 1rem;
         }
         .ts-control:focus { border-color: #3270FC; }
-        .ts-dropdown { border-radius: 0.75rem; border: 1px solid #E5E7EB; margin-top: 4px; }
+        .ts-dropdown { border-radius: 0.75rem; border: 1px solid #E5E7EB; margin-top: 4px; z-index: 99999 !important; }
         
         [x-cloak] { display: none !important; }
         
@@ -760,13 +760,13 @@
 
         <div class="absolute top-0 left-0 right-0 z-[1000] p-4 pt-safe-top bg-gradient-to-b from-white/90 to-transparent pointer-events-none">
             <div class="flex items-center gap-3 pointer-events-auto">
-                <button @click="showMapPicker = false" class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform z-50">
+                <button @click="showMapPicker = false" class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform relative z-[60]">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
                 
                 <div class="flex-1 pointer-events-auto shadow-lg">
                     <select id="select-street" x-model="formData.street"
-                            x-init="$watch('showMapPicker', (value) => { if (value) { $nextTick(() => { new TomSelect($el, { create: false, sortField: { field: 'text', direction: 'asc' }, plugins: ['dropdown_input'], maxOptions: null, onChange: (value) => { formData.street = value; } }); }); } })"
+                            x-init="$watch('showMapPicker', (value) => { if (value) { $nextTick(() => { new TomSelect($el, { create: false, sortField: { field: 'text', direction: 'asc' }, plugins: ['dropdown_input'], maxOptions: null, dropdownParent: 'body', onChange: (value) => { formData.street = value; } }); }); } })"
                             placeholder="Tìm tên đường..." autocomplete="off">
                         <option value="">Chọn đường...</option>
                         <template x-for="st in streets" :key="st.id">
