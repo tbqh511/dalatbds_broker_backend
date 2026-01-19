@@ -37,6 +37,17 @@
         .btn-counter { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: #F0F5FF; color: #3270FC; font-weight: bold; transition: all 0.2s; border: 1px solid transparent; }
         .btn-counter:hover { background-color: #3270FC; color: white; }
         .btn-counter:active { transform: scale(0.95); }
+
+        /* Ẩn Header/Navbar chính của Website (Tùy theo class trong master layout của bạn) */
+        /* Thường các theme sẽ dùng class .header, .navbar, .main-header */
+        header, .header, .main-header, .navbar {
+            display: none !important;
+        }
+
+        /* Đảm bảo nội dung không bị đẩy xuống do padding của header cũ */
+        body {
+            padding-top: 0 !important;
+        }
     </style>
 @endpush
 
@@ -775,8 +786,8 @@
         </div>
 
     <!-- Fullscreen Map Picker -->
-    <div x-show="showMapPicker" x-cloak 
-         class="fixed inset-0 z-[100] bg-white flex flex-col w-full h-full transition-transform duration-300"
+    <div x-show="showMapPicker" x-cloak
+         class="fixed inset-0 z-[9999] bg-white flex flex-col w-full h-full transition-transform duration-300"
          x-transition:enter="transform transition ease-in-out duration-300"
          x-transition:enter-start="translate-x-full"
          x-transition:enter-end="translate-x-0"
