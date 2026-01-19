@@ -29,6 +29,7 @@
                             <li><a href="/gioi-thieu">Đà Lạt BĐS</a></li>
                             <li><a href="/tin-tuc">Tin tức</a></li>
                             <li><a href="/lien-he">Liên hệ</a></li>
+                            <li><a href="{{ route('customer-privacy-policy') }}">Chính sách bảo mật</a></li>
                         </ul>
                     </div>
                 </div>
@@ -86,6 +87,7 @@
                     {{-- <li><a href="#">Terms of use</a></li>
                     <li><a href="#">Privacy Policy</a></li>
                     <li><a href="/tin-tuc">Tin tức</a></li> --}}
+                    <li><a href="{{ route('customer-privacy-policy') }}">Chính sách bảo mật</a></li>
                 </ul>
             </div>
         </div>
