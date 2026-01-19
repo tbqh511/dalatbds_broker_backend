@@ -126,6 +126,7 @@
                 pickerLng: null,
                 isMapDragging: false,
                 searchBox: null,
+                pickerMarker: null,
 
                 // Open fullscreen map picker
                 openMapPicker() {
@@ -148,7 +149,22 @@
                         gestureHandling: "greedy",
                     });
 
+                    // Add marker
+                    this.pickerMarker = new google.maps.Marker({
+                        position: defaultPos,
+                        map: this.pickerMap,
+                        draggable: true,
+                    });
+
                     this.pickerGeocoder = new google.maps.Geocoder();
+
+                    // Marker drag listener
+                    this.pickerMarker.addListener("dragend", (event) => {
+                        const position = event.latLng;
+                        this.pickerLat = position.lat();
+                        this.pickerLng = position.lng();
+                        this.reverseGeocode(position);
+                    });
 
                     this.pickerMap.addListener("dragstart", () => {
                         this.isMapDragging = true;
@@ -160,6 +176,7 @@
                         const center = this.pickerMap.getCenter();
                         this.pickerLat = center.lat();
                         this.pickerLng = center.lng();
+                        this.pickerMarker.setPosition(center);
                         this.reverseGeocode(center);
                     });
 
@@ -170,6 +187,7 @@
                         this.searchBox.addListener("place_changed", () => {
                             const place = this.searchBox.getPlace();
                             if (!place.geometry || !place.geometry.location) return;
+                            this.pickerMarker.setPosition(place.geometry.location);
                             if (place.geometry.viewport) {
                                 this.pickerMap.fitBounds(place.geometry.viewport);
                             } else {
@@ -207,6 +225,9 @@
                                 if (this.pickerMap) {
                                     this.pickerMap.setCenter(pos);
                                     this.pickerMap.setZoom(17);
+                                    if (this.pickerMarker) {
+                                        this.pickerMarker.setPosition(pos);
+                                    }
                                 } else {
                                     // update quick preview text if picker not open
                                     this.locationText = `📍 Đã ghim: Vị trí hiện tại của bạn`;
