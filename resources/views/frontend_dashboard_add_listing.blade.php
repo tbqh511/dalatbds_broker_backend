@@ -150,8 +150,13 @@
                 openMapPicker() {
                     this.showMapPicker = true;
                     this.$nextTick(() => {
-                        if (!this.pickerMap && window.google) {
-                            this.initGoogleMap();
+                        if (!this.pickerMap) {
+                            if (window.google) this.initGoogleMap();
+                        } else {
+                            // Resize map when modal opens
+                            google.maps.event.trigger(this.pickerMap, 'resize');
+                            const currentCenter = this.pickerMap.getCenter();
+                            if(currentCenter) this.pickerMap.setCenter(currentCenter);
                         }
                     });
                 },
@@ -778,19 +783,6 @@
             </button>
         </div>
 
-        <div class="relative flex-1 w-full h-full bg-gray-100">
-            <div id="picker-map" class="w-full h-full"></div>
-
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-4 pointer-events-none z-0 flex flex-col items-center justify-center">
-                <i class="fa-solid fa-location-dot text-4xl text-red-500 drop-shadow-md animate-bounce-short"></i>
-                <div class="w-3 h-1.5 bg-black/20 rounded-[100%] mt-1 blur-[1px]"></div>
-            </div>
-
-            <button @click="panToCurrentLocation" class="absolute bottom-6 right-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-primary active:bg-gray-50">
-                <i class="fa-solid fa-crosshairs text-lg"></i>
-            </button>
-        </div>
-
         <div class="bg-white p-4 pb-safe-bottom rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-10 border-t border-gray-100">
             <div class="mb-4">
                 <p class="text-xs text-gray-400 uppercase font-bold tracking-wide mb-1">Vị trí đã chọn</p>
@@ -818,7 +810,22 @@
                 <div class="flex-1 z-50 pointer-events-auto shadow-lg">
                     <select id="select-street" x-model="formData.street"
                             data-z-index="1000003"
-                            x-init="$watch('showMapPicker', (value) => { if (value) { $nextTick(() => { new TomSelect($el, { create: false, sortField: { field: 'text', direction: 'asc' }, plugins: ['dropdown_input'], maxOptions: null, dropdownParent: 'body', onChange: (value) => { formData.street = value; } }); }); } })"
+                            x-init="$watch('showMapPicker', (value) => {
+                                if (value) {
+                                    $nextTick(() => {
+                                        if (!$el.tomselect) {
+                                            new TomSelect($el, {
+                                                create: false,
+                                                sortField: { field: 'text', direction: 'asc' },
+                                                plugins: ['dropdown_input'],
+                                                maxOptions: null,
+                                                dropdownParent: document.body,
+                                                onChange: (value) => { formData.street = value; }
+                                            });
+                                        }
+                                    });
+                                }
+                            })"
                             placeholder="Tìm tên đường..." autocomplete="off">
                         <option value="">Chọn đường...</option>
                         <template x-for="st in streets" :key="st.id">
