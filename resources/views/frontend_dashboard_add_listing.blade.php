@@ -766,15 +766,15 @@
          x-transition:leave-start="translate-x-0"
          x-transition:leave-end="translate-x-full">
 
-        <div class="absolute top-0 left-0 right-0 z-[10000] p-4 pt-safe-top pointer-events-none">
+        <div class="absolute top-0 left-0 right-0 z-50 p-4 pt-safe-top pointer-events-none">
             <div class="flex items-center gap-3 pointer-events-auto">
-                <button @click="showMapPicker = false" class="relative w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform z-[10001] pointer-events-auto cursor-pointer">
+                <button @click="showMapPicker = false" class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform z-50 pointer-events-auto">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
 
                 <div class="flex-1 z-50 pointer-events-auto shadow-lg">
                     <select id="select-street" x-model="formData.street"
-                            x-init="$watch('showMapPicker', (value) => { if (value) { $nextTick(() => { new TomSelect($el, { create: false, sortField: { field: 'text', direction: 'asc' }, plugins: ['dropdown_input'], maxOptions: null, dropdownParent: document.body, onDropdownOpen: function() { this.dropdown.style.zIndex = '99999'; }, onChange: (value) => { formData.street = value; } }); }); } })"
+                            x-init="$watch('showMapPicker', (value) => { if (value) { $nextTick(() => { new TomSelect($el, { create: false, sortField: { field: 'text', direction: 'asc' }, plugins: ['dropdown_input'], maxOptions: null, dropdownParent: 'body', onChange: (value) => { formData.street = value; } }); }); } })"
                             placeholder="Tìm tên đường..." autocomplete="off">
                         <option value="">Chọn đường...</option>
                         <template x-for="st in streets" :key="st.id">
