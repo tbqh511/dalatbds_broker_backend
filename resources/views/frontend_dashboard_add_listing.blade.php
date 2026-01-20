@@ -38,9 +38,8 @@
         .btn-counter:hover { background-color: #3270FC; color: white; }
         .btn-counter:active { transform: scale(0.95); }
 
-        /* Ẩn Header/Navbar chính của Website (Tùy theo class trong master layout của bạn) */
-        /* Thường các theme sẽ dùng class .header, .navbar, .main-header */
-        header, .header, .main-header, .navbar {
+        /* Ẩn Header/Navbar chính của Website chỉ khi ở chế độ map picker */
+        body.hide-header header, body.hide-header .header, body.hide-header .main-header, body.hide-header .navbar {
             display: none !important;
         }
 
@@ -111,6 +110,15 @@
                 ],
                 directions: ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'],
                 locationText: 'Chưa xác định vị trí',
+                init() {
+                    this.$watch('showMapPicker', (value) => {
+                        if (value) {
+                            document.body.classList.add('hide-header');
+                        } else {
+                            document.body.classList.remove('hide-header');
+                        }
+                    });
+                },
                 nextStep() { if(this.step < 4) this.step++; },
                 prevStep() { if(this.step > 1) this.step--; },
                 getPropertyName() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.name : 'Bất động sản'; },
