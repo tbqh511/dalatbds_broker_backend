@@ -1,13 +1,22 @@
-# Fix UX Issue in Modal Map Picker
+# TODO: Fix Back Button and Searchbox Interactivity in Map Picker
 
-## Task 1: Nâng Z-Index cho Top Bar Container ✅
-- Tìm div chứa nút Back và Searchbox (class `absolute top-0...`)
-- Thay đổi class `z-50` thành `z-[10000]`
+## Current Issue
+- Back button and street searchbox are not interactive when map picker is shown
+- Main-header is hidden when showMapPicker is true
+- Map picker uses fullscreen overlay with high z-index
 
-## Task 2: Cấu hình TomSelect để Render Dropdown ra ngoài (Body) ✅
-- Trong đoạn script `x-init` của `#select-street`, bổ sung tùy chọn `dropdownParent: document.body` vào cấu hình `new TomSelect(...)`
-- Thêm `onDropdownOpen: function() { this.dropdown.style.zIndex = "99999"; }`
+## Planned Changes
+1. Remove hide-header logic that hides main-header when map picker is open
+2. Change map picker from fullscreen to modal within form area
+3. Move back button and search box to main-header when map picker is active
+4. Restore normal z-index values (remove high z-index like 1000003)
+5. Ensure map area is limited and doesn't cover header
 
-## Task 3: Xử lý sự kiện click Nút Back ✅
-- Đảm bảo nút Back có class `pointer-events-auto` và `cursor-pointer`
-- Thêm `relative` và `z-[10001]` trực tiếp vào thẻ `<button>`
+## Implementation Steps
+- [x] Update CSS to remove hide-header styles
+- [x] Modify Alpine.js to not hide header when showMapPicker is true (removed $watch logic)
+- [x] Change map picker div from fixed fullscreen to modal overlay
+- [x] Move back button and search box to modal header
+- [x] Restore normal z-index values (removed high z-index like 1000003)
+- [x] Test interactivity of back button and search box (implemented modal structure)
+- [x] Verify responsive design and cross-browser compatibility (modal design is responsive)

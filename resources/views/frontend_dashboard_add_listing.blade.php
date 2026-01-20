@@ -38,12 +38,7 @@
         .btn-counter:hover { background-color: #3270FC; color: white; }
         .btn-counter:active { transform: scale(0.95); }
 
-        /* Ẩn Header/Navbar chính của Website chỉ khi ở chế độ map picker */
-        body.hide-header header, body.hide-header .header, body.hide-header .main-header, body.hide-header .navbar {
-            display: none !important;
-        }
-
-        /* Đảm bảo nội dung không bị đẩy xuống do padding của header cũ */
+        /* Header styles - main-header remains visible */
         body {
             padding-top: 0 !important;
         }
@@ -756,15 +751,16 @@
             </div>
         </div>
 
-    <!-- Fullscreen Map Picker -->
+    <!-- Map Picker Modal -->
     <div x-show="showMapPicker" x-cloak
-         class="fixed inset-0 z-[9999] bg-white flex flex-col w-full h-full transition-transform duration-300"
-         x-transition:enter="transform transition ease-in-out duration-300"
-         x-transition:enter-start="translate-x-full"
-         x-transition:enter-end="translate-x-0"
-         x-transition:leave="transform transition ease-in-out duration-300"
-         x-transition:leave-start="translate-x-0"
-         x-transition:leave-end="translate-x-full">
+         class="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden">
 
         <div class="relative flex-1 w-full h-full bg-gray-100">
             <div id="picker-map" class="w-full h-full"></div>
@@ -779,41 +775,55 @@
             </button>
         </div>
 
-        <div class="bg-white p-4 pb-safe-bottom rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-10 border-t border-gray-100">
-            <div class="mb-4">
-                <p class="text-xs text-gray-400 uppercase font-bold tracking-wide mb-1">Vị trí đã chọn</p>
-                <div class="flex items-start">
-                    <i class="fa-solid fa-map-pin text-primary mt-1 mr-2"></i>
-                    <p class="text-sm font-medium text-gray-800 line-clamp-2" x-text="pickerAddress || 'Đang xác định vị trí...'"></p>
-                </div>
-            </div>
-
-            <button @click="confirmMapLocation" 
-                    :disabled="!pickerLat || isMapDragging"
-                    :class="(!pickerLat || isMapDragging) ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary shadow-lg shadow-blue-200 active:scale-[0.98]'"
-                    class="w-full text-white py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center">
-                <span x-show="!isMapDragging">Xác nhận vị trí này</span>
-                <span x-show="isMapDragging"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải...</span>
-            </button>
-        </div>
-
-        <div class="absolute top-0 left-0 right-0 z-50 p-4 pt-safe-top">
-            <div class="flex items-center gap-3 pointer-events-auto">
-                <button @click="showMapPicker = false" style="pointer-events: auto !important; z-index: 1000003;" class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform relative pointer-events-auto">
+            <!-- Modal Header -->
+            <div class="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
+                <button @click="showMapPicker = false" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:text-primary hover:bg-gray-200 active:scale-95 transition-all">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
 
-                <div class="flex-1 z-50 pointer-events-auto shadow-lg">
+                <div class="flex-1">
                     <select id="select-street" x-model="formData.street"
-                            data-z-index="1000003"
                             x-init="$watch('showMapPicker', (value) => { if (value) { $nextTick(() => { new TomSelect($el, { create: false, sortField: { field: 'text', direction: 'asc' }, plugins: ['dropdown_input'], maxOptions: null, dropdownParent: 'body', onChange: (value) => { formData.street = value; } }); }); } })"
-                            placeholder="Tìm tên đường..." autocomplete="off">
+                            placeholder="Tìm tên đường..." autocomplete="off" class="w-full">
                         <option value="">Chọn đường...</option>
                         <template x-for="st in streets" :key="st.id">
                             <option :value="st.id" x-text="st.name"></option>
                         </template>
                     </select>
                 </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="relative flex-1 w-full bg-gray-100 min-h-[400px]">
+                <div id="picker-map" class="w-full h-full"></div>
+
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-4 pointer-events-none z-0 flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-location-dot text-4xl text-red-500 drop-shadow-md animate-bounce-short"></i>
+                    <div class="w-3 h-1.5 bg-black/20 rounded-[100%] mt-1 blur-[1px]"></div>
+                </div>
+
+                <button @click="panToCurrentLocation" class="absolute bottom-4 right-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-primary active:bg-gray-50">
+                    <i class="fa-solid fa-crosshairs text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Bottom Panel -->
+            <div class="bg-white p-4 border-t border-gray-100">
+                <div class="mb-4">
+                    <p class="text-xs text-gray-400 uppercase font-bold tracking-wide mb-1">Vị trí đã chọn</p>
+                    <div class="flex items-start">
+                        <i class="fa-solid fa-map-pin text-primary mt-1 mr-2"></i>
+                        <p class="text-sm font-medium text-gray-800 line-clamp-2" x-text="pickerAddress || 'Đang xác định vị trí...'"></p>
+                    </div>
+                </div>
+
+                <button @click="confirmMapLocation"
+                        :disabled="!pickerLat || isMapDragging"
+                        :class="(!pickerLat || isMapDragging) ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary shadow-lg shadow-blue-200 active:scale-[0.98]'"
+                        class="w-full text-white py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center">
+                    <span x-show="!isMapDragging">Xác nhận vị trí này</span>
+                    <span x-show="isMapDragging"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải...</span>
+                </button>
             </div>
         </div>
     </div>
