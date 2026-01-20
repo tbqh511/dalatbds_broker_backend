@@ -271,8 +271,8 @@
 @endpush
 
 @section('content')
-    <div class="flex items-start justify-center min-h-screen w-full py-2 px-4">
-    <div x-data="realEstateForm" class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh]">
+    <div x-data="realEstateForm" class="flex items-start justify-center min-h-screen w-full py-2 px-4">
+    <div class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh]">
         
         <!-- HEADER -->
         <div class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 px-5 py-4">
@@ -763,6 +763,8 @@
             </div>
         </div>
 
+    </div>
+
     <!-- Map Picker Modal -->
     <div x-show="showMapPicker" x-cloak
          class="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4"
@@ -841,7 +843,6 @@
         </div>
     </div>
 
-    </div>
     </div>
     <style>
         /* Ẩn các thành phần thừa của Google Map để giao diện sạch như App */
