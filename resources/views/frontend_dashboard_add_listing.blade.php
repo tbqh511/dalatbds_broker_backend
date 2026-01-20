@@ -166,31 +166,52 @@
                 },
 
                 // Initialize Google Map inside picker
-                initGoogleMap() {
+                async initGoogleMap() {
+                    console.log("Start initGoogleMap");
                     const defaultPos = { lat: 11.940419, lng: 108.458313 };
+
+                    if (!document.getElementById("picker-map")) {
+                        console.error("Map container #picker-map not found!");
+                        return;
+                    }
+
+                    // Import AdvancedMarkerElement
+                    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
                     this.pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
                         center: defaultPos,
                         zoom: 15,
+                        mapId: "DEMO_MAP_ID",
                         disableDefaultUI: true,
                         clickableIcons: false,
                         gestureHandling: "greedy",
                     });
+                    
+                    console.log("Map instance created", this.pickerMap);
 
-                    // Add marker
-                    this.pickerMarker = new google.maps.Marker({
-                        position: defaultPos,
+                    // Add AdvancedMarker
+                    this.pickerMarker = new AdvancedMarkerElement({
                         map: this.pickerMap,
-                        draggable: true,
+                        position: defaultPos,
+                        gmpDraggable: true,
+                        title: "Kéo thả để chọn vị trí"
                     });
+                    
+                    console.log("Marker created", this.pickerMarker);
 
                     this.pickerGeocoder = new google.maps.Geocoder();
 
                     // Marker drag listener
                     this.pickerMarker.addListener("dragend", (event) => {
-                        const position = event.latLng;
-                        this.pickerLat = position.lat();
-                        this.pickerLng = position.lng();
-                        this.reverseGeocode(position);
+                        const position = this.pickerMarker.position;
+                        if (position.lat && typeof position.lat === 'function') {
+                             this.pickerLat = position.lat();
+                             this.pickerLng = position.lng();
+                        } else {
+                             this.pickerLat = position.lat;
+                             this.pickerLng = position.lng;
+                        }
+                        this.reverseGeocode({lat: this.pickerLat, lng: this.pickerLng});
                     });
 
                     this.pickerMap.addListener("dragstart", () => {
@@ -203,11 +224,10 @@
                         const center = this.pickerMap.getCenter();
                         this.pickerLat = center.lat();
                         this.pickerLng = center.lng();
-                        this.pickerMarker.setPosition(center);
+                        // Update marker position
+                        this.pickerMarker.position = center;
                         this.reverseGeocode(center);
                     });
-
-
                 },
 
                 // Reverse geocode
@@ -236,7 +256,7 @@
                                     this.pickerMap.setCenter(pos);
                                     this.pickerMap.setZoom(17);
                                     if (this.pickerMarker) {
-                                        this.pickerMarker.setPosition(pos);
+                                        this.pickerMarker.position = pos;
                                     }
                                 } else {
                                     // update quick preview text if picker not open
@@ -265,7 +285,7 @@
         });
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 @endpush

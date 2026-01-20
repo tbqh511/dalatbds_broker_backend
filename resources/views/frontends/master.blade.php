@@ -81,7 +81,7 @@
     <script src="{{asset('js/jquery.min.js')}}"></script>
     <script src="{{asset('js/plugins.js')}}"></script>
     <script src="{{asset('js/scripts.js')}}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=places&loading=async"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=places,marker&v=weekly&map_ids=DEMO_MAP_ID&loading=async"></script>
     <script src="{{asset('js/map-single.js')}}"></script>
     @stack('scripts')
 </body>
