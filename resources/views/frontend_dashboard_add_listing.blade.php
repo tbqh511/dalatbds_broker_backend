@@ -121,6 +121,7 @@
                 },
                 nextStep() { if(this.step < 4) this.step++; },
                 prevStep() { if(this.step > 1) this.step--; },
+                goToDashboardHome() { window.location.href = '/webapp'; },
                 getPropertyName() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.name : 'Bất động sản'; },
                 isHouseType() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.isHouse : false; },
                 getSelectedType() { return this.propertyTypes.find(t => t.id === this.formData.type) || this.propertyTypes[0]; },
@@ -756,20 +757,19 @@
         <div id="floating-footer" class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center">
             <div class="w-full max-w-md flex justify-between gap-3">
                 <!-- Nút Quay lại -->
-                <button type="button" x-show="step > 1" @click="prevStep" 
+                <button type="button" x-show="step >= 1" @click="step === 1 ? goToDashboardHome() : prevStep()"
                     class="flex-1 bg-gray-100 text-gray-600 px-4. py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
                     Quay lại
                 </button>
-                
+
                 <!-- Nút Tiếp tục -->
-                <button type="button" x-show="step < 4" @click="nextStep" 
-                    :class="step === 1 ? 'w-full' : 'flex-[2]'"
-                    class="bg-primary text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
+                <button type="button" x-show="step < 4" @click="nextStep"
+                    class="flex-[2] bg-primary text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
                     Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
 
                 <!-- Nút Hoàn tất -->
-                <button type="button" x-show="step === 4" @click="submitForm" 
+                <button type="button" x-show="step === 4" @click="submitForm"
                     class="flex-[2] bg-success text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
                     Đăng Tin <i class="fa-solid fa-paper-plane ml-2"></i>
                 </button>
