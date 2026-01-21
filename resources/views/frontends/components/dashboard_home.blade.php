@@ -53,10 +53,14 @@
             <!-- Quick Functions Widget -->
             <div class="dashboard-widget fl-wrap">
                 <div class="dashboard-widget-title fl-wrap">
-                    <h5><i class="fal fa-bolt"></i> Một số chức năng nhanh</h5>
+                    <h5> Một số chức năng nhanh</h5>
                 </div>
+                
                 <div class="quick-functions-container">
                     <div class="grid grid-cols-2 gap-3">
+                        <div class="add-list_wrap">
+                            <a href="../../../Downloads/themeforest-8CFJTVUZ-homeradar-directory-listing-real-estate-template/homeradar/light/dashboard-add-listing.html" class="add-list color-bg"><i class="fal fa-plus"></i> <span>Add Listing</span></a>
+                        </div>
                         <a href="{{ route('webapp.add_listing') }}" class="quick-function-btn flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200 aspect-square bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-200 hover:transform hover:scale-105">
                             <i class="fa-solid fa-plus-circle text-2xl mb-2"></i>
                             <span class="text-sm font-medium text-center leading-tight">Thêm BĐS</span>
