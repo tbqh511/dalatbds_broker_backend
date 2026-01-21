@@ -56,18 +56,31 @@
                     <h5> Một số chức năng nhanh</h5>
                 </div>
                 
-                <div class="quick-functions-container">
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="{{ route('webapp.add_listing') }}" class="btn color-bg float-btn ">
-                            <i class="fal fa-paper-plane"></i>
-                            <span class="text-sm font-medium text-center leading-tight">Thêm BĐS</span>
-                        </a>
-                        <a href="{{ route('webapp.listings') }}" class="btn color-bg float-btn">
-                            <i class="fal fa-paper-plane"></i>
-                            <span class="text-sm font-medium text-center leading-tight">Danh sách BĐS</span>
-                        </a>
-                    </div>
-                </div>
+                <div class="quick-functions-container w-full px-5 mb-6">
+    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3 ml-1">Truy cập nhanh</h3>
+
+    <div class="grid grid-cols-2 gap-4">
+        <a href="{{ route('webapp.add_listing') }}" 
+           class="group relative flex flex-col items-center justify-center p-4 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-300">
+            <div class="w-12 h-12 rounded-full bg-blue-50 text-primary flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <i class="fa-solid fa-plus text-xl"></i>
+            </div>
+            <span class="text-sm font-bold text-gray-700 group-hover:text-primary transition-colors">Đăng Tin</span>
+            
+            <div class="absolute inset-0 rounded-2xl ring-2 ring-primary/0 group-hover:ring-primary/5 transition-all"></div>
+        </a>
+
+        <a href="{{ route('webapp.listings') }}" 
+           class="group relative flex flex-col items-center justify-center p-4 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-300">
+            <div class="w-12 h-12 rounded-full bg-green-50 text-success flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <i class="fa-solid fa-list-ul text-xl"></i>
+            </div>
+            <span class="text-sm font-bold text-gray-700 group-hover:text-primary transition-colors">Danh sách</span>
+            
+            <div class="absolute inset-0 rounded-2xl ring-2 ring-green-500/0 group-hover:ring-green-500/5 transition-all"></div>
+        </a>
+    </div>
+</div>
             </div>
             <!-- Quick Functions Widget End -->
             <div class="clearfix"></div>
