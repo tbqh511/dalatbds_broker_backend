@@ -166,7 +166,7 @@
                 },
 
                 // Initialize Google Map inside picker
-                async initGoogleMap() {
+                initGoogleMap() {
                     console.log("Start initGoogleMap");
                     const defaultPos = { lat: 11.940419, lng: 108.458313 };
 
@@ -175,43 +175,35 @@
                         return;
                     }
 
-                    // Import AdvancedMarkerElement
-                    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-
                     this.pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
                         center: defaultPos,
                         zoom: 15,
-                        mapId: "DEMO_MAP_ID",
                         disableDefaultUI: true,
                         clickableIcons: false,
                         gestureHandling: "greedy",
                     });
-                    
-                    console.log("Map instance created", this.pickerMap);
 
-                    // Add AdvancedMarker
-                    this.pickerMarker = new AdvancedMarkerElement({
-                        map: this.pickerMap,
+                    this.pickerMarker = new google.maps.Marker({
                         position: defaultPos,
-                        gmpDraggable: true,
-                        title: "Kéo thả để chọn vị trí"
+                        map: this.pickerMap,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+                        icon: {
+                            url: "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png",
+                            scaledSize: new google.maps.Size(27, 43)
+                        }
                     });
-                    
+
+                    console.log("Map instance created", this.pickerMap);
                     console.log("Marker created", this.pickerMarker);
 
                     this.pickerGeocoder = new google.maps.Geocoder();
 
-                    // Marker drag listener
+                    // Sự kiện drag cho marker cũ
                     this.pickerMarker.addListener("dragend", (event) => {
-                        const position = this.pickerMarker.position;
-                        if (position.lat && typeof position.lat === 'function') {
-                             this.pickerLat = position.lat();
-                             this.pickerLng = position.lng();
-                        } else {
-                             this.pickerLat = position.lat;
-                             this.pickerLng = position.lng;
-                        }
-                        this.reverseGeocode({lat: this.pickerLat, lng: this.pickerLng});
+                        this.pickerLat = event.latLng.lat();
+                        this.pickerLng = event.latLng.lng();
+                        this.reverseGeocode(event.latLng);
                     });
 
                     this.pickerMap.addListener("dragstart", () => {
@@ -225,7 +217,7 @@
                         this.pickerLat = center.lat();
                         this.pickerLng = center.lng();
                         // Update marker position
-                        this.pickerMarker.position = center;
+                        this.pickerMarker.setPosition(center);
                         this.reverseGeocode(center);
                     });
                 },
@@ -787,7 +779,7 @@
 
     <!-- Map Picker Modal -->
     <div x-show="showMapPicker" x-cloak
-         class="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4"
+         class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -797,7 +789,7 @@
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
 
         <div class="relative flex-1 w-full h-full bg-gray-100">
-            <div id="picker-map" class="w-full h-full"></div>
+            <div id="picker-map" class="w-full h-full min-h-[400px]"></div>
 
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-4 pointer-events-none z-0 flex flex-col items-center justify-center">
                 <i class="fa-solid fa-location-dot text-4xl text-red-500 drop-shadow-md animate-bounce-short"></i>
