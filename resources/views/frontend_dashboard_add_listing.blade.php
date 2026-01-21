@@ -810,13 +810,20 @@
                 </div>
             </div>
 
-            <button @click="confirmMapLocation"
-                    :disabled="!pickerLat || isMapDragging"
-                    :class="(!pickerLat || isMapDragging) ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary shadow-lg shadow-blue-200 active:scale-[0.98]'"
-                    class="w-full text-white py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center">
-                <span x-show="!isMapDragging">Xác nhận vị trí này</span>
-                <span x-show="isMapDragging"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải...</span>
-            </button>
+            <div class="flex gap-3">
+                <button type="button" @click="showMapPicker = false" 
+                    class="flex-1 bg-gray-100 text-gray-600 px-4 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
+                    Quay lại
+                </button>
+
+                <button @click="confirmMapLocation"
+                        :disabled="!pickerLat || isMapDragging"
+                        :class="(!pickerLat || isMapDragging) ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary shadow-lg shadow-blue-200 active:scale-[0.98]'"
+                        class="flex-[2] text-white py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center">
+                    <span x-show="!isMapDragging">Xác nhận vị trí này</span>
+                    <span x-show="isMapDragging"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải...</span>
+                </button>
+            </div>
         </div>
 
         <div class="absolute top-0 left-0 right-0 z-50 p-4 pt-safe-top">
