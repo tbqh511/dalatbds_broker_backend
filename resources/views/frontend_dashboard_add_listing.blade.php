@@ -219,17 +219,6 @@
                         this.pickerAddress = "Đang di chuyển...";
                     });
 
-                    this.pickerMap.addListener("idle", () => {
-                        this.isMapDragging = false;
-                        const center = this.pickerMap.getCenter();
-                        this.pickerLat = center.lat();
-                        this.pickerLng = center.lng();
-                        // Update marker position
-                        this.pickerMarker.position = center;
-                        this.reverseGeocode(center);
-                    });
-                },
-
                 // Reverse geocode
                 reverseGeocode(latlng) {
                     if (!this.pickerGeocoder) return;
@@ -794,10 +783,10 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
+     
 
         <div class="relative flex-1 w-full h-full bg-gray-100">
-            <div id="picker-map" class="w-full h-full min-h-[400px]"></div>
+            <div id="picker-map" class="w-full h-full"></div>
 
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-4 pointer-events-none z-0 flex flex-col items-center justify-center">
                 <i class="fa-solid fa-location-dot text-4xl text-red-500 drop-shadow-md animate-bounce-short"></i>
