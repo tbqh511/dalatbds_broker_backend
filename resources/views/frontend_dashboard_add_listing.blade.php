@@ -166,7 +166,7 @@
                 },
 
                 // Initialize Google Map inside picker
-                initGoogleMap() {
+                async initGoogleMap() {
                     console.log("Start initGoogleMap");
                     const defaultPos = { lat: 11.940419, lng: 108.458313 };
 
@@ -175,35 +175,43 @@
                         return;
                     }
 
+                    // Import AdvancedMarkerElement
+                    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
                     this.pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
                         center: defaultPos,
                         zoom: 15,
+                        mapId: "DEMO_MAP_ID",
                         disableDefaultUI: true,
                         clickableIcons: false,
                         gestureHandling: "greedy",
                     });
 
-                    this.pickerMarker = new google.maps.Marker({
-                        position: defaultPos,
+                    console.log("Map instance created", this.pickerMap);
+
+                    // Add AdvancedMarker
+                    this.pickerMarker = new AdvancedMarkerElement({
                         map: this.pickerMap,
-                        draggable: true,
-                        animation: google.maps.Animation.DROP,
-                        icon: {
-                            url: "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png",
-                            scaledSize: new google.maps.Size(27, 43)
-                        }
+                        position: defaultPos,
+                        gmpDraggable: true,
+                        title: "Kéo thả để chọn vị trí"
                     });
 
-                    console.log("Map instance created", this.pickerMap);
                     console.log("Marker created", this.pickerMarker);
 
                     this.pickerGeocoder = new google.maps.Geocoder();
 
-                    // Sự kiện drag cho marker cũ
+                    // Marker drag listener
                     this.pickerMarker.addListener("dragend", (event) => {
-                        this.pickerLat = event.latLng.lat();
-                        this.pickerLng = event.latLng.lng();
-                        this.reverseGeocode(event.latLng);
+                        const position = this.pickerMarker.position;
+                        if (position.lat && typeof position.lat === 'function') {
+                             this.pickerLat = position.lat();
+                             this.pickerLng = position.lng();
+                        } else {
+                             this.pickerLat = position.lat;
+                             this.pickerLng = position.lng;
+                        }
+                        this.reverseGeocode({lat: this.pickerLat, lng: this.pickerLng});
                     });
 
                     this.pickerMap.addListener("dragstart", () => {
@@ -217,7 +225,7 @@
                         this.pickerLat = center.lat();
                         this.pickerLng = center.lng();
                         // Update marker position
-                        this.pickerMarker.setPosition(center);
+                        this.pickerMarker.position = center;
                         this.reverseGeocode(center);
                     });
                 },
