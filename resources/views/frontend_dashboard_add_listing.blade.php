@@ -779,7 +779,7 @@
 
     <!-- Map Picker Modal -->
     <div x-show="showMapPicker" x-cloak
-         class="fixed inset-0 z-[100] bg-black/50 flex justify-center p-4"
+         class="fixed inset-0 z-[100] bg-black/50 flex justify-center"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
