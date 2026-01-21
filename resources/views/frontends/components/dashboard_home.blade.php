@@ -19,11 +19,9 @@
                 <div class="quick-functions-container">
                     <div class="grid grid-cols-2 gap-3">
                         <a href="{{ route('webapp.add_listing') }}" class="btn color-bg  ">
-                            <i class="fal fa-paper-plane"></i>
                             <span class="text-sm font-medium text-center leading-tight">Thêm BĐS</span>
                         </a>
                         <a href="{{ route('webapp.listings') }}" class="btn color-bg " style="margin-left: 20px;">
-                            <i class="fal fa-paper-plane"></i>
                             <span class="text-sm font-medium text-center leading-tight">Danh sách BĐS</span>
                         </a>
                     </div>
