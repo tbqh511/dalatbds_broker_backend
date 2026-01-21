@@ -783,7 +783,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
-     
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden"> 
 
         <div class="relative flex-1 w-full h-full bg-gray-100">
             <div id="picker-map" class="w-full h-full"></div>
