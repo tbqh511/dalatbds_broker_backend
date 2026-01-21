@@ -212,6 +212,7 @@
                     });
 
                     this.pickerMap.addListener("idle", () => {
+                        this.isMapDragging = false;
                         const center = this.pickerMap.getCenter();
                         this.pickerLat = center.lat();
                         this.pickerLng = center.lng();
