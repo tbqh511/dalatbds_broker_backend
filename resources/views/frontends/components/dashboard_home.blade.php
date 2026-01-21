@@ -50,6 +50,29 @@
                     <!-- dashboard-stats end -->
                 </div>
             </div>
+            <!-- Quick Functions Widget -->
+            <div class="dashboard-widget fl-wrap">
+                <div class="dashboard-widget-title fl-wrap">
+                    <h5><i class="fal fa-bolt"></i> Một số chức năng nhanh</h5>
+                </div>
+                <div class="quick-functions-container">
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                            <a href="{{ route('webapp.add_listing') }}" class="quick-function-btn fl-wrap">
+                                <i class="fal fa-plus-circle"></i>
+                                <span>Thêm BĐS</span>
+                            </a>
+                        </div>
+                        <div class="col-md-6 col-sm-6">
+                            <a href="{{ route('webapp.listings') }}" class="quick-function-btn fl-wrap">
+                                <i class="fal fa-list"></i>
+                                <span>Danh sách BĐS</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Quick Functions Widget End -->
             <div class="clearfix"></div>
             {{-- <div class="row">
                 <div class="col-md-8">

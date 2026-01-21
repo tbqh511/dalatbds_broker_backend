@@ -18,5 +18,3 @@
 - [x] Change map picker div from fixed fullscreen to modal overlay
 - [x] Move back button and search box to modal header
 - [x] Restore normal z-index values (removed high z-index like 1000003)
-- [x] Test interactivity of back button and search box (implemented modal structure)
-- [x] Verify responsive design and cross-browser compatibility (modal design is responsive)

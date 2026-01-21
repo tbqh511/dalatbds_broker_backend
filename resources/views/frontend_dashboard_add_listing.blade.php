@@ -409,7 +409,8 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-left">Số nhà</label>
                         <input type="text" x-model="formData.houseNumber" @input="updateMapLocation" placeholder="VD: 123/4" class="input-field">
                     </div> --}}
-
+                    
+                    
                     <!-- Google Map Preview -->
                     <div class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
                         <div class="flex justify-between items-center mb-2">
