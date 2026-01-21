@@ -56,19 +56,15 @@
                     <h5><i class="fal fa-bolt"></i> Một số chức năng nhanh</h5>
                 </div>
                 <div class="quick-functions-container">
-                    <div class="row">
-                        <div class="col-md-6 col-sm-6">
-                            <a href="{{ route('webapp.add_listing') }}" class="quick-function-btn fl-wrap">
-                                <i class="fal fa-plus-circle"></i>
-                                <span>Thêm BĐS</span>
-                            </a>
-                        </div>
-                        <div class="col-md-6 col-sm-6">
-                            <a href="{{ route('webapp.listings') }}" class="quick-function-btn fl-wrap">
-                                <i class="fal fa-list"></i>
-                                <span>Danh sách BĐS</span>
-                            </a>
-                        </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="{{ route('webapp.add_listing') }}" class="quick-function-btn flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200 aspect-square bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-200 hover:transform hover:scale-105">
+                            <i class="fa-solid fa-plus-circle text-2xl mb-2"></i>
+                            <span class="text-sm font-medium text-center leading-tight">Thêm BĐS</span>
+                        </a>
+                        <a href="{{ route('webapp.listings') }}" class="quick-function-btn flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200 aspect-square bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-200 hover:transform hover:scale-105">
+                            <i class="fa-solid fa-list text-2xl mb-2"></i>
+                            <span class="text-sm font-medium text-center leading-tight">Danh sách BĐS</span>
+                        </a>
                     </div>
                 </div>
             </div>
