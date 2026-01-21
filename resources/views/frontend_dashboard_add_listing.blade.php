@@ -39,7 +39,7 @@
         .btn-counter:active { transform: scale(0.95); }
 
         /* Ẩn Header/Navbar chính của Website chỉ khi ở chế độ map picker */
-        body.hide-header header, body.hide-header .header, body.hide-header .main-header, body.hide-header .navbar {
+        body.hide-header header, body.hide-header .header, body.hide-header .main-header, body.hide-header .navbar, body.hide-header #floating-footer {
             display: none !important;
         }
 
