@@ -56,19 +56,41 @@
                     <h5> Một số chức năng nhanh</h5>
                 </div>
                 
-                <div class="quick-functions-container">
-                    <div class="grid grid-cols-2 gap-3">
-                       
-                        <a href="{{ route('webapp.add_listing') }}" class="color-bg flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200 aspect-square bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-200 hover:transform hover:scale-105">
-                            <i class="fal fa-paper-plane"></i>
-                            <span class="text-sm font-medium text-center leading-tight">Thêm BĐS</span>
-                        </a>
-                        <a href="{{ route('webapp.listings') }}" class="color-bg flex flex-col items-center justify-center p-4 border rounded-xl transition-all duration-200 aspect-square bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-200 hover:transform hover:scale-105">
-                            <i class="fal fa-paper-plane"></i>
-                            <span class="text-sm font-medium text-center leading-tight">Danh sách BĐS</span>
-                        </a>
-                    </div>
-                </div>
+                <div class="quick-functions-container mb-6 px-1">
+    <div class="grid grid-cols-2 gap-4">
+        
+        <!-- Nút Thêm BĐS -->
+        <a href="{{ route('webapp.add_listing') }}" 
+           class="group flex flex-col items-center justify-center p-5 border border-gray-200 rounded-2xl bg-white shadow-sm transition-all duration-300 aspect-square hover:border-primary hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-1">
+            
+            <!-- Icon Wrapper -->
+            <div class="w-14 h-14 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                <i class="fa-solid fa-paper-plane text-2xl"></i>
+            </div>
+            
+            <!-- Text -->
+            <span class="text-sm font-bold text-gray-700 text-center leading-tight group-hover:text-primary transition-colors">
+                Thêm BĐS
+            </span>
+        </a>
+
+        <!-- Nút Danh sách BĐS -->
+        <a href="{{ route('webapp.listings') }}" 
+           class="group flex flex-col items-center justify-center p-5 border border-gray-200 rounded-2xl bg-white shadow-sm transition-all duration-300 aspect-square hover:border-primary hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-1">
+            
+            <!-- Icon Wrapper -->
+            <div class="w-14 h-14 bg-green-50 text-success rounded-full flex items-center justify-center mb-3 group-hover:bg-success group-hover:text-white transition-colors duration-300">
+                <i class="fa-solid fa-list-check text-2xl"></i>
+            </div>
+            
+            <!-- Text -->
+            <span class="text-sm font-bold text-gray-700 text-center leading-tight group-hover:text-success transition-colors">
+                Danh sách BĐS
+            </span>
+        </a>
+
+    </div>
+</div>
             </div>
             <!-- Quick Functions Widget End -->
             <div class="clearfix"></div>
