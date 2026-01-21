@@ -283,7 +283,7 @@
 @endpush
 
 @section('content')
-    <div x-data="realEstateForm" class="flex items-start justify-center min-h-screen w-full py-2 px-4">
+    <div x-data="realEstateForm" class="flex items-start justify-center min-h-screen w-full py-2 ">
     <div class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh]">
         
         <!-- HEADER -->
