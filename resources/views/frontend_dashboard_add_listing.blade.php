@@ -602,7 +602,7 @@
                     </label>
 
                     <!-- STATE 1: DANH SÁCH MỞ RỘNG -->
-                    <div x-show="isLegalExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-2 gap-3">
+                    <div x-show="isLegalExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-3 gap-3">
                         <template x-for="legal in legalTypes" :key="legal.value">
                             <button type="button"
                                 @click="selectLegal(legal.value)"
