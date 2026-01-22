@@ -288,7 +288,7 @@
     <div class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh]">
         
         <!-- HEADER -->
-        <div class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 px-5 py-4">
+        <div class="sticky top-0 z-49 bg-white/90 backdrop-blur-md border-b border-gray-100 px-5 py-4">
             <div class="flex justify-between items-center mb-2">
                 <h1 class="text-lg font-bold text-gray-800">Đăng Tin Mới</h1>
                 <span class="text-xs font-bold text-primary bg-blue-50 px-2 py-1 rounded-md">Bước <span x-text="step"></span>/4</span>
