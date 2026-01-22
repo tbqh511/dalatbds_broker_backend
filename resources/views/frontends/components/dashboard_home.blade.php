@@ -10,26 +10,6 @@
         <!-- dashboard-title end -->
 
         <div class="dasboard-wrapper fl-wrap no-pag">
-            <!-- Quick Functions Widget -->
-            <div class="dashboard-widget fl-wrap">
-                <div class="dashboard-widget-title fl-wrap">
-                    <h5> Một số chức năng nhanh</h5>
-                </div>
-                
-                <div class="quick-functions-container">
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="{{ route('webapp.add_listing') }}" class="btn color-bg  ">
-                            <i class="fa-solid fa-plus"></i>
-                            <span class="text-sm font-medium text-center leading-tight">Thêm BĐS</span>
-                        </a>
-                        <a href="{{ route('webapp.listings') }}" class="btn color-bg " style="margin-left: 20px;">
-                            <i class="fa-solid fa-plus"></i>
-                            <span class="text-sm font-medium text-center leading-tight">Danh sách BĐS</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <!-- Quick Functions Widget End -->
             <div class="dashboard-stats-container fl-wrap">
                 <div class="row">
                     <!--dashboard-stats-->
