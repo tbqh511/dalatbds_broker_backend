@@ -383,7 +383,7 @@
                                         : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                                     class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-[4/3] group">
                                     <i :class="['fa-solid', ward.icon, 'text-lg mb-1 group-hover:scale-110 transition-transform']"></i>
-                                    <span class="text-[10px] font-bold text-center leading-tight" x-text="ward.name"></span>
+                                    <span class="text-xs font-medium text-center leading-tight" x-text="ward.name"></span>
                                 </button>
                             </template>
                         </div>
