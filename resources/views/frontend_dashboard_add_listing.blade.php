@@ -330,7 +330,7 @@
                                 console.log('Geocoding successful for', street.name, 'at position:', pos);
 
                                 this.pickerMap.setCenter(pos);
-                                this.pickerMap.setZoom(17);
+                                this.pickerMap.setZoom(15);
                                 if (this.pickerMarker) {
                                     this.pickerMarker.setPosition(pos);
                                 }
