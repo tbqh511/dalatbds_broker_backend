@@ -547,7 +547,7 @@
                                    placeholder="Số điện thoại"
                                    class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
 
-                            <div class="absolute -bottom-5 left-0 text-[10px] text-green-600 font-medium flex items-center opacity-0 group-focus-within:opacity-100 transition-opacity" x-show="formData.contact.phone">
+                            <div class="absolute -bottom-5 left-0 text-[10px] text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone">
                                 <i class="fa-solid fa-shield-halved mr-1"></i> Số điện thoại này được mã hóa và chỉ Sale nội bộ mới thấy.
                             </div>
                         </div>
