@@ -541,7 +541,16 @@
                     </div>
                     <div class="space-y-3">
                         <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field ">
-                        <input type="tel" x-model="formData.contact.phone" placeholder="Số điện thoại" class="input-field ">
+                        <div class="relative group">
+                            <input type="tel"
+                                   x-model="formData.contact.phone"
+                                   placeholder="Số điện thoại"
+                                   class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
+
+                            <div class="absolute -bottom-5 left-0 text-[10px] text-green-600 font-medium flex items-center opacity-0 group-focus-within:opacity-100 transition-opacity">
+                                <i class="fa-solid fa-shield-halved mr-1"></i> Số điện thoại này được mã hóa và chỉ Sale nội bộ mới thấy.
+                            </div>
+                        </div>
                         <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
                     </div>
                 </div>
@@ -634,7 +643,7 @@
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Mô tả chi tiết</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mô tả chi tiết</label>
                     <textarea x-model="formData.description" class="input-field h-32 resize-none" placeholder="Mô tả về đường đi, view, nội thất, tiện ích..."></textarea>
                 </div>
 
