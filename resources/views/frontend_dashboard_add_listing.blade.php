@@ -271,6 +271,23 @@
                 },
                 
                 getStreetName(id) { const st = this.streets.find(s => s.id == id); return st ? st.name : 'Đường đã chọn'; },
+                selectStreet(id) {
+                    this.formData.street = id;
+                    if (this.showMapPicker && this.pickerMap) {
+                        const street = this.streets.find(s => s.id == id);
+                        if (street && street.lat && street.lng) {
+                            const pos = { lat: parseFloat(street.lat), lng: parseFloat(street.lng) };
+                            this.pickerMap.setCenter(pos);
+                            this.pickerMap.setZoom(17);
+                            if (this.pickerMarker) {
+                                this.pickerMarker.setPosition(pos);
+                            }
+                            this.pickerLat = pos.lat;
+                            this.pickerLng = pos.lng;
+                            this.reverseGeocode(pos);
+                        }
+                    }
+                },
                 updateMapLocation() { if(this.formData.street && this.formData.houseNumber) { const streetName = this.getStreetName(this.formData.street); this.locationText = `📍 Đã ghim: ${this.formData.houseNumber}, ${streetName}`; } },
                 readMoney(number) { if (number === 0) return '0 VNĐ'; if (number >= 1000000000) { return (number / 1000000000).toFixed(2).replace('.00', '') + ' Tỷ VNĐ'; } if (number >= 1000000) { return (number / 1000000).toFixed(0) + ' Triệu VNĐ'; } return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(number); },
                 submitForm() { alert("Đang gửi dữ liệu về hệ thống..."); console.log(JSON.parse(JSON.stringify(this.formData))); }
@@ -846,7 +863,7 @@
                                                 plugins: ['dropdown_input'],
                                                 maxOptions: null,
                                                 dropdownParent: document.body,
-                                                onChange: (value) => { formData.street = value; }
+                                                onChange: (value) => { selectStreet(value); }
                                             });
                                         }
                                     });
