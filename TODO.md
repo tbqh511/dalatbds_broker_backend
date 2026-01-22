@@ -1,3 +1,4 @@
-- [ ] Modify footer.blade.php to replace links with "Thêm BĐS" and "Thêm Khách" buttons
-- [ ] Update webapp.css with mobile-specific styles for fixed footer, hide totop, and button styling
-- [ ] Test responsive design and compatibility
+- [ ] Update calculateCommission() function to use readMoney() for Vietnamese word display
+- [ ] Test commission display with various values (0, small amounts, millions, billions)
+- [ ] Verify display consistency with priceInWords formatting
+- [ ] Check interface rendering after changes
