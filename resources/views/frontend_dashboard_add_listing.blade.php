@@ -272,21 +272,80 @@
                 
                 getStreetName(id) { const st = this.streets.find(s => s.id == id); return st ? st.name : 'Đường đã chọn'; },
                 selectStreet(id) {
+                    console.log('selectStreet called with id:', id);
                     this.formData.street = id;
-                    if (this.showMapPicker && this.pickerMap) {
-                        const street = this.streets.find(s => s.id == id);
-                        if (street && street.lat && street.lng) {
-                            const pos = { lat: parseFloat(street.lat), lng: parseFloat(street.lng) };
-                            this.pickerMap.setCenter(pos);
-                            this.pickerMap.setZoom(17);
-                            if (this.pickerMarker) {
-                                this.pickerMarker.setPosition(pos);
-                            }
-                            this.pickerLat = pos.lat;
-                            this.pickerLng = pos.lng;
-                            this.reverseGeocode(pos);
-                        }
+
+                    if (!this.showMapPicker) {
+                        console.log('Map picker not open, skipping geocoding');
+                        return;
                     }
+
+                    if (!this.pickerMap) {
+                        console.log('Map not initialized, skipping geocoding');
+                        return;
+                    }
+
+                    if (!this.pickerGeocoder) {
+                        console.log('Geocoder not initialized, skipping geocoding');
+                        return;
+                    }
+
+                    const street = this.streets.find(s => s.id == id);
+                    if (!street) {
+                        console.log('Street not found for id:', id);
+                        return;
+                    }
+
+                    console.log('Attempting to geocode street:', street.name);
+
+                    // Try multiple address formats for better geocoding success
+                    const addressFormats = [
+                        street.name + ', Đà Lạt, Lâm Đồng, Vietnam',
+                        street.name + ', Đà Lạt, Vietnam',
+                        street.name + ', Da Lat, Vietnam',
+                        street.name + ', Lam Dong, Vietnam'
+                    ];
+
+                    let geocodeAttempt = 0;
+
+                    const tryGeocode = () => {
+                        if (geocodeAttempt >= addressFormats.length) {
+                            console.warn('All geocoding attempts failed for street:', street.name);
+                            return;
+                        }
+
+                        const geocodeRequest = {
+                            address: addressFormats[geocodeAttempt]
+                        };
+
+                        console.log('Geocoding attempt', geocodeAttempt + 1, 'with address:', geocodeRequest.address);
+
+                        this.pickerGeocoder.geocode(geocodeRequest, (results, status) => {
+                            if (status === 'OK' && results[0]) {
+                                const pos = {
+                                    lat: results[0].geometry.location.lat(),
+                                    lng: results[0].geometry.location.lng()
+                                };
+
+                                console.log('Geocoding successful for', street.name, 'at position:', pos);
+
+                                this.pickerMap.setCenter(pos);
+                                this.pickerMap.setZoom(17);
+                                if (this.pickerMarker) {
+                                    this.pickerMarker.setPosition(pos);
+                                }
+                                this.pickerLat = pos.lat;
+                                this.pickerLng = pos.lng;
+                                this.reverseGeocode(pos);
+                            } else {
+                                console.warn('Geocoding attempt', geocodeAttempt + 1, 'failed for', street.name, 'with status:', status);
+                                geocodeAttempt++;
+                                tryGeocode(); // Try next format
+                            }
+                        });
+                    };
+
+                    tryGeocode();
                 },
                 updateMapLocation() { if(this.formData.street && this.formData.houseNumber) { const streetName = this.getStreetName(this.formData.street); this.locationText = `📍 Đã ghim: ${this.formData.houseNumber}, ${streetName}`; } },
                 readMoney(number) { if (number === 0) return '0 VNĐ'; if (number >= 1000000000) { return (number / 1000000000).toFixed(2).replace('.00', '') + ' Tỷ VNĐ'; } if (number >= 1000000) { return (number / 1000000).toFixed(0) + ' Triệu VNĐ'; } return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(number); },
