@@ -379,8 +379,8 @@
                                 <button type="button" 
                                     @click="selectWard(ward.id)"
                                     :class="formData.ward === ward.id 
-                                        ? 'bg-primary text-white border-primary shadow-md' 
-                                        : 'bg-white text-primary border-gray-200 hover:bg-blue-50'"
+                                        ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105' 
+                                        : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                                     class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-[4/3] group">
                                     <i :class="['fa-solid', ward.icon, 'text-lg mb-1 group-hover:scale-110 transition-transform']"></i>
                                     <span class="text-[10px] font-bold text-center leading-tight" x-text="ward.name"></span>
