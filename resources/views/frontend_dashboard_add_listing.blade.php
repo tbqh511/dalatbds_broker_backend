@@ -547,8 +547,8 @@
                                    placeholder="Số điện thoại"
                                    class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
 
-                            <div class="relative -bottom-5 left-0 text-[10px] text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone">
-                                <i class="fa-solid fa-shield-halved mr-1"></i> Số điện thoại này được bảo mật.
+                            <div class="relative -bottom-5 left-0 text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone">
+                                <i class="fa-solid fa-shield-halved mr-1"></i> Thông tin này được bảo mật.
                             </div>
                         </div>
                         <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
