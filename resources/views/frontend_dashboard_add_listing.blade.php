@@ -31,7 +31,7 @@
         .input-field {
             width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #E5E7EB; outline: none; transition: all 0.2s; background-color: white;
         }
-        .input-field:focus { border-color: #3270FC; ring: 2px; ring-color: #3270FC; }
+        .input-field:focus { border-color: #22c55e; ring: 2px; ring-color: #bbf7d0; }
         
         /* Custom number input controls */
         .btn-counter { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: #F0F5FF; color: #3270FC; font-weight: bold; transition: all 0.2s; border: 1px solid transparent; }
@@ -547,7 +547,7 @@
                                    placeholder="Số điện thoại"
                                    class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
 
-                            <div class="absolute -bottom-5 left-0 text-[10px] text-green-600 font-medium flex items-center opacity-0 group-focus-within:opacity-100 transition-opacity">
+                            <div class="absolute -bottom-5 left-0 text-[10px] text-green-600 font-medium flex items-center opacity-0 group-focus-within:opacity-100 transition-opacity" x-show="formData.contact.phone">
                                 <i class="fa-solid fa-shield-halved mr-1"></i> Số điện thoại này được mã hóa và chỉ Sale nội bộ mới thấy.
                             </div>
                         </div>
