@@ -830,7 +830,7 @@
                                             <div class="mt-1 flex justify-between items-center overflow-hidden">
                                                  <span class="text-[9px] text-gray-500 truncate w-full" x-text="img.name"></span>
                                             </div>
-                                            <button type="button" @click="removeImage('others', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10">
+                                            <button type="button" @click="removeImage('others', index)" class="relative -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </div>
