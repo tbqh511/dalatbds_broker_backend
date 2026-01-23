@@ -99,44 +99,84 @@
                 // IMAGE UPLOAD STATE
                 images: {
                     avatar: null,
-                    legal: null,
-                    others: null
+                    legal: [],
+                    others: []
                 },
 
                 handleImageUpload(event, type) {
-                    const file = event.target.files[0];
-                    if (!file) return;
+                    const files = event.target.files;
+                    if (!files.length) return;
 
-                    // Validate type
                     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                    if (!validTypes.includes(file.type)) {
-                        alert('Chỉ chấp nhận định dạng JPG, PNG, GIF, WebP');
-                        return;
-                    }
+                    const maxSize = 5 * 1024 * 1024; // 5MB
 
-                    // Validate size (5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert('Kích thước ảnh tối đa 5MB');
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        this.images[type] = {
-                            file: file,
-                            preview: e.target.result,
-                            name: file.name,
-                            size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
-                        };
+                    const validateFile = (file) => {
+                        if (!validTypes.includes(file.type)) return 'Định dạng không hỗ trợ (chỉ JPG, PNG, GIF, WebP)';
+                        if (file.size > maxSize) return 'Kích thước file quá lớn (> 5MB)';
+                        return null;
                     };
-                    reader.readAsDataURL(file);
+
+                    if (type === 'avatar') {
+                        // Single file logic
+                        const file = files[0];
+                        const error = validateFile(file);
+                        if (error) {
+                            alert(error);
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.images.avatar = {
+                                file: file,
+                                preview: e.target.result,
+                                name: file.name,
+                                size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
+                            };
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        // Multi file logic
+                        const currentFiles = this.images[type];
+                        if (currentFiles.length + files.length > 10) {
+                            alert(`Bạn chỉ được chọn tối đa 10 tệp tin. Hiện đã có ${currentFiles.length} tệp.`);
+                            return;
+                        }
+
+                        Array.from(files).forEach(file => {
+                            const error = validateFile(file);
+                            if (error) {
+                                alert(`File ${file.name}: ${error}`); // Simple alert for now
+                                return;
+                            }
+
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                // Push to array
+                                this.images[type].push({
+                                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                                    file: file,
+                                    preview: e.target.result,
+                                    name: file.name,
+                                    size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                                    progress: 0,
+                                    status: 'pending'
+                                });
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    }
                     
-                    // Reset input value to allow re-selecting the same file if needed
+                    // Reset input value
                     event.target.value = '';
                 },
 
-                removeImage(type) {
-                    this.images[type] = null;
+                removeImage(type, index = null) {
+                    if (type === 'avatar') {
+                        this.images.avatar = null;
+                    } else if (index !== null) {
+                        this.images[type].splice(index, 1);
+                    }
                 },
 
                 streets: @json($streets),
@@ -696,10 +736,10 @@
                     
                     <!-- Hidden Inputs -->
                     <input type="file" x-ref="avatarInput" class="hidden" accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'avatar')">
-                    <input type="file" x-ref="legalInput" class="hidden" accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'legal')">
-                    <input type="file" x-ref="othersInput" class="hidden" accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'others')">
+                    <input type="file" x-ref="legalInput" class="hidden" multiple accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'legal')">
+                    <input type="file" x-ref="othersInput" class="hidden" multiple accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'others')">
 
-                    <!-- Ảnh chính -->
+                    <!-- Ảnh chính (Single) -->
                     <div>
                         <!-- State 1: Chưa chọn ảnh -->
                         <div x-show="!images.avatar" @click="$refs.avatarInput.click()" class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group h-48 flex flex-col items-center justify-center">
@@ -724,47 +764,78 @@
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
-                        <!-- Ảnh giấy tờ -->
+                        <!-- Ảnh giấy tờ (Multi) -->
                         <div>
-                            <div x-show="!images.legal" @click="$refs.legalInput.click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group h-36 flex flex-col items-center justify-center">
+                            <!-- Empty State -->
+                            <div x-show="images.legal.length === 0" @click="$refs.legalInput.click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group h-full min-h-[144px] flex flex-col items-center justify-center">
                                 <div class="w-10 h-10 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
                                     <i class="fa-solid fa-file-shield text-lg"></i>
                                 </div>
                                 <p class="text-xs font-bold text-gray-700 text-center">Sổ đỏ/Pháp lý</p>
-                                <p class="text-[10px] text-gray-400 text-center"><i class="fa-solid fa-lock mr-1"></i>Bảo mật</p>
+                                <p class="text-[10px] text-gray-400 text-center"><i class="fa-solid fa-lock mr-1"></i>Bảo mật (Max 10)</p>
                             </div>
 
-                            <div x-show="images.legal" class="relative border border-gray-200 rounded-xl p-2 bg-white h-full">
-                                <img :src="images.legal?.preview" class="w-full h-24 object-cover rounded-lg mb-2 bg-gray-100">
-                                <div class="flex justify-between items-center px-1">
-                                    <div class="text-[10px] font-bold text-gray-700 truncate max-w-[80px]" x-text="images.legal?.name"></div>
-                                    <div class="text-[9px] text-gray-400" x-text="images.legal?.size"></div>
+                            <!-- List State -->
+                            <div x-show="images.legal.length > 0" class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-gray-700">Pháp lý (<span x-text="images.legal.length"></span>/10)</span>
+                                    <button type="button" x-show="images.legal.length < 10" @click="$refs.legalInput.click()" class="text-[10px] bg-blue-50 text-primary px-2 py-1 rounded font-bold hover:bg-blue-100">
+                                        <i class="fa-solid fa-plus mr-1"></i>Thêm
+                                    </button>
                                 </div>
-                                <button type="button" @click="removeImage('legal')" class="absolute top-3 right-3 bg-white/90 text-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-trash text-xs"></i>
-                                </button>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <template x-for="(img, index) in images.legal" :key="img.id">
+                                        <div class="relative border border-gray-200 rounded-lg p-1 bg-white group">
+                                            <img :src="img.preview" class="w-full h-16 object-cover rounded bg-gray-50">
+                                            <div class="mt-1 flex justify-between items-center overflow-hidden">
+                                                 <span class="text-[9px] text-gray-500 truncate w-full" x-text="img.name"></span>
+                                            </div>
+                                            <!-- Remove Button -->
+                                            <button type="button" @click="removeImage('legal', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-times text-[10px]"></i>
+                                            </button>
+                                            <!-- Progress Bar (Visual only for now) -->
+                                            <div class="h-0.5 w-full bg-gray-100 mt-1 rounded-full overflow-hidden" x-show="img.status === 'uploading'">
+                                                <div class="h-full bg-blue-500" :style="`width: ${img.progress}%`"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Ảnh khác -->
+                        <!-- Ảnh khác (Multi) -->
                         <div>
-                            <div x-show="!images.others" @click="$refs.othersInput.click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group h-36 flex flex-col items-center justify-center">
+                            <!-- Empty State -->
+                            <div x-show="images.others.length === 0" @click="$refs.othersInput.click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group h-full min-h-[144px] flex flex-col items-center justify-center">
                                 <div class="w-10 h-10 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
                                     <i class="fa-regular fa-images text-lg"></i>
                                 </div>
                                 <p class="text-xs font-bold text-gray-700 text-center">Ảnh khác</p>
-                                <p class="text-[10px] text-gray-400 text-center">Nội thất, đường đi...</p>
+                                <p class="text-[10px] text-gray-400 text-center">Nội thất... (Max 10)</p>
                             </div>
 
-                            <div x-show="images.others" class="relative border border-gray-200 rounded-xl p-2 bg-white h-full">
-                                <img :src="images.others?.preview" class="w-full h-24 object-cover rounded-lg mb-2 bg-gray-100">
-                                <div class="flex justify-between items-center px-1">
-                                    <div class="text-[10px] font-bold text-gray-700 truncate max-w-[80px]" x-text="images.others?.name"></div>
-                                    <div class="text-[9px] text-gray-400" x-text="images.others?.size"></div>
+                            <!-- List State -->
+                            <div x-show="images.others.length > 0" class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-gray-700">Ảnh khác (<span x-text="images.others.length"></span>/10)</span>
+                                    <button type="button" x-show="images.others.length < 10" @click="$refs.othersInput.click()" class="text-[10px] bg-blue-50 text-primary px-2 py-1 rounded font-bold hover:bg-blue-100">
+                                        <i class="fa-solid fa-plus mr-1"></i>Thêm
+                                    </button>
                                 </div>
-                                <button type="button" @click="removeImage('others')" class="absolute top-3 right-3 bg-white/90 text-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-trash text-xs"></i>
-                                </button>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <template x-for="(img, index) in images.others" :key="img.id">
+                                        <div class="relative border border-gray-200 rounded-lg p-1 bg-white group">
+                                            <img :src="img.preview" class="w-full h-16 object-cover rounded bg-gray-50">
+                                            <div class="mt-1 flex justify-between items-center overflow-hidden">
+                                                 <span class="text-[9px] text-gray-500 truncate w-full" x-text="img.name"></span>
+                                            </div>
+                                            <button type="button" @click="removeImage('others', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-times text-[10px]"></i>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
