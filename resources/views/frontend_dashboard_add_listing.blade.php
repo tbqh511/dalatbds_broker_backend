@@ -767,11 +767,11 @@
                         <!-- Ảnh giấy tờ (Multi) -->
                         <div>
                             <!-- Empty State -->
-                            <div x-show="images.legal.length === 0" @click="$refs.legalInput.click()" class="border-2 border-dashed border-[#16a34a]/50 rounded-xl p-4 text-center hover:bg-green-50 transition-colors cursor-pointer bg-white group h-full min-h-[144px] flex flex-col items-center justify-center">
+                            <div x-show="images.legal.length === 0" @click="$refs.legalInput.click()" class="border-2 border-dashed border-[#16a34a] rounded-xl p-4 text-center hover:bg-green-50 transition-colors cursor-pointer bg-white group h-full min-h-[144px] flex flex-col items-center justify-center">
                                 <div class="w-10 h-10 bg-green-100 text-[#16a34a] group-hover:bg-green-200 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
                                     <i class="fa-solid fa-file-shield text-lg"></i>
                                 </div>
-                                <p class="text-xs font-bold text-gray-700 text-center">Sổ đỏ/Pháp lý</p>
+                                <p class="text-xs font-bold text-[#16a34a] text-center">Sổ đỏ/Pháp lý</p>
                                 <p class="text-[10px] text-[#16a34a] font-bold text-center"><i class="fa-solid fa-lock mr-1"></i>Bảo mật (Max 10)</p>
                             </div>
 
