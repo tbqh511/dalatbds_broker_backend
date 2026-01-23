@@ -95,6 +95,49 @@
                     direction: 'DongNam',
                     amenities: {}
                 },
+                
+                // IMAGE UPLOAD STATE
+                images: {
+                    avatar: null,
+                    legal: null,
+                    others: null
+                },
+
+                handleImageUpload(event, type) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    // Validate type
+                    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Chỉ chấp nhận định dạng JPG, PNG, GIF, WebP');
+                        return;
+                    }
+
+                    // Validate size (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Kích thước ảnh tối đa 5MB');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.images[type] = {
+                            file: file,
+                            preview: e.target.result,
+                            name: file.name,
+                            size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Reset input value to allow re-selecting the same file if needed
+                    event.target.value = '';
+                },
+
+                removeImage(type) {
+                    this.images[type] = null;
+                },
 
                 streets: @json($streets),
                 propertyTypes: @json($propertyTypes),
@@ -651,32 +694,78 @@
                 <div class="space-y-4">
                     <h3 class="text-sm font-bold text-gray-800 border-l-4 border-primary pl-2 text-left">Hình ảnh & Giấy tờ</h3>
                     
+                    <!-- Hidden Inputs -->
+                    <input type="file" x-ref="avatarInput" class="hidden" accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'avatar')">
+                    <input type="file" x-ref="legalInput" class="hidden" accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'legal')">
+                    <input type="file" x-ref="othersInput" class="hidden" accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'others')">
+
                     <!-- Ảnh chính -->
-                    <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group">
-                        <div class="w-10 h-10 bg-blue-100 text-primary rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-camera"></i>
+                    <div>
+                        <!-- State 1: Chưa chọn ảnh -->
+                        <div x-show="!images.avatar" @click="$refs.avatarInput.click()" class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group h-48 flex flex-col items-center justify-center">
+                            <div class="w-12 h-12 bg-blue-100 text-primary rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-camera text-xl"></i>
+                            </div>
+                            <p class="text-sm font-bold text-gray-700 text-center">Ảnh đại diện</p>
+                            <p class="text-xs text-gray-400 text-center">Bắt buộc 1 tấm đẹp nhất</p>
                         </div>
-                        <p class="text-sm font-bold text-gray-700 text-center">Ảnh đại diện</p>
-                        <p class="text-xs text-gray-400 text-center">Bắt buộc 1 tấm đẹp nhất</p>
+
+                        <!-- State 2: Đã chọn ảnh (Preview) -->
+                        <div x-show="images.avatar" class="relative border-2 border-primary rounded-xl p-2 bg-white h-full">
+                            <img :src="images.avatar?.preview" class="w-full h-48 object-cover rounded-lg mb-2 bg-gray-100">
+                            <div class="flex justify-between items-center px-1">
+                                <div class="text-xs font-bold text-gray-700 truncate max-w-[200px]" x-text="images.avatar?.name"></div>
+                                <div class="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded" x-text="images.avatar?.size"></div>
+                            </div>
+                            <button type="button" @click="removeImage('avatar')" class="absolute top-4 right-4 bg-white/90 text-red-500 rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:scale-110 transition-transform hover:bg-red-50">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Ảnh giấy tờ -->
-                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group">
-                            <div class="w-8 h-8 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
-                                <i class="fa-solid fa-file-shield"></i>
+                        <div>
+                            <div x-show="!images.legal" @click="$refs.legalInput.click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group h-36 flex flex-col items-center justify-center">
+                                <div class="w-10 h-10 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                    <i class="fa-solid fa-file-shield text-lg"></i>
+                                </div>
+                                <p class="text-xs font-bold text-gray-700 text-center">Sổ đỏ/Pháp lý</p>
+                                <p class="text-[10px] text-gray-400 text-center"><i class="fa-solid fa-lock mr-1"></i>Bảo mật</p>
                             </div>
-                            <p class="text-xs font-bold text-gray-700 text-center">Sổ đỏ/Pháp lý</p>
-                            <p class="text-[10px] text-gray-400 text-center"><i class="fa-solid fa-lock mr-1"></i>Bảo mật</p>
+
+                            <div x-show="images.legal" class="relative border border-gray-200 rounded-xl p-2 bg-white h-full">
+                                <img :src="images.legal?.preview" class="w-full h-24 object-cover rounded-lg mb-2 bg-gray-100">
+                                <div class="flex justify-between items-center px-1">
+                                    <div class="text-[10px] font-bold text-gray-700 truncate max-w-[80px]" x-text="images.legal?.name"></div>
+                                    <div class="text-[9px] text-gray-400" x-text="images.legal?.size"></div>
+                                </div>
+                                <button type="button" @click="removeImage('legal')" class="absolute top-3 right-3 bg-white/90 text-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Ảnh khác -->
-                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group">
-                            <div class="w-8 h-8 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
-                                <i class="fa-regular fa-images"></i>
+                        <div>
+                            <div x-show="!images.others" @click="$refs.othersInput.click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white group h-36 flex flex-col items-center justify-center">
+                                <div class="w-10 h-10 bg-gray-100 text-gray-500 group-hover:text-primary group-hover:bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                    <i class="fa-regular fa-images text-lg"></i>
+                                </div>
+                                <p class="text-xs font-bold text-gray-700 text-center">Ảnh khác</p>
+                                <p class="text-[10px] text-gray-400 text-center">Nội thất, đường đi...</p>
                             </div>
-                            <p class="text-xs font-bold text-gray-700 text-center">Ảnh khác</p>
-                            <p class="text-[10px] text-gray-400 text-center">Nội thất, đường đi...</p>
+
+                            <div x-show="images.others" class="relative border border-gray-200 rounded-xl p-2 bg-white h-full">
+                                <img :src="images.others?.preview" class="w-full h-24 object-cover rounded-lg mb-2 bg-gray-100">
+                                <div class="flex justify-between items-center px-1">
+                                    <div class="text-[10px] font-bold text-gray-700 truncate max-w-[80px]" x-text="images.others?.name"></div>
+                                    <div class="text-[9px] text-gray-400" x-text="images.others?.size"></div>
+                                </div>
+                                <button type="button" @click="removeImage('others')" class="absolute top-3 right-3 bg-white/90 text-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
