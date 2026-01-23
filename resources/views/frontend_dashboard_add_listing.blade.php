@@ -980,7 +980,7 @@
             <!-- === BƯỚC 4: TIỆN ÍCH XUNG QUANH (LOGIC MỚI - GRID BUTTON) === -->
             <div x-show="step === 4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 <h2 class="text-xl font-bold text-gray-800 mb-1">Tiện ích xung quanh</h2>
-                <p class="text-sm text-gray-500 mb-6">Chọn các địa điểm gần BĐS của bạn.</p>
+                <p class="text-sm text-gray-500 mb-6 text-center">Chọn các địa điểm gần BĐS của bạn.</p>
                 
                 <!-- GRID TIỆN ÍCH (4 Cột) -->
                 <div class="grid grid-cols-4 gap-2 mb-6">
