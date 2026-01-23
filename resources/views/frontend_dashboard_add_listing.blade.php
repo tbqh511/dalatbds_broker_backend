@@ -600,14 +600,9 @@
                         
                     </div>
                 </div>
-            </div>
-
-            <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
-            <div x-show="step === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                {{-- <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2> --}}
 
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
-                <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group">
+                <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6">
                     <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center">
                         <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Chủ sở hữu
                     </h3>
@@ -637,6 +632,13 @@
                         <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
                     </div>
                 </div>
+            </div>
+
+            <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
+            <div x-show="step === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                {{-- <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2> --}}
+
+
 
                 <!-- Giá bán (Căn phải + Màu Primary) -->
                 <div class="mb-5">
