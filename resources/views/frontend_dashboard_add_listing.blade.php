@@ -723,46 +723,6 @@
                     </p>
                 </div>
 
-                <!-- Giấy tờ -->
-                <div class="mb-6">
-                    <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
-                        Loại giấy tờ
-                        <button type="button" x-show="!isLegalExpanded" @click="isLegalExpanded = true" class="text-xs font-normal text-primary hover:underline">
-                            Thay đổi
-                        </button>
-                    </label>
-
-                    <!-- STATE 1: DANH SÁCH MỞ RỘNG -->
-                    <div x-show="isLegalExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-3 gap-3">
-                        <template x-for="legal in legalTypes" :key="legal.value">
-                            <button type="button"
-                                @click="selectLegal(legal.value)"
-                                :class="formData.legal === legal.value
-                                    ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
-                                    : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
-                                class="flex flex-col items-center justify-center p-3 border rounded-xl transition-all duration-200 aspect-square">
-                                <i :class="['fa-solid', legal.icon, 'text-xl mb-2']"></i>
-                                <span class="text-xs font-medium text-center leading-tight" x-text="legal.name"></span>
-                            </button>
-                        </template>
-                    </div>
-
-                    <!-- STATE 2: ĐÃ CHỌN (Thu gọn) -->
-                    <div x-show="!isLegalExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
-                        <div @click="isLegalExpanded = true" class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
-                            <div class="flex items-center">
-                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
-                                    <i :class="['fa-solid', getSelectedLegal().icon, 'text-lg']"></i>
-                                </div>
-                                <div class="flex flex-col text-left">
-                                    <span class="text-xs text-blue-100 font-medium">Đã chọn loại:</span>
-                                    <span class="font-bold text-lg leading-tight" x-text="getSelectedLegal().name"></span>
-                                </div>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
-                        </div>
-                    </div>
-                </div>
                 <!-- Mô tả -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mô tả chi tiết</label>
