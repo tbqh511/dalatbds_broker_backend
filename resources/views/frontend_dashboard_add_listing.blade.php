@@ -791,8 +791,8 @@
                                                  <span class="text-[9px] text-gray-500 truncate w-full" x-text="img.name"></span>
                                             </div>
                                             <!-- Remove Button -->
-                                            <button type="button" @click="removeImage('legal', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
-                                                <i class="fa-solid fa-times text-[10px]"></i>
+                                            <button type="button" @click="removeImage('legal', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10">
+                                                <i class="fa-solid fa-xmark text-[10px]"></i>
                                             </button>
                                             <!-- Progress Bar (Visual only for now) -->
                                             <div class="h-0.5 w-full bg-gray-100 mt-1 rounded-full overflow-hidden" x-show="img.status === 'uploading'">
@@ -830,8 +830,8 @@
                                             <div class="mt-1 flex justify-between items-center overflow-hidden">
                                                  <span class="text-[9px] text-gray-500 truncate w-full" x-text="img.name"></span>
                                             </div>
-                                            <button type="button" @click="removeImage('others', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
-                                                <i class="fa-solid fa-times text-[10px]"></i>
+                                            <button type="button" @click="removeImage('others', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10">
+                                                <i class="fa-solid fa-xmark text-[10px]"></i>
                                             </button>
                                         </div>
                                     </template>
@@ -1019,7 +1019,7 @@
                             </div>
                             <!-- Remove Btn -->
                             <button type="button" @click="toggleAmenity(id)" class="ml-3 text-gray-300 hover:text-red-500">
-                                <i class="fa-solid fa-times"></i>
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     </template>
