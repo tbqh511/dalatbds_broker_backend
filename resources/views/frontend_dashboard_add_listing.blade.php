@@ -989,7 +989,7 @@
                             @click="toggleAmenity(am.id)"
                             :class="isAmenitySelected(am.id) 
                                 ? 'bg-primary text-white border-primary shadow-md transform scale-105' 
-                                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'"
+                                : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
                             <i :class="['fa-solid', am.icon, 'text-lg mb-1']"></i>
                             <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
