@@ -603,14 +603,11 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Số nhà -->
                     {{-- <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-left">Số nhà</label>
                         <input type="text" x-model="formData.houseNumber" @input="updateMapLocation" placeholder="VD: 123/4" class="input-field">
                     </div> --}}
-                    
-                    
                     <!-- Google Map Preview -->
                     <div class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
                         <div class="flex justify-between items-center mb-2">
@@ -637,6 +634,24 @@
             <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
             <div x-show="step === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 {{-- <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2> --}}
+                <!-- Hoa hồng (Màu Primary) -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
+                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                        <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
+                            <button type="button" 
+                                @click="formData.commissionRate = rate"
+                                :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
+                                class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[60px]">
+                                <span x-text="rate + '%'"></span>
+                            </button>
+                        </template>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
+                        <span>Nhận về:</span>
+                        <span class="font-bold text-success text-sm" x-text="calculateCommission()"></span>
+                    </div>
+                </div>
                 <!-- Giấy tờ -->
                 <div class="mb-6">
                     <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
@@ -690,26 +705,6 @@
                         <i class="fa-solid fa-tag mr-1.5 text-xs"></i> <span x-text="priceInWords"></span>
                     </p>
                 </div>
-
-                <!-- Hoa hồng (Màu Primary) -->
-                <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
-                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                        <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
-                            <button type="button" 
-                                @click="formData.commissionRate = rate"
-                                :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
-                                class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[60px]">
-                                <span x-text="rate + '%'"></span>
-                            </button>
-                        </template>
-                    </div>
-                    <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
-                        <span>Nhận về:</span>
-                        <span class="font-bold text-success text-sm" x-text="calculateCommission()"></span>
-                    </div>
-                </div>
-
                 <!-- Diện tích (Căn phải + Màu Primary) -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Diện tích (m²)</label>
@@ -722,13 +717,11 @@
                         <span class="font-bold text-success"><span x-text="calculatePricePerM2()"></span> / m²</span>
                     </p>
                 </div>
-
                 <!-- Mô tả -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mô tả chi tiết</label>
                     <textarea x-model="formData.description" class="input-field h-32 resize-none" placeholder="Mô tả về đường đi, view, nội thất, tiện ích..."></textarea>
                 </div>
-
                 <!-- Upload Ảnh -->
                 <div class="space-y-4">
                     <h3 class="text-sm font-bold text-gray-800 border-l-4 border-primary pl-2 text-left">Hình ảnh & Giấy tờ</h3>
@@ -1014,7 +1007,7 @@
                             <!-- Input -->
                             <div class="relative w-24">
                                 <input type="number" x-model="formData.amenities[id]" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-2 pr-6 text-right font-bold text-gray-800 text-sm focus:border-primary outline-none" placeholder="0">
-                                <span class="absolute right-1.5 top-2 text-xs text-gray-400 font-bold">km</span>
+                                <span class="absolute right-2 top-2 text-xs text-gray-400 font-bold">km</span>
                             </div>
                             <!-- Remove Btn -->
                             <button type="button" @click="toggleAmenity(id)" class="ml-3 text-gray-300 hover:text-red-500">
@@ -1026,7 +1019,7 @@
 
                 <div x-show="Object.keys(formData.amenities).length === 0" class="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
                     <i class="fa-solid fa-map-location-dot text-4xl mb-2 text-gray-200"></i>
-                    <p class="text-xs">Chưa chọn tiện ích nào</p>
+                    <p class="text-xs text-center">Chưa chọn tiện ích nào</p>
                 </div>
             </div>
 
