@@ -792,7 +792,7 @@
                                             </div>
                                             <!-- Remove Button -->
                                             <button type="button" @click="removeImage('legal', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10">
-                                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                                                <i class="fa-solid fa-trash"></i>
                                             </button>
                                             <!-- Progress Bar (Visual only for now) -->
                                             <div class="h-0.5 w-full bg-gray-100 mt-1 rounded-full overflow-hidden" x-show="img.status === 'uploading'">
@@ -831,7 +831,7 @@
                                                  <span class="text-[9px] text-gray-500 truncate w-full" x-text="img.name"></span>
                                             </div>
                                             <button type="button" @click="removeImage('others', index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10">
-                                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                                                <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </div>
                                     </template>
