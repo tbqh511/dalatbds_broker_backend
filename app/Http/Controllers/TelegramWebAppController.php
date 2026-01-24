@@ -157,7 +157,13 @@ class TelegramWebAppController extends Controller
         $dbCategories = Category::where('status', '1')->orderBy('order', 'asc')->get();
         $propertyTypes = $dbCategories->map(function ($cat) {
             $isHouse = !Str::contains(Str::lower($cat->category), ['đất', 'land']);
-            
+
+            // Parse parameter_types from the category
+            $parameterIds = [];
+            if ($cat->parameter_types) {
+                $parameterIds = array_map('intval', explode(',', $cat->parameter_types));
+            }
+
             // Icon mapping (basic heuristic)
             $icon = 'fa-house';
             $lowerName = Str::lower($cat->category);
@@ -165,12 +171,13 @@ class TelegramWebAppController extends Controller
             elseif (Str::contains($lowerName, 'khách sạn')) $icon = 'fa-bell-concierge';
             elseif (Str::contains($lowerName, 'chung cư')) $icon = 'fa-building';
             elseif (Str::contains($lowerName, 'đất')) $icon = 'fa-map-location-dot';
-            
+
             return [
                 'id' => $cat->id, // Use DB ID
                 'name' => $cat->category,
                 'icon' => $icon,
-                'isHouse' => $isHouse
+                'isHouse' => $isHouse,
+                'parameter_ids' => $parameterIds // Add parameter IDs for this category
             ];
         });
 

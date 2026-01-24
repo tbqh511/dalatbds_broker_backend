@@ -222,10 +222,9 @@
                 selectPropertyType(id) { this.formData.type = id; this.isTypeExpanded = false; },
                 getFilteredParameters() {
                     if (!this.formData.type) return [];
-                    const assignedParamIds = this.assignParameters
-                        .filter(ap => ap.property_id == this.formData.type)
-                        .map(ap => ap.parameter_id);
-                    return this.parameters.filter(p => assignedParamIds.includes(p.id));
+                    const selectedType = this.propertyTypes.find(t => t.id === this.formData.type);
+                    if (!selectedType || !selectedType.parameter_ids) return [];
+                    return this.parameters.filter(p => selectedType.parameter_ids.includes(p.id));
                 },
                 getSelectedWard() { return this.wards.find(w => w.id === this.formData.ward) || { name: 'Chọn Khu vực', icon: 'fa-map' }; },
                 selectWard(id) { this.formData.ward = id; this.isWardExpanded = false; },
