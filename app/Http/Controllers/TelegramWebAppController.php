@@ -12,6 +12,8 @@ use Carbon\Carbon;
 use App\Models\Category;
 use App\Models\LocationsWard;
 use App\Models\LocationsStreet;
+use App\Models\parameter;
+use App\Models\AssignParameters;
 use Illuminate\Support\Str;
 
 class TelegramWebAppController extends Controller
@@ -202,6 +204,25 @@ class TelegramWebAppController extends Controller
                 ];
             });
 
-        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets'));
+        // 4. Parameters and Assign Parameters
+        $parameters = parameter::with('assigned_parameter')->get()->map(function($param) {
+            return [
+                'id' => $param->id,
+                'name' => $param->name,
+                'type_of_parameter' => $param->type_of_parameter,
+                'type_values' => $param->type_values
+            ];
+        });
+
+        $assignParameters = AssignParameters::all()->map(function($ap) {
+            return [
+                'id' => $ap->id,
+                'property_id' => $ap->property_id,
+                'parameter_id' => $ap->parameter_id,
+                'value' => $ap->value
+            ];
+        });
+
+        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters'));
     }
 }

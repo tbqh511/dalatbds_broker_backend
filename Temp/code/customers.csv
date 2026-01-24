@@ -1,0 +1,4 @@
+chat_id,flow_type,current_step,draft_data,last_bot_msg_id,status,updated_at
+"123456789","REAL_ESTATE","WAITING_IMAGES_HOUSE","{""type"": ""sell"", ""ward"": ""Phường Bến Nghé"", ""street"": ""Nguyễn Huệ"", ""guest_contact"": ""0909123456"", ""details"": {""area"": ""100m2"", ""direction"": ""Đông Nam"", ""price"": ""10 tỷ""}}","5001","ACTIVE","2025-12-25 10:30:00"
+"987654321","NEWS","WAITING_IMAGE_UPLOAD","{""topic"": ""Thị trường BĐS năm 2025"", ""ai_content"": ""Dự báo thị trường bất động sản năm 2025 sẽ có nhiều khởi sắc...""}","5002","ACTIVE","2025-12-25 11:15:00"
+"112233445","REAL_ESTATE","WAITING_WARD","{""type"": ""rent""}","5003","ACTIVE","2025-12-25 12:00:00"

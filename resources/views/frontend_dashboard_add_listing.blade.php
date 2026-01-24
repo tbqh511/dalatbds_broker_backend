@@ -93,7 +93,8 @@
                     length: 0,
                     roadWidth: 0,
                     direction: 'DongNam',
-                    amenities: {}
+                    amenities: {},
+                    parameters: {}
                 },
                 
                 // IMAGE UPLOAD STATE
@@ -199,6 +200,8 @@
                     {id: 'ho_xuan_huong', name: 'Hồ Xuân Hương', icon: 'fa-water'},
                     {id: 'quang_truong', name: 'Quảng trường', icon: 'fa-users'},
                 ],
+                parameters: @json($parameters),
+                assignParameters: @json($assignParameters),
                 directions: ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'],
                 locationText: 'Chưa xác định vị trí',
                 init() {
@@ -837,7 +840,7 @@
             <!-- === BƯỚC 3: CHI TIẾT KỸ THUẬT (TRANG TRÍ LẠI) === -->
             <div x-show="step === 3" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 {{-- <h2 class="text-xl font-bold text-gray-800 mb-4">Chi tiết kỹ thuật</h2> --}}
-                
+
                 <div class="bg-blue-50 text-primary px-4 py-3 rounded-xl mb-6 border border-blue-100 flex items-center shadow-sm">
                     <i :class="['fa-solid', getSelectedType().icon, 'mr-3 text-lg']"></i>
                     <div>
@@ -845,129 +848,74 @@
                         <p class="font-bold text-gray-800 text-lg" x-text="getPropertyName()"></p>
                     </div>
                 </div>
-                
-                <!-- FORM CHO NHÀ -->
-                <template x-if="isHouseType()">
-                    <div class="space-y-6">
-                        <!-- Diện tích sàn -->
+
+                <!-- DYNAMIC PARAMETERS BASED ON PROPERTY TYPE -->
+                <div class="space-y-6" x-show="getFilteredParameters().length > 0">
+                    <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
-                            <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Diện tích sàn</label>
-                            <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary group-focus-within:ring-1 group-focus-within:ring-primary transition-all">
-                                <div class="w-10 h-10 flex items-center justify-center text-gray-400 bg-gray-50 border-r border-gray-100">
-                                    <i class="fa-solid fa-ruler-combined"></i>
-                                </div>
-                                <input type="number" x-model="formData.floorArea" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
-                                <span class="pr-4 text-sm font-bold text-gray-400">m²</span>
-                            </div>
-                        </div>
+                            <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide" x-text="param.name"></label>
 
-                        <!-- Số tầng & Hướng -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Số tầng</label>
-                                <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
-                                    <button type="button" @click="if(formData.floors > 1) formData.floors--" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
-                                    <span class="font-bold text-lg text-gray-800" x-text="formData.floors"></span>
-                                    <button type="button" @click="formData.floors++" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
+                            <!-- NUMBER INPUT -->
+                            <template x-if="param.type_of_parameter === 'number'">
+                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary group-focus-within:ring-1 group-focus-within:ring-primary transition-all">
+                                    <div class="w-10 h-10 flex items-center justify-center text-gray-400 bg-gray-50 border-r border-gray-100">
+                                        <i class="fa-solid fa-hashtag"></i>
+                                    </div>
+                                    <input type="number" :x-model="`formData.parameters.${param.id}`" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
+                                    <span class="pr-4 text-sm font-bold text-gray-400" x-text="param.type_values ? 'm²' : ''"></span>
                                 </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Hướng nhà</label>
+                            </template>
+
+                            <!-- RADIOBUTTON -->
+                            <template x-if="param.type_of_parameter === 'radiobutton'">
+                                <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
+                                    <template x-for="option in param.type_values" :key="option">
+                                        <button type="button"
+                                            @click="formData.parameters[param.id] = option"
+                                            :class="formData.parameters[param.id] === option ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center"
+                                            x-text="option">
+                                        </button>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- CHECKBOX -->
+                            <template x-if="param.type_of_parameter === 'checkbox'">
+                                <div class="space-y-2">
+                                    <template x-for="option in param.type_values" :key="option">
+                                        <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+                                            <input type="checkbox"
+                                                   :value="option"
+                                                   x-model="formData.parameters[param.id]"
+                                                   class="text-primary focus:ring-primary h-4 w-4">
+                                            <span class="text-sm font-bold text-gray-700" x-text="option"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- DROPDOWN -->
+                            <template x-if="param.type_of_parameter === 'dropdown'">
                                 <div class="relative">
-                                    <select x-model="formData.direction" class="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-bold text-gray-700 outline-none focus:border-primary appearance-none h-[44px]">
-                                        <template x-for="d in directions">
-                                            <option :value="d" x-text="d"></option>
+                                    <select :x-model="`formData.parameters.${param.id}`" class="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-bold text-gray-700 outline-none focus:border-primary appearance-none h-[44px]">
+                                        <option value="">Chọn...</option>
+                                        <template x-for="option in param.type_values" :key="option">
+                                            <option :value="option" x-text="option"></option>
                                         </template>
                                     </select>
-                                    <i class="fa-solid fa-compass absolute right-3 top-3.5 text-gray-400 pointer-events-none"></i>
+                                    <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-gray-400 pointer-events-none"></i>
                                 </div>
-                            </div>
+                            </template>
                         </div>
+                    </template>
+                </div>
 
-                        <!-- Phòng ngủ & Toilet -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                                <div class="flex items-center mb-2 text-gray-500">
-                                    <i class="fa-solid fa-bed mr-2"></i> <span class="text-xs font-bold uppercase">Phòng ngủ</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <button type="button" @click="if(formData.bedrooms > 0) formData.bedrooms--" class="text-gray-400 hover:text-primary text-xl"><i class="fa-solid fa-circle-minus"></i></button>
-                                    <span class="text-2xl font-bold text-gray-800" x-text="formData.bedrooms"></span>
-                                    <button type="button" @click="formData.bedrooms++" class="text-primary hover:text-blue-600 text-xl"><i class="fa-solid fa-circle-plus"></i></button>
-                                </div>
-                            </div>
-                            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                                <div class="flex items-center mb-2 text-gray-500">
-                                    <i class="fa-solid fa-bath mr-2"></i> <span class="text-xs font-bold uppercase">Toilet</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <button type="button" @click="if(formData.bathrooms > 0) formData.bathrooms--" class="text-gray-400 hover:text-primary text-xl"><i class="fa-solid fa-circle-minus"></i></button>
-                                    <span class="text-2xl font-bold text-gray-800" x-text="formData.bathrooms"></span>
-                                    <button type="button" @click="formData.bathrooms++" class="text-primary hover:text-blue-600 text-xl"><i class="fa-solid fa-circle-plus"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- FORM CHO ĐẤT -->
-                <template x-if="!isHouseType()">
-                    <div class="space-y-6">
-                        <!-- Kích thước đất -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="relative group">
-                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Mặt tiền</label>
-                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary transition-all">
-                                    <input type="number" x-model="formData.frontage" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
-                                    <span class="pr-3 text-sm font-bold text-gray-400">m</span>
-                                </div>
-                            </div>
-                            <div class="relative group">
-                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Chiều dài</label>
-                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary transition-all">
-                                    <input type="number" x-model="formData.length" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
-                                    <span class="pr-3 text-sm font-bold text-gray-400">m</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Lộ giới & Hướng -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="relative group">
-                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Lộ giới</label>
-                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary transition-all">
-                                    <div class="pl-3 text-gray-400"><i class="fa-solid fa-road"></i></div>
-                                    <input type="number" x-model="formData.roadWidth" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
-                                    <span class="pr-3 text-sm font-bold text-gray-400">m</span>
-                                </div>
-                            </div>
-                            <div class="relative group">
-                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Hướng</label>
-                                <div class="relative">
-                                    <select x-model="formData.direction" class="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-bold text-gray-700 outline-none focus:border-primary appearance-none h-[42px]">
-                                        <template x-for="d in directions">
-                                            <option :value="d" x-text="d"></option>
-                                        </template>
-                                    </select>
-                                    <i class="fa-solid fa-compass absolute right-3 top-3.5 text-gray-400 pointer-events-none"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="p-3 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
-                             <div class="flex items-center">
-                                <div class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mr-3">
-                                    <i class="fa-solid fa-maximize"></i>
-                                </div>
-                                <span class="font-bold text-gray-700">Đất nở hậu?</span>
-                             </div>
-                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                              </label>
-                        </div>
-                    </div>
-                </template>
+                <!-- NO PARAMETERS MESSAGE -->
+                <div x-show="getFilteredParameters().length === 0" class="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
+                    <i class="fa-solid fa-cogs text-4xl mb-2 text-gray-200"></i>
+                    <p class="text-sm text-center">Không có thông số kỹ thuật cho loại BĐS này</p>
+                </div>
             </div>
 
             <!-- === BƯỚC 4: TIỆN ÍCH XUNG QUANH (LOGIC MỚI - GRID BUTTON) === -->
