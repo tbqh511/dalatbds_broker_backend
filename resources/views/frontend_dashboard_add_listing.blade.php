@@ -220,6 +220,13 @@
                 isHouseType() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.isHouse : false; },
                 getSelectedType() { return this.propertyTypes.find(t => t.id === this.formData.type) || this.propertyTypes[0]; },
                 selectPropertyType(id) { this.formData.type = id; this.isTypeExpanded = false; },
+                getFilteredParameters() {
+                    if (!this.formData.type) return [];
+                    const assignedParamIds = this.assignParameters
+                        .filter(ap => ap.property_id == this.formData.type)
+                        .map(ap => ap.parameter_id);
+                    return this.parameters.filter(p => assignedParamIds.includes(p.id));
+                },
                 getSelectedWard() { return this.wards.find(w => w.id === this.formData.ward) || { name: 'Chọn Khu vực', icon: 'fa-map' }; },
                 selectWard(id) { this.formData.ward = id; this.isWardExpanded = false; },
                 getSelectedLegal() { return this.legalTypes.find(l => l.value === this.formData.legal) || { name: 'Chọn loại giấy tờ', icon: 'fa-file' }; },
