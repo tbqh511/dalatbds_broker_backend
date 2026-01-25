@@ -1011,6 +1011,7 @@
                                                     ? 'bg-primary text-white border-primary shadow-md shadow-blue-200 transform scale-105'
                                                     : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                                                 class="py-3 px-4 border rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center text-center leading-tight min-h-[44px]">
+                                                <i :class="['fa-compass', item.icon, 'text-xl mb-2']"></i>
                                                 <span x-text="option"></span>
                                             </button>
                                         </template>
