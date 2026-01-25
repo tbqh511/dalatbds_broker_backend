@@ -1,6 +1,7 @@
 @extends('frontends.master')
 @section('hide_newsletter')@endsection
 @section('hide_footer')@endsection
+@section('hide_secondary_nav')@endsection
 
 @section('title', 'Đánh giá - Đà Lạt BDS')
 

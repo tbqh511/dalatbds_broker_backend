@@ -987,16 +987,57 @@
                                 </div>
                             </template>
 
-                            <!-- DROPDOWN -->
+                            <!-- DROPDOWN (Button Style) -->
                             <template x-if="param.type_of_parameter === 'dropdown'">
-                                <div class="relative">
-                                    <select :x-model="`formData.parameters.${param.id}`" class="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-bold text-gray-700 outline-none focus:border-primary appearance-none h-[44px]">
-                                        <option value="">Chọn...</option>
+                                <div x-data="{
+                                    isExpanded: !formData.parameters[param.id],
+                                    init() {
+                                        this.$watch('formData.parameters.' + param.id, value => {
+                                            if (!value) this.isExpanded = true;
+                                        });
+                                    }
+                                }" class="w-full">
+
+                                    <!-- STATE 1: LIST EXPANDED -->
+                                    <div x-show="isExpanded"
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 scale-95"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         class="grid grid-cols-2 gap-3">
                                         <template x-for="option in param.type_values" :key="option">
-                                            <option :value="option" x-text="option"></option>
+                                            <button type="button"
+                                                @click="formData.parameters[param.id] = option; isExpanded = false"
+                                                :class="formData.parameters[param.id] === option
+                                                    ? 'bg-primary text-white border-primary shadow-md shadow-blue-200 transform scale-105'
+                                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
+                                                class="py-3 px-4 border rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center text-center leading-tight min-h-[44px]">
+                                                <span x-text="option"></span>
+                                            </button>
                                         </template>
-                                    </select>
-                                    <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-gray-400 pointer-events-none"></i>
+                                    </div>
+
+                                    <!-- STATE 2: COLLAPSED (SELECTED) -->
+                                    <div x-show="!isExpanded"
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 translate-y-2"
+                                         x-transition:enter-end="opacity-100 translate-y-0">
+                                        <div @click="isExpanded = true"
+                                             class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                                    <i class="fa-solid fa-check text-xs"></i>
+                                                </div>
+                                                <div class="flex flex-col text-left">
+                                                    <span class="text-[10px] text-blue-100 font-medium">Đã chọn:</span>
+                                                    <span class="font-bold text-sm leading-tight" x-text="formData.parameters[param.id]"></span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <span class="text-[10px] text-blue-100 mr-2 group-hover:underline">Thay đổi</span>
+                                                <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </template>
                         </div>
