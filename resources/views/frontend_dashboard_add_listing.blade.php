@@ -494,7 +494,7 @@
 
 @section('content')
     <div x-data="realEstateForm" class="flex items-start justify-center min-h-screen w-full py-2 ">
-    <div class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh]">
+    <div x-ref="formContainer" class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh] overflow-y-auto">
 
         <!-- HEADER -->
         <div class="sticky top-0 z-49 bg-white/90 backdrop-blur-md border-b border-gray-100 px-5 py-4">
@@ -508,7 +508,7 @@
         </div>
 
         <!-- SCROLLABLE CONTENT -->
-        <form x-ref="formContainer" class="flex-1 p-5 pb-32 overflow-y-auto" @submit.prevent="submitForm">
+        <form class="flex-1 p-5 pb-32" @submit.prevent="submitForm">
 
             <!-- === BƯỚC 1: VỊ TRÍ & LOẠI BĐS === -->
             <div x-show="step === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
