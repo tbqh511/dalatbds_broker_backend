@@ -232,7 +232,7 @@
                                 if (this.$refs.formContainer) {
                                     this.$refs.formContainer.scrollTop = 0;
                                 }
-                            }, 50);
+                            }, 350);
                         });
                     }
                 },
@@ -245,7 +245,7 @@
                                 if (this.$refs.formContainer) {
                                     this.$refs.formContainer.scrollTop = 0;
                                 }
-                            }, 50);
+                            }, 350);
                         });
                     }
                 },
@@ -785,7 +785,7 @@
                     <div>
                         <!-- State 1: Chưa chọn ảnh -->
                         <div x-show="!images.avatar" @click="$refs.avatarInput.click()" class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group h-48 flex flex-col items-center justify-center">
-                            <div class="w-12 h-12 bg-blue-100 text-primary rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                            <div class="w-12 h-12 bg-blue-100 text-primary rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
                                 <i class="fa-solid fa-camera text-xl"></i>
                             </div>
                             <p class="text-sm font-bold text-gray-700 text-center">Ảnh đại diện</p>
