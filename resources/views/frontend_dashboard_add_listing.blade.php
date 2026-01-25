@@ -223,8 +223,22 @@
                         }
                     });
                 },
-                nextStep() { if(this.step < 4) this.step++; },
-                prevStep() { if(this.step > 1) this.step--; },
+                nextStep() {
+                    if(this.step < 4) {
+                        this.step++;
+                        this.$nextTick(() => {
+                            this.$refs.formContainer.scrollTop = 0;
+                        });
+                    }
+                },
+                prevStep() {
+                    if(this.step > 1) {
+                        this.step--;
+                        this.$nextTick(() => {
+                            this.$refs.formContainer.scrollTop = 0;
+                        });
+                    }
+                },
                 goToDashboardHome() { window.location.href = '/webapp'; },
                 getPropertyName() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.name : 'Bất động sản'; },
                 isHouseType() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.isHouse : false; },
@@ -494,7 +508,7 @@
         </div>
 
         <!-- SCROLLABLE CONTENT -->
-        <form class="flex-1 p-5 pb-32 overflow-y-auto" @submit.prevent="submitForm">
+        <form x-ref="formContainer" class="flex-1 p-5 pb-32 overflow-y-auto" @submit.prevent="submitForm">
 
             <!-- === BƯỚC 1: VỊ TRÍ & LOẠI BĐS === -->
             <div x-show="step === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
@@ -878,7 +892,7 @@
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
                             <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide"
-                                x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('(m2)') ? '' : (param.name.includes('Tầng') ? ' (tầng)' : (param.name.includes('Phòng') ? ' (phòng)' : '')))) : param.name">
+                                  x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('Đường rộng') ? '(m)' : (param.name.includes('Số tầng') ? ' (tầng)' : (param.name.includes('Phòng ngủ') ? ' (số phòng)' : '')))) : param.name">
                             </label>
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
