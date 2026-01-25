@@ -223,30 +223,52 @@
                         }
                     });
                 },
+                // Scroll helper: ensure the new step is visible at the top
+                scrollToTopOfForm() {
+                    this.$nextTick(() => {
+                        // Delay slightly to wait for x-transition/DOM updates
+                        setTimeout(() => {
+                            const sc = this.$refs.formContainer;
+                            try {
+                                if (sc) {
+                                    // If the container is scrollable, reset its internal scroll
+                                    if (sc.scrollHeight > sc.clientHeight) {
+                                        if (typeof sc.scrollTo === 'function') {
+                                            sc.scrollTo({ top: 0, behavior: 'smooth' });
+                                        } else {
+                                            sc.scrollTop = 0;
+                                        }
+                                    } else {
+                                        // Otherwise bring the container into viewport
+                                        if (typeof sc.scrollIntoView === 'function') {
+                                            sc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        } else {
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }
+                                    }
+                                } else {
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                            } catch (e) {
+                                // Fallback to instant jump
+                                if (sc) sc.scrollTop = 0;
+                                try { window.scrollTo(0,0); } catch (e) {}
+                            }
+                        }, 250);
+                    });
+                },
                 nextStep() {
                     if(this.step < 4) {
                         this.step++;
-                        this.$nextTick(() => {
-                            // Dùng setTimeout để đảm bảo cuộn xảy ra sau khi DOM đã ổn định (sau transition)
-                            setTimeout(() => {
-                                if (this.$refs.formContainer) {
-                                    this.$refs.formContainer.scrollTop = 0;
-                                }
-                            }, 350);
-                        });
+                        // ensure new step content is visible from the top
+                        this.scrollToTopOfForm();
                     }
                 },
                 prevStep() {
                     if(this.step > 1) {
                         this.step--;
-                        this.$nextTick(() => {
-                            // Dùng setTimeout để đảm bảo cuộn xảy ra sau khi DOM đã ổn định (sau transition)
-                            setTimeout(() => {
-                                if (this.$refs.formContainer) {
-                                    this.$refs.formContainer.scrollTop = 0;
-                                }
-                            }, 350);
-                        });
+                        // ensure previous step content is visible from the top
+                        this.scrollToTopOfForm();
                     }
                 },
                 goToDashboardHome() { window.location.href = '/webapp'; },

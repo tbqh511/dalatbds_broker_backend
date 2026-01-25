@@ -2,6 +2,7 @@
 
 @section('hide_newsletter')@endsection
 @section('hide_footer')@endsection
+@section('hide_secondary_nav')@endsection
 
 @section('content')
     @include('frontends.components.dashboard_bookings')

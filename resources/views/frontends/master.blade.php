@@ -53,7 +53,9 @@
         @include('frontends.register_form')
         <!--register form end -->
         <!--secondary-nav -->
+        @unless(View::hasSection('hide_secondary_nav'))
         @include('frontends.secondary_nav')
+        @endunless
         <!--secondary-nav end -->
         @unless(request()->routeIs('webapp.add_listing'))
         <a class="to-top color-bg"><i class="fas fa-caret-up"></i></a>
