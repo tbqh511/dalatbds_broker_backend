@@ -234,7 +234,14 @@
                     if (!this.formData.type) return [];
                     const selectedType = this.propertyTypes.find(t => t.id === this.formData.type);
                     if (!selectedType || !selectedType.parameter_ids) return [];
-                    return this.parameters.filter(p => selectedType.parameter_ids.includes(p.id));
+
+                    // Lọc bỏ các tham số có tên chính xác là "Diện tích" hoặc "Pháp lý"
+                    const excludedNames = ['Diện tích', 'Pháp lý'];
+
+                    return this.parameters.filter(p =>
+                        selectedType.parameter_ids.includes(p.id) &&
+                        !excludedNames.includes(p.name)
+                    );
                 },
                 getSelectedWard() { return this.wards.find(w => w.id === this.formData.ward) || { name: 'Chọn Khu vực', icon: 'fa-map' }; },
                 selectWard(id) { this.formData.ward = id; this.isWardExpanded = false; },
@@ -871,7 +878,7 @@
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
                             <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide"
-                                x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('Đường rộng') ? '(m)' : (param.name.includes('Số tầng') ? ' (tầng)' : (param.name.includes('Phòng ngủ') ? ' (số phòng)' : '')))) : param.name">
+                                x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('(m2)') ? '' : (param.name.includes('Tầng') ? ' (tầng)' : (param.name.includes('Phòng') ? ' (phòng)' : '')))) : param.name">
                             </label>
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
@@ -920,7 +927,7 @@
                             </template>
 
                             <!-- CHECKBOX -->
-                            <template x-if="param.type_of_parameter ===    'checkbox'">
+                            <template x-if="param.type_of_parameter === 'checkbox'">
                                 <div class="space-y-2">
                                     <template x-for="option in param.type_values" :key="option">
                                         <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
