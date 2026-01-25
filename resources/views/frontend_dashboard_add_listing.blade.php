@@ -282,7 +282,7 @@
                     if (!selectedType || !selectedType.parameter_ids) return [];
 
                     // Lọc bỏ các tham số có tên chính xác là "Diện tích" hoặc "Pháp lý"
-                    const excludedNames = ['Diện tích', 'Pháp lý'];
+                    const excludedNames = ['Diện tích', 'Pháp lý','Giá m2'];
 
                     return this.parameters.filter(p =>
                         selectedType.parameter_ids.includes(p.id) &&
