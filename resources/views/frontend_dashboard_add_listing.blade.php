@@ -871,7 +871,7 @@
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
                             <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide"
-                                x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('(m2)') ? '' : (param.name.includes('Tầng') ? ' (tầng)' : (param.name.includes('Phòng') ? ' (phòng)' : '')))) : param.name">
+                                x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('diện tích') ? '(m2)' : (param.name.includes('Tầng') ? ' (tầng)' : (param.name.includes('Phòng') ? ' (số phòng)' : '')))) : param.name">
                             </label>
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
