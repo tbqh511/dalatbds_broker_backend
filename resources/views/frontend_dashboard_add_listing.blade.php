@@ -859,7 +859,7 @@
                 <div class="space-y-6" x-show="getFilteredParameters().length > 0">
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
-                            <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide" x-text="param.name"></label>
+                            <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide" x-text="param.name"></label>
 
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
