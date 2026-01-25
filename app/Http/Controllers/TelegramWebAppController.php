@@ -14,7 +14,7 @@ use App\Models\LocationsWard;
 use App\Models\LocationsStreet;
 use App\Models\parameter;
 use App\Models\AssignParameters;
-use App\Models\OutdoorFacility;
+use App\Models\OutdoorFacilities;
 use Illuminate\Support\Str;
 
 class TelegramWebAppController extends Controller
@@ -232,7 +232,7 @@ class TelegramWebAppController extends Controller
         });
 
         // 5. Outdoor Facilities
-        $facilities = OutdoorFacility::all();
+        $facilities = OutdoorFacilities::all();
 
         return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities'));
     }
