@@ -860,22 +860,18 @@
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
                             <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide" x-text="param.name"></label>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Số tầng</label>
-                                    <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
-                                        <button type="button" @click="if(formData.floors > 1) formData.floors--" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
-                                        <span class="font-bold text-lg text-gray-800" x-text="formData.floors"></span>
-                                        <button type="button" @click="formData.floors++" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
-                                    </div>
-                                </div>
-                            </div>
+                            
 
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
                                 <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary group-focus-within:ring-1 group-focus-within:ring-primary transition-all">
                                     <div class="w-10 h-10 flex items-center justify-center text-gray-400 bg-gray-50 border-r border-gray-100">
                                         <i class="fa-solid fa-hashtag"></i>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
+                                        <button type="button" @click="if(formData.floors > 1) formData.floors--" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
+                                        <span class="font-bold text-lg text-gray-800" x-text="formData.floors"></span>
+                                        <button type="button" @click="formData.floors++" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
                                     </div>
                                     <input type="number" :x-model="`formData.parameters.${param.id}`" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
                                     <span class="pr-4 text-sm font-bold text-gray-400" x-text="param.type_values ? 'm²' : ''"></span>
