@@ -200,16 +200,7 @@
                     {value: 'Sổ phân quyền nông nghiệp', name: 'Sổ phân quyền nông nghiệp', icon: 'fa-file-signature'},
                     {value: 'Giấy tay / Vi bằng', name: 'Giấy tay / Vi bằng', icon: 'fa-file-alt'}
                 ],
-                amenitiesList: [
-                    {id: 'market', name: 'Chợ', icon: 'fa-basket-shopping'},
-                    {id: 'school', name: 'Trường học', icon: 'fa-graduation-cap'},
-                    {id: 'hospital', name: 'Bệnh viện', icon: 'fa-hospital'},
-                    {id: 'park', name: 'Công viên', icon: 'fa-tree'},
-                    {id: 'supermarket', name: 'Siêu thị', icon: 'fa-cart-shopping'},
-                    {id: 'airport', name: 'Sân bay', icon: 'fa-plane'},
-                    {id: 'ho_xuan_huong', name: 'Hồ Xuân Hương', icon: 'fa-water'},
-                    {id: 'quang_truong', name: 'Quảng trường', icon: 'fa-users'},
-                ],
+                amenitiesList: @json($facilities),
                 parameters: @json($parameters),
                 assignParameters: @json($assignParameters),
                 directions: ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'],
@@ -295,7 +286,7 @@
                 selectLegal(value) { this.formData.legal = value; this.isLegalExpanded = false; },
                 toggleAmenity(id) { if (id in this.formData.amenities) { let temp = {...this.formData.amenities}; delete temp[id]; this.formData.amenities = temp; } else { this.formData.amenities = { ...this.formData.amenities, [id]: '' }; } },
                 isAmenitySelected(id) { return id in this.formData.amenities; },
-                getAmenityIcon(id) { const am = this.amenitiesList.find(a => a.id === id); return am ? am.icon : 'fa-circle'; },
+                getAmenityImage(id) { const am = this.amenitiesList.find(a => a.id === id); return am ? am.image : ''; },
                 getAmenityName(id) { const am = this.amenitiesList.find(a => a.id === id); return am ? am.name : id; },
                 handlePriceInput(e) { let value = e.target.value.replace(/[^0-9]/g, ''); if (!value) value = '0'; this.price = parseInt(value); this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.price); this.priceInWords = this.readMoney(this.price); },
                 addZeros() { this.price = this.price * 1000; this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.price); this.priceInWords = this.readMoney(this.price); },
@@ -1066,7 +1057,8 @@
                                 ? 'bg-primary text-white border-primary shadow-md transform scale-105'
                                 : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
-                            <i :class="['fa-solid', am.icon, 'text-lg mb-1']"></i>
+                            {{-- <i :class="['fa-solid', am.icon, 'text-lg mb-1']"></i> --}}
+                            <img :src="'/images/facility_img/' + am.image" class="w-8 h-8 object-contain mb-1 filter" :class="isAmenitySelected(am.id) ? 'brightness-0 invert' : ''">
                             <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
                         </button>
                     </template>
@@ -1079,8 +1071,9 @@
                     <template x-for="(dist, id) in formData.amenities" :key="id">
                         <div class="flex items-center bg-white border border-gray-200 rounded-xl p-2 pr-4 shadow-sm animate-fade-in-up">
                             <!-- Icon & Name -->
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center mr-3 flex-shrink-0">
-                                <i :class="['fa-solid', getAmenityIcon(id)]"></i>
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center mr-3 flex-shrink-0 p-1">
+                                {{-- <i :class="['fa-solid', getAmenityIcon(id)]"></i> --}}
+                                <img :src="'/images/facility_img/' + getAmenityImage(id)" class="w-full h-full object-contain">
                             </div>
                             <div class="flex-1 mr-3">
                                 <p class="text-xs font-bold text-gray-500 uppercase" x-text="getAmenityName(id)"></p>
@@ -1088,7 +1081,7 @@
                             </div>
                             <!-- Input -->
                             <div class="relative w-24">
-                                <input type="number" x-model="formData.amenities[id]" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-2 pr-6 text-right font-bold text-gray-800 text-sm focus:border-primary outline-none" placeholder="0">
+                                <input type="number" :name="'facilities[' + id + '][distance]'" x-model="formData.amenities[id]" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-2 pr-6 text-right font-bold text-gray-800 text-sm focus:border-primary outline-none" placeholder="0">
                                 <span class="absolute right-2 top-2 text-xs text-gray-400 font-bold">km</span>
                             </div>
                             <!-- Remove Btn -->
