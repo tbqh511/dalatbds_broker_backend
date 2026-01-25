@@ -227,7 +227,12 @@
                     if(this.step < 4) {
                         this.step++;
                         this.$nextTick(() => {
-                            this.$refs.formContainer.scrollTop = 0;
+                            // Dùng setTimeout để đảm bảo cuộn xảy ra sau khi DOM đã ổn định (sau transition)
+                            setTimeout(() => {
+                                if (this.$refs.formContainer) {
+                                    this.$refs.formContainer.scrollTop = 0;
+                                }
+                            }, 50);
                         });
                     }
                 },
@@ -235,7 +240,12 @@
                     if(this.step > 1) {
                         this.step--;
                         this.$nextTick(() => {
-                            this.$refs.formContainer.scrollTop = 0;
+                            // Dùng setTimeout để đảm bảo cuộn xảy ra sau khi DOM đã ổn định (sau transition)
+                            setTimeout(() => {
+                                if (this.$refs.formContainer) {
+                                    this.$refs.formContainer.scrollTop = 0;
+                                }
+                            }, 50);
                         });
                     }
                 },
