@@ -14,29 +14,39 @@
     <style>
         body { background-color: #F5F7FB; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-        
-        .ts-control { 
-            border-radius: 0.75rem; 
-            padding: 12px 16px; 
-            border: 1px solid #E5E7EB; 
-            box-shadow: none; 
+
+        .ts-control {
+            border-radius: 0.75rem;
+            padding: 12px 16px;
+            border: 1px solid #E5E7EB;
+            box-shadow: none;
             background-color: white;
             font-size: 1rem;
         }
         .ts-control:focus { border-color: #3270FC; }
         .ts-dropdown { border-radius: 0.75rem; border: 1px solid #E5E7EB; margin-top: 4px; z-index: 1000003 !important; }
-        
+
         [x-cloak] { display: none !important; }
-        
+
         .input-field {
             width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #E5E7EB; outline: none; transition: all 0.2s; background-color: white;
         }
         .input-field:focus { border-color: #22c55e; ring: 2px; ring-color: #bbf7d0; }
-        
+
         /* Custom number input controls */
         .btn-counter { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: #F0F5FF; color: #3270FC; font-weight: bold; transition: all 0.2s; border: 1px solid transparent; }
         .btn-counter:hover { background-color: #3270FC; color: white; }
         .btn-counter:active { transform: scale(0.95); }
+
+        /* Hide number input arrows for cleaner appearance */
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type='number'] {
+            -moz-appearance: textfield;
+        }
 
         /* Ẩn Header/Navbar chính của Website chỉ khi ở chế độ map picker */
         body.hide-header header, body.hide-header .header, body.hide-header .main-header, body.hide-header .navbar, body.hide-header #floating-footer {
@@ -72,7 +82,7 @@
                 isTypeExpanded: true,
                 isWardExpanded: true,
                 isLegalExpanded: true,
-                
+
                 // DATA MODEL
                 formData: {
                     transactionType: 'sale',
@@ -96,7 +106,7 @@
                     amenities: {},
                     parameters: {}
                 },
-                
+
                 // IMAGE UPLOAD STATE
                 images: {
                     avatar: null,
@@ -167,7 +177,7 @@
                             reader.readAsDataURL(file);
                         });
                     }
-                    
+
                     // Reset input value
                     event.target.value = '';
                 },
@@ -371,7 +381,7 @@
                     // this.formData.latitude = this.pickerLat; this.formData.longitude = this.pickerLng;
                     this.showMapPicker = false;
                 },
-                
+
                 getStreetName(id) { const st = this.streets.find(s => s.id == id); return st ? st.name : 'Đường đã chọn'; },
                 selectStreet(id) {
                     console.log('selectStreet called with id:', id);
@@ -464,7 +474,7 @@
 @section('content')
     <div x-data="realEstateForm" class="flex items-start justify-center min-h-screen w-full py-2 ">
     <div class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh]">
-        
+
         <!-- HEADER -->
         <div class="sticky top-0 z-49 bg-white/90 backdrop-blur-md border-b border-gray-100 px-5 py-4">
             <div class="flex justify-between items-center mb-2">
@@ -478,10 +488,10 @@
 
         <!-- SCROLLABLE CONTENT -->
         <form class="flex-1 p-5 pb-32 overflow-y-auto" @submit.prevent="submitForm">
-            
+
             <!-- === BƯỚC 1: VỊ TRÍ & LOẠI BĐS === -->
             <div x-show="step === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                
+
                 <!-- Hình thức giao dịch (Bán / Cho Thuê) -->
                 <div class="mb-6">
                     {{-- <label class="block text-sm font-bold text-gray-800 mb-3">Hình thức giao dịch</label> --}}
@@ -541,10 +551,10 @@
                     <!-- STATE 1: DANH SÁCH MỞ RỘNG -->
                     <div x-show="isTypeExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-4 gap-3">
                         <template x-for="item in propertyTypes" :key="item.id">
-                            <button type="button" 
+                            <button type="button"
                                 @click="selectPropertyType(item.id)"
-                                :class="formData.type === item.id 
-                                    ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105' 
+                                :class="formData.type === item.id
+                                    ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
                                     : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                                 class="flex flex-col items-center justify-center p-3 border rounded-xl transition-all duration-200 aspect-square">
                                 <i :class="['fa-solid', item.icon, 'text-xl mb-2']"></i>
@@ -584,10 +594,10 @@
                         <!-- STATE 1: DANH SÁCH MỞ RỘNG (Grid 3 cột) -->
                         <div x-show="isWardExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-4 gap-2">
                             <template x-for="ward in wards" :key="ward.id">
-                                <button type="button" 
+                                <button type="button"
                                     @click="selectWard(ward.id)"
-                                    :class="formData.ward === ward.id 
-                                        ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105' 
+                                    :class="formData.ward === ward.id
+                                        ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
                                         : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                                     class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-[4/3] group">
                                     <i :class="['fa-solid', ward.icon, 'text-lg mb-1 group-hover:scale-110 transition-transform']"></i>
@@ -632,12 +642,12 @@
                             </span>
                         </div>
                         <p class="text-xs text-gray-500 mt-2 truncate" x-text="locationText"></p>
-                        
-                        
+
+
                     </div>
                 </div>
 
-                
+
             </div>
 
             <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
@@ -648,7 +658,7 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
                     <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                         <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
-                            <button type="button" 
+                            <button type="button"
                                 @click="formData.commissionRate = rate"
                                 :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
                                 class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[60px]">
@@ -734,7 +744,7 @@
                 <!-- Upload Ảnh -->
                 <div class="space-y-4">
                     <h3 class="text-sm font-bold text-gray-800 border-l-4 border-primary pl-2 text-left">Hình ảnh & Giấy tờ</h3>
-                    
+
                     <!-- Hidden Inputs -->
                     <input type="file" x-ref="avatarInput" class="hidden" accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'avatar')">
                     <input type="file" x-ref="legalInput" class="hidden" multiple accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'legal')">
@@ -763,7 +773,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Ảnh giấy tờ (Multi) -->
                         <div>
@@ -854,7 +864,7 @@
                         <p class="font-bold text-gray-800 text-lg" x-text="getPropertyName()"></p>
                     </div>
                 </div>
-                
+
 
                 <!-- DYNAMIC PARAMETERS BASED ON PROPERTY TYPE -->
                 <div class="space-y-6" x-show="getFilteredParameters().length > 0">
@@ -864,12 +874,32 @@
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
                                 <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
-                                    <button type="button" @click="if((formData.parameters[param.id] || 0) > 0) formData.parameters[param.id] = (parseInt(formData.parameters[param.id]) || 0) - 1" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
-                                    <div class="flex items-center gap-1">
-                                        <span class="font-bold text-lg text-gray-800" x-text="formData.parameters[param.id] || 0"></span>
-                                        <span class="font-bold text-sm text-gray-400" x-text="param.type_values ? 'm²' : ''"></span>
+                                    <button type="button"
+                                        @click="let val = parseInt(formData.parameters[param.id] || 0); if(val > 0) formData.parameters[param.id] = val - 1;"
+                                        class="btn-counter flex-shrink-0">
+                                        <i class="fa-solid fa-minus"></i>
+                                    </button>
+
+                                    {{-- Replaced the inner div (span + span) with a proper input for direct typing --}}
+                                    <div class="relative flex-1 h-full flex items-center">
+                                        <input type="number"
+                                            x-model.number="formData.parameters[param.id]"
+                                            @change="if (formData.parameters[param.id] < 0 || formData.parameters[param.id] === null || formData.parameters[param.id] === '') formData.parameters[param.id] = 0"
+                                            min="0"
+                                            placeholder="0"
+                                            class="w-full text-center font-bold text-lg text-gray-800 border-none bg-transparent focus:ring-0 p-0 m-0"
+                                            style="padding-right: 35px;"
+                                        >
+                                        {{-- Unit display, reusing original logic --}}
+                                        <span class="absolute right-2 top-1/2 -translate-y-1/2 font-bold text-sm text-gray-400 pointer-events-none"
+                                            x-text="param.type_values ? 'm²' : ''"></span>
                                     </div>
-                                    <button type="button" @click="formData.parameters[param.id] = (parseInt(formData.parameters[param.id]) || 0) + 1" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
+
+                                    <button type="button"
+                                        @click="let val = parseInt(formData.parameters[param.id] || 0); formData.parameters[param.id] = val + 1;"
+                                        class="btn-counter flex-shrink-0">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
                                 </div>
                             </template>
 
@@ -929,14 +959,14 @@
             <div x-show="step === 4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 <h2 class="text-xl font-bold text-gray-800 mb-1">Tiện ích xung quanh</h2>
                 <p class="text-sm text-gray-500 mb-6 text-center">Chọn các địa điểm gần BĐS của bạn.</p>
-                
+
                 <!-- GRID TIỆN ÍCH (4 Cột) -->
                 <div class="grid grid-cols-4 gap-2 mb-6">
                     <template x-for="am in amenitiesList" :key="am.id">
-                        <button type="button" 
+                        <button type="button"
                             @click="toggleAmenity(am.id)"
-                            :class="isAmenitySelected(am.id) 
-                                ? 'bg-primary text-white border-primary shadow-md transform scale-105' 
+                            :class="isAmenitySelected(am.id)
+                                ? 'bg-primary text-white border-primary shadow-md transform scale-105'
                                 : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
                             <i :class="['fa-solid', am.icon, 'text-lg mb-1']"></i>
@@ -948,7 +978,7 @@
                 <!-- LIST INPUT KHOẢNG CÁCH (Chỉ hiện cái đã chọn) -->
                 <div class="space-y-3" x-show="Object.keys(formData.amenities).length > 0" x-transition>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Nhập khoảng cách (km)</h3>
-                    
+
                     <template x-for="(dist, id) in formData.amenities" :key="id">
                         <div class="flex items-center bg-white border border-gray-200 rounded-xl p-2 pr-4 shadow-sm animate-fade-in-up">
                             <!-- Icon & Name -->
@@ -1014,7 +1044,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden"> 
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
 
         <div class="relative flex-1 w-full h-full bg-gray-100">
             <div id="picker-map" class="w-full h-full"></div>
@@ -1039,7 +1069,7 @@
             </div>
 
             <div class="flex gap-3">
-                <button type="button" @click="showMapPicker = false" 
+                <button type="button" @click="showMapPicker = false"
                     class="flex-1 bg-gray-100 text-gray-600 px-4 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
                     Quay lại
                 </button>
@@ -1094,7 +1124,7 @@
     <style>
         /* Ẩn các thành phần thừa của Google Map để giao diện sạch như App */
         .gmnoprint, .gm-control-active, .gm-style-cc { display: none !important; }
-        
+
         /* Animation cho cái ghim nhảy nhảy */
         @keyframes bounce-short {
             0%, 100% { transform: translateY(0); }
@@ -1106,7 +1136,7 @@
 
 @push('scripts')
     <script src="{{ asset('js/dashboard.js') }}"></script>
-    
+
     <script>
         // Global Telegram WebApp Logic (Run on every page load)
         if (window.Telegram && window.Telegram.WebApp) {
@@ -1120,5 +1150,5 @@
             }
         }
     </script>
-    
+
 @endpush
