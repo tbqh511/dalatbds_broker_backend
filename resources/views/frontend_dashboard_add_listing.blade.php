@@ -870,7 +870,9 @@
                 <div class="space-y-6" x-show="getFilteredParameters().length > 0">
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
-                            <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide" x-text="param.name"></label>
+                            <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide"
+                                x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('(m2)') ? '' : (param.name.includes('Tầng') ? ' (tầng)' : (param.name.includes('Phòng') ? ' (phòng)' : '')))) : param.name">
+                            </label>
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
                                 <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
@@ -892,7 +894,7 @@
                                         >
                                         {{-- Unit display, reusing original logic --}}
                                         <span class="absolute right-2 top-1/2 -translate-y-1/2 font-bold text-sm text-gray-400 pointer-events-none"
-                                            x-text="param.type_values ? 'm²' : ''"></span>
+                                            x-text="param.type_values ? '' : ''"></span>
                                     </div>
 
                                     <button type="button"
