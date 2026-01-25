@@ -860,6 +860,65 @@
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
                             <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide" x-text="param.name"></label>
+                            
+                            <!-- Diện tích sàn -->
+                            <div class="relative group">
+                                <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Diện tích sàn</label>
+                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary group-focus-within:ring-1 group-focus-within:ring-primary transition-all">
+                                    <div class="w-10 h-10 flex items-center justify-center text-gray-400 bg-gray-50 border-r border-gray-100">
+                                        <i class="fa-solid fa-ruler-combined"></i>
+                                    </div>
+                                    <input type="number" x-model="formData.floorArea" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
+                                    <span class="pr-4 text-sm font-bold text-gray-400">m²</span>
+                                </div>
+                            </div>
+
+                            <!-- Số tầng & Hướng -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Số tầng</label>
+                                    <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
+                                        <button type="button" @click="if(formData.floors > 1) formData.floors--" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
+                                        <span class="font-bold text-lg text-gray-800" x-text="formData.floors"></span>
+                                        <button type="button" @click="formData.floors++" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-primary mb-1 uppercase tracking-wide">Hướng nhà</label>
+                                    <div class="relative">
+                                        <select x-model="formData.direction" class="w-full bg-white border border-gray-200 rounded-xl p-2.5 font-bold text-gray-700 outline-none focus:border-primary appearance-none h-[44px]">
+                                            <template x-for="d in directions">
+                                                <option :value="d" x-text="d"></option>
+                                            </template>
+                                        </select>
+                                        <i class="fa-solid fa-compass absolute right-3 top-3.5 text-gray-400 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Phòng ngủ & Toilet -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                    <div class="flex items-center mb-2 text-gray-500">
+                                        <i class="fa-solid fa-bed mr-2"></i> <span class="text-xs font-bold uppercase">Phòng ngủ</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <button type="button" @click="if(formData.bedrooms > 0) formData.bedrooms--" class="text-gray-400 hover:text-primary text-xl"><i class="fa-solid fa-circle-minus"></i></button>
+                                        <span class="text-2xl font-bold text-gray-800" x-text="formData.bedrooms"></span>
+                                        <button type="button" @click="formData.bedrooms++" class="text-primary hover:text-blue-600 text-xl"><i class="fa-solid fa-circle-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                    <div class="flex items-center mb-2 text-gray-500">
+                                        <i class="fa-solid fa-bath mr-2"></i> <span class="text-xs font-bold uppercase">Toilet</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <button type="button" @click="if(formData.bathrooms > 0) formData.bathrooms--" class="text-gray-400 hover:text-primary text-xl"><i class="fa-solid fa-circle-minus"></i></button>
+                                        <span class="text-2xl font-bold text-gray-800" x-text="formData.bathrooms"></span>
+                                        <button type="button" @click="formData.bathrooms++" class="text-primary hover:text-blue-600 text-xl"><i class="fa-solid fa-circle-plus"></i></button>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
