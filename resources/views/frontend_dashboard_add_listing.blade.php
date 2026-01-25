@@ -854,27 +854,22 @@
                         <p class="font-bold text-gray-800 text-lg" x-text="getPropertyName()"></p>
                     </div>
                 </div>
+                
 
                 <!-- DYNAMIC PARAMETERS BASED ON PROPERTY TYPE -->
                 <div class="space-y-6" x-show="getFilteredParameters().length > 0">
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
                             <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide" x-text="param.name"></label>
-                            
-
                             <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
                                 <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
-                                        <button type="button" @click="if(formData.floors > 1) formData.floors--" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
-                                        <span class="font-bold text-lg text-gray-800" x-text="formData.floors"></span>
-                                        <button type="button" @click="formData.floors++" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
-                                </div>
-                                <div class="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden group-focus-within:border-primary group-focus-within:ring-1 group-focus-within:ring-primary transition-all">
-                                    <div class="w-10 h-10 flex items-center justify-center text-gray-400 bg-gray-50 border-r border-gray-100">
-                                        <i class="fa-solid fa-hashtag"></i>
+                                    <button type="button" @click="if((formData.parameters[param.id] || 0) > 0) formData.parameters[param.id] = (parseInt(formData.parameters[param.id]) || 0) - 1" class="btn-counter"><i class="fa-solid fa-minus"></i></button>
+                                    <div class="flex items-center gap-1">
+                                        <span class="font-bold text-lg text-gray-800" x-text="formData.parameters[param.id] || 0"></span>
+                                        <span class="font-bold text-sm text-gray-400" x-text="param.type_values ? 'm²' : ''"></span>
                                     </div>
-                                    <input type="number" :x-model="`formData.parameters.${param.id}`" class="flex-1 p-2.5 outline-none font-bold text-gray-700" placeholder="0">
-                                    <span class="pr-4 text-sm font-bold text-gray-400" x-text="param.type_values ? 'm²' : ''"></span>
+                                    <button type="button" @click="formData.parameters[param.id] = (parseInt(formData.parameters[param.id]) || 0) + 1" class="btn-counter"><i class="fa-solid fa-plus"></i></button>
                                 </div>
                             </template>
 
