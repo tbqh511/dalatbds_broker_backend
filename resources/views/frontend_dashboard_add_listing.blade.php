@@ -735,24 +735,7 @@
             <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
             <div x-show="step === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 {{-- <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2> --}}
-                <!-- Hoa hồng (Màu Primary) -->
-                <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
-                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                        <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
-                            <button type="button"
-                                @click="formData.commissionRate = rate"
-                                :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
-                                class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[60px]">
-                                <span x-text="rate + '%'"></span>
-                            </button>
-                        </template>
-                    </div>
-                    <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
-                        <span>Nhận về:</span>
-                        <span class="font-bold text-success text-sm" x-text="calculateCommission()"></span>
-                    </div>
-                </div>
+                
                 <!-- Giấy tờ -->
                 <div class="mb-6">
                     <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
@@ -817,6 +800,24 @@
                         <span class="mr-2">Đơn giá:</span>
                         <span class="font-bold text-success"><span x-text="calculatePricePerM2()"></span> / m²</span>
                     </p>
+                </div>
+                <!-- Hoa hồng (Màu Primary) -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
+                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                        <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
+                            <button type="button"
+                                @click="formData.commissionRate = rate"
+                                :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
+                                class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[60px]">
+                                <span x-text="rate + '%'"></span>
+                            </button>
+                        </template>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
+                        <span>Nhận về:</span>
+                        <span class="font-bold text-success text-sm" x-text="calculateCommission()"></span>
+                    </div>
                 </div>
                 <!-- Mô tả -->
                 <div class="mb-6">
@@ -952,7 +953,7 @@
                 <div class="space-y-6" x-show="getFilteredParameters().length > 0">
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
-                            <label class="block text-left text-xs font-bold text-primary mb-1 uppercase tracking-wide"
+                            <label class="block text-left text-xs font-bold mb-1 tracking-wide"
                                   x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('Đường rộng') ? '(m)' : (param.name.includes('Số tầng') ? ' (tầng)' : (param.name.includes('Phòng ngủ') ? ' (số phòng)' : '')))) : param.name">
                             </label>
                             <!-- NUMBER INPUT -->
@@ -1029,19 +1030,19 @@
 
                                     <!-- STATE 1: LIST EXPANDED -->
                                     <div x-show="isExpanded"
-                                         x-transition:enter="transition ease-out duration-200"
-                                         x-transition:enter-start="opacity-0 scale-95"
-                                         x-transition:enter-end="opacity-100 scale-100"
-                                         class="grid grid-cols-2 gap-3">
-                                        <template x-for="option in param.type_values" :key="option">
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100"
+                                        class="grid grid-cols-4 gap-2"> <template x-for="option in param.type_values" :key="option">
                                             <button type="button"
                                                 @click="formData.parameters[param.id] = option; isExpanded = false"
                                                 :class="formData.parameters[param.id] === option
-                                                    ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
+                                                    ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105 z-10'
                                                     : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
-                                                class="py-3 px-4 border rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center text-center leading-tight min-h-[44px]">
-                                                <i :class="[fa-solid fa-compass, 'text-xl mb-2']"></i>
-                                                <span x-text="option"></span>
+                                                class="py-2 px-1 border rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 flex flex-col items-center justify-center text-center leading-tight min-h-[60px]">
+                                                
+                                                <i class="fa-solid fa-compass text-lg mb-1"></i>
+                                                <span x-text="option" class="break-words w-full"></span>
                                             </button>
                                         </template>
                                     </div>
