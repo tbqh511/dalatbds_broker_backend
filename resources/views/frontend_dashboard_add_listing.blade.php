@@ -574,7 +574,8 @@
                          isEditing: false,
                          get isHasData() { return this.formData.contact.name && this.formData.contact.phone; },
                          init() { this.isEditing = !this.isHasData; }
-                     }">
+                     }"
+                     @click.outside="if(isHasData) isEditing = false">
                     <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center justify-center">
                         <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Liên hệ bán
                     </h3>
@@ -582,14 +583,13 @@
                     <!-- VIEW MODE: Label (Chỉ hiện khi không edit và đã có data) -->
                     <div x-show="!isEditing && isHasData"
                          @click="isEditing = true"
-                         class="py-4 px-2 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition shadow-sm animate-fade-in-up">
-                        <p class="text-lg font-bold text-primary">
+                         class="py-4 px-2 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition shadow-sm animate-fade-in-up flex flex-col items-center justify-center">
+                        <p class="text-lg font-bold text-primary text-center">
                             <span x-text="formData.contact.gender === 'ong' ? 'Ông' : 'Bà'"></span>
                             <span x-text="formData.contact.name"></span>
                             <span> - </span>
                             <span class="text-gray-500">*******<span x-text="formData.contact.phone ? formData.contact.phone.slice(-3) : ''"></span></span>
                         </p>
-                        <p class="text-[10px] text-gray-400 mt-1 italic">(Nhấn để chỉnh sửa)</p>
                     </div>
 
                     <!-- EDIT MODE: Form (Hiện khi đang edit hoặc chưa có data) -->
@@ -618,14 +618,6 @@
                                 </div>
                             </div>
                             <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
-
-                            <!-- Nút Xong (Chỉ hiện khi đã có đủ data để quay lại view mode) -->
-                            <button type="button"
-                                    x-show="isHasData"
-                                    @click="isEditing = false"
-                                    class="w-full py-2 bg-blue-50 text-primary font-bold rounded-lg hover:bg-blue-100 transition text-sm mt-2 border border-blue-100">
-                                <i class="fa-solid fa-check mr-1"></i> Xong / Lưu tạm
-                            </button>
                         </div>
                     </div>
                 </div>
