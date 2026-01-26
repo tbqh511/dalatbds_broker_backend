@@ -288,13 +288,19 @@
                 isAmenitySelected(id) { return id in this.formData.amenities; },
                 getAmenityIcon(am) {
                     if (!am || !am.image) return '';
-                    if (am.image.includes('http')) return am.image;
                     
-                    let imageName = am.image;
-                    if (this.isAmenitySelected(am.id)) {
-                        imageName = imageName.replace(/\.svg$/i, '-white.svg');
+                    // Xác định đường dẫn cơ bản
+                    let imageUrl = am.image;
+                    if (!imageUrl.includes('http') && !imageUrl.startsWith('/')) {
+                        imageUrl = '/images/facility_img/' + imageUrl;
                     }
-                    return '/images/facility_img/' + imageName;
+
+                    // Nếu đang chọn, thay thế đuôi file
+                    if (this.isAmenitySelected(am.id)) {
+                        return imageUrl.replace(/\.svg$/i, '-white.svg');
+                    }
+                    
+                    return imageUrl;
                 },
                 getAmenityImage(id) { const am = this.amenitiesList.find(a => a.id == id); return am ? am.image : ''; },
                 getAmenityName(id) { const am = this.amenitiesList.find(a => a.id == id); return am ? am.name : id; },
