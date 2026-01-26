@@ -569,34 +569,64 @@
                     </div>
                 </div>
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
-                <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6">
-                    <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center">
+                <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6"
+                     x-data="{
+                         isEditing: false,
+                         get isHasData() { return this.formData.contact.name && this.formData.contact.phone; },
+                         init() { this.isEditing = !this.isHasData; }
+                     }">
+                    <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center justify-center">
                         <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Liên hệ bán
                     </h3>
-                    <!-- Canh giữa Radio buttons -->
-                    <div class="flex justify-center gap-8 mb-4 border-b border-gray-100 pb-3">
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
-                            <input type="radio" name="gender" value="ong" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
-                            <span class="text-sm font-bold text-gray-700">Ông</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
-                            <input type="radio" name="gender" value="ba" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
-                            <span class="text-sm font-bold text-gray-700">Bà</span>
-                        </label>
-                    </div>
-                    <div class="space-y-3">
-                        <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field ">
-                        <div class="relative group">
-                            <input type="tel"
-                                   x-model="formData.contact.phone"
-                                   placeholder="Số điện thoại"
-                                   class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
 
-                            <div class="relative -bottom-5 left-0 text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone">
-                                <i class="fa-solid fa-shield-halved mr-1"></i> Thông tin này được bảo mật.
-                            </div>
+                    <!-- VIEW MODE: Label (Chỉ hiện khi không edit và đã có data) -->
+                    <div x-show="!isEditing && isHasData"
+                         @click="isEditing = true"
+                         class="py-4 px-2 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition shadow-sm animate-fade-in-up">
+                        <p class="text-lg font-bold text-primary">
+                            <span x-text="formData.contact.gender === 'ong' ? 'Ông' : 'Bà'"></span>
+                            <span x-text="formData.contact.name"></span>
+                            <span> - </span>
+                            <span class="text-gray-500">*******<span x-text="formData.contact.phone ? formData.contact.phone.slice(-3) : ''"></span></span>
+                        </p>
+                        <p class="text-[10px] text-gray-400 mt-1 italic">(Nhấn để chỉnh sửa)</p>
+                    </div>
+
+                    <!-- EDIT MODE: Form (Hiện khi đang edit hoặc chưa có data) -->
+                    <div x-show="isEditing || !isHasData" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                        <!-- Canh giữa Radio buttons -->
+                        <div class="flex justify-center gap-8 mb-4 border-b border-gray-100 pb-3">
+                            <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+                                <input type="radio" name="gender" value="ong" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
+                                <span class="text-sm font-bold text-gray-700">Ông</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+                                <input type="radio" name="gender" value="ba" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
+                                <span class="text-sm font-bold text-gray-700">Bà</span>
+                            </label>
                         </div>
-                        <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
+                        <div class="space-y-3">
+                            <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field ">
+                            <div class="relative group">
+                                <input type="tel"
+                                       x-model="formData.contact.phone"
+                                       placeholder="Số điện thoại"
+                                       class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
+
+                                <div class="relative -bottom-5 left-0 text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone">
+                                    <i class="fa-solid fa-shield-halved mr-1"></i> Thông tin này được bảo mật.
+                                </div>
+                            </div>
+                            <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
+
+                            <!-- Nút Xong (Chỉ hiện khi đã có đủ data để quay lại view mode) -->
+                            <button type="button"
+                                    x-show="isHasData"
+                                    @click="isEditing = false"
+                                    class="w-full py-2 bg-blue-50 text-primary font-bold rounded-lg hover:bg-blue-100 transition text-sm mt-2 border border-blue-100">
+                                <i class="fa-solid fa-check mr-1"></i> Xong / Lưu tạm
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <!-- Loại BĐS - Collapsible Logic -->
