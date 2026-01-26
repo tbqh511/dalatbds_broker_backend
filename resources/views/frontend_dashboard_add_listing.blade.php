@@ -286,6 +286,16 @@
                 selectLegal(value) { this.formData.legal = value; this.isLegalExpanded = false; },
                 toggleAmenity(id) { if (id in this.formData.amenities) { let temp = {...this.formData.amenities}; delete temp[id]; this.formData.amenities = temp; } else { this.formData.amenities = { ...this.formData.amenities, [id]: '' }; } },
                 isAmenitySelected(id) { return id in this.formData.amenities; },
+                getAmenityIcon(am) {
+                    if (!am || !am.image) return '';
+                    if (am.image.includes('http')) return am.image;
+                    
+                    let imageName = am.image;
+                    if (this.isAmenitySelected(am.id)) {
+                        imageName = imageName.replace(/\.svg$/i, '-white.svg');
+                    }
+                    return '/images/facility_img/' + imageName;
+                },
                 getAmenityImage(id) { const am = this.amenitiesList.find(a => a.id == id); return am ? am.image : ''; },
                 getAmenityName(id) { const am = this.amenitiesList.find(a => a.id == id); return am ? am.name : id; },
                 handlePriceInput(e) { let value = e.target.value.replace(/[^0-9]/g, ''); if (!value) value = '0'; this.price = parseInt(value); this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.price); this.priceInWords = this.readMoney(this.price); },
@@ -1057,7 +1067,7 @@
                                 ? 'bg-primary text-white border-primary shadow-md transform scale-105'
                                 : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
-                            <img :src="am.image && am.image.includes('http') ? am.image : '/images/facility_img/' + (isAmenitySelected(am.id) ? am.image.replace(/\.svg$/i, '-white.svg') : am.image)" :alt="am.name" class="w-8 h-8 object-contain mb-1">
+                            <img :src="getAmenityIcon(am)" :alt="am.name" class="w-8 h-8 object-contain mb-1">
                             <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
                         </button>
                     </template>
