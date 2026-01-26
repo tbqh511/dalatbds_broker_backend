@@ -1058,7 +1058,7 @@
                                 : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
                             {{-- <i :class="['fa-solid', am.icon, 'text-lg mb-1']"></i> --}}
-                            <img :src="'am.image" class="w-8 h-8 object-contain mb-1 filter" :class="isAmenitySelected(am.id) ? 'brightness-0 invert' : ''">
+                            <img :src="'/images/facility_img/' + am.image" class="w-8 h-8 object-contain mb-1 filter" :class="isAmenitySelected(am.id) ? 'brightness-0 invert' : ''">
                             <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
                         </button>
                     </template>
@@ -1073,7 +1073,7 @@
                             <!-- Icon & Name -->
                             <div class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center mr-3 flex-shrink-0 p-1">
                                 {{-- <i :class="['fa-solid', getAmenityIcon(id)]"></i> --}}
-                                <img :src="'getAmenityImage(id)" class="w-full h-full object-contain">
+                                <img :src="'/images/facility_img/' + getAmenityImage(id)" class="w-full h-full object-contain">
                             </div>
                             <div class="flex-1 mr-3">
                                 <p class="text-xs font-bold text-gray-500 uppercase" x-text="getAmenityName(id)"></p>
