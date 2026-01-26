@@ -1087,15 +1087,24 @@
                 <h2 class="text-xl font-bold text-gray-800 mb-1">Tiện ích xung quanh</h2>
                 <p class="text-sm text-gray-500 mb-6 text-center">Chọn các địa điểm gần BĐS của bạn.</p>
 
-                <!-- GRID TIỆN ÍCH (4 Cột) -->
-                <div class="grid grid-cols-4 gap-2 mb-6">
+                <!-- GRID TIỆN ÍCH (Horizontal Scroll) -->
+                <style>
+                    .no-scrollbar::-webkit-scrollbar {
+                        display: none;
+                    }
+                    .no-scrollbar {
+                        -ms-overflow-style: none;
+                        scrollbar-width: none;
+                    }
+                </style>
+                <div class="flex gap-3 mb-6 overflow-x-auto snap-x scroll-smooth no-scrollbar pb-2">
                     <template x-for="am in amenitiesList" :key="am.id">
                         <button type="button"
                             @click="toggleAmenity(am.id)"
                             :class="isAmenitySelected(am.id)
                                 ? 'bg-primary text-white border-primary shadow-md transform scale-105'
                                 : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
-                            class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
+                            class="flex-none w-[22%] snap-start flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
                             <img :src="getAmenityIcon(am)" :alt="am.name" class="w-8 h-8 object-contain mb-1">
                             <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
                         </button>
