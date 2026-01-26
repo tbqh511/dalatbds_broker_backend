@@ -1057,7 +1057,7 @@
                                 ? 'bg-primary text-white border-primary shadow-md transform scale-105'
                                 : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
-                            <img :src="am.image && am.image.includes('http') ? am.image : '/images/facility_img/' + (isAmenitySelected(am.id) ? am.image.replace('.svg', '-white.svg') : am.image)" class="w-8 h-8 object-contain mb-1">
+                            <img :src="am.image && am.image.includes('http') ? am.image : '/images/facility_img/' + (isAmenitySelected(am.id) ? am.image.replace(/\.svg$/i, '-white.svg') : am.image)" :alt="am.name" class="w-8 h-8 object-contain mb-1">
                             <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
                         </button>
                     </template>
