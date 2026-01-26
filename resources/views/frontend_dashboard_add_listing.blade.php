@@ -286,8 +286,8 @@
                 selectLegal(value) { this.formData.legal = value; this.isLegalExpanded = false; },
                 toggleAmenity(id) { if (id in this.formData.amenities) { let temp = {...this.formData.amenities}; delete temp[id]; this.formData.amenities = temp; } else { this.formData.amenities = { ...this.formData.amenities, [id]: '' }; } },
                 isAmenitySelected(id) { return id in this.formData.amenities; },
-                getAmenityImage(id) { const am = this.amenitiesList.find(a => a.id === id); return am ? am.image : ''; },
-                getAmenityName(id) { const am = this.amenitiesList.find(a => a.id === id); return am ? am.name : id; },
+                getAmenityImage(id) { const am = this.amenitiesList.find(a => a.id == id); return am ? am.image : ''; },
+                getAmenityName(id) { const am = this.amenitiesList.find(a => a.id == id); return am ? am.name : id; },
                 handlePriceInput(e) { let value = e.target.value.replace(/[^0-9]/g, ''); if (!value) value = '0'; this.price = parseInt(value); this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.price); this.priceInWords = this.readMoney(this.price); },
                 addZeros() { this.price = this.price * 1000; this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.price); this.priceInWords = this.readMoney(this.price); },
                 calculateCommission() { if(!this.price) return '0 VNĐ'; const commission = this.price * (this.formData.commissionRate / 100); return this.readMoney(commission); },
@@ -1057,7 +1057,6 @@
                                 ? 'bg-primary text-white border-primary shadow-md transform scale-105'
                                 : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
-                            {{-- <i :class="['fa-solid', am.icon, 'text-lg mb-1']"></i> --}}
                             <img :src="am.image && am.image.includes('http') ? am.image : '/images/facility_img/' + am.image" class="w-8 h-8 object-contain mb-1 filter" :class="isAmenitySelected(am.id) ? 'brightness-0 invert' : ''">
                             <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
                         </button>
@@ -1069,14 +1068,13 @@
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Nhập khoảng cách (km)</h3>
 
                     <template x-for="(dist, id) in formData.amenities" :key="id">
-                        <div class="flex items-center bg-white border border-gray-200 rounded-xl p-2 pr-4 shadow-sm animate-fade-in-up">
+                        <div x-data="{ am: amenitiesList.find(a => a.id == id) }" class="flex items-center bg-white border border-gray-200 rounded-xl p-2 pr-4 shadow-sm animate-fade-in-up">
                             <!-- Icon & Name -->
                             <div class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center mr-3 flex-shrink-0 p-1">
-                                {{-- <i :class="['fa-solid', getAmenityIcon(id)]"></i> --}}
-                                <img :src="getAmenityImage(id) && getAmenityImage(id).includes('http') ? getAmenityImage(id) : '/images/facility_img/' + getAmenityImage(id)" class="w-full h-full object-contain">
+                                <img :src="am && am.image && am.image.includes('http') ? am.image : (am ? '/images/facility_img/' + am.image : '')" class="w-full h-full object-contain">
                             </div>
                             <div class="flex-1 mr-3">
-                                <p class="text-xs font-bold text-gray-500 uppercase" x-text="getAmenityName(id)"></p>
+                                <p class="text-xs font-bold text-gray-500 uppercase" x-text="am ? am.name : ''"></p>
                                 <p class="text-sm font-bold text-gray-800">Cách bao xa?</p>
                             </div>
                             <!-- Input -->
