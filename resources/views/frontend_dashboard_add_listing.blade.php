@@ -1139,7 +1139,7 @@
                             <!-- Input -->
                             <div class="relative w-24">
                                 <input type="number" :name="'facilities[' + id + '][distance]'" x-model="formData.amenities[id]" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-2 pr-6 text-right font-bold text-gray-800 text-sm focus:border-primary outline-none" placeholder="0">
-                                <span class="absolute right-2 top-2 text-xs text-gray-400 font-bold">km</span>
+                                <span class="absolute top-2 text-xs text-gray-400 font-bold">km</span>
                             </div>
                             <!-- Remove Btn -->
                             <button type="button" @click="toggleAmenity(id)" class="ml-3 text-gray-300 hover:text-red-500">
