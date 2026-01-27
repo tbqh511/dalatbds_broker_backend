@@ -76,6 +76,7 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('realEstateForm', () => ({
                 step: 1,
+                isAmenityExpanded: false,
                 price: 0,
                 formattedPrice: '',
                 priceInWords: '0 VNĐ',
@@ -1089,17 +1090,36 @@
 
                 <!-- GRID TIỆN ÍCH (4 Cột) -->
                 <div class="grid grid-cols-4 gap-2 mb-6">
-                    <template x-for="am in amenitiesList" :key="am.id">
+                    <!-- Loop items: Show all if expanded or count <= 8. Else show first 7. -->
+                    <template x-for="am in (isAmenityExpanded || amenitiesList.length <= 8 ? amenitiesList : amenitiesList.slice(0, 7))" :key="am.id">
                         <button type="button"
                             @click="toggleAmenity(am.id)"
                             :class="isAmenitySelected(am.id)
                                 ? 'bg-primary text-white border-primary shadow-md transform scale-105'
                                 : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
-                            class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square">
+                            class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square animate-fade-in-up">
                             <img :src="getAmenityIcon(am)" :alt="am.name" class="w-8 h-8 object-contain mb-1">
                             <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
                         </button>
                     </template>
+                    
+                    <!-- View More Button (7 items displayed + 1 button = 8 slots) -->
+                    <button x-show="!isAmenityExpanded && amenitiesList.length > 8"
+                            type="button"
+                            @click="isAmenityExpanded = true"
+                            class="flex flex-col items-center justify-center p-2 border border-dashed border-primary/40 bg-blue-50/50 text-primary rounded-xl hover:bg-blue-50 transition-all aspect-square group">
+                        <div class="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm mb-1 group-hover:scale-110 transition-transform">
+                             <i class="fa-solid fa-plus text-sm"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-center leading-tight">Xem thêm</span>
+                    </button>
+                </div>
+
+                <!-- Thu gọn Button -->
+                <div x-show="isAmenityExpanded && amenitiesList.length > 8" class="flex justify-center -mt-4 mb-6">
+                    <button type="button" @click="isAmenityExpanded = false" class="text-xs text-gray-400 hover:text-primary flex items-center bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm transition-colors">
+                        <i class="fa-solid fa-chevron-up mr-1.5"></i> Thu gọn
+                    </button>
                 </div>
 
                 <!-- LIST INPUT KHOẢNG CÁCH (Chỉ hiện cái đã chọn) -->
