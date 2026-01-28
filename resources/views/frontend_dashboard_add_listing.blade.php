@@ -810,6 +810,39 @@
                     </div> --}}
                     <!-- Google Map Preview -->
                     <div x-show="formData.ward" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
+                        <!-- External Street Search Box -->
+                        <div class="mb-3">
+                             <label class="block text-sm font-bold text-gray-700 mb-1.5 text-left">Tên đường <span class="text-red-500">*</span></label>
+                             <div class="relative">
+                                <select id="select-street-outside" x-model="formData.street"
+                                        x-init="$nextTick(() => {
+                                            new TomSelect($el, {
+                                                create: false,
+                                                sortField: { field: 'text', direction: 'asc' },
+                                                plugins: ['dropdown_input'],
+                                                maxOptions: null,
+                                                dropdownParent: document.body,
+                                                onChange: (value) => { 
+                                                    formData.street = value;
+                                                    selectStreet(value);
+                                                }
+                                            });
+                                            // Watch for changes from the inside picker to update this outside one
+                                            $watch('formData.street', (value) => {
+                                                if ($el.tomselect) {
+                                                    $el.tomselect.setValue(value, true); // true = silent update
+                                                }
+                                            });
+                                        })"
+                                        placeholder="Tìm tên đường..." autocomplete="off">
+                                    <option value="">Chọn đường...</option>
+                                    <template x-for="st in streets" :key="st.id">
+                                        <option :value="st.id" x-text="st.name"></option>
+                                    </template>
+                                </select>
+                             </div>
+                        </div>
+
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-sm font-bold text-gray-700">📍 Vị trí trên bản đồ</label>
                             <button type="button" @click="panToCurrentLocation" class="text-xs text-primary font-bold flex items-center bg-blue-50 px-2 py-1 rounded">
@@ -1356,6 +1389,9 @@
                                                 dropdownParent: document.body,
                                                 onChange: (value) => { selectStreet(value); }
                                             });
+                                        } else {
+                                             // If already initialized, ensure value is synced when opening
+                                             $el.tomselect.setValue(formData.street, true);
                                         }
                                     });
                                 }
