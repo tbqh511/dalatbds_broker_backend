@@ -15,6 +15,13 @@ use App\Models\LocationsStreet;
 use App\Models\parameter;
 use App\Models\AssignParameters;
 use App\Models\OutdoorFacilities;
+use App\Models\CrmHost;
+use App\Models\PropertyImages;
+use App\Models\PropertyLegalImages;
+use App\Models\AssignedOutdoorFacilities;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class TelegramWebAppController extends Controller
@@ -44,7 +51,7 @@ class TelegramWebAppController extends Controller
             // Count reviews/inquiries
             $stats['reviews_count'] = PropertysInquiry::whereIn('propertys_id', function($query) use ($customer) {
                 $query->select('id')->from('propertys')->where('added_by', $customer->id);
-            })->count();
+})->count();
 
             // Count reviews/inquiries this week
             $stats['reviews_count_week'] = PropertysInquiry::whereIn('propertys_id', function($query) use ($customer) {
@@ -235,5 +242,210 @@ class TelegramWebAppController extends Controller
         $facilities = OutdoorFacilities::all();
 
         return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities'));
+    }
+
+    public function submitForm(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Check Auth
+            $customer = Auth::guard('webapp')->user();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Vui lòng đăng nhập lại.'], 401);
+            }
+
+            // Validation
+            $validator = Validator::make($request->all(), [
+                'type' => 'required',
+                'transactionType' => 'required',
+                'price' => 'required|numeric',
+                'area' => 'required|numeric',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
+
+            // --- DATA PREPARATION ---
+            $categoryId = $request->input('type');
+            $propertyType = ($request->input('transactionType') === 'sale') ? 0 : 1; // 0: Sale, 1: Rent
+
+            // Construct Title & Address
+            $streetId = $request->input('street');
+            $wardId = $request->input('ward');
+            $houseNumber = $request->input('houseNumber') ?? '';
+
+            $streetName = '';
+            if ($streetId) {
+                $streetObj = LocationsStreet::where('code', $streetId)->first();
+                if ($streetObj) $streetName = $streetObj->street_name;
+            }
+
+            $wardName = '';
+            if ($wardId) {
+                $wardObj = LocationsWard::where('code', $wardId)->first();
+                if ($wardObj) $wardName = $wardObj->full_name;
+            }
+
+            // Format: "123 Đường A, Phường B"
+            $addressParts = [];
+            if ($houseNumber) $addressParts[] = $houseNumber;
+            if ($streetName) $addressParts[] = $streetName;
+            if ($wardName) $addressParts[] = $wardName;
+            $address = implode(', ', $addressParts);
+
+            // Generate Title: "Bán/Cho thuê [Category] [Street], [Ward]"
+            $category = Category::find($categoryId);
+            $catName = $category ? $category->category : 'Bất động sản';
+            $actionName = ($propertyType == 0) ? 'Bán' : 'Cho thuê';
+
+            $titleParts = [$actionName, $catName];
+            if ($streetName) $titleParts[] = $streetName;
+            if ($wardName) $titleParts[] = $wardName;
+            $title = implode(', ', $titleParts);
+
+
+            // --- 1. HOST (Contact) ---
+            $contact = $request->input('contact');
+            if (is_string($contact)) {
+                $contact = json_decode($contact, true);
+            }
+
+            $host = new CrmHost();
+            $host->name = $contact['name'] ?? $customer->name ?? 'Unknown';
+            $host->number = $contact['phone'] ?? $customer->phone ?? '';
+            $host->email = $customer->email ?? '';
+            $host->save();
+
+
+            // --- 2. PROPERTY ---
+            $property = new Property();
+            $property->category_id = $categoryId;
+            $property->package_id = 1; // Default
+            $property->title = $title;
+            $property->description = $request->input('description');
+            $property->address = $address;
+            $property->client_address = $address;
+            $property->propery_type = $propertyType;
+            $property->price = $request->input('price');
+            $property->added_by = $customer->id;
+            $property->status = 0; // Pending approval
+            $property->host_id = $host->id;
+
+            // Commission
+            $commissionRate = $request->input('commissionRate', 0);
+            $property->commission = ($property->price * ($commissionRate / 100));
+
+            // Slug
+            $slug = Str::slug($title) . '-' . time();
+            $property->slug = $slug;
+
+            // Map Location
+            if ($request->has('latitude')) $property->latitude = $request->input('latitude');
+            if ($request->has('longitude')) $property->longitude = $request->input('longitude');
+
+            $property->save();
+
+
+            // --- 3. IMAGES ---
+            $imagePath = 'images/property_images/';
+
+            // Avatar (title_image)
+            if ($request->hasFile('avatar')) {
+                $file = $request->file('avatar');
+                $filename = time() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path($imagePath), $filename);
+
+                $property->title_image = $filename;
+                $property->save();
+            }
+
+            // Gallery (others)
+            if ($request->hasFile('others')) {
+                foreach ($request->file('others') as $file) {
+                    $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path($imagePath), $filename);
+
+                    $propImg = new PropertyImages();
+                    $propImg->propertys_id = $property->id;
+                    $propImg->image = $filename;
+                    $propImg->save();
+                }
+            }
+
+            // Legal (legal_images)
+            $legalPath = 'images/property_legal_images/';
+            if ($request->hasFile('legal')) {
+                foreach ($request->file('legal') as $file) {
+                    $filename = time() . '_legal_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path($legalPath), $filename);
+
+                    $legalImg = new PropertyLegalImages();
+                    $legalImg->property_id = $property->id;
+                    $legalImg->image = $filename;
+                    $legalImg->save();
+                }
+            }
+
+
+            // --- 4. PARAMETERS ---
+            $parameters = $request->input('parameters');
+            if (is_string($parameters)) $parameters = json_decode($parameters, true);
+
+            $excludedNames = ['Diện tích', 'Pháp lý', 'Giá m2'];
+
+            if (is_array($parameters)) {
+                foreach ($parameters as $paramId => $val) {
+                    if (empty($val)) continue;
+
+                    $paramDef = parameter::find($paramId);
+                    if ($paramDef && !in_array($paramDef->name, $excludedNames)) {
+                        $assignParam = new AssignParameters();
+                        $assignParam->modal()->associate($property);
+                        $assignParam->parameter_id = $paramId;
+                        $assignParam->value = $val;
+                        $assignParam->save();
+                    }
+                }
+            }
+
+
+            // --- 5. FACILITIES ---
+            $amenities = $request->input('amenities');
+            if (is_string($amenities)) $amenities = json_decode($amenities, true);
+
+            if (is_array($amenities)) {
+                foreach ($amenities as $facId => $val) {
+                    if (!empty($val)) {
+                        $assignFac = new AssignedOutdoorFacilities();
+                        $assignFac->property_id = $property->id;
+                        $assignFac->facility_id = $facId;
+                        $assignFac->distance = $val;
+                        $assignFac->save();
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'redirect_url' => route('webapp.add_listing_success')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addListingSuccess()
+    {
+        return view('frontend_dashboard_add_listing_success');
     }
 }

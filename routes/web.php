@@ -73,6 +73,8 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/bookings', [TelegramWebAppController::class, 'bookings'])->name('webapp.bookings');
     Route::get('/webapp/reviews', [TelegramWebAppController::class, 'reviews'])->name('webapp.reviews');
     Route::get('/webapp/add-listing', [TelegramWebAppController::class, 'addListing'])->name('webapp.add_listing');
+    Route::post('/webapp/submit-listing', [TelegramWebAppController::class, 'submitForm'])->name('webapp.submit_listing');
+    Route::get('/webapp/listing-success', [TelegramWebAppController::class, 'addListingSuccess'])->name('webapp.add_listing_success');
 });
 
 //property controller

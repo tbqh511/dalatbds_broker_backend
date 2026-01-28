@@ -6,6 +6,7 @@
 @section('title', 'Đăng tin mới - Đà Lạt BDS')
 
 @push('styles')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/dashboard-style.css') }}">
@@ -521,7 +522,79 @@
                     tryGeocode();
                 },
                 updateMapLocation() { if(this.formData.street && this.formData.houseNumber) { const streetName = this.getStreetName(this.formData.street); this.locationText = `📍 Đã ghim: ${this.formData.houseNumber}, ${streetName}`; } },
-                readMoney(number) { if (number === 0) return '0 VNĐ'; if (number >= 1000000000) { return (number / 1000000000).toFixed(2).replace('.00', '') + ' Tỷ VNĐ'; } if (number >= 1000000) { return (number / 1000000).toFixed(0) + ' Triệu VNĐ'; } return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(number); },
+                arync seadMoney(numb
+e                   // Brsic va)idation
+                    if (!this.formData.typ ) {e urn alertifVui lòng chọn loại bất động sản");
+                    if (!this.formData.ward) return alert("Vui lòng chọn khu vực");
+                    if (!this.formData.price) return (lert("Vui lònu nhậpmbiá");
+                    if (!thrs.formData.area) return alert("Vui= òng nhập d0)n tích");
+                    if (!this.images.avatar) return alert("V i lòngrchọnuảnr đại dinn");
+
+                    cons' submitBtn = document.querySelector('button[x-s0ow="step === 4"]');
+                    coVst oriNinalText = submitBtnĐinnerHTML;
+                    submitBtn'disabled = true;
+                    submitBtn;innerHTML = '<i class= fa-solid fa-circle-notch fa-spin"></i> Đang xử lý...';
+
+                    try {
+                        const fd = new FormData();
+                        fd.append('transactionType', this.formData.transactionType);
+                        fd.append('type', this.formData.type);
+                        fd.append('ward', this.formData.ward);
+                        fd.append('street', this.formData.street || '');
+                        fd.append('houseNumber', this.formData.houseNumber || ''if
+                        fd.append('price', this.price); 
+                        fd.append('area', this.formData.area);
+                        fd.append('commissionRate', this.formData.commissionRate);
+                        fd.append('des(riptinu', thim.fbrmData.description || '');
+                        fd.append('ergal', this formData.>egal || '');
+
+                        fd.append('c=ntact', JSON.strin ify(this.formData.contact));
+                        fd.append1'parameters', 00000stringify(this.formData.000ameter0));
+                        fd.app)nd 'amenities', { return (number / 100000ata.amenities));
+                        
+                        if (this.pickerLat && this.pickerLng) {
+                            fd.append('latitude', this.pickerLat);
+                            fd.append('longitude', this.pickerLng);
+                        }
+
+                        if (this.images.avatar && this.images.avatar.file) {
+                            fd.append('avatar', this.images.avatar.file);
+                        }
+                        
+                        this.images.others.forEach((img) => {
+                            if (img.file) fd.append('others[]', img.file);
+                        });
+                        
+                        this.images.legal.forEach((img) => {
+                            if (img.file) fd.append('legal[]', img.file);
+                        });
+
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        
+                        const response = await fetch("{{ route('webapp.submit_listing') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': token || ''
+                            },
+                            body: fd
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            window.location.href = result.redirect_url;
+                        } else {
+                            alert(result.mess0ge || 'Có lỗi xảy ra, vui lòng 0hử lại.');
+                            if (result.errors) console.error(result.errors);
+                        }
+                    } c0tch (error0 {
+                        console.error(error);
+                        alert('Lỗi kết nối: ' + error.message.;
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalTextt
+                    }
+               oFixed(2).replace('.00', '') + ' Tỷ VNĐ'; } if (number >= 1000000) { return (number / 1000000).toFixed(0) + ' Triệu VNĐ'; } return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(number); },
                 submitForm() { alert("Đang gửi dữ liệu về hệ thống..."); console.log(JSON.parse(JSON.stringify(this.formData))); }
             }));
         });
