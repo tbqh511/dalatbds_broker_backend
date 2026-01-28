@@ -348,7 +348,7 @@
                 },
 
                 // Initialize Google Map inside picker
-                async initGoogleMap() {
+                initGoogleMap() {
                     console.log("Start initGoogleMap");
                     const defaultPos = { lat: 11.940419, lng: 108.458313 };
 
@@ -357,44 +357,35 @@
                         return;
                     }
 
-                    // Use importLibrary for modern API access
-                    const { Map } = await google.maps.importLibrary("maps");
-                    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-
-                    this.pickerMap = new Map(document.getElementById("picker-map"), {
+                    this.pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
                         center: defaultPos,
                         zoom: 15,
-                        mapId: "DEMO_MAP_ID", // Required for AdvancedMarkerElement
                         disableDefaultUI: true,
                         clickableIcons: false,
                         gestureHandling: "greedy",
                     });
 
-                    // Create custom icon element
-                    const iconImg = document.createElement('img');
-                    iconImg.src = "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png";
-                    iconImg.style.width = "27px";
-                    iconImg.style.height = "43px";
-
-                    this.pickerMarker = new AdvancedMarkerElement({
+                    this.pickerMarker = new google.maps.Marker({
                         map: this.pickerMap,
                         position: defaultPos,
-                        gmpDraggable: true,
-                        content: iconImg,
+                        draggable: true,
+                        icon: {
+                            url: "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png",
+                            scaledSize: new google.maps.Size(27, 43)
+                        },
                         title: "Kéo để chọn vị trí"
                     });
 
                     console.log("Map instance created", this.pickerMap);
-                    console.log("AdvancedMarkerElement created", this.pickerMarker);
+                    console.log("Marker created", this.pickerMarker);
 
                     this.pickerGeocoder = new google.maps.Geocoder();
 
-                    // Event listener for dragend on AdvancedMarkerElement
+                    // Event listener for dragend
                     this.pickerMarker.addListener("dragend", () => {
-                        const pos = this.pickerMarker.position;
-                        // Handle LatLng object or literal
-                        this.pickerLat = (typeof pos.lat === 'function') ? pos.lat() : pos.lat;
-                        this.pickerLng = (typeof pos.lng === 'function') ? pos.lng() : pos.lng;
+                        const pos = this.pickerMarker.getPosition();
+                        this.pickerLat = pos.lat();
+                        this.pickerLng = pos.lng();
                         this.reverseGeocode(pos);
                     });
 
@@ -409,9 +400,9 @@
                         this.pickerLat = center.lat();
                         this.pickerLng = center.lng();
                         
-                        // Update AdvancedMarkerElement position
+                        // Update Marker position
                         if (this.pickerMarker) {
-                            this.pickerMarker.position = center;
+                            this.pickerMarker.setPosition(center);
                         }
                         this.reverseGeocode(center);
                     });
@@ -443,7 +434,7 @@
                                     this.pickerMap.setCenter(pos);
                                     this.pickerMap.setZoom(17);
                                     if (this.pickerMarker) {
-                                        this.pickerMarker.position = pos;
+                                        this.pickerMarker.setPosition(pos);
                                     }
                                 } else {
                                     // update quick preview text if picker not open
@@ -526,7 +517,7 @@
                                 this.pickerMap.setCenter(pos);
                                 this.pickerMap.setZoom(15);
                                 if (this.pickerMarker) {
-                                    this.pickerMarker.position = pos;
+                                    this.pickerMarker.setPosition(pos);
                                 }
                                 this.pickerLat = pos.lat;
                                 this.pickerLng = pos.lng;
