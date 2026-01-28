@@ -1072,7 +1072,7 @@
                     <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
                         <span>Giá:</span>
                         <span x-text="formatCurrency(formData.price)"></span>
-                        
+                        <span class="font-bold text-success"><span x-text="formatCurrency(formData.price)"></span></span>
                     </div>
                 </div>
                 <!-- Diện tích (Căn phải + Màu Primary) -->
