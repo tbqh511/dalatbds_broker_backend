@@ -1021,7 +1021,7 @@
                 {{-- <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Giá & Pháp lý</h2> --}}
                 
                 <!-- Giấy tờ -->
-                <div class="mb-6">
+                <div class="mb-6 mt-4">
                     <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
                         Loại giấy tờ
                         <button type="button" x-show="!isLegalExpanded" @click="isLegalExpanded = true" class="text-xs font-normal text-primary hover:underline">
