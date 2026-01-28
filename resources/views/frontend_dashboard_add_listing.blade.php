@@ -1165,7 +1165,7 @@
                                 <div x-data="{
                                     isExpanded: !formData.parameters[param.id],
                                     init() {
-                                        this.$watch(() => formData.parameters[param.id], value => {
+                                        this.$watch('formData.parameters.' + param.id, value => {
                                             if (!value) this.isExpanded = true;
                                         });
                                     }
