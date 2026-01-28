@@ -662,12 +662,12 @@
                     <!-- VIEW MODE: Label (Chỉ hiện khi không edit và đã có data) -->
                     <div x-show="!isEditing && isHasData"
                          @click="isEditing = true"
-                         class="py-4 px-2 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition shadow-sm animate-fade-in-up flex flex-col items-center justify-center">
+                         class="py-2 px-2 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition shadow-sm animate-fade-in-up flex flex-col items-center justify-center">
                         <p class="text-lg font-bold text-primary text-center">
                             <span x-text="formData.contact.gender === 'ong' ? 'Ông' : 'Bà'"></span>
                             <span x-text="formData.contact.name"></span>
                             <span> - </span>
-                            <span class="text-gray-500">*******<span x-text="formData.contact.phone ? formData.contact.phone.slice(-3) : ''"></span></span>
+                            <span class="text-green-600">*******<span x-text="formData.contact.phone ? formData.contact.phone.slice(-3) : ''"></span></span>
                         </p>
                     </div>
 
@@ -808,7 +808,7 @@
                         <input type="text" x-model="formData.houseNumber" @input="updateMapLocation" placeholder="VD: 123/4" class="input-field">
                     </div> --}}
                     <!-- Google Map Preview -->
-                    <div x-show="formData.ward" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
+                    <div x-show="formData.ward" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white rounded-2xl border border-gray-200 shadow-sm">
                         <!-- External Street Search Box -->
                         <div class="mb-3 relative z-10" x-show="!showMapPicker">
                              <label class="block text-sm font-bold text-gray-700 mb-1.5 text-left">Tên đường <span class="text-red-500">*</span></label>
