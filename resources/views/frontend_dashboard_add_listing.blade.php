@@ -644,40 +644,13 @@
             <!-- === BƯỚC 1: VỊ TRÍ & LOẠI BĐS === -->
             <div x-show="step === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
 
-                <!-- Hình thức giao dịch (Bán / Cho Thuê) -->
-                <div class="mb-6">
-                    {{-- <label class="block text-sm font-bold text-gray-800 mb-3">Hình thức giao dịch</label> --}}
-                    <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
-                        <button type="button" @click="formData.transactionType = 'sale'"
-                            :class="formData.transactionType === 'sale' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
-                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
-                            <i class="fa-solid fa-tag mr-2"></i> Cần Bán
-                        </button>
-                        <button type="button" @click="formData.transactionType = 'rent'"
-                            :class="formData.transactionType === 'rent' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
-                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
-                            <i class="fa-solid fa-key mr-2"></i> Cho Thuê
-                        </button>
-                    </div>
-                </div>
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
-                <div x-show="formData.transactionType" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-                     class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6"
+                <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6"
                      x-data="{
                          isEditing: false,
                          get isHasData() { return this.formData.contact.name && this.formData.contact.phone; },
                          init() { 
                              this.isEditing = !this.isHasData;
-                             this.$watch(() => formData.transactionType, (val) => {
-                                 if (val) {
-                                     setTimeout(() => {
-                                         if(this.$refs.contactName) {
-                                             this.$refs.contactName.focus();
-                                             this.$refs.contactName.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                         }
-                                     }, 400);
-                                 }
-                             });
                          }
                      }"
                      @click.outside="if(isHasData) isEditing = false">
@@ -726,6 +699,23 @@
                             </div>
                             <textarea @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Hình thức giao dịch (Bán / Cho Thuê) -->
+                <div class="mb-6" x-show="formData.contact.name && formData.contact.phone" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
+                    {{-- <label class="block text-sm font-bold text-gray-800 mb-3">Hình thức giao dịch</label> --}}
+                    <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
+                        <button type="button" @click="formData.transactionType = 'sale'"
+                            :class="formData.transactionType === 'sale' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-tag mr-2"></i> Cần Bán
+                        </button>
+                        <button type="button" @click="formData.transactionType = 'rent'"
+                            :class="formData.transactionType === 'rent' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-key mr-2"></i> Cho Thuê
+                        </button>
                     </div>
                 </div>
 
