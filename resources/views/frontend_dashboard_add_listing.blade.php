@@ -87,8 +87,8 @@
 
                 // DATA MODEL
                 formData: {
-                    transactionType: 'sale',
-                    type: @json($propertyTypes->isNotEmpty() ? $propertyTypes->first()['id'] : ''),
+                    transactionType: '',
+                    type: '',
                     ward: '',
                     street: '',
                     houseNumber: '',
@@ -652,7 +652,8 @@
                     </div>
                 </div>
                 <!-- Thông tin chủ nhà (Căn giữa Radio) -->
-                <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6"
+                <div x-show="formData.transactionType" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+                     class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6"
                      x-data="{
                          isEditing: false,
                          get isHasData() { return this.formData.contact.name && this.formData.contact.phone; },
@@ -707,7 +708,7 @@
                 </div>
 
                 <!-- Loại BĐS - Collapsible Logic -->
-                <div class="mb-6">
+                <div class="mb-6" x-show="formData.transactionType && formData.contact.name && formData.contact.phone" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                     <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
                         Loại bất động sản
                         <button type="button" x-show="!isTypeExpanded" @click="isTypeExpanded = true" class="text-xs font-normal text-primary hover:underline">
@@ -748,7 +749,7 @@
                 </div>
 
                 <!-- Khu vực - Collapsible Logic -->
-                <div class="mb-6 space-y-4">
+                <div class="mb-6 space-y-4" x-show="formData.transactionType && formData.contact.name && formData.contact.phone && formData.type" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                     <!-- Chọn Phường -->
                     <div>
                         <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
@@ -795,7 +796,7 @@
                         <input type="text" x-model="formData.houseNumber" @input="updateMapLocation" placeholder="VD: 123/4" class="input-field">
                     </div> --}}
                     <!-- Google Map Preview -->
-                    <div class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
+                    <div x-show="formData.ward" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-sm font-bold text-gray-700">📍 Vị trí trên bản đồ</label>
                             <button type="button" @click="panToCurrentLocation" class="text-xs text-primary font-bold flex items-center bg-blue-50 px-2 py-1 rounded">
