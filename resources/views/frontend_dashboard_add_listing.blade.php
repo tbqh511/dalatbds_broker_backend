@@ -395,7 +395,8 @@
                         const pos = this.pickerMarker.getPosition();
                         this.pickerLat = pos.lat();
                         this.pickerLng = pos.lng();
-                        this.reverseGeocode(pos);
+                        // Removed immediate geocoding to save costs
+                        this.pickerAddress = `Tọa độ: ${this.pickerLat.toFixed(5)}, ${this.pickerLng.toFixed(5)}`;
                     });
 
                     this.pickerMap.addListener("dragstart", () => {
@@ -413,7 +414,8 @@
                         if (this.pickerMarker) {
                             this.pickerMarker.setPosition(center);
                         }
-                        this.reverseGeocode(center);
+                        // Removed immediate geocoding to save costs
+                        this.pickerAddress = `Tọa độ: ${this.pickerLat.toFixed(5)}, ${this.pickerLng.toFixed(5)}`;
                     });
                 },
 
@@ -458,10 +460,37 @@
 
                 // Confirm pick and close
                 confirmMapLocation() {
-                    this.locationText = this.pickerAddress || this.locationText;
-                    // Optional: save lat/lng to formData
-                    // this.formData.latitude = this.pickerLat; this.formData.longitude = this.pickerLng;
-                    this.showMapPicker = false;
+                    if (!this.pickerLat || !this.pickerLng) return;
+
+                    // Geocode only on confirmation to save costs
+                    this.isMapDragging = true; // Show loading state
+                    
+                    const latlng = { lat: this.pickerLat, lng: this.pickerLng };
+
+                    if (this.pickerGeocoder) {
+                        this.pickerGeocoder.geocode({ location: latlng }, (results, status) => {
+                            this.isMapDragging = false;
+                            
+                            if (status === "OK" && results[0]) {
+                                let address = results[0].formatted_address.replace(', Vietnam', '');
+                                this.pickerAddress = address;
+                                this.locationText = address;
+                                
+                                // Log street name if found (optional)
+                                const route = results[0].address_components.find(c => c.types.includes('route'));
+                                if (route) console.log('Đường:', route.long_name);
+                            } else {
+                                // Fallback to coordinates
+                                this.locationText = `${this.pickerLat.toFixed(6)}, ${this.pickerLng.toFixed(6)}`;
+                            }
+                            this.showMapPicker = false;
+                        });
+                    } else {
+                        // Fallback if geocoder missing
+                        this.locationText = `${this.pickerLat.toFixed(6)}, ${this.pickerLng.toFixed(6)}`;
+                        this.isMapDragging = false;
+                        this.showMapPicker = false;
+                    }
                 },
 
                 getStreetName(id) { const st = this.streets.find(s => s.id == id); return st ? st.name : 'Đường đã chọn'; },
@@ -530,7 +559,9 @@
                                 }
                                 this.pickerLat = pos.lat;
                                 this.pickerLng = pos.lng;
-                                this.reverseGeocode(pos);
+                                // Use forward geocode result directly instead of reverse geocoding again
+                                let address = results[0].formatted_address.replace(', Vietnam', '');
+                                this.pickerAddress = address;
                             } else {
                                 console.warn('Geocoding attempt', geocodeAttempt + 1, 'failed for', street.name, 'with status:', status);
                                 geocodeAttempt++;
