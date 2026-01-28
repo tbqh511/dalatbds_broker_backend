@@ -657,7 +657,19 @@
                      x-data="{
                          isEditing: false,
                          get isHasData() { return this.formData.contact.name && this.formData.contact.phone; },
-                         init() { this.isEditing = !this.isHasData; }
+                         init() { 
+                             this.isEditing = !this.isHasData;
+                             this.$watch(() => formData.transactionType, (val) => {
+                                 if (val) {
+                                     setTimeout(() => {
+                                         if(this.$refs.contactName) {
+                                             this.$refs.contactName.focus();
+                                             this.$refs.contactName.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                         }
+                                     }, 400);
+                                 }
+                             });
+                         }
                      }"
                      @click.outside="if(isHasData) isEditing = false">
                     <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center justify-center">
@@ -691,9 +703,10 @@
                             </label>
                         </div>
                         <div class="space-y-3">
-                            <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field ">
+                            <input type="text" x-ref="contactName" @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field ">
                             <div class="relative group">
                                 <input type="tel"
+                                       @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })"
                                        x-model="formData.contact.phone"
                                        placeholder="Số điện thoại"
                                        class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
@@ -702,7 +715,7 @@
                                     <i class="fa-solid fa-shield-halved mr-1"></i> Thông tin này được bảo mật.
                                 </div>
                             </div>
-                            <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
+                            <textarea @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
                         </div>
                     </div>
                 </div>
