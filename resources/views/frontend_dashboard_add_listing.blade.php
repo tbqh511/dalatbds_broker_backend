@@ -655,7 +655,7 @@
                      }"
                      @click.outside="if(isHasData) isEditing = false">
                     <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center justify-center">
-                        <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Liên hệ bán
+                        <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Thông tin liên hệ
                     </h3>
 
 
@@ -842,19 +842,21 @@
                              </div>
                         </div>
 
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="text-sm font-bold text-gray-700">📍 Vị trí trên bản đồ</label>
-                            <button type="button" @click="panToCurrentLocation" class="text-xs text-primary font-bold flex items-center bg-blue-50 px-2 py-1 rounded">
-                                <i class="fa-solid fa-crosshairs mr-1"></i> Vị trí của tôi
-                            </button>
+                        <div x-show="formData.street" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-sm font-bold text-gray-700">📍 Vị trí trên bản đồ</label>
+                                <button type="button" @click="panToCurrentLocation" class="text-xs text-primary font-bold flex items-center bg-blue-50 px-2 py-1 rounded">
+                                    <i class="fa-solid fa-crosshairs mr-1"></i> Vị trí của tôi
+                                </button>
+                            </div>
+                            <div id="map-preview" @click="openMapPicker" class="w-full h-40 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border border-dashed border-gray-300 group hover:border-primary transition-colors">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-60" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/Map_of_Dalat.jpg');"></div>
+                                <span class="bg-white/90 px-4 py-2 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200 group-hover:text-primary group-hover:scale-105 transition-all">
+                                    🗺️ Chạm để chọn vị trí
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 truncate" x-text="locationText"></p>
                         </div>
-                        <div id="map-preview" @click="openMapPicker" class="w-full h-40 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border border-dashed border-gray-300 group hover:border-primary transition-colors">
-                            <div class="absolute inset-0 bg-cover bg-center opacity-60" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/Map_of_Dalat.jpg');"></div>
-                            <span class="bg-white/90 px-4 py-2 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200 group-hover:text-primary group-hover:scale-105 transition-all">
-                                🗺️ Chạm để chọn vị trí
-                            </span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2 truncate" x-text="locationText"></p>
 
 
                     </div>
