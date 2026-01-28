@@ -322,6 +322,13 @@
                 pickerLng: null,
                 isMapDragging: false,
                 pickerMarker: null,
+                mapType: 'roadmap',
+
+                toggleMapType() {
+                    if (!this.pickerMap) return;
+                    this.mapType = (this.mapType === 'roadmap') ? 'hybrid' : 'roadmap';
+                    this.pickerMap.setMapTypeId(this.mapType);
+                },
 
                 // Open fullscreen map picker
                 openMapPicker() {
@@ -1338,9 +1345,16 @@
                 <div class="w-3 h-1.5 bg-black/20 rounded-[100%] mt-1 blur-[1px]"></div>
             </div>
 
-            <button @click="panToCurrentLocation" class="absolute bottom-6 right-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-primary active:bg-gray-50">
-                <i class="fa-solid fa-crosshairs text-lg"></i>
-            </button>
+            <div class="absolute bottom-6 right-4 z-10 flex flex-col gap-3">
+                <button type="button" @click="toggleMapType" class="w-12 h-12 bg-white rounded-full shadow-lg flex flex-col items-center justify-center text-gray-700 active:bg-gray-50 overflow-hidden border border-gray-100">
+                    <i class="fa-solid fa-layer-group text-sm mb-0.5" :class="mapType === 'hybrid' ? 'text-primary' : ''"></i>
+                    <span class="text-[9px] font-bold uppercase leading-none" x-text="mapType === 'roadmap' ? 'Vệ tinh' : 'Bản đồ'"></span>
+                </button>
+
+                <button @click="panToCurrentLocation" class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-primary active:bg-gray-50 border border-gray-100">
+                    <i class="fa-solid fa-crosshairs text-lg"></i>
+                </button>
+            </div>
         </div>
 
         <div class="bg-white p-4 pb-safe-bottom rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-10 border-t border-gray-100">
