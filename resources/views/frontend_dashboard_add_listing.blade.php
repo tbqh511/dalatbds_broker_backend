@@ -706,55 +706,55 @@
     <div x-ref="formContainer" class="w-full max-w-md bg-white shadow-2xl relative flex flex-col pb-24 rounded-xl overflow-hidden h-auto max-h-[90vh] overflow-y-auto">
 
         <!-- HEADER -->
-        <div class="sticky top-0 z-49 bg-white/90 backdrop-blur-md border-b border-gray-100 px-5 py-4">
-            <div class="flex justify-between items-center mb-2">
-                <h1 class="text-lg font-bold text-gray-800">Đăng Tin Mới</h1>
-                <span class="text-xs font-bold text-primary bg-blue-50 px-2 py-1 rounded-md">Bước <span x-text="step"></span>/4</span>
+        <div class="sticky top-0 z-49 bg-white/95 backdrop-blur-md border-b border-gray-100 px-6 py-5 shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+                <h1 class="text-xl font-bold text-gray-800">Đăng Tin Mới</h1>
+                <span class="text-xs font-bold text-primary bg-blue-50 px-3 py-1.5 rounded-full shadow-sm">Bước <span x-text="step"></span>/4</span>
             </div>
             <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full bg-primary transition-all duration-500 ease-out" :style="'width: ' + (step/4)*100 + '%'" ></div>
+                <div class="h-full bg-primary transition-all duration-500 ease-out shadow-sm" :style="'width: ' + (step/4)*100 + '%'" ></div>
             </div>
         </div>
 
         <!-- SCROLLABLE CONTENT -->
-        <form class="flex-1 p-5 pb-32" @submit.prevent="submitForm">
+        <form class="flex-1 px-6 py-6 pb-40" @submit.prevent="submitForm">
 
             <!-- === WIZARD CONTENT === -->
             <!-- We will use currentStepIndex to show/hide sections -->
             
             <!-- STEP 0: TRANSACTION TYPE -->
             <div x-show="steps[currentStepIndex].id === 'transaction'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Bạn muốn đăng tin gì?</h2>
-                <div class="grid grid-cols-1 gap-4">
+                <h2 class="text-xl font-bold text-gray-800 mb-8 text-center">Bạn muốn đăng tin gì?</h2>
+                <div class="grid grid-cols-1 gap-5">
                     <button type="button" @click="selectAndNext('transactionType', 'sale')"
-                        class="p-6 bg-white border-2 border-gray-100 rounded-2xl hover:border-primary hover:bg-blue-50 transition-all group flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 rounded-full bg-blue-100 text-primary flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-tag text-xl"></i>
+                        class="p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-primary hover:bg-blue-50 transition-all group flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-full bg-blue-100 text-primary flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                                <i class="fa-solid fa-tag text-2xl"></i>
                             </div>
                             <div class="text-left">
-                                <h3 class="font-bold text-lg text-gray-800">Cần Bán</h3>
-                                <p class="text-xs text-gray-500">Đăng bán nhà đất, căn hộ...</p>
+                                <h3 class="font-bold text-lg text-gray-800 mb-1">Cần Bán</h3>
+                                <p class="text-sm text-gray-500 font-medium">Đăng bán nhà đất, căn hộ...</p>
                             </div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-primary"></i>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-lg group-hover:text-primary transition-colors"></i>
                     </button>
 
                     <button type="button" @click="selectAndNext('transactionType', 'rent')"
-                        class="p-6 bg-white border-2 border-gray-100 rounded-2xl hover:border-primary hover:bg-blue-50 transition-all group flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-key text-xl"></i>
+                        class="p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-primary hover:bg-blue-50 transition-all group flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                                <i class="fa-solid fa-key text-2xl"></i>
                             </div>
                             <div class="text-left">
-                                <h3 class="font-bold text-lg text-gray-800">Cho Thuê</h3>
-                                <p class="text-xs text-gray-500">Đăng cho thuê phòng, nhà...</p>
+                                <h3 class="font-bold text-lg text-gray-800 mb-1">Cho Thuê</h3>
+                                <p class="text-sm text-gray-500 font-medium">Đăng cho thuê phòng, nhà...</p>
                             </div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-primary"></i>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-lg group-hover:text-primary transition-colors"></i>
                     </button>
                 </div>
-                <div x-show="validationErrors.transactionType" class="text-red-500 text-sm mt-2 text-center" x-text="validationErrors.transactionType"></div>
+                <div x-show="validationErrors.transactionType" class="text-red-500 text-sm mt-3 text-center font-medium" x-text="validationErrors.transactionType"></div>
             </div>
 
             <!-- STEP 1: CONTACT INFO -->
@@ -801,20 +801,20 @@
             <div x-show="steps[currentStepIndex].id === 'type'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
                 <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Chọn loại bất động sản</h2>
                 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-4">
                     <template x-for="item in propertyTypes" :key="item.id">
                         <button type="button"
                             @click="selectAndNext('type', item.id)"
                             :class="formData.type === item.id
-                                ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
-                                : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
-                            class="flex flex-col items-center justify-center p-4 border rounded-2xl transition-all duration-200 aspect-square shadow-sm">
-                            <i :class="['fa-solid', item.icon, 'text-2xl mb-3']"></i>
+                                ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-[1.02]'
+                                : 'bg-white text-gray-700 border-gray-100 hover:bg-blue-50 hover:border-blue-100 shadow-sm'"
+                            class="flex flex-col items-center justify-center p-5 border rounded-3xl transition-all duration-200 aspect-square group">
+                            <i :class="['fa-solid', item.icon, 'text-3xl mb-3 transition-transform group-hover:scale-110']"></i>
                             <span class="text-sm font-bold text-center leading-tight" x-text="item.name"></span>
                         </button>
                     </template>
                 </div>
-                <div x-show="validationErrors.type" class="text-red-500 text-sm mt-2 text-center" x-text="validationErrors.type"></div>
+                <div x-show="validationErrors.type" class="text-red-500 text-sm mt-3 text-center font-medium" x-text="validationErrors.type"></div>
             </div>
 
             <!-- STEP 3: WARD (LOCATION) -->
@@ -826,15 +826,15 @@
                         <button type="button"
                             @click="selectAndNext('ward', ward.id)"
                             :class="formData.ward === ward.id
-                                ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
-                                : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
-                            class="flex flex-col items-center justify-center p-3 border rounded-xl transition-all duration-200 aspect-square group shadow-sm">
+                                ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-[1.02]'
+                                : 'bg-white text-gray-700 border-gray-100 hover:bg-blue-50 hover:border-blue-100 shadow-sm'"
+                            class="flex flex-col items-center justify-center p-3 border rounded-2xl transition-all duration-200 aspect-square group">
                             <i :class="['fa-solid', ward.icon, 'text-xl mb-2 group-hover:scale-110 transition-transform']"></i>
-                            <span class="text-xs font-bold text-center leading-tight" x-text="ward.name"></span>
+                            <span class="text-xs font-bold text-center leading-tight px-1" x-text="ward.name"></span>
                         </button>
                     </template>
                 </div>
-                <div x-show="validationErrors.ward" class="text-red-500 text-sm mt-2 text-center" x-text="validationErrors.ward"></div>
+                <div x-show="validationErrors.ward" class="text-red-500 text-sm mt-3 text-center font-medium" x-text="validationErrors.ward"></div>
             </div>
 
             <!-- STEP 4: DETAILED LOCATION -->
@@ -1200,21 +1200,21 @@
                 <p class="text-sm text-gray-500 mb-6 text-center">Chọn các địa điểm gần BĐS của bạn.</p>
 
                 <!-- GRID TIỆN ÍCH (4 Cột) -->
-                <div class="grid grid-cols-4 gap-2 mb-6">
+                <div class="grid grid-cols-4 gap-3 mb-6">
                     <template x-for="am in (isAmenityExpanded || amenitiesList.length <= 8 ? amenitiesList : amenitiesList.slice(0, 7))" :key="am.id">
                         <button type="button"
                             @click="toggleAmenity(am.id)"
                             :class="isAmenitySelected(am.id)
-                                ? 'bg-primary text-white border-primary shadow-md transform scale-105'
-                                : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
+                                ? 'bg-primary text-white border-primary shadow-md transform scale-[1.05]'
+                                : 'bg-white text-primary border-gray-100 hover:bg-blue-50 hover:border-blue-100 shadow-sm'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-square animate-fade-in-up">
-                            <img :src="getAmenityIcon(am)" :alt="am.name" class="w-8 h-8 object-contain mb-1">
-                            <span class="text-[9px] font-bold text-center leading-tight truncate w-full" x-text="am.name"></span>
+                            <img :src="getAmenityIcon(am)" :alt="am.name" class="w-8 h-8 object-contain mb-1.5">
+                            <span class="text-[9px] font-bold text-center leading-tight truncate w-full px-1" x-text="am.name"></span>
                         </button>
                     </template>
                     
                     <button x-show="!isAmenityExpanded && amenitiesList.length > 8" type="button" @click="isAmenityExpanded = true"
-                            class="flex flex-col items-center justify-center p-2 border border-dashed border-primary/40 bg-blue-50/50 text-primary rounded-xl hover:bg-blue-50 transition-all aspect-square group">
+                            class="flex flex-col items-center justify-center p-2 border border-dashed border-primary/40 bg-blue-50/50 text-primary rounded-xl hover:bg-blue-50 transition-all aspect-square group shadow-sm">
                         <div class="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm mb-1 group-hover:scale-110 transition-transform"><i class="fa-solid fa-plus text-sm"></i></div>
                         <span class="text-[9px] font-bold text-center leading-tight">Xem thêm</span>
                     </button>
@@ -1305,23 +1305,23 @@
         </form>
 
         <!-- FOOTER: FIXED BOTTOM NAVIGATION -->
-        <div id="floating-footer" class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center">
-            <div class="w-full max-w-md flex justify-between gap-3">
+        <div id="floating-footer" class="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center pb-8 sm:pb-4">
+            <div class="w-full max-w-md flex justify-between gap-3 px-2">
                 <!-- Nút Quay lại (Ẩn ở bước đầu tiên) -->
                 <button type="button" x-show="currentStepIndex > 0" @click="prevStepWizard()"
-                    class="flex-1 bg-gray-100 text-gray-600 px-4 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
+                    class="flex-1 bg-gray-100 text-gray-600 px-4 py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-colors shadow-sm active:scale-95">
                     Quay lại
                 </button>
 
                 <!-- Nút Tiếp tục (Ẩn ở bước cuối) -->
                 <button type="button" x-show="currentStepIndex < steps.length - 1" @click="nextStepWizard()"
-                    class="flex-[2] bg-primary text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
+                    class="flex-[2] bg-primary text-white px-6 py-4 rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
                     Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
 
                 <!-- Nút Hoàn tất (Chỉ hiện ở bước cuối) -->
                 <button type="button" x-show="currentStepIndex === steps.length - 1" @click="submitForm"
-                    class="flex-[2] bg-success text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
+                    class="flex-[2] bg-success text-white px-6 py-4 rounded-2xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
                     Đăng Tin <i class="fa-solid fa-paper-plane ml-2"></i>
                 </button>
             </div>
