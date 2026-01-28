@@ -816,7 +816,7 @@
                     <!-- Google Map Preview -->
                     <div x-show="formData.ward" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
                         <!-- External Street Search Box -->
-                        <div class="mb-3">
+                        <div class="mb-3 relative z-10">
                              <label class="block text-sm font-bold text-gray-700 mb-1.5 text-left">Tên đường <span class="text-red-500">*</span></label>
                              <div class="relative">
                                 <select id="select-street-outside" x-model="formData.street"
