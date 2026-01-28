@@ -318,6 +318,42 @@
                         }
                     });
                 },
+
+                // Scroll helper: ensure the new step is visible at the top
+                scrollToTopOfForm() {
+                    this.$nextTick(() => {
+                        // Delay slightly to wait for x-transition/DOM updates
+                        setTimeout(() => {
+                            const sc = this.$refs.formContainer;
+                            try {
+                                if (sc) {
+                                    // If the container is scrollable, reset its internal scroll
+                                    if (sc.scrollHeight > sc.clientHeight) {
+                                        if (typeof sc.scrollTo === 'function') {
+                                            sc.scrollTo({ top: 0, behavior: 'smooth' });
+                                        } else {
+                                            sc.scrollTop = 0;
+                                        }
+                                    } else {
+                                        // Otherwise bring the container into viewport
+                                        if (typeof sc.scrollIntoView === 'function') {
+                                            sc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        } else {
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }
+                                    }
+                                } else {
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                            } catch (e) {
+                                // Fallback to instant jump
+                                if (sc) sc.scrollTop = 0;
+                                try { window.scrollTo(0,0); } catch (e) {}
+                            }
+                        }, 250);
+                    });
+                },
+
                 goToDashboardHome() { window.location.href = '/webapp'; },
                 getPropertyName() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.name : 'Bất động sản'; },
                 isHouseType() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.isHouse : false; },
