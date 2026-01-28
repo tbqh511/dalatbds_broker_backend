@@ -1326,8 +1326,8 @@
 
                 <button @click="confirmMapLocation"
                         :disabled="!pickerLat || isMapDragging || !formData.street"
-                        :class="(!pickerLat || isMapDragging || !formData.street) ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary shadow-lg shadow-blue-200 active:scale-[0.98]'"
-                        class="flex-[2] text-white py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center">
+                        :class="(!pickerLat || isMapDragging || !formData.street) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-primary text-white shadow-lg shadow-blue-200 active:scale-[0.98]'"
+                        class="flex-[2] py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center">
                     <span x-show="!isMapDragging && formData.street">Xác nhận vị trí này</span>
                     <span x-show="!isMapDragging && !formData.street">Vui lòng chọn đường</span>
                     <span x-show="isMapDragging"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải...</span>
