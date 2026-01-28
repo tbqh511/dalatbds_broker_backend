@@ -339,6 +339,11 @@
                             const currentCenter = this.pickerMap.getCenter();
                             if(currentCenter) this.pickerMap.setCenter(currentCenter);
                         }
+
+                        // Focus on selected street if available
+                        if (this.formData.street) {
+                            this.selectStreet(this.formData.street);
+                        }
                     });
                 },
 
