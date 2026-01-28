@@ -348,7 +348,7 @@
                 },
 
                 // Initialize Google Map inside picker
-                initGoogleMap() {
+                async initGoogleMap() {
                     console.log("Start initGoogleMap");
                     const defaultPos = { lat: 11.940419, lng: 108.458313 };
 
@@ -357,35 +357,45 @@
                         return;
                     }
 
-                    this.pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
+                    // Use importLibrary for modern API access
+                    const { Map } = await google.maps.importLibrary("maps");
+                    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+                    this.pickerMap = new Map(document.getElementById("picker-map"), {
                         center: defaultPos,
                         zoom: 15,
+                        mapId: "DEMO_MAP_ID", // Required for AdvancedMarkerElement
                         disableDefaultUI: true,
                         clickableIcons: false,
                         gestureHandling: "greedy",
                     });
 
-                    this.pickerMarker = new google.maps.Marker({
-                        position: defaultPos,
+                    // Create custom icon element
+                    const iconImg = document.createElement('img');
+                    iconImg.src = "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png";
+                    iconImg.style.width = "27px";
+                    iconImg.style.height = "43px";
+
+                    this.pickerMarker = new AdvancedMarkerElement({
                         map: this.pickerMap,
-                        draggable: true,
-                        animation: google.maps.Animation.DROP,
-                        icon: {
-                            url: "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png",
-                            scaledSize: new google.maps.Size(27, 43)
-                        }
+                        position: defaultPos,
+                        gmpDraggable: true,
+                        content: iconImg,
+                        title: "Kéo để chọn vị trí"
                     });
 
                     console.log("Map instance created", this.pickerMap);
-                    console.log("Marker created", this.pickerMarker);
+                    console.log("AdvancedMarkerElement created", this.pickerMarker);
 
                     this.pickerGeocoder = new google.maps.Geocoder();
 
-                    // Sự kiện drag cho marker cũ
-                    this.pickerMarker.addListener("dragend", (event) => {
-                        this.pickerLat = event.latLng.lat();
-                        this.pickerLng = event.latLng.lng();
-                        this.reverseGeocode(event.latLng);
+                    // Event listener for dragend on AdvancedMarkerElement
+                    this.pickerMarker.addListener("dragend", () => {
+                        const pos = this.pickerMarker.position;
+                        // Handle LatLng object or literal
+                        this.pickerLat = (typeof pos.lat === 'function') ? pos.lat() : pos.lat;
+                        this.pickerLng = (typeof pos.lng === 'function') ? pos.lng() : pos.lng;
+                        this.reverseGeocode(pos);
                     });
 
                     this.pickerMap.addListener("dragstart", () => {
@@ -398,8 +408,11 @@
                         const center = this.pickerMap.getCenter();
                         this.pickerLat = center.lat();
                         this.pickerLng = center.lng();
-                        // Update marker position
-                        this.pickerMarker.setPosition(center);
+                        
+                        // Update AdvancedMarkerElement position
+                        if (this.pickerMarker) {
+                            this.pickerMarker.position = center;
+                        }
                         this.reverseGeocode(center);
                     });
                 },
@@ -513,7 +526,7 @@
                                 this.pickerMap.setCenter(pos);
                                 this.pickerMap.setZoom(15);
                                 if (this.pickerMarker) {
-                                    this.pickerMarker.setPosition(pos);
+                                    this.pickerMarker.position = pos;
                                 }
                                 this.pickerLat = pos.lat;
                                 this.pickerLng = pos.lng;
@@ -816,7 +829,7 @@
                     <!-- Google Map Preview -->
                     <div x-show="formData.ward" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
                         <!-- External Street Search Box -->
-                        <div class="mb-3 relative z-10">
+                        <div class="mb-3 relative z-10" x-show="!showMapPicker">
                              <label class="block text-sm font-bold text-gray-700 mb-1.5 text-left">Tên đường <span class="text-red-500">*</span></label>
                              <div class="relative">
                                 <select id="select-street-outside" x-model="formData.street"
