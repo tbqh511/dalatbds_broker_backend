@@ -76,25 +76,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('realEstateForm', () => ({
-                step: 1, // Macro step for Progress Bar (1-4)
-                currentStepIndex: 0, // Micro step for Wizard (0-N)
-                validationErrors: {},
-                steps: [
-                    { id: 'transaction', title: 'Loại giao dịch', macroStep: 1 },
-                    { id: 'contact', title: 'Thông tin liên hệ', macroStep: 1 },
-                    { id: 'type', title: 'Loại BĐS', macroStep: 1 },
-                    { id: 'ward', title: 'Khu vực', macroStep: 1 },
-                    { id: 'location', title: 'Vị trí chi tiết', macroStep: 1 },
-                    { id: 'legal', title: 'Pháp lý', macroStep: 2 },
-                    { id: 'price', title: 'Giá bán', macroStep: 2 },
-                    { id: 'area', title: 'Diện tích', macroStep: 2 },
-                    { id: 'commission', title: 'Hoa hồng', macroStep: 2 },
-                    { id: 'description', title: 'Mô tả', macroStep: 3 },
-                    { id: 'images', title: 'Hình ảnh', macroStep: 3 },
-                    { id: 'parameters', title: 'Chi tiết kỹ thuật', macroStep: 3 },
-                    { id: 'amenities', title: 'Tiện ích', macroStep: 4 },
-                    { id: 'review', title: 'Xác nhận', macroStep: 4 }
-                ],
+                step: 1,
                 isAmenityExpanded: false,
                 price: 0,
                 formattedPrice: '',
@@ -105,8 +87,8 @@
 
                 // DATA MODEL
                 formData: {
-                    transactionType: '', // Reset default to force selection
-                    type: '', // Reset default to force selection
+                    transactionType: 'sale',
+                    type: @json($propertyTypes->isNotEmpty() ? $propertyTypes->first()['id'] : ''),
                     ward: '',
                     street: '',
                     houseNumber: '',
@@ -225,90 +207,6 @@
                 assignParameters: @json($assignParameters),
                 directions: ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'],
                 locationText: 'Chưa xác định vị trí',
-                // --- WIZARD NAVIGATION LOGIC ---
-                validateCurrentStep() {
-                    this.validationErrors = {};
-                    const currentStep = this.steps[this.currentStepIndex];
-                    let isValid = true;
-
-                    if (currentStep.id === 'transaction') {
-                        if (!this.formData.transactionType) {
-                            this.validationErrors.transactionType = 'Vui lòng chọn hình thức giao dịch';
-                            isValid = false;
-                        }
-                    }
-                    else if (currentStep.id === 'contact') {
-                        if (!this.formData.contact.name) {
-                            this.validationErrors.contactName = 'Vui lòng nhập họ tên';
-                            isValid = false;
-                        }
-                        if (!this.formData.contact.phone) {
-                            this.validationErrors.contactPhone = 'Vui lòng nhập số điện thoại';
-                            isValid = false;
-                        }
-                    }
-                    else if (currentStep.id === 'type') {
-                        if (!this.formData.type) {
-                            this.validationErrors.type = 'Vui lòng chọn loại bất động sản';
-                            isValid = false;
-                        }
-                    }
-                    else if (currentStep.id === 'ward') {
-                        if (!this.formData.ward) {
-                            this.validationErrors.ward = 'Vui lòng chọn khu vực';
-                            isValid = false;
-                        }
-                    }
-                    else if (currentStep.id === 'price') {
-                         if (!this.formData.price || this.formData.price <= 0) {
-                             this.validationErrors.price = 'Vui lòng nhập giá hợp lệ';
-                             isValid = false;
-                         }
-                    }
-                    else if (currentStep.id === 'area') {
-                         if (!this.formData.area || this.formData.area <= 0) {
-                             this.validationErrors.area = 'Vui lòng nhập diện tích';
-                             isValid = false;
-                         }
-                    }
-                    else if (currentStep.id === 'images') {
-                        if (!this.images.avatar) {
-                             alert("Vui lòng chọn ảnh đại diện");
-                             isValid = false;
-                        }
-                    }
-
-                    return isValid;
-                },
-
-                nextStepWizard() {
-                    if (this.validateCurrentStep()) {
-                        if (this.currentStepIndex < this.steps.length - 1) {
-                            this.currentStepIndex++;
-                            // Sync with macro step
-                            this.step = this.steps[this.currentStepIndex].macroStep;
-                            this.scrollToTopOfForm();
-                        }
-                    }
-                },
-
-                prevStepWizard() {
-                    if (this.currentStepIndex > 0) {
-                        this.currentStepIndex--;
-                        // Sync with macro step
-                        this.step = this.steps[this.currentStepIndex].macroStep;
-                        this.scrollToTopOfForm();
-                    } else {
-                        this.goToDashboardHome();
-                    }
-                },
-
-                // Helper to select option and auto-advance
-                selectAndNext(field, value) {
-                    this.formData[field] = value;
-                    this.nextStepWizard();
-                },
-
                 init() {
                     this.$watch('showMapPicker', (value) => {
                         if (value) {
@@ -719,147 +617,190 @@
         <!-- SCROLLABLE CONTENT -->
         <form class="flex-1 px-6 py-6 pb-40" @submit.prevent="submitForm">
 
-            <!-- === WIZARD CONTENT === -->
-            <!-- We will use currentStepIndex to show/hide sections -->
-            
-            <!-- STEP 0: TRANSACTION TYPE -->
-            <div x-show="steps[currentStepIndex].id === 'transaction'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-8 text-center">Bạn muốn đăng tin gì?</h2>
-                <div class="grid grid-cols-1 gap-5">
-                    <button type="button" @click="selectAndNext('transactionType', 'sale')"
-                        class="p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-primary hover:bg-blue-50 transition-all group flex items-center justify-between shadow-sm">
-                        <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 rounded-full bg-blue-100 text-primary flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
-                                <i class="fa-solid fa-tag text-2xl"></i>
-                            </div>
-                            <div class="text-left">
-                                <h3 class="font-bold text-lg text-gray-800 mb-1">Cần Bán</h3>
-                                <p class="text-sm text-gray-500 font-medium">Đăng bán nhà đất, căn hộ...</p>
-                            </div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 text-lg group-hover:text-primary transition-colors"></i>
-                    </button>
 
-                    <button type="button" @click="selectAndNext('transactionType', 'rent')"
-                        class="p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-primary hover:bg-blue-50 transition-all group flex items-center justify-between shadow-sm">
-                        <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
-                                <i class="fa-solid fa-key text-2xl"></i>
-                            </div>
-                            <div class="text-left">
-                                <h3 class="font-bold text-lg text-gray-800 mb-1">Cho Thuê</h3>
-                                <p class="text-sm text-gray-500 font-medium">Đăng cho thuê phòng, nhà...</p>
-                            </div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 text-lg group-hover:text-primary transition-colors"></i>
-                    </button>
+            <!-- === BƯỚC 1: VỊ TRÍ & LOẠI BĐS === -->
+            <div x-show="step === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+
+                <!-- Hình thức giao dịch (Bán / Cho Thuê) -->
+                <div class="mb-6">
+                    {{-- <label class="block text-sm font-bold text-gray-800 mb-3">Hình thức giao dịch</label> --}}
+                    <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
+                        <button type="button" @click="formData.transactionType = 'sale'"
+                            :class="formData.transactionType === 'sale' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-tag mr-2"></i> Cần Bán
+                        </button>
+                        <button type="button" @click="formData.transactionType = 'rent'"
+                            :class="formData.transactionType === 'rent' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-key mr-2"></i> Cho Thuê
+                        </button>
+                    </div>
                 </div>
-                <div x-show="validationErrors.transactionType" class="text-red-500 text-sm mt-3 text-center font-medium" x-text="validationErrors.transactionType"></div>
-            </div>
+                <!-- Thông tin chủ nhà (Căn giữa Radio) -->
+                <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6"
+                     x-data="{
+                         isEditing: false,
+                         get isHasData() { return this.formData.contact.name && this.formData.contact.phone; },
+                         init() { this.isEditing = !this.isHasData; }
+                     }"
+                     @click.outside="if(isHasData) isEditing = false">
+                    <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center justify-center">
+                        <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Liên hệ bán
+                    </h3>
 
-            <!-- STEP 1: CONTACT INFO -->
-            <div x-show="steps[currentStepIndex].id === 'contact'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Thông tin liên hệ</h2>
-                
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex justify-center gap-6 mb-6">
-                        <label class="flex items-center space-x-2 cursor-pointer p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors" :class="formData.contact.gender === 'ong' ? 'border-primary bg-blue-50 ring-1 ring-primary' : ''">
-                            <input type="radio" name="gender" value="ong" x-model="formData.contact.gender" class="hidden">
-                            <span class="text-lg">👨🏻</span>
-                            <span class="font-bold text-gray-700">Ông</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors" :class="formData.contact.gender === 'ba' ? 'border-primary bg-blue-50 ring-1 ring-primary' : ''">
-                            <input type="radio" name="gender" value="ba" x-model="formData.contact.gender" class="hidden">
-                            <span class="text-lg">👩🏻</span>
-                            <span class="font-bold text-gray-700">Bà</span>
-                        </label>
+
+                    <!-- VIEW MODE: Label (Chỉ hiện khi không edit và đã có data) -->
+                    <div x-show="!isEditing && isHasData"
+                         @click="isEditing = true"
+                         class="py-4 px-2 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition shadow-sm animate-fade-in-up flex flex-col items-center justify-center">
+                        <p class="text-lg font-bold text-primary text-center">
+                            <span x-text="formData.contact.gender === 'ong' ? 'Ông' : 'Bà'"></span>
+                            <span x-text="formData.contact.name"></span>
+                            <span> - </span>
+                            <span class="text-gray-500">*******<span x-text="formData.contact.phone ? formData.contact.phone.slice(-3) : ''"></span></span>
+                        </p>
                     </div>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Họ và tên <span class="text-red-500">*</span></label>
-                            <input type="text" x-model="formData.contact.name" placeholder="Ví dụ: Nguyễn Văn A" class="input-field">
-                            <p x-show="validationErrors.contactName" class="text-red-500 text-xs mt-1" x-text="validationErrors.contactName"></p>
+                    <!-- EDIT MODE: Form (Hiện khi đang edit hoặc chưa có data) -->
+                    <div x-show="isEditing || !isHasData" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                        <!-- Canh giữa Radio buttons -->
+                        <div class="flex justify-center gap-8 mb-4 border-b border-gray-100 pb-3">
+                            <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+                                <input type="radio" name="gender" value="ong" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
+                                <span class="text-sm font-bold text-gray-700">Ông</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+                                <input type="radio" name="gender" value="ba" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
+                                <span class="text-sm font-bold text-gray-700">Bà</span>
+                            </label>
                         </div>
-                        
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
-                            <input type="tel" x-model="formData.contact.phone" placeholder="0912..." class="input-field">
-                            <p x-show="validationErrors.contactPhone" class="text-red-500 text-xs mt-1" x-text="validationErrors.contactPhone"></p>
-                            <p class="text-xs text-green-600 mt-1 flex items-center"><i class="fa-solid fa-shield-halved mr-1"></i> Số điện thoại được bảo mật</p>
-                        </div>
+                        <div class="space-y-3">
+                            <input type="text" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field ">
+                            <div class="relative group">
+                                <input type="tel"
+                                       x-model="formData.contact.phone"
+                                       placeholder="Số điện thoại"
+                                       class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
 
-                        <div>
-                             <label class="block text-sm font-bold text-gray-700 mb-1">Ghi chú (tùy chọn)</label>
-                             <textarea x-model="formData.contact.note" placeholder="Giờ hành chính, gọi trước khi đến..." class="input-field h-20 resize-none"></textarea>
+                                <div class="relative -bottom-5 left-0 text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone">
+                                    <i class="fa-solid fa-shield-halved mr-1"></i> Thông tin này được bảo mật.
+                                </div>
+                            </div>
+                            <textarea x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- STEP 2: PROPERTY TYPE -->
-            <div x-show="steps[currentStepIndex].id === 'type'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Chọn loại bất động sản</h2>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <template x-for="item in propertyTypes" :key="item.id">
-                        <button type="button"
-                            @click="selectAndNext('type', item.id)"
-                            :class="formData.type === item.id
-                                ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-[1.02]'
-                                : 'bg-white text-gray-700 border-gray-100 hover:bg-blue-50 hover:border-blue-100 shadow-sm'"
-                            class="flex flex-col items-center justify-center p-5 border rounded-3xl transition-all duration-200 aspect-square group">
-                            <i :class="['fa-solid', item.icon, 'text-3xl mb-3 transition-transform group-hover:scale-110']"></i>
-                            <span class="text-sm font-bold text-center leading-tight" x-text="item.name"></span>
+                <!-- Loại BĐS - Collapsible Logic -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                        Loại bất động sản
+                        <button type="button" x-show="!isTypeExpanded" @click="isTypeExpanded = true" class="text-xs font-normal text-primary hover:underline">
+                            Thay đổi
                         </button>
-                    </template>
-                </div>
-                <div x-show="validationErrors.type" class="text-red-500 text-sm mt-3 text-center font-medium" x-text="validationErrors.type"></div>
-            </div>
+                    </label>
 
-            <!-- STEP 3: WARD (LOCATION) -->
-            <div x-show="steps[currentStepIndex].id === 'ward'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Bất động sản ở khu vực nào?</h2>
-                
-                <div class="grid grid-cols-3 gap-3">
-                    <template x-for="ward in wards" :key="ward.id">
-                        <button type="button"
-                            @click="selectAndNext('ward', ward.id)"
-                            :class="formData.ward === ward.id
-                                ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-[1.02]'
-                                : 'bg-white text-gray-700 border-gray-100 hover:bg-blue-50 hover:border-blue-100 shadow-sm'"
-                            class="flex flex-col items-center justify-center p-3 border rounded-2xl transition-all duration-200 aspect-square group">
-                            <i :class="['fa-solid', ward.icon, 'text-xl mb-2 group-hover:scale-110 transition-transform']"></i>
-                            <span class="text-xs font-bold text-center leading-tight px-1" x-text="ward.name"></span>
-                        </button>
-                    </template>
-                </div>
-                <div x-show="validationErrors.ward" class="text-red-500 text-sm mt-3 text-center font-medium" x-text="validationErrors.ward"></div>
-            </div>
+                    <!-- STATE 1: DANH SÁCH MỞ RỘNG -->
+                    <div x-show="isTypeExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-4 gap-3">
+                        <template x-for="item in propertyTypes" :key="item.id">
+                            <button type="button"
+                                @click="selectPropertyType(item.id)"
+                                :class="formData.type === item.id
+                                    ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
+                                    : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
+                                class="flex flex-col items-center justify-center p-3 border rounded-xl transition-all duration-200 aspect-square">
+                                <i :class="['fa-solid', item.icon, 'text-xl mb-2']"></i>
+                                <span class="text-xs font-medium text-center leading-tight" x-text="item.name"></span>
+                            </button>
+                        </template>
+                    </div>
 
-            <!-- STEP 4: DETAILED LOCATION -->
-            <div x-show="steps[currentStepIndex].id === 'location'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Vị trí chi tiết</h2>
-                
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                     <!-- Map Picker Trigger -->
+                    <!-- STATE 2: ĐÃ CHỌN (Thu gọn) -->
+                    <div x-show="!isTypeExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                        <div @click="isTypeExpanded = true" class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                    <i :class="['fa-solid', getSelectedType().icon, 'text-lg']"></i>
+                                </div>
+                                <div class="flex flex-col text-left">
+                                    <span class="text-xs text-blue-100 font-medium">Đã chọn loại:</span>
+                                    <span class="font-bold text-lg leading-tight" x-text="getSelectedType().name"></span>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Khu vực - Collapsible Logic -->
+                <div class="mb-6 space-y-4">
+                    <!-- Chọn Phường -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Ghim vị trí trên bản đồ</label>
-                        <div id="map-preview" @click="openMapPicker" class="w-full h-48 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 group hover:border-primary transition-colors">
+                        <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                            Khu vực
+                            <button type="button" x-show="!isWardExpanded" @click="isWardExpanded = true" class="text-xs font-normal text-primary hover:underline">
+                                Thay đổi
+                            </button>
+                        </label>
+
+                        <!-- STATE 1: DANH SÁCH MỞ RỘNG (Grid 3 cột) -->
+                        <div x-show="isWardExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-4 gap-2">
+                            <template x-for="ward in wards" :key="ward.id">
+                                <button type="button"
+                                    @click="selectWard(ward.id)"
+                                    :class="formData.ward === ward.id
+                                        ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
+                                        : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
+                                    class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 aspect-[4/3] group">
+                                    <i :class="['fa-solid', ward.icon, 'text-lg mb-1 group-hover:scale-110 transition-transform']"></i>
+                                    <span class="text-xs font-medium text-center leading-tight" x-text="ward.name"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                        <!-- STATE 2: ĐÃ CHỌN (Thu gọn) -->
+                        <div x-show="!isWardExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <div @click="isWardExpanded = true" class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                        <i :class="['fa-solid', getSelectedWard().icon, 'text-lg']"></i>
+                                    </div>
+                                    <div class="flex flex-col text-left">
+                                        <span class="text-xs text-blue-100 font-medium">Đã chọn khu vực:</span>
+                                        <span class="font-bold text-lg leading-tight" x-text="getSelectedWard().name"></span>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Số nhà -->
+                    {{-- <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-left">Số nhà</label>
+                        <input type="text" x-model="formData.houseNumber" @input="updateMapLocation" placeholder="VD: 123/4" class="input-field">
+                    </div> --}}
+                    <!-- Google Map Preview -->
+                    <div class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-gray-700">📍 Vị trí trên bản đồ</label>
+                            <button type="button" @click="panToCurrentLocation" class="text-xs text-primary font-bold flex items-center bg-blue-50 px-2 py-1 rounded">
+                                <i class="fa-solid fa-crosshairs mr-1"></i> Vị trí của tôi
+                            </button>
+                        </div>
+                        <div id="map-preview" @click="openMapPicker" class="w-full h-40 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center cursor-pointer border border-dashed border-gray-300 group hover:border-primary transition-colors">
                             <div class="absolute inset-0 bg-cover bg-center opacity-60" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/Map_of_Dalat.jpg');"></div>
-                            <span class="bg-white/90 px-4 py-2 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200 group-hover:text-primary group-hover:scale-105 transition-all z-10">
-                                <i class="fa-solid fa-map-location-dot mr-1"></i> Chọn vị trí
+                            <span class="bg-white/90 px-4 py-2 rounded-full text-xs font-bold shadow-sm backdrop-blur text-gray-700 border border-gray-200 group-hover:text-primary group-hover:scale-105 transition-all">
+                                🗺️ Chạm để chọn vị trí
                             </span>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2 truncate font-medium" x-text="locationText"></p>
-                    </div>
+                        <p class="text-xs text-gray-500 mt-2 truncate" x-text="locationText"></p>
 
-                    <!-- House Number -->
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Số nhà (Tùy chọn)</label>
-                        <input type="text" x-model="formData.houseNumber" placeholder="VD: 123/4" class="input-field">
+
                     </div>
                 </div>
+
+
             </div>
 
             <!-- === BƯỚC 2: GIÁ & PHÁP LÝ === -->
@@ -1066,102 +1007,89 @@
                 </div>
             </div>
 
-            <!-- STEP 9: DESCRIPTION -->
-            <div x-show="steps[currentStepIndex].id === 'description'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Mô tả bất động sản</h2>
-                
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Tiêu đề & Nội dung</label>
-                    <textarea x-model="formData.description" class="input-field h-48 resize-none p-4 leading-relaxed" placeholder="Mô tả chi tiết về vị trí, tiện ích, nội thất, view..."></textarea>
-                    <p class="text-xs text-gray-400 mt-2 text-right">Tối thiểu 50 ký tự</p>
-                </div>
-            </div>
+            <!-- === BƯỚC 3: CHI TIẾT KỸ THUẬT (TRANG TRÍ LẠI) === -->
+            <div x-show="step === 3" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                {{-- <h2 class="text-xl font-bold text-gray-800 mb-4">Chi tiết kỹ thuật</h2> --}}
 
-            <!-- STEP 10: IMAGES -->
-            <div x-show="steps[currentStepIndex].id === 'images'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Hình ảnh & Giấy tờ</h2>
-                
-                <div class="space-y-4">
-                    <!-- Hidden Inputs -->
-                    <input type="file" x-ref="avatarInput" class="hidden" accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'avatar')">
-                    <input type="file" x-ref="legalInput" class="hidden" multiple accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'legal')">
-                    <input type="file" x-ref="othersInput" class="hidden" multiple accept="image/png, image/jpeg, image/gif, image/webp" @change="handleImageUpload($event, 'others')">
-
-                    <!-- Ảnh chính (Single) -->
-                    <div>
-                        <div x-show="!images.avatar" @click="$refs.avatarInput.click()" class="border-2 border-dashed border-primary/30 rounded-xl p-6 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group h-56 flex flex-col items-center justify-center">
-                            <div class="w-16 h-16 bg-blue-100 text-primary rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-camera text-2xl"></i>
-                            </div>
-                            <p class="text-base font-bold text-gray-700">Ảnh đại diện</p>
-                            <p class="text-sm text-gray-400">Ảnh đẹp nhất để hiển thị đầu tiên</p>
-                        </div>
-
-                        <div x-show="images.avatar" class="relative border-2 border-primary rounded-xl p-2 bg-white">
-                            <img :src="images.avatar?.preview" class="w-full h-56 object-cover rounded-lg bg-gray-100">
-                            <button type="button" @click="removeImage('avatar')" class="absolute top-4 right-4 bg-white/90 text-red-500 rounded-full w-10 h-10 flex items-center justify-center shadow-md hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Multi Images Grid -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <!-- Pháp lý -->
-                        <div @click="$refs.legalInput.click()" class="border-2 border-dashed border-green-500/30 rounded-xl p-4 text-center hover:bg-green-50 transition-colors cursor-pointer bg-white min-h-[120px] flex flex-col items-center justify-center">
-                            <i class="fa-solid fa-file-shield text-2xl text-green-600 mb-2"></i>
-                            <p class="text-xs font-bold text-green-700">Pháp lý (<span x-text="images.legal.length"></span>)</p>
-                        </div>
-                        
-                        <!-- Ảnh khác -->
-                        <div @click="$refs.othersInput.click()" class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer bg-white min-h-[120px] flex flex-col items-center justify-center">
-                            <i class="fa-regular fa-images text-2xl text-gray-500 mb-2"></i>
-                            <p class="text-xs font-bold text-gray-700">Ảnh khác (<span x-text="images.others.length"></span>)</p>
-                        </div>
-                    </div>
-
-                    <!-- List Preview Small -->
-                    <div class="flex gap-2 overflow-x-auto py-2">
-                        <template x-for="(img, index) in images.legal" :key="'l'+index">
-                            <div class="w-16 h-16 rounded-lg overflow-hidden border border-green-200 flex-shrink-0 relative">
-                                <img :src="img.preview" class="w-full h-full object-cover">
-                                <div class="absolute bottom-0 left-0 right-0 bg-green-500/80 text-white text-[8px] text-center">Pháp lý</div>
-                            </div>
-                        </template>
-                         <template x-for="(img, index) in images.others" :key="'o'+index">
-                            <div class="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 relative">
-                                <img :src="img.preview" class="w-full h-full object-cover">
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STEP 11: PARAMETERS -->
-            <div x-show="steps[currentStepIndex].id === 'parameters'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Chi tiết kỹ thuật</h2>
-                
                 <div class="bg-blue-50 text-primary px-4 py-3 rounded-xl mb-6 border border-blue-100 flex items-center shadow-sm">
                     <i :class="['fa-solid', getSelectedType().icon, 'mr-3 text-lg']"></i>
-                    <span class="font-bold text-gray-800" x-text="getPropertyName()"></span>
+                    <div>
+                        <p class="text-xs text-blue-400 uppercase font-bold tracking-wide">Loại BĐS</p>
+                        <p class="font-bold text-gray-800 text-lg" x-text="getPropertyName()"></p>
+                    </div>
                 </div>
 
+
+                <!-- DYNAMIC PARAMETERS BASED ON PROPERTY TYPE -->
                 <div class="space-y-6" x-show="getFilteredParameters().length > 0">
                     <template x-for="param in getFilteredParameters()" :key="param.id">
                         <div class="relative group">
-                            <label class="block text-left text-xs font-bold mb-1 tracking-wide" x-text="param.name"></label>
-                            
-                            <!-- Number Input -->
+                            <label class="block text-left text-xs font-bold mb-1 tracking-wide"
+                                  x-text="param.type_of_parameter === 'number' ? (param.name + (param.name.includes('Đường rộng') ? '(m)' : (param.name.includes('Số tầng') ? ' (tầng)' : (param.name.includes('Phòng ngủ') ? ' (số phòng)' : '')))) : param.name">
+                            </label>
+                            <!-- NUMBER INPUT -->
                             <template x-if="param.type_of_parameter === 'number'">
                                 <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-1">
-                                    <button type="button" @click="let val = parseInt(formData.parameters[param.id] || 0); if(val > 0) formData.parameters[param.id] = val - 1;" class="btn-counter flex-shrink-0"><i class="fa-solid fa-minus"></i></button>
-                                    <input type="number" x-model.number="formData.parameters[param.id]" class="w-full text-center font-bold text-lg text-gray-800 border-none bg-transparent focus:ring-0 p-0" placeholder="0">
-                                    <button type="button" @click="let val = parseInt(formData.parameters[param.id] || 0); formData.parameters[param.id] = val + 1;" class="btn-counter flex-shrink-0"><i class="fa-solid fa-plus"></i></button>
+                                    <button type="button"
+                                        @click="let val = parseInt(formData.parameters[param.id] || 0); if(val > 0) formData.parameters[param.id] = val - 1;"
+                                        class="btn-counter flex-shrink-0">
+                                        <i class="fa-solid fa-minus"></i>
+                                    </button>
+
+                                    {{-- Replaced the inner div (span + span) with a proper input for direct typing --}}
+                                    <div class="relative flex-1 h-full flex items-center">
+                                        <input type="number"
+                                            x-model.number="formData.parameters[param.id]"
+                                            @change="if (formData.parameters[param.id] < 0 || formData.parameters[param.id] === null || formData.parameters[param.id] === '') formData.parameters[param.id] = 0"
+                                            min="0"
+                                            placeholder="0"
+                                            class="w-full text-center font-bold text-lg text-gray-800 border-none bg-transparent focus:ring-0 p-0 m-0"
+                                            style="padding-right: 35px;"
+                                        >
+                                        {{-- Unit display, reusing original logic --}}
+                                        <span class="absolute right-2 top-1/2 -translate-y-1/2 font-bold text-sm text-gray-400 pointer-events-none"
+                                            x-text="param.type_values ? '' : ''"></span>
+                                    </div>
+
+                                    <button type="button"
+                                        @click="let val = parseInt(formData.parameters[param.id] || 0); formData.parameters[param.id] = val + 1;"
+                                        class="btn-counter flex-shrink-0">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
                                 </div>
                             </template>
 
-                            <!-- Other inputs reuse existing logic but simplified wrapper if needed -->
-                             <template x-if="param.type_of_parameter === 'dropdown'">
+                            <!-- RADIOBUTTON -->
+                            <template x-if="param.type_of_parameter === 'radiobutton'">
+                                <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
+                                    <template x-for="option in param.type_values" :key="option">
+                                        <button type="button"
+                                            @click="formData.parameters[param.id] = option"
+                                            :class="formData.parameters[param.id] === option ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center"
+                                            x-text="option">
+                                        </button>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- CHECKBOX -->
+                            <template x-if="param.type_of_parameter === 'checkbox'">
+                                <div class="space-y-2">
+                                    <template x-for="option in param.type_values" :key="option">
+                                        <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+                                            <input type="checkbox"
+                                                   :value="option"
+                                                   x-model="formData.parameters[param.id]"
+                                                   class="text-primary focus:ring-primary h-4 w-4">
+                                            <span class="text-sm font-bold text-gray-700" x-text="option"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- DROPDOWN (Button Style) -->
+                            <template x-if="param.type_of_parameter === 'dropdown'">
                                 <div x-data="{
                                     isExpanded: !formData.parameters[param.id],
                                     init() {
@@ -1170,37 +1098,71 @@
                                         });
                                     }
                                 }" class="w-full">
-                                    <!-- List Expanded -->
-                                    <div x-show="isExpanded" class="grid grid-cols-4 gap-2">
-                                        <template x-for="option in param.type_values" :key="option">
-                                            <button type="button" @click="formData.parameters[param.id] = option; isExpanded = false" 
-                                                :class="formData.parameters[param.id] === option ? 'bg-primary text-white' : 'bg-white text-gray-600'"
-                                                class="py-2 border rounded-lg text-xs font-bold transition-all" x-text="option">
+
+                                    <!-- STATE 1: LIST EXPANDED -->
+                                    <div x-show="isExpanded"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100"
+                                        class="grid grid-cols-4 gap-2"> <template x-for="option in param.type_values" :key="option">
+                                            <button type="button"
+                                                @click="formData.parameters[param.id] = option; isExpanded = false"
+                                                :class="formData.parameters[param.id] === option
+                                                    ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105 z-10'
+                                                    : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
+                                                class="py-2 px-1 border rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 flex flex-col items-center justify-center text-center leading-tight min-h-[60px]">
+                                                
+                                                <i class="fa-solid fa-compass text-lg mb-1"></i>
+                                                <span x-text="option" class="break-words w-full"></span>
                                             </button>
                                         </template>
                                     </div>
-                                    <!-- Collapsed -->
-                                    <div x-show="!isExpanded" @click="isExpanded = true" class="bg-primary text-white p-3 rounded-xl flex justify-between items-center cursor-pointer">
-                                        <span x-text="formData.parameters[param.id]" class="font-bold"></span>
-                                        <i class="fa-solid fa-pen text-xs"></i>
+
+                                    <!-- STATE 2: COLLAPSED (SELECTED) -->
+                                    <div x-show="!isExpanded"
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 translate-y-2"
+                                         x-transition:enter-end="opacity-100 translate-y-0">
+                                        <div @click="isExpanded = true"
+                                             class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                                    <i class="fa-solid fa-check text-xs"></i>
+                                                </div>
+                                                <div class="flex flex-col text-left">
+                                                    <span class="text-[10px] text-blue-100 font-medium">Đã chọn:</span>
+                                                    <span class="font-bold text-sm leading-tight" x-text="formData.parameters[param.id]"></span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <span class="text-[10px] text-blue-100 mr-2 group-hover:underline">Thay đổi</span>
+                                                <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
                         </div>
                     </template>
                 </div>
-                 <div x-show="getFilteredParameters().length === 0" class="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
-                    <p class="text-sm">Không có thông số kỹ thuật cho loại BĐS này</p>
+
+                <!-- NO PARAMETERS MESSAGE -->
+                <div x-show="getFilteredParameters().length === 0" class="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
+                    <i class="fa-solid fa-cogs text-4xl mb-2 text-gray-200"></i>
+                    <p class="text-sm text-center">Không có thông số kỹ thuật cho loại BĐS này</p>
                 </div>
             </div>
 
-            <!-- STEP 12: AMENITIES -->
-            <div x-show="steps[currentStepIndex].id === 'amenities'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Tiện ích xung quanh</h2>
+            <!-- === BƯỚC 4: TIỆN ÍCH XUNG QUANH (LOGIC MỚI - GRID BUTTON) === -->
+            <div x-show="step === 4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                
                 <p class="text-sm text-gray-500 mb-6 text-center">Chọn các địa điểm gần BĐS của bạn.</p>
 
                 <!-- GRID TIỆN ÍCH (4 Cột) -->
-                <div class="grid grid-cols-4 gap-3 mb-6">
+
+                <div class="grid grid-cols-4 gap-2 mb-6">
+                    <!-- Loop items: Show all if expanded or count <= 8. Else show first 7. -->
+
                     <template x-for="am in (isAmenityExpanded || amenitiesList.length <= 8 ? amenitiesList : amenitiesList.slice(0, 7))" :key="am.id">
                         <button type="button"
                             @click="toggleAmenity(am.id)"
@@ -1213,9 +1175,16 @@
                         </button>
                     </template>
                     
-                    <button x-show="!isAmenityExpanded && amenitiesList.length > 8" type="button" @click="isAmenityExpanded = true"
-                            class="flex flex-col items-center justify-center p-2 border border-dashed border-primary/40 bg-blue-50/50 text-primary rounded-xl hover:bg-blue-50 transition-all aspect-square group shadow-sm">
-                        <div class="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm mb-1 group-hover:scale-110 transition-transform"><i class="fa-solid fa-plus text-sm"></i></div>
+
+                    <!-- View More Button (7 items displayed + 1 button = 8 slots) -->
+                    <button x-show="!isAmenityExpanded && amenitiesList.length > 8"
+                            type="button"
+                            @click="isAmenityExpanded = true"
+                            class="flex flex-col items-center justify-center p-2 border border-dashed border-primary/40 bg-blue-50/50 text-primary rounded-xl hover:bg-blue-50 transition-all aspect-square group">
+                        <div class="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm mb-1 group-hover:scale-110 transition-transform">
+                             <i class="fa-solid fa-plus text-sm"></i>
+                        </div>
+
                         <span class="text-[9px] font-bold text-center leading-tight">Xem thêm</span>
                     </button>
                 </div>
@@ -1227,11 +1196,13 @@
                     </button>
                 </div>
 
-                <!-- LIST INPUT KHOẢNG CÁCH -->
+                <!-- LIST INPUT KHOẢNG CÁCH (Chỉ hiện cái đã chọn) -->
                 <div class="space-y-3" x-show="Object.keys(formData.amenities).length > 0" x-transition>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Nhập khoảng cách (km)</h3>
+
                     <template x-for="(dist, id) in formData.amenities" :key="id">
                         <div x-data="{ am: amenitiesList.find(a => a.id == id) }" class="flex items-center bg-white border border-gray-200 rounded-xl p-2 pr-4 shadow-sm animate-fade-in-up">
+                            <!-- Icon & Name -->
                             <div class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center mr-3 flex-shrink-0 p-1">
                                 <img :src="am && am.image && am.image.includes('http') ? am.image : (am ? '/images/facility_img/' + am.image : '')" class="w-full h-full object-contain">
                             </div>
@@ -1239,89 +1210,46 @@
                                 <p class="text-xs font-bold text-gray-500 uppercase" x-text="am ? am.name : ''"></p>
                                 <p class="text-sm font-bold text-gray-800">Cách bao xa?</p>
                             </div>
+                            <!-- Input -->
                             <div class="relative w-24">
-                                <input type="number" x-model="formData.amenities[id]" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-2 pr-6 text-right font-bold text-gray-800 text-sm focus:border-primary outline-none" placeholder="0">
+                                <input type="number" :name="'facilities[' + id + '][distance]'" x-model="formData.amenities[id]" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 pl-2 pr-6 text-right font-bold text-gray-800 text-sm focus:border-primary outline-none" placeholder="0">
                                 <span class="absolute right-2 top-2 text-xs text-gray-400 ">km</span>
                             </div>
-                            <button type="button" @click="toggleAmenity(id)" class="ml-3 text-gray-300 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+                            <!-- Remove Btn -->
+                            <button type="button" @click="toggleAmenity(id)" class="ml-3 text-gray-300 hover:text-red-500">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
                     </template>
                 </div>
-            </div>
 
-            <!-- STEP 13: REVIEW & SUBMIT -->
-            <div x-show="steps[currentStepIndex].id === 'review'" x-transition:enter="transition ease-out duration-300" class="animate-fade-in-up">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Xác nhận thông tin</h2>
-                
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <!-- Header Image -->
-                    <div class="h-40 w-full bg-gray-100 relative">
-                        <img x-show="images.avatar" :src="images.avatar?.preview" class="w-full h-full object-cover">
-                        <div x-show="!images.avatar" class="w-full h-full flex items-center justify-center text-gray-400">
-                            <i class="fa-solid fa-image text-4xl"></i>
-                        </div>
-                        <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/60 to-transparent">
-                            <h3 class="text-white font-bold text-lg leading-tight line-clamp-2" x-text="formData.description || 'Chưa có mô tả'"></h3>
-                            <p class="text-white/90 text-sm font-medium"><i class="fa-solid fa-location-dot mr-1"></i> <span x-text="getSelectedWard().name"></span></p>
-                        </div>
-                    </div>
-
-                    <!-- Summary Info -->
-                    <div class="p-4 space-y-3">
-                        <div class="flex justify-between items-center pb-3 border-b border-gray-100">
-                            <span class="text-gray-500 text-sm">Giá bán</span>
-                            <span class="text-primary font-bold text-lg" x-text="priceInWords"></span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 pb-3 border-b border-gray-100">
-                            <div>
-                                <p class="text-gray-500 text-xs">Diện tích</p>
-                                <p class="font-bold text-gray-800"><span x-text="formData.area"></span> m²</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-500 text-xs">Loại BĐS</p>
-                                <p class="font-bold text-gray-800" x-text="getSelectedType().name"></p>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 rounded-full bg-blue-50 text-primary flex items-center justify-center mr-2 font-bold text-xs">
-                                    <span x-text="formData.contact.gender === 'ong' ? 'Ô' : 'B'"></span>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-sm text-gray-800" x-text="formData.contact.name"></p>
-                                    <p class="text-xs text-gray-500" x-text="formData.contact.phone"></p>
-                                </div>
-                            </div>
-                            <span class="text-xs text-green-600 font-bold bg-green-50 px-2 py-1 rounded">Hoa hồng <span x-text="formData.commissionRate + '%'"></span></span>
-                        </div>
-                    </div>
+                <div x-show="Object.keys(formData.amenities).length === 0" class="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
+                    <i class="fa-solid fa-map-location-dot text-4xl mb-2 text-gray-200"></i>
+                    <p class="text-xs text-center">Chưa chọn tiện ích nào</p>
                 </div>
-                
-                <p class="text-xs text-center text-gray-400 mt-6 px-4">
-                    Bằng việc nhấn "Đăng Tin", bạn đồng ý với các điều khoản sử dụng của chúng tôi. Tin đăng sẽ được duyệt trước khi hiển thị.
-                </p>
             </div>
 
         </form>
 
         <!-- FOOTER: FIXED BOTTOM NAVIGATION -->
-        <div id="floating-footer" class="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center pb-8 sm:pb-4">
-            <div class="w-full max-w-md flex justify-between gap-3 px-2">
-                <!-- Nút Quay lại (Ẩn ở bước đầu tiên) -->
-                <button type="button" x-show="currentStepIndex > 0" @click="prevStepWizard()"
-                    class="flex-1 bg-gray-100 text-gray-600 px-4 py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-colors shadow-sm active:scale-95">
+
+        <div id="floating-footer" class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center">
+            <div class="w-full max-w-md flex justify-between gap-3">
+                <!-- Nút Quay lại -->
+                <button type="button" x-show="step >= 1" @click="step === 1 ? goToDashboardHome() : prevStep()"
+                    class="flex-1 bg-gray-100 text-gray-600 px-4. py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
                     Quay lại
                 </button>
 
-                <!-- Nút Tiếp tục (Ẩn ở bước cuối) -->
-                <button type="button" x-show="currentStepIndex < steps.length - 1" @click="nextStepWizard()"
-                    class="flex-[2] bg-primary text-white px-6 py-4 rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
+                <!-- Nút Tiếp tục -->
+                <button type="button" x-show="step < 4" @click="nextStep"
+                    class="flex-[2] bg-primary text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
                     Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
 
-                <!-- Nút Hoàn tất (Chỉ hiện ở bước cuối) -->
-                <button type="button" x-show="currentStepIndex === steps.length - 1" @click="submitForm"
-                    class="flex-[2] bg-success text-white px-6 py-4 rounded-2xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
+                <!-- Nút Hoàn tất -->
+                <button type="button" x-show="step === 4" @click="submitForm"
+                    class="flex-[2] bg-success text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
                     Đăng Tin <i class="fa-solid fa-paper-plane ml-2"></i>
                 </button>
             </div>
