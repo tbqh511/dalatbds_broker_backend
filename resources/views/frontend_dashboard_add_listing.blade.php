@@ -1069,11 +1069,11 @@
                             +000
                         </button>
                     </div>
-                    <p class="text-sm text-success font-bold mt-1.5 flex justify-end items-center" x-show="formData.price > 0">
-                        <i class="fa-solid fa-tag mr-1.5 text-xs"></i> 
+                    <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
+                        <span>Giá:</span>
                         <span x-text="formatCurrency(formData.price)"></span>
-                        <span class="text-gray-500 font-normal ml-1" x-text="'(' + priceInWords + ')'"></span>
-                    </p>
+                        
+                    </div>
                 </div>
                 <!-- Diện tích (Căn phải + Màu Primary) -->
                 <div class="mb-6">
@@ -1082,10 +1082,10 @@
                         <input type="number" x-model="formData.area" placeholder="0" class="input-field pr-10">
                         <span class="absolute right-3 top-3 text-gray-400 font-bold text-sm">m²</span>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2 flex justify-end px-1" x-show="formData.area > 0 && formData.price > 0">
+                     <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
                         <span class="mr-2">Đơn giá:</span>
                         <span class="font-bold text-success"><span x-text="calculatePricePerM2()"></span> / m²</span>
-                    </p>
+                    </div>
                 </div>
                 <!-- Hoa hồng (Màu Primary) -->
                 <div class="mb-6">
