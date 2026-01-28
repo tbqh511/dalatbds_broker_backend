@@ -378,8 +378,9 @@
                         position: defaultPos,
                         draggable: true,
                         icon: {
-                            url: "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png",
-                            scaledSize: new google.maps.Size(27, 43)
+                            url: "{{ asset('images/marker-single.png') }}",
+                            // Using anchor from map-listing.js reference for consistency
+                            anchor: new google.maps.Point(22, 16) 
                         },
                         title: "Kéo để chọn vị trí"
                     });
@@ -1341,10 +1342,13 @@
         <div class="relative flex-1 w-full h-full bg-gray-100">
             <div id="picker-map" class="w-full h-full"></div>
 
+            <!-- Static marker removed to avoid duplication/glitch with Google Maps marker -->
+            <!--
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-4 pointer-events-none z-0 flex flex-col items-center justify-center">
                 <i class="fa-solid fa-location-dot text-4xl text-red-500 drop-shadow-md animate-bounce-short"></i>
                 <div class="w-3 h-1.5 bg-black/20 rounded-[100%] mt-1 blur-[1px]"></div>
             </div>
+            -->
 
             <div class="absolute bottom-6 right-4 z-[50] flex flex-col gap-3">
                 <button type="button" @click="toggleMapType" class="w-12 h-12 bg-white rounded-full shadow-lg flex flex-col items-center justify-center text-gray-700 active:bg-gray-50 overflow-hidden border border-gray-100">
