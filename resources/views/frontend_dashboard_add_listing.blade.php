@@ -252,6 +252,20 @@
                     });
                 },
 
+                nextStep() {
+                    if (this.step < 4) {
+                        this.step++;
+                        this.scrollToTopOfForm();
+                    }
+                },
+
+                prevStep() {
+                    if (this.step > 1) {
+                        this.step--;
+                        this.scrollToTopOfForm();
+                    }
+                },
+
                 goToDashboardHome() { window.location.href = '/webapp'; },
                 getPropertyName() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.name : 'Bất động sản'; },
                 isHouseType() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.isHouse : false; },
