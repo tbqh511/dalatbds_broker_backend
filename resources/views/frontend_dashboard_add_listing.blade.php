@@ -207,12 +207,22 @@
                 assignParameters: @json($assignParameters),
                 directions: ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'],
                 locationText: 'Chưa xác định vị trí',
+                formattedPrice: '',
+                priceInWords: '',
                 init() {
                     this.$watch('showMapPicker', (value) => {
                         if (value) {
                             document.body.classList.add('hide-header');
                         } else {
                             document.body.classList.remove('hide-header');
+                        }
+                    });
+                    
+                    // Initialize price watcher to update text on load if editing
+                    this.$watch('formData.price', (value) => {
+                        if (value && !this.formattedPrice) {
+                            this.formattedPrice = new Intl.NumberFormat('vi-VN').format(value);
+                            this.updatePriceInWords();
                         }
                     });
                 },
@@ -573,6 +583,107 @@
                     tryGeocode();
                 },
                 updateMapLocation() { if(this.formData.street && this.formData.houseNumber) { const streetName = this.getStreetName(this.formData.street); this.locationText = `📍 Đã ghim: ${this.formData.houseNumber}, ${streetName}`; } },
+
+                calculateCommission() {
+                    if (!this.formData.price || !this.formData.commissionRate) return '0 VNĐ';
+                    const commission = (this.formData.price * this.formData.commissionRate) / 100;
+                    return this.formatCurrency(commission);
+                },
+
+                calculatePricePerM2() {
+                    if (!this.formData.price || !this.formData.area) return '0';
+                    const pricePerM2 = this.formData.price / this.formData.area;
+                    // Format: 50.5 Triệu
+                    if (pricePerM2 >= 1000000000) { return (pricePerM2 / 1000000000).toFixed(2) + ' Tỷ'; }
+                    if (pricePerM2 >= 1000000) { return (pricePerM2 / 1000000).toFixed(1) + ' Triệu'; }
+                    return new Intl.NumberFormat('vi-VN').format(pricePerM2);
+                },
+
+                addZeros() {
+                    // Logic to add '000' to input
+                    let currentVal = this.formattedPrice.replace(/[^0-9]/g, '');
+                    if (!currentVal) currentVal = '0';
+                    currentVal += '000';
+                    this.formData.price = parseInt(currentVal);
+                    this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.formData.price);
+                    this.updatePriceInWords();
+                },
+
+                handlePriceInput(e) {
+                    let value = e.target.value.replace(/[^0-9]/g, '');
+                    if (!value) {
+                        this.formData.price = 0;
+                        this.formattedPrice = '';
+                        this.priceInWords = '';
+                        return;
+                    }
+                    this.formData.price = parseInt(value);
+                    this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.formData.price);
+                    this.updatePriceInWords();
+                },
+                
+                updatePriceInWords() {
+                    if (!this.formData.price) {
+                        this.priceInWords = '';
+                        return;
+                    }
+                    this.priceInWords = this.numberToVietnamese(this.formData.price);
+                },
+
+                numberToVietnamese(number) {
+                    if (!number || isNaN(number)) return '';
+                    
+                    const str = number.toString();
+                    if (str.length > 21) return 'Số quá lớn';
+
+                    const digits = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+                    const units = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
+
+                    let result = '';
+                    let groups = [];
+                    let tempStr = str;
+
+                    while (tempStr.length > 0) {
+                        groups.push(tempStr.slice(Math.max(0, tempStr.length - 3)));
+                        tempStr = tempStr.slice(0, Math.max(0, tempStr.length - 3));
+                    }
+
+                    for (let i = groups.length - 1; i >= 0; i--) {
+                        let groupVal = parseInt(groups[i]);
+                        if (groupVal > 0) {
+                            let groupStr = '';
+                            let tram = Math.floor(groupVal / 100);
+                            let chuc = Math.floor((groupVal % 100) / 10);
+                            let donvi = groupVal % 10;
+
+                            if (str.length > 3 && i < groups.length - 1 && tram === 0) {
+                                groupStr += 'không trăm ';
+                            } else if (tram > 0) {
+                                groupStr += digits[tram] + ' trăm ';
+                            }
+
+                            if (chuc > 1) {
+                                groupStr += digits[chuc] + ' mươi ';
+                                if (donvi === 1) groupStr += 'mốt ';
+                                else if (donvi === 5) groupStr += 'lăm ';
+                                else if (donvi > 0) groupStr += digits[donvi] + ' ';
+                            } else if (chuc === 1) {
+                                groupStr += 'mười ';
+                                if (donvi === 1) groupStr += 'một ';
+                                else if (donvi === 5) groupStr += 'lăm ';
+                                else if (donvi > 0) groupStr += digits[donvi] + ' ';
+                            } else if (i < groups.length - 1 && (tram > 0 || (groupVal > 0 && str.length > 3))) {
+                                if (chuc === 0 && donvi > 0) groupStr += 'lẻ ' + digits[donvi] + ' ';
+                            } else if (donvi > 0) {
+                                groupStr += digits[donvi] + ' ';
+                            }
+
+                            result += groupStr + units[i] + ' ';
+                        }
+                    }
+
+                    return result.trim() + ' đồng';
+                },
 
                 formatCurrency(number) {
                     if (!number) return '0 VNĐ';
