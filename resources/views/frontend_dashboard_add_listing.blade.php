@@ -213,16 +213,29 @@
 
                 // VALIDATION GETTERS
                 get isPhoneValid() {
-                    const phone = this.formData.contact.phone;
+                    let phone = this.formData.contact.phone;
                     if (!phone) return false;
+                    // Strip non-numeric characters (spaces, dots, dashes)
+                    phone = phone.replace(/\D/g, '');
                     // Vietnamese phone format: Starts with 0, followed by 3,5,7,8,9, and 8 more digits (Total 10 digits)
                     const regex = /^0(3|5|7|8|9)[0-9]{8}$/;
                     return regex.test(phone);
                 },
 
+                get isNameValid() {
+                    const name = this.formData.contact.name;
+                    if (!name) return false;
+                    // Min 2 chars, no special characters (allows letters, spaces, Vietnamese accents)
+                    // Regex: Allow unicode letters and spaces.
+                    // Simple check: length >= 2 and no obviously bad chars like @#$
+                    if (name.length < 2) return false;
+                    const regex = /^[a-zA-ZÀ-ỹ\s]+$/;
+                    return regex.test(name);
+                },
+
                 get isStep1Valid() {
                     // 1. Contact Name & Phone (Valid)
-                    if (!this.formData.contact.name || !this.isPhoneValid) return false;
+                    if (!this.formData.contact.name || !this.isNameValid || !this.isPhoneValid) return false;
                     
                     // 4. Transaction Type
                     if (!this.formData.transactionType) return false;
@@ -848,7 +861,7 @@
                 <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer bg-white group mb-6"
                      x-data="{
                          isEditing: false,
-                         get isHasData() { return this.formData.contact.name && this.formData.contact.phone; },
+                         get isHasData() { return this.formData.contact.name && this.formData.contact.phone && this.isNameValid && this.isPhoneValid; },
                          init() { 
                              this.isEditing = !this.isHasData;
                          }
@@ -885,7 +898,18 @@
                             </label>
                         </div>
                         <div class="space-y-3">
-                            <input type="text" x-ref="contactName" @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" x-model="formData.contact.name" placeholder="Tên liên hệ" class="input-field ">
+                            <div>
+                                <input type="text" x-ref="contactName" 
+                                       @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" 
+                                       x-model="formData.contact.name" 
+                                       placeholder="Tên liên hệ" 
+                                       :class="{'!border-red-500 !bg-red-50 focus:!border-red-500': formData.contact.name && !isNameValid}"
+                                       class="input-field">
+                                <p x-show="formData.contact.name && !isNameValid" class="text-xs text-red-500 mt-1 text-left ml-1">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i> Tên phải có ít nhất 2 ký tự và không chứa ký tự đặc biệt
+                                </p>
+                            </div>
+
                             <div class="relative group">
                                 <input type="tel"
                                        @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })"
@@ -893,12 +917,15 @@
                                        placeholder="Số điện thoại"
                                        :class="{'!border-red-500 !bg-red-50 focus:!border-red-500': formData.contact.phone && !isPhoneValid}"
                                        class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
+                                <p x-show="formData.contact.phone && !isPhoneValid" class="text-xs text-red-500 mt-1 text-left ml-1">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i> Số điện thoại không đúng định dạng (VN)
+                                </p>
 
-                                <div class="relative -bottom-5 left-0 text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone">
+                                <div class="relative -bottom-5 left-0 text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone && isPhoneValid">
                                     <i class="fa-solid fa-shield-halved mr-1"></i> Thông tin này được bảo mật.
                                 </div>
                             </div>
-                            <textarea @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none"></textarea>
+                            <textarea @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" x-model="formData.contact.note" placeholder="Ghi chú (Gọi giờ hành chính...)" class="input-field h-20 resize-none mt-6"></textarea>
                         </div>
                     </div>
                 </div>
