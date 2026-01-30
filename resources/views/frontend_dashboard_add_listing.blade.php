@@ -82,6 +82,7 @@
                 formattedPrice: '',
                 priceInWords: '0 VNĐ',
                 isTypeExpanded: true,
+                isTypeExpandedStep3: false,
                 isWardExpanded: true,
                 isLegalExpanded: true,
 
@@ -209,6 +210,57 @@
                 locationText: 'Chưa xác định vị trí',
                 formattedPrice: '',
                 priceInWords: '',
+
+                // VALIDATION GETTERS
+                get isPhoneValid() {
+                    const phone = this.formData.contact.phone;
+                    if (!phone) return false;
+                    // Vietnamese phone format: Starts with 0, followed by 3,5,7,8,9, and 8 more digits (Total 10 digits)
+                    const regex = /^0(3|5|7|8|9)[0-9]{8}$/;
+                    return regex.test(phone);
+                },
+
+                get isStep1Valid() {
+                    // 1. Contact Name & Phone (Valid)
+                    if (!this.formData.contact.name || !this.isPhoneValid) return false;
+                    
+                    // 4. Transaction Type
+                    if (!this.formData.transactionType) return false;
+                    
+                    // 5. Property Type
+                    if (!this.formData.type) return false;
+                    
+                    // 6. Ward (Area)
+                    if (!this.formData.ward) return false;
+                    
+                    // 7. Street
+                    if (!this.formData.street) return false;
+                    
+                    // 8. Map Location (Must have lat/lng selected via map picker)
+                    if (!this.pickerLat || !this.pickerLng) return false;
+
+                    return true;
+                },
+
+                get isStep2Valid() {
+                    // 1. Legal Type
+                    if (!this.formData.legal) return false;
+                    
+                    // 2. Price (Required > 0)
+                    if (!this.formData.price || this.formData.price <= 0) return false;
+                    
+                    // 3. Area (Required > 0)
+                    if (!this.formData.area || this.formData.area <= 0) return false;
+                    
+                    // 4. Commission Rate (Required)
+                    if (!this.formData.commissionRate) return false;
+                    
+                    // 5. Avatar (Required)
+                    if (!this.images.avatar) return false;
+
+                    return true;
+                },
+
                 init() {
                     this.$watch('showMapPicker', (value) => {
                         if (value) {
@@ -836,12 +888,13 @@
                             </label>
                         </div>
                         <div class="space-y-3">
-                            <input type="text" x-ref="contactName" @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" x-model="formData.contact.name" placeholder="Họ và tên" class="input-field ">
+                            <input type="text" x-ref="contactName" @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" x-model="formData.contact.name" placeholder="Tên liên hệ" class="input-field ">
                             <div class="relative group">
                                 <input type="tel"
                                        @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })"
                                        x-model="formData.contact.phone"
                                        placeholder="Số điện thoại"
+                                       :class="{'!border-red-500 !bg-red-50 focus:!border-red-500': formData.contact.phone && !isPhoneValid}"
                                        class="input-field pl-10 border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
 
                                 <div class="relative -bottom-5 left-0 text-green-600 font-medium flex items-center opacity-100 transition-opacity" x-show="formData.contact.phone">
@@ -1030,7 +1083,7 @@
                     </label>
 
                     <!-- STATE 1: DANH SÁCH MỞ RỘNG -->
-                    <div x-show="isLegalExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-3 gap-3">
+                    <div x-show="isLegalExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-4 gap-3">
                         <template x-for="legal in legalTypes" :key="legal.value">
                             <button type="button"
                                 @click="selectLegal(legal.value)"
@@ -1061,7 +1114,7 @@
                     </div>
                 </div>
                 <!-- Giá bán (Căn phải + Màu Primary) -->
-                <div class="mb-5">
+                <div class="mb-5" x-show="formData.legal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Giá mong muốn (VNĐ)</label>
                     <div class="relative">
                         <input type="text" x-model="formattedPrice" @input="handlePriceInput" placeholder="0" class="input-field pr-16 font-bold text-gray-800 text-xl tracking-wide">
@@ -1075,7 +1128,7 @@
                     </div>
                 </div>
                 <!-- Diện tích (Căn phải + Màu Primary) -->
-                <div class="mb-6">
+                <div class="mb-6" x-show="formData.legal && formData.price" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Diện tích (m²)</label>
                     <div class="relative">
                         <input type="number" x-model="formData.area" placeholder="0" class="input-field pr-10">
@@ -1087,7 +1140,7 @@
                     </div>
                 </div>
                 <!-- Hoa hồng (Màu Primary) -->
-                <div class="mb-6">
+                <div class="mb-6" x-show="formData.legal && formData.price && formData.area" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
                     <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                         <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
@@ -1105,12 +1158,12 @@
                     </div>
                 </div>
                 <!-- Mô tả -->
-                <div class="mb-6">
+                <div class="mb-6" x-show="formData.legal && formData.price && formData.area && formData.commissionRate" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mô tả chi tiết</label>
                     <textarea x-model="formData.description" class="input-field h-32 resize-none" placeholder="Mô tả về đường đi, view, nội thất, tiện ích..."></textarea>
                 </div>
                 <!-- Upload Ảnh -->
-                <div class="space-y-4">
+                <div class="space-y-4" x-show="formData.legal && formData.price && formData.area && formData.commissionRate" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                     <h3 class="text-sm font-bold text-gray-800 border-l-4 border-primary pl-2 text-left">Hình ảnh & Giấy tờ</h3>
 
                     <!-- Hidden Inputs -->
@@ -1125,7 +1178,7 @@
                             <div class="w-12 h-12 bg-blue-100 text-primary rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
                                 <i class="fa-solid fa-camera text-xl"></i>
                             </div>
-                            <p class="text-sm font-bold text-gray-700 text-center">Ảnh đại diện</p>
+                            <p class="text-sm font-bold text-gray-700 text-center">Ảnh đại diện <span class="text-red-500">*</span></p>
                             <p class="text-xs text-gray-400 text-center">Bắt buộc 1 tấm đẹp nhất</p>
                         </div>
 
@@ -1225,11 +1278,43 @@
             <div x-show="step === 3" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                 {{-- <h2 class="text-xl font-bold text-gray-800 mb-4">Chi tiết kỹ thuật</h2> --}}
 
-                <div class="bg-blue-50 text-primary px-4 py-3 rounded-xl mb-6 border border-blue-100 flex items-center shadow-sm">
-                    <i :class="['fa-solid', getSelectedType().icon, 'mr-3 text-lg']"></i>
-                    <div>
-                        <p class="text-xs text-blue-400 uppercase font-bold tracking-wide">Loại BĐS</p>
-                        <p class="font-bold text-gray-800 text-lg" x-text="getPropertyName()"></p>
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                        Loại bất động sản
+                        <button type="button" x-show="!isTypeExpandedStep3" @click="isTypeExpandedStep3 = true" class="text-xs font-normal text-primary hover:underline">
+                            Thay đổi
+                        </button>
+                    </label>
+
+                    <!-- STATE 1: DANH SÁCH MỞ RỘNG -->
+                    <div x-show="isTypeExpandedStep3" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="grid grid-cols-4 gap-3">
+                        <template x-for="item in propertyTypes" :key="item.id">
+                            <button type="button"
+                                @click="formData.type = item.id; isTypeExpandedStep3 = false"
+                                :class="formData.type === item.id
+                                    ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
+                                    : 'bg-white text-primary border-gray-200 hover:bg-blue-50 hover:border-blue-100'"
+                                class="flex flex-col items-center justify-center p-3 border rounded-xl transition-all duration-200 aspect-square">
+                                <i :class="['fa-solid', item.icon, 'text-xl mb-2']"></i>
+                                <span class="text-xs font-medium text-center leading-tight" x-text="item.name"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- STATE 2: ĐÃ CHỌN (Thu gọn) -->
+                    <div x-show="!isTypeExpandedStep3" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                        <div @click="isTypeExpandedStep3 = true" class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                    <i :class="['fa-solid', getSelectedType().icon, 'text-lg']"></i>
+                                </div>
+                                <div class="flex flex-col text-left">
+                                    <span class="text-xs text-blue-100 font-medium">Đã chọn loại:</span>
+                                    <span class="font-bold text-lg leading-tight" x-text="getSelectedType().name"></span>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -1457,7 +1542,9 @@
 
                 <!-- Nút Tiếp tục -->
                 <button type="button" x-show="step < 4" @click="nextStep"
-                    class="flex-[2] bg-primary text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
+                    :disabled="(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)"
+                    :class="((step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)) ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary shadow-blue-200 hover:bg-blue-600 active:scale-[0.98]'"
+                    class="flex-[2] text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg transition-transform transform flex justify-center items-center">
                     Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
 
