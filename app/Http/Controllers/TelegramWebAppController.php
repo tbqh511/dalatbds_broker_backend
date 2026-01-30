@@ -315,7 +315,6 @@ class TelegramWebAppController extends Controller
             $host = new CrmHost();
             $host->name = $contact['name'] ?? $customer->name ?? 'Unknown';
             $host->contact = $contact['phone'] ?? $customer->phone ?? '';
-            $host->email = $customer->email ?? '';
             $host->save();
 
 
