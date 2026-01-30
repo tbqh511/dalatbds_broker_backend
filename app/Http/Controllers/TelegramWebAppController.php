@@ -17,7 +17,7 @@ use App\Models\AssignParameters;
 use App\Models\OutdoorFacilities;
 use App\Models\CrmHost;
 use App\Models\PropertyImages;
-use App\Models\PropertyLegalImages;
+use App\Models\PropertyLegalImage;
 use App\Models\AssignedOutdoorFacilities;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -314,7 +314,7 @@ class TelegramWebAppController extends Controller
 
             $host = new CrmHost();
             $host->name = $contact['name'] ?? $customer->name ?? 'Unknown';
-            $host->number = $contact['phone'] ?? $customer->phone ?? '';
+            $host->contact = $contact['phone'] ?? $customer->phone ?? '';
             $host->email = $customer->email ?? '';
             $host->save();
 
@@ -381,7 +381,7 @@ class TelegramWebAppController extends Controller
                     $filename = time() . '_legal_' . uniqid() . '.' . $file->getClientOriginalExtension();
                     $file->move(public_path($legalPath), $filename);
 
-                    $legalImg = new PropertyLegalImages();
+                    $legalImg = new PropertyLegalImage();
                     $legalImg->property_id = $property->id;
                     $legalImg->image = $filename;
                     $legalImg->save();
