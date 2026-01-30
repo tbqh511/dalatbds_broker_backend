@@ -235,9 +235,6 @@
                     
                     // 7. Street
                     if (!this.formData.street) return false;
-                    
-                    // 8. Map Location (Must have lat/lng selected via map picker)
-                    if (!this.pickerLat || !this.pickerLng) return false;
 
                     return true;
                 },
@@ -1543,8 +1540,8 @@
                 <!-- Nút Tiếp tục -->
                 <button type="button" x-show="step < 4" @click="nextStep"
                     :disabled="(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)"
-                    :class="((step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)) ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary shadow-blue-200 hover:bg-blue-600 active:scale-[0.98]'"
-                    class="flex-[2] text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg transition-transform transform flex justify-center items-center">
+                    :class="((step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-600 active:scale-[0.98]'"
+                    class="flex-[2] bg-primary text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-200 transition-transform transform flex justify-center items-center">
                     Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
 
