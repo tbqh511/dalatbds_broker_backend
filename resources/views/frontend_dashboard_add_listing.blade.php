@@ -196,17 +196,12 @@
                 streets: @json($streets),
                 propertyTypes: @json($propertyTypes),
                 wards: @json($wards),
-                legalTypes: [
-                    {value: 'Sổ riêng xây dựng', name: 'Sổ riêng xây dựng', icon: 'fa-file-contract'},
-                    {value: 'Sổ riêng nông nghiệp', name: 'Sổ riêng nông nghiệp', icon: 'fa-file-contract'},
-                    {value: 'Sổ phân quyền xây dựng', name: 'Sổ phân quyền xây dựng', icon: 'fa-file-signature'},
-                    {value: 'Sổ phân quyền nông nghiệp', name: 'Sổ phân quyền nông nghiệp', icon: 'fa-file-signature'},
-                    {value: 'Giấy tay / Vi bằng', name: 'Giấy tay / Vi bằng', icon: 'fa-file-alt'}
-                ],
+                legalTypes: @json($legalTypes),
                 amenitiesList: @json($facilities),
                 parameters: @json($parameters),
                 assignParameters: @json($assignParameters),
-                directions: ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'],
+                directions: @json($directions),
+                commissionRates: @json($commissionRates),
                 locationText: 'Chưa xác định vị trí',
                 formattedPrice: '',
                 priceInWords: '',
@@ -1167,7 +1162,7 @@
                 <div class="mb-6" x-show="formData.legal && formData.price && formData.area" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                     <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
                     <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                        <template x-for="rate in [1, 1.5, 2, 2.5, 3]">
+                        <template x-for="rate in commissionRates">
                             <button type="button"
                                 @click="formData.commissionRate = rate"
                                 :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"

@@ -241,7 +241,20 @@ class TelegramWebAppController extends Controller
         // 5. Outdoor Facilities
         $facilities = OutdoorFacilities::all();
 
-        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities'));
+        // 6. Hardcoded Data (Moved from View)
+        $legalTypes = [
+            ['value' => 'Sổ riêng xây dựng', 'name' => 'Sổ riêng xây dựng', 'icon' => 'fa-file-contract'],
+            ['value' => 'Sổ riêng nông nghiệp', 'name' => 'Sổ riêng nông nghiệp', 'icon' => 'fa-file-contract'],
+            ['value' => 'Sổ phân quyền xây dựng', 'name' => 'Sổ phân quyền xây dựng', 'icon' => 'fa-file-signature'],
+            ['value' => 'Sổ phân quyền nông nghiệp', 'name' => 'Sổ phân quyền nông nghiệp', 'icon' => 'fa-file-signature'],
+            ['value' => 'Giấy tay / Vi bằng', 'name' => 'Giấy tay / Vi bằng', 'icon' => 'fa-file-alt']
+        ];
+
+        $directions = ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'];
+
+        $commissionRates = [1, 1.5, 2, 2.5, 3];
+
+        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities', 'legalTypes', 'directions', 'commissionRates'));
     }
 
     public function submitForm(Request $request)
@@ -261,6 +274,8 @@ class TelegramWebAppController extends Controller
                 'transactionType' => 'required',
                 'price' => 'required|numeric',
                 'area' => 'required|numeric',
+                'latitude' => 'nullable|numeric',
+                'longitude' => 'nullable|numeric',
             ]);
 
             if ($validator->fails()) {
@@ -288,22 +303,22 @@ class TelegramWebAppController extends Controller
                 if ($wardObj) $wardName = $wardObj->full_name;
             }
 
-            // Format: "123 Đường A, Phường B"
+            // Format: "123 Đường A, Phường B - Đà Lạt, Tỉnh Lâm Đồng"
             $addressParts = [];
             if ($houseNumber) $addressParts[] = $houseNumber;
             if ($streetName) $addressParts[] = $streetName;
             if ($wardName) $addressParts[] = $wardName;
-            $address = implode(', ', $addressParts);
+            $address = implode(', ', $addressParts) . ' - Đà Lạt, Tỉnh Lâm Đồng';
 
-            // Generate Title: "Bán/Cho thuê [Category] [Street], [Ward]"
+            // Generate Title: "Bán nhà/Cho thuê nhà [Category] [Street], [Ward] - Đà Lạt"
             $category = Category::find($categoryId);
             $catName = $category ? $category->category : 'Bất động sản';
             $actionName = ($propertyType == 0) ? 'Bán' : 'Cho thuê';
 
-            $titleParts = [$actionName, $catName];
+            $titleParts = [$actionName . ' ' . strtolower($catName)];
             if ($streetName) $titleParts[] = $streetName;
             if ($wardName) $titleParts[] = $wardName;
-            $title = implode(', ', $titleParts);
+            $title = implode(', ', $titleParts) . ' - Đà Lạt';
 
 
             // --- 1. HOST (Contact) ---
@@ -311,10 +326,18 @@ class TelegramWebAppController extends Controller
             if (is_string($contact)) {
                 $contact = json_decode($contact, true);
             }
+            
+            // Format phone number to international format (84...)
+            $rawPhone = $contact['phone'] ?? $customer->phone ?? '';
+            $phone = preg_replace('/[^0-9]/', '', $rawPhone); // Remove non-numeric chars
+            if (substr($phone, 0, 1) === '0') {
+                $phone = '84' . substr($phone, 1);
+            }
 
             $host = new CrmHost();
             $host->name = $contact['name'] ?? $customer->name ?? 'Unknown';
-            $host->contact = $contact['phone'] ?? $customer->phone ?? '';
+            $host->contact = $phone;
+            $host->gender = $contact['gender'] ?? '';
             $host->save();
 
 
@@ -331,6 +354,9 @@ class TelegramWebAppController extends Controller
             $property->added_by = $customer->id;
             $property->status = 0; // Pending approval
             $property->host_id = $host->id;
+            $property->post_type = 1; // User submitted
+            $property->street_code = $streetId;
+            $property->ward_code = $wardId;
 
             // Commission
             $commissionRate = $request->input('commissionRate', 0);
