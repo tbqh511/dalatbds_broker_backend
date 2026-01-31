@@ -1599,10 +1599,15 @@
             </div>
             -->
 
-            <div class="absolute bottom-6 right-4 z-[50] flex flex-col gap-3">
+            <div class="absolute bottom-6 right-4 z-[1000] flex flex-col gap-3">
                 <button type="button" @click="toggleMapType" class="w-12 h-12 bg-white rounded-full shadow-lg flex flex-col items-center justify-center text-gray-700 active:bg-gray-50 overflow-hidden border border-gray-100">
                     <i class="fa-solid fa-layer-group text-sm mb-0.5" :class="mapType === 'hybrid' ? 'text-primary' : ''"></i>
                     <span class="text-[9px] font-bold uppercase leading-none" x-text="mapType === 'roadmap' ? 'Vệ tinh' : 'Bản đồ'"></span>
+                </button>
+
+                <button type="button" @click="toggleTraffic" class="w-12 h-12 bg-white rounded-full shadow-lg flex flex-col items-center justify-center text-gray-700 active:bg-gray-50 overflow-hidden border border-gray-100">
+                    <i class="fa-solid fa-traffic-light text-sm mb-0.5" :class="isTrafficEnabled ? 'text-primary' : ''"></i>
+                    <span class="text-[9px] font-bold uppercase leading-none">GT</span>
                 </button>
 
                 <button @click="panToCurrentLocation" class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-primary active:bg-gray-50 border border-gray-100">
@@ -1690,6 +1695,24 @@
     </style>
 @endsection
 
+@push('scripts')
+    <script src="{{ asset('js/dashboard.js') }}"></script>
+
+    <script>
+        // Global Telegram WebApp Logic (Run on every page load)
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            try {
+                tg.setHeaderColor('#3270FC');
+                tg.setBackgroundColor('#ffffff');
+            } catch (e) {
+                console.warn('Telegram WebApp setHeaderColor failed:', e);
+            }
+        }
+    </script>
+
+@endpush
 @push('scripts')
     <script src="{{ asset('js/dashboard.js') }}"></script>
 
