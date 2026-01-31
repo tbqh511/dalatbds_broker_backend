@@ -93,7 +93,7 @@
                     ward: '',
                     street: '',
                     houseNumber: '',
-                    contact: { gender: 'ong', name: '', phone: '', note: '' },
+                    contact: { gender: '1', name: '', phone: '', note: '' },
                     area: 0,
                     commissionRate: 2,
                     legal: '',
@@ -872,7 +872,7 @@
                          @click="isEditing = true"
                          class="py-2 px-2 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition shadow-sm animate-fade-in-up flex flex-col items-center justify-center">
                         <p class="text-lg font-bold text-primary text-center">
-                            <span x-text="formData.contact.gender === 'ong' ? 'Ông' : 'Bà'"></span>
+                            <span x-text="formData.contact.gender == '1' ? 'Ông' : 'Bà'"></span>
                             <span x-text="formData.contact.name"></span>
                             <span> - </span>
                             <span class="text-green-600">*******<span x-text="formData.contact.phone ? formData.contact.phone.slice(-3) : ''"></span></span>
@@ -884,11 +884,11 @@
                         <!-- Canh giữa Radio buttons -->
                         <div class="flex justify-center gap-8 mb-4 border-b border-gray-100 pb-3">
                             <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
-                                <input type="radio" name="gender" value="ong" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
+                                <input type="radio" name="gender" value="1" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
                                 <span class="text-sm font-bold text-gray-700">Ông</span>
                             </label>
                             <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
-                                <input type="radio" name="gender" value="ba" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
+                                <input type="radio" name="gender" value="2" x-model="formData.contact.gender" class="text-primary focus:ring-primary h-4 w-4">
                                 <span class="text-sm font-bold text-gray-700">Bà</span>
                             </label>
                         </div>
