@@ -407,7 +407,7 @@ class TelegramWebAppController extends Controller
                     $file->move(public_path($legalPath), $filename);
 
                     $legalImg = new PropertyLegalImage();
-                    $legalImg->property_id = $property->id;
+                    $legalImg->propertys_id = $property->id;
                     $legalImg->image = $filename;
                     $legalImg->save();
                 }
