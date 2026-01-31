@@ -433,7 +433,7 @@
 
                     this.pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
                         center: defaultPos,
-                        zoom: 15,
+                        zoom: 18,
                         disableDefaultUI: true,
                         clickableIcons: false,
                         gestureHandling: "greedy",
@@ -510,7 +510,7 @@
                                 const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
                                 if (this.pickerMap) {
                                     this.pickerMap.setCenter(pos);
-                                    this.pickerMap.setZoom(17);
+                                    this.pickerMap.setZoom(18);
                                     if (this.pickerMarker) {
                                         this.pickerMarker.setPosition(pos);
                                     }
@@ -620,7 +620,7 @@
                                 console.log('Geocoding successful for', street.name, 'at position:', pos);
 
                                 this.pickerMap.setCenter(pos);
-                                this.pickerMap.setZoom(15);
+                                this.pickerMap.setZoom(18);
                                 if (this.pickerMarker) {
                                     this.pickerMarker.setPosition(pos);
                                 }
@@ -1562,8 +1562,8 @@
                 <!-- Nút Tiếp tục -->
                 <button type="button" x-show="step < 4" @click="nextStep"
                     :disabled="(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)"
-                    :class="((step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-600 active:scale-[0.98]'"
-                    class="flex-[2] bg-primary text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-200 transition-transform transform flex justify-center items-center">
+                    :class="((step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-primary text-white shadow-lg shadow-blue-200 hover:bg-blue-600 active:scale-[0.98]'"
+                    class="flex-[2] px-6 py-3.5 rounded-xl font-bold text-sm transition-transform transform flex justify-center items-center">
                     Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
 
