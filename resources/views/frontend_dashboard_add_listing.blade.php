@@ -389,7 +389,9 @@
                 pickerLng: null,
                 isMapDragging: false,
                 pickerMarker: null,
-                mapType: 'hybrid',
+                mapType: 'roadmap',
+                //mapType: 'hybrid',
+               
 
                 toggleMapType() {
                     if (!this.pickerMap) return;
