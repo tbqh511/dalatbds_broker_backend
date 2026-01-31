@@ -1605,11 +1605,6 @@
                     <span class="text-[9px] font-bold uppercase leading-none" x-text="mapType === 'roadmap' ? 'Vệ tinh' : 'Bản đồ'"></span>
                 </button>
 
-                <button type="button" @click="toggleTraffic" class="w-12 h-12 bg-white rounded-full shadow-lg flex flex-col items-center justify-center text-gray-700 active:bg-gray-50 overflow-hidden border border-gray-100">
-                    <i class="fa-solid fa-traffic-light text-sm mb-0.5" :class="isTrafficEnabled ? 'text-primary' : ''"></i>
-                    <span class="text-[9px] font-bold uppercase leading-none">GT</span>
-                </button>
-
                 <button @click="panToCurrentLocation" class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-primary active:bg-gray-50 border border-gray-100">
                     <i class="fa-solid fa-crosshairs text-lg"></i>
                 </button>
