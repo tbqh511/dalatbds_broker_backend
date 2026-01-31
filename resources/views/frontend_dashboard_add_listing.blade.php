@@ -1599,7 +1599,7 @@
             </div>
             -->
 
-            <div class="absolute bottom-6 right-4 z-[1000] flex flex-col gap-3">
+            <div class="absolute top-1/2 right-4 flex flex-col gap-3 -translate-y-1/2" style="z-index: 1000;">
                 <button type="button" @click="toggleMapType" class="w-12 h-12 bg-white rounded-full shadow-lg flex flex-col items-center justify-center text-gray-700 active:bg-gray-50 overflow-hidden border border-gray-100">
                     <i class="fa-solid fa-layer-group text-sm mb-0.5" :class="mapType === 'hybrid' ? 'text-primary' : ''"></i>
                     <span class="text-[9px] font-bold uppercase leading-none" x-text="mapType === 'roadmap' ? 'Vệ tinh' : 'Bản đồ'"></span>
