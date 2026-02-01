@@ -374,23 +374,50 @@ class TelegramWebAppController extends Controller
 
 
             // --- 3. IMAGES ---
-            $imagePath = 'images/property_images/';
+            // Title Image
+            $imagePath = public_path('images') . config('global.PROPERTY_TITLE_IMG_PATH');
+            if (!is_dir($imagePath)) {
+                mkdir($imagePath, 0777, true);
+            }
 
             // Avatar (title_image)
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
                 $filename = time() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path($imagePath), $filename);
+                $file->move($imagePath, $filename);
 
                 $property->title_image = $filename;
                 $property->save();
+            }
+
+            // 3D Image
+            if ($request->hasFile('threeD_image')) {
+                $threeDPath = public_path('images') . config('global.3D_IMG_PATH');
+                if (!is_dir($threeDPath)) {
+                    mkdir($threeDPath, 0777, true);
+                }
+                $file = $request->file('threeD_image');
+                $filename = microtime(true) . "." . $file->getClientOriginalExtension();
+                $file->move($threeDPath, $filename);
+                $property->threeD_image = $filename;
+                $property->save();
+            }
+
+            // Gallery & Legal Path
+            $galleryPathBase = public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH');
+            if (!is_dir($galleryPathBase)) {
+                mkdir($galleryPathBase, 0777, true);
+            }
+            $galleryPath = $galleryPathBase . "/" . $property->id;
+            if (!is_dir($galleryPath)) {
+                mkdir($galleryPath, 0777, true);
             }
 
             // Gallery (others)
             if ($request->hasFile('others')) {
                 foreach ($request->file('others') as $file) {
                     $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                    $file->move(public_path($imagePath), $filename);
+                    $file->move($galleryPath, $filename);
 
                     $propImg = new PropertyImages();
                     $propImg->propertys_id = $property->id;
@@ -400,11 +427,10 @@ class TelegramWebAppController extends Controller
             }
 
             // Legal (legal_images)
-            $legalPath = 'images/property_legal_images/';
             if ($request->hasFile('legal')) {
                 foreach ($request->file('legal') as $file) {
                     $filename = time() . '_legal_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                    $file->move(public_path($legalPath), $filename);
+                    $file->move($galleryPath, $filename);
 
                     $legalImg = new PropertyLegalImage();
                     $legalImg->propertys_id = $property->id;
@@ -418,20 +444,33 @@ class TelegramWebAppController extends Controller
             $parameters = $request->input('parameters');
             if (is_string($parameters)) $parameters = json_decode($parameters, true);
 
+            $destinationPathforparam = public_path('images') . config('global.PARAMETER_IMAGE_PATH');
+            if (!is_dir($destinationPathforparam)) {
+                mkdir($destinationPathforparam, 0777, true);
+            }
+
             $excludedNames = ['Diện tích', 'Pháp lý', 'Giá m2'];
 
             if (is_array($parameters)) {
                 foreach ($parameters as $paramId => $val) {
-                    if (empty($val)) continue;
-
                     $paramDef = parameter::find($paramId);
-                    if ($paramDef && !in_array($paramDef->name, $excludedNames)) {
-                        $assignParam = new AssignParameters();
-                        $assignParam->modal()->associate($property);
-                        $assignParam->parameter_id = $paramId;
+                    if (!$paramDef || in_array($paramDef->name, $excludedNames)) continue;
+
+                    $assignParam = new AssignParameters();
+                    $assignParam->modal()->associate($property);
+                    $assignParam->parameter_id = $paramId;
+
+                    // Check for file upload for this parameter
+                    if ($request->hasFile("parameters.$paramId")) {
+                        $profile = $request->file("parameters.$paramId");
+                        $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
+                        $profile->move($destinationPathforparam, $imageName);
+                        $assignParam->value = $imageName;
+                    } else {
+                        if (empty($val)) continue;
                         $assignParam->value = $val;
-                        $assignParam->save();
                     }
+                    $assignParam->save();
                 }
             }
 
