@@ -17,3 +17,13 @@ yarn-error.log
 /.vscode
 .DS_Store
 *.log
+/public/images/property_title_img/
+/public/images/property_gallery_img/
+/public/images/3d_img/
+/public/images/parameter_img/
+/public/images/users/
+/public/images/article/
+/public/images/chat/
+/public/images/chat_audio/
+/public/images/property_images/
+/public/images/property_legal_images/
