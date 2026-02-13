@@ -56,6 +56,10 @@ class TelegramWebAppAuth
         
         // 2. For any other sub-route (e.g. /webapp/profile), redirect to /webapp
         // to force the initial Telegram check
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
         return redirect('/webapp');
     }
 }

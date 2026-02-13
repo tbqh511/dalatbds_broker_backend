@@ -4,6 +4,7 @@
 <head>
     <!-- basic   -->
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Đà Lạt BDS - Mạng lưới thổ địa Đà Lạt')</title>
     <meta name="robots" content="index, follow" />
     <meta name="keywords" content="@yield('meta_keywords', 'bất động sản, đà lạt, mua bán nhà đất, thổ địa')" />

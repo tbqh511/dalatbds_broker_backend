@@ -59,12 +59,12 @@
         </script>
     </div>
     <!--Tariff Plan menu-->
-    <div class="tfp-det-container">
+    <!-- <div class="tfp-det-container">
         <div class="tfp-btn"><span>Gói dịch vụ : </span> <strong>Cao cấp</strong></div>
         <div class="tfp-det">
             <p>Bạn đang sử dụng gói <a href="#">Cao cấp</a> . Nhấn vào link bên dưới để xem chi tiết hoặc nâng cấp. </p>
             <a href="#" class="tfp-det-btn color-bg">Chi tiết</a>
         </div>
-    </div>
+    </div> -->
     <!--Tariff Plan menu end-->
 </div>

@@ -19,8 +19,12 @@ class VerifyCsrfToken extends Middleware
         '/webhook/stripe',
 
         '/firebase_messaging_settings',
-        
+
         // Exclude Telegram WebApp Login from CSRF check (uses Telegram InitData signature instead)
         '/api/webapp/login',
+        '/webapp/submit-listing',
+        '/webapp/update-listing/*',
+        '/webapp/listings/*',
+        '/webapp/listings/*/toggle',
     ];
 }
