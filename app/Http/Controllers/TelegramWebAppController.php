@@ -349,11 +349,11 @@ class TelegramWebAppController extends Controller
 
         // 6. Hardcoded Data (Moved from View)
         $legalTypes = [
-            ['value' => 'Sổ riêng xây dựng', 'name' => 'Sổ riêng xây dựng', 'icon' => 'fa-file-contract'],
-            ['value' => 'Sổ riêng nông nghiệp', 'name' => 'Sổ riêng nông nghiệp', 'icon' => 'fa-file-contract'],
+            ['value' => 'Sổ xây dựng', 'name' => 'Sổ xây dựng', 'icon' => 'fa-file-contract'],
+            ['value' => 'Sổ nông nghiệp', 'name' => 'Sổ nông nghiệp', 'icon' => 'fa-file-contract'],
             ['value' => 'Sổ phân quyền xây dựng', 'name' => 'Sổ phân quyền xây dựng', 'icon' => 'fa-file-signature'],
             ['value' => 'Sổ phân quyền nông nghiệp', 'name' => 'Sổ phân quyền nông nghiệp', 'icon' => 'fa-file-signature'],
-            ['value' => 'Giấy tay / Vi bằng', 'name' => 'Giấy tay / Vi bằng', 'icon' => 'fa-file-alt']
+            ['value' => 'Giấy tay', 'name' => 'Giấy tay / Vi bằng', 'icon' => 'fa-file-alt']
         ];
 
         $directions = ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'];
@@ -830,11 +830,11 @@ class TelegramWebAppController extends Controller
         $facilities = OutdoorFacilities::all();
 
         $legalTypes = [
-            ['value' => 'Sổ riêng xây dựng', 'name' => 'Sổ riêng xây dựng', 'icon' => 'fa-file-contract'],
-            ['value' => 'Sổ riêng nông nghiệp', 'name' => 'Sổ riêng nông nghiệp', 'icon' => 'fa-file-contract'],
+            ['value' => 'Sổ xây dựng', 'name' => 'Sổ xây dựng', 'icon' => 'fa-file-contract'],
+            ['value' => 'Sổ nông nghiệp', 'name' => 'Sổ nông nghiệp', 'icon' => 'fa-file-contract'],
             ['value' => 'Sổ phân quyền xây dựng', 'name' => 'Sổ phân quyền xây dựng', 'icon' => 'fa-file-signature'],
             ['value' => 'Sổ phân quyền nông nghiệp', 'name' => 'Sổ phân quyền nông nghiệp', 'icon' => 'fa-file-signature'],
-            ['value' => 'Giấy tay / Vi bằng', 'name' => 'Giấy tay / Vi bằng', 'icon' => 'fa-file-alt']
+            ['value' => 'Giấy tay', 'name' => 'Giấy tay / Vi bằng', 'icon' => 'fa-file-alt']
         ];
 
         $directions = ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'];

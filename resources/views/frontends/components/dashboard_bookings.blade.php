@@ -144,7 +144,7 @@
                     </div>
                 </div>
                 <!-- pagination-->
-                <div class="pagination float-pagination">
+                <div class="pagination" style="display: flex; justify-content: center; margin-top: 30px; gap: 5px;">
                     <a href="#" class="prevposts-link"><i class="fa fa-caret-left"></i></a>
                     <a href="#">1</a>
                     <a href="#" class="current-page">2</a>

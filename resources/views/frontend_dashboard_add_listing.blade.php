@@ -442,10 +442,10 @@ build. --}}
                     }));
                 }
 
-                // Collapse expanded sections since they have values
-                this.isTypeExpanded = false;
-                this.isWardExpanded = false;
-                this.isLegalExpanded = false;
+                // Collapse expanded sections that have values
+                if (this.formData.type) this.isTypeExpanded = false;
+                if (this.formData.ward) this.isWardExpanded = false;
+                if (this.formData.legal) this.isLegalExpanded = false;
             },
 
             // Scroll helper: ensure the new step is visible at the top
@@ -1374,6 +1374,10 @@ build. --}}
                                                     selectStreet(value);
                                                 }
                                             });
+                                            // If editing, set the initial value
+                                            if (formData.street && $el.tomselect) {
+                                                $el.tomselect.setValue(formData.street, true);
+                                            }
                                             // Watch for changes from the inside picker to update this outside one
                                             $watch('formData.street', (value) => {
                                                 if ($el.tomselect) {
@@ -1984,7 +1988,8 @@ build. --}}
                 <!-- Nút Hoàn tất -->
                 <button type="button" x-show="step === 4" @click="submitForm"
                     class="flex-[2] bg-success text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center">
-                    Đăng Tin <i class="fa-solid fa-paper-plane ml-2"></i>
+                    <span x-text="isEditMode ? 'Cập nhật' : 'Đăng Tin'">Đăng Tin</span> <i
+                        class="fa-solid fa-paper-plane ml-2"></i>
                 </button>
             </div>
         </div>

@@ -35,6 +35,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostCategoryController;
 use App\Http\Controllers\PostTagController;
 use App\Http\Controllers\TelegramWebAppController;
+use App\Http\Controllers\CrmLeadController;
 use App\Models\Payments;
 use App\Models\PropertysInquiry;
 use Illuminate\Support\Facades\Artisan;
@@ -80,6 +81,14 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::patch('/webapp/listings/{id}/toggle', [TelegramWebAppController::class , 'toggleStatus'])->name('webapp.listings.toggle');
     Route::get('/webapp/edit-listing/{id}', [TelegramWebAppController::class , 'editListing'])->name('webapp.edit_listing');
     Route::post('/webapp/update-listing/{id}', [TelegramWebAppController::class , 'updateForm'])->name('webapp.update_listing');
+    
+    // CRM Leads Routes
+    Route::get('/webapp/leads', [CrmLeadController::class, 'index'])->name('webapp.leads');
+    Route::get('/webapp/leads/create', [CrmLeadController::class, 'create'])->name('webapp.leads.create');
+    Route::post('/webapp/leads', [CrmLeadController::class, 'store'])->name('webapp.leads.store');
+    Route::get('/webapp/leads/{id}/edit', [CrmLeadController::class, 'edit'])->name('webapp.leads.edit');
+    Route::put('/webapp/leads/{id}', [CrmLeadController::class, 'update'])->name('webapp.leads.update');
+    Route::delete('/webapp/leads/{id}', [CrmLeadController::class, 'destroy'])->name('webapp.leads.destroy');
 });
 
 //property controller

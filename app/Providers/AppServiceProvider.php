@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Log;
+use App\Repositories\CrmLeadRepositoryInterface;
+use App\Repositories\Eloquent\CrmLeadRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(CrmLeadRepositoryInterface::class, CrmLeadRepository::class);
     }
 
     /**

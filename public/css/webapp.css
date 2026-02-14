@@ -47,3 +47,24 @@
   }
 }
 
+/* Status Colors for Leads */
+.new-bookmark.status-new {
+    background-color: #40B69E; /* Green */
+}
+.new-bookmark.status-contacted {
+    background-color: #F9B930; /* Orange */
+}
+.new-bookmark.status-converted {
+    background-color: #3270FC; /* Blue */
+}
+.new-bookmark.status-lost {
+    background-color: #F87171; /* Red */
+}
+.new-bookmark.status-bad-contact {
+    background-color: #6B7280; /* Gray */
+}
+
+/* Fix for bookings item layout if needed */
+.bookings-item-header img {
+    object-fit: cover; /* Ensure image doesn't stretch */
+}
