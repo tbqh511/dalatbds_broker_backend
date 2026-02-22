@@ -20,7 +20,7 @@
         <div class="grid-item-holder gallery-items gisp fl-wrap">
             @foreach($newestProducts as $productItem )
             <!-- gallery-item-->
-            <div class="gallery-item {{ ($productItem->propery_type == 1) ? 'for_rent' : 'for_sale'}}">
+            <div class="gallery-item {{ ($productItem->property_type == 1) ? 'for_rent' : 'for_sale'}}">
                 <!-- listing-item -->
                 @include('frontends.components.product_card',['productCard'=>$productItem ])
                 <!-- listing-item end-->

@@ -47,8 +47,8 @@ class HomeController extends Controller
 
 
             // 0:Sell 1:Rent 2:Sold 3:Rented
-            $list['total_sell_property'] = Property::where('propery_type', '0')->get()->count();
-            $list['total_rant_property'] = Property::where('propery_type', '1')->get()->count();
+            $list['total_sell_property'] = Property::where('property_type', '0')->get()->count();
+            $list['total_rant_property'] = Property::where('property_type', '1')->get()->count();
 
 
             $list['total_property_inquiry'] = PropertysInquiry::all()->count();
@@ -181,4 +181,3 @@ class HomeController extends Controller
         $request->file->move(public_path(), 'firebase-messaging-sw.js');
     }
 }
-

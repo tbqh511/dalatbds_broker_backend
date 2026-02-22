@@ -18,12 +18,12 @@
                             </div>
                             <div class="col-sm-3">
                                 <div class="listsearch-input-item">
-                                    <select name="propery_type" data-placeholder="Tình trạng"
+                                    <select name="property_type" data-placeholder="Tình trạng"
                                         class="chosen-select on-radius no-search-select">
                                         <option value="">Cho thuê & Bán</option>
-                                        <option value="0" {{ request()->input('propery_type') == '0' ? 'selected' :
+                                        <option value="0" {{ request()->input('property_type') == '0' ? 'selected' :
                                             ''}}>Bán</option>
-                                        <option value="1" {{ request()->input('propery_type') == '1' ? 'selected' :
+                                        <option value="1" {{ request()->input('property_type') == '1' ? 'selected' :
                                             ''}}>Cho Thuê</option>
                                     </select>
                                 </div>

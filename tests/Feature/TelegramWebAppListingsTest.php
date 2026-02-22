@@ -25,7 +25,7 @@ class TelegramWebAppListingsTest extends TestCase
                 'description' => 'Desc ' . $i,
                 'address' => 'Address ' . $i,
                 'client_address' => 'Client address ' . $i,
-                'propery_type' => 0,
+                'property_type' => 0,
                 'price' => '1000000',
                 'post_type' => null,
                 'city' => 'City',

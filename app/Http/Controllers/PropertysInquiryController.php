@@ -121,7 +121,7 @@ class PropertysInquiryController extends Controller
 
             $tempRow['chat'] = $operate1;
 
-            $tempRow['property_type'] =  ($row->propery_type == '0') ? 'Sell' : 'Rent';
+            $tempRow['property_type'] =  ($row->property_type == '0') ? 'Sell' : 'Rent';
 
             $tempRow['inquiry_created'] = $row->created_at->diffForHumans();
             if ($row->status == '0') {

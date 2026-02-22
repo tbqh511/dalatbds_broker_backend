@@ -331,16 +331,16 @@
                     '"onclick = "chk(this);" type = "checkbox" role = "switch"' + row.property.status +
                     ' style="width: 4rem;height: 2rem;"> '
                 );
-                if (row.property.propery_type == 0) {
+                if (row.property.property_type == 0) {
                     $("#property_type").val("Sell");
                 }
-                if (row.property.propery_type == 1) {
+                if (row.property.property_type == 1) {
                     $("#property_type").val("Rent");
                 }
-                if (row.property.propery_type == 2) {
+                if (row.property.property_type == 2) {
                     $("#property_type").val("sold");
                 }
-                if (row.property.propery_type == 3) {
+                if (row.property.property_type == 3) {
                     $("#property_type").val("Rented");
                 }
                 $("#title").val(row.property.title);

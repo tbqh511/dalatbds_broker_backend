@@ -28,7 +28,7 @@ class Property extends Model
         'description',
         'address',
         'client_address',
-        'propery_type',
+        'property_type',
         'price',
         'title_image',
         'state',
@@ -95,7 +95,7 @@ class Property extends Model
     //HuyTBQ: get Code attribute
     public function getCodeAttribute()
     {
-        $prefix = ($this->propery_type == 0) ? 'B' : 'T';
+        $prefix = ($this->property_type == 0) ? 'B' : 'T';
         $wardName = $this->ward->name ?? '';
 
         // Chuyển đổi tên phường thành định dạng mong muốn
@@ -229,9 +229,9 @@ class Property extends Model
     {
         $address = $this->getAddressLocationAttribute();
 
-        if ($this->propery_type == 0) {
+        if ($this->property_type == 0) {
             return "Bán " . $this->category->category . ', ' . $address . ', Tp Đà Lạt';
-        } elseif ($this->propery_type == 1) {
+        } elseif ($this->property_type == 1) {
             return "Cho thuê " . $this->category->category . ', ' . $address;
         } else {
             return $address;
@@ -276,7 +276,7 @@ class Property extends Model
         $suffix = "";
 
         // Check property type and set suffix accordingly
-        if ($this->propery_type == 1) {
+        if ($this->property_type == 1) {
             switch ($this->rentduration) {
                 case "Monthly":
                     $suffix = ' / tháng';
@@ -289,6 +289,9 @@ class Property extends Model
                     break;
                 case "Quarterly":
                     $suffix = ' / quý';
+                    break;
+                case "Six Months":
+                    $suffix = ' / 6 tháng';
                     break;
                 default:
                     // Do nothing
@@ -347,9 +350,9 @@ class Property extends Model
     //HuyTBQ: add function get title
     public function getTypeAttribute()
     {
-        if ($this->propery_type == 0) {
+        if ($this->property_type == 0) {
             return 'Bán';
-        } elseif ($this->propery_type == 1) {
+        } elseif ($this->property_type == 1) {
             return 'Cho thuê';
         } else {
             return null; // Hoặc bất kỳ giá trị mặc định nào bạn muốn nếu không có giá trị phù hợp

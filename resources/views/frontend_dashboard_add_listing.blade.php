@@ -167,6 +167,7 @@ build. --}}
                 direction: 'DongNam',
                 amenities: {},
                 parameters: {},
+                rentduration: 'Monthly',
                 price: 0
             },
 
@@ -380,6 +381,11 @@ build. --}}
                     this.formData.price = parseInt(data.price);
                     this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.formData.price);
                     this.updatePriceInWords();
+                }
+                
+                // Rent Duration
+                if (data.rentduration) {
+                    this.formData.rentduration = data.rentduration;
                 }
 
                 // Area
@@ -948,6 +954,7 @@ build. --}}
                     fd.append('street', this.formData.street || '');
                     fd.append('houseNumber', this.formData.houseNumber || '');
                     fd.append('price', this.formData.price);
+                    fd.append('rentduration', this.formData.rentduration);
                     fd.append('area', this.formData.area);
                     fd.append('commissionRate', this.formData.commissionRate);
                     fd.append('description', this.formData.description || '');
@@ -1474,11 +1481,55 @@ build. --}}
                         </div>
                     </div>
                 </div>
-                <!-- Giá bán (Căn phải + Màu Primary) -->
+                <!-- Giá bán / Giá thuê -->
                 <div class="mb-5" x-show="formData.legal" x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4"
                     x-transition:enter-end="opacity-100 translate-y-0">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Giá mong muốn (VNĐ)</label>
+                    
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 text-left" 
+                            x-text="formData.transactionType === 'rent' ? 'Giá cho thuê (VNĐ)' : 'Giá mong muốn (VNĐ)'">
+                        </label>
+                        
+                        <!-- Removed redundant unit badge here to simplify UI as requested -->
+                    </div>
+
+                    <!-- Rent Duration Options (Modern Segmented Control) -->
+                    <div x-show="formData.transactionType === 'rent'" class="mb-5"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0">
+                        
+                        <div class="bg-gray-100 p-1.5 rounded-xl flex justify-between items-stretch gap-1 shadow-inner">
+                            <template x-for="dur in [
+                                {val: 'Yearly', label: 'Năm'},
+                                {val: 'Six Months', label: '6T'},
+                                {val: 'Quarterly', label: 'Quý'},
+                                {val: 'Monthly', label: 'Tháng'},
+                                {val: 'Daily', label: 'Ngày'}
+                            ]">
+                               <button type="button" @click="formData.rentduration = dur.val"
+                                   :class="formData.rentduration === dur.val 
+                                        ? 'bg-white text-primary shadow-sm ring-1 ring-black/5 font-extrabold scale-[1.02]' 
+                                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50 font-medium'"
+                                   class="flex-1 py-2.5 rounded-lg text-xs sm:text-sm transition-all duration-200 ease-out text-center flex items-center justify-center leading-tight select-none"
+                                   x-text="dur.label">
+                               </button>
+                            </template>
+                        </div>
+                        
+                        <!-- Helper Text -->
+                        <div class="mt-2 text-[10px] text-gray-400 text-right italic" x-show="formData.rentduration">
+                            Đơn vị tính: <span x-text="{
+                                'Yearly': 'Theo Năm',
+                                'Six Months': 'Theo 6 Tháng',
+                                'Quarterly': 'Theo Quý',
+                                'Monthly': 'Theo Tháng',
+                                'Daily': 'Theo Ngày'
+                            }[formData.rentduration]"></span>
+                        </div>
+                    </div>
+
                     <div class="relative">
                         <input type="text" x-model="formattedPrice" @input="handlePriceInput" placeholder="0"
                             class="input-field pr-16 font-bold text-gray-800 text-xl tracking-wide">
@@ -1490,8 +1541,16 @@ build. --}}
                     <div
                         class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
                         <span>Giá:</span>
-                        <span class="font-bold text-success"><span
-                                x-text="formatCurrency(formData.price)"></span></span>
+                        <span class="font-bold text-success">
+                            <span x-text="formatCurrency(formData.price)"></span>
+                            <span x-show="formData.transactionType === 'rent'" x-text="{
+                                'Yearly': '/ Năm',
+                                'Six Months': '/ 6 Tháng',
+                                'Quarterly': '/ Quý',
+                                'Monthly': '/ Tháng',
+                                'Daily': '/ Ngày'
+                            }[formData.rentduration] || ''"></span>
+                        </span>
                     </div>
                 </div>
                 <!-- Diện tích (Căn phải + Màu Primary) -->

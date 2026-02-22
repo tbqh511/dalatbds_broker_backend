@@ -240,7 +240,7 @@ class FrontEndPropertiesController extends Controller
         $wardInput = $request->input('ward');
         $streetInput = $request->input('street');
         $textInput = $request->input('text');
-        $propertyTypeInput = $request->input('propery_type');
+        $propertyTypeInput = $request->input('property_type');
         $priceRangeInput = $request->input('price-range2');
         $legalInput = $request->input('legal');
         $directionInput = $request->input('direction');
@@ -277,10 +277,10 @@ class FrontEndPropertiesController extends Controller
         if (isset($propertyTypeInput)) {
             if ($propertyTypeInput == '1') {
                 // Xử lý khi người dùng chọn "Cho Thuê"
-                $propertiesQuery->where('propery_type', 1);
+                $propertiesQuery->where('property_type', 1);
             } elseif ($propertyTypeInput == '0') {
                 // Xử lý khi người dùng chọn "Bán"
-                $propertiesQuery->where('propery_type', 0);
+                $propertiesQuery->where('property_type', 0);
             } else {
                 // Xử lý khi người dùng chọn "Cho thuê & Bán"
                 // Không cần thêm điều kiện gì vì đã xử lý các trường hợp này trước đó
@@ -399,7 +399,7 @@ class FrontEndPropertiesController extends Controller
             $searchResult .= "Tìm \"" . $textInput . "\", ";
         }
 
-        //$propertyTypeInput = $request->input('propery_type');
+        //$propertyTypeInput = $request->input('property_type');
         if (!empty($propertyTypeInput)) {
             if ($propertyTypeInput == 0)
                 $searchResult .= "Bán, ";

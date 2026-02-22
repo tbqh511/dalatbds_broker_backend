@@ -378,6 +378,7 @@ class TelegramWebAppController extends Controller
             $validator = Validator::make($request->all(), [
                 'type' => 'required',
                 'transactionType' => 'required',
+                'rentduration' => 'nullable|string',
                 'ward' => 'required',
                 'price' => 'required|numeric|min:0',
                 'area' => 'required|numeric|min:0',
@@ -498,7 +499,8 @@ class TelegramWebAppController extends Controller
             $property->description = $request->input('description');
             $property->address = $address;
             $property->client_address = $address;
-            $property->propery_type = $propertyType;
+            $property->property_type = $propertyType;
+            $property->rentduration = ($propertyType == 1) ? $request->input('rentduration') : null;
             $property->price = $request->input('price');
             $property->added_by = $customer->id;
             $property->status = 0; // Pending approval
@@ -690,12 +692,13 @@ class TelegramWebAppController extends Controller
         // Build editProperty data for the frontend
         $editData = [
             'id' => $property->id,
-            'transactionType' => ($property->propery_type == 0) ? 'sale' : 'rent',
+            'transactionType' => ($property->property_type == 0) ? 'sale' : 'rent',
             'type' => $property->category_id,
             'ward' => $property->ward_code,
             'street' => $property->street_code,
             'houseNumber' => $property->street_number ?? '',
             'price' => $property->price,
+            'rentduration' => $property->rentduration ?? 'Monthly',
             'description' => $property->description ?? '',
             'latitude' => $property->latitude,
             'longitude' => $property->longitude,
@@ -865,6 +868,7 @@ class TelegramWebAppController extends Controller
             $validator = Validator::make($request->all(), [
                 'type' => 'required',
                 'transactionType' => 'required',
+                'rentduration' => 'nullable|string',
                 'ward' => 'required',
                 'price' => 'required|numeric|min:0',
                 'area' => 'required|numeric|min:0',
@@ -966,7 +970,8 @@ class TelegramWebAppController extends Controller
             $property->description = $request->input('description');
             $property->address = $address;
             $property->client_address = $address;
-            $property->propery_type = $propertyType;
+            $property->property_type = $propertyType;
+            $property->rentduration = ($propertyType == 1) ? $request->input('rentduration') : null;
             $property->price = $request->input('price');
             $property->host_id = $host->id;
             $property->street_code = $streetId;

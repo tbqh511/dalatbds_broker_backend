@@ -44,10 +44,10 @@
                     <a href="/" class="act-link">Trang chủ <i class="fa"></i></a>
                 </li>
                 <li>
-                    <a href="{{ route('properties.index', ['propery_type' => 0]) }}">Bán <i class="fa "></i></a>
+                    <a href="{{ route('properties.index', ['property_type' => 0]) }}">Bán <i class="fa "></i></a>
                 </li>
                 <li>
-                    <a href="{{ route('properties.index', ['propery_type' => 1]) }}">Cho thuê <i class="fa "></i></a>
+                    <a href="{{ route('properties.index', ['property_type' => 1]) }}">Cho thuê <i class="fa "></i></a>
                 </li>
                 {{-- <li>
                     <a href="#">Listings <i class="fa fa-caret-down"></i></a>
@@ -111,11 +111,11 @@
         <div class="custom-form">
             <form method="GET" name="registerform" action="{{ route('properties.index') }}">
                 <label>Cho thuê & Bán</label>
-                <select name="propery_type" data-placeholder="Tình trạng" class="chosen-select on-radius no-search-select" style="z-index: 1;">
+                <select name="property_type" data-placeholder="Tình trạng" class="chosen-select on-radius no-search-select" style="z-index: 1;">
                     <option value="">Cho thuê & Bán</option>
-                    <option value="0" {{ request()->input('propery_type') == '0' ? 'selected' :
+                    <option value="0" {{ request()->input('property_type') == '0' ? 'selected' :
                         ''}}>Bán</option>
-                    <option value="1" {{ request()->input('propery_type') == '1' ? 'selected' :
+                    <option value="1" {{ request()->input('property_type') == '1' ? 'selected' :
                         ''}}>Cho Thuê</option>
                 </select>
                 <label>Loại BDS</label>

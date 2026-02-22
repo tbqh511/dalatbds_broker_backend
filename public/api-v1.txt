@@ -79,7 +79,7 @@ dd API LIST
     id :
     category_id :
     userid :  //optional
-    propery_type :   ////0 : Buy 1:Rent
+    property_type :   ////0 : Buy 1:Rent
     max_price  :
     min_price  :
     top_rated  : //  0 : No 1: Yes
@@ -237,4 +237,3 @@ $fcmMsg = array(
             'end_date' => '2022-12-28',
 
 23.get_package
-

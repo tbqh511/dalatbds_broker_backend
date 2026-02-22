@@ -421,7 +421,7 @@ function get_property_details($result, $current_user = NULL)
         $tempRow['description'] = $row->description;
         $tempRow['address'] = $row->address;
         $tempRow['client_address'] = $row->client_address;
-        $tempRow['propery_type'] = ($row->propery_type == '0') ? 'Sell' : 'Rent';
+        $tempRow['property_type'] = ($row->property_type == '0') ? 'Sell' : 'Rent';
         $tempRow['title_image'] = $row->title_image;
 
         $tempRow['title_image_hash'] = $row->title_image_hash != '' ? $row->title_image_hash : '';
@@ -671,4 +671,3 @@ if (!function_exists('getAccessToken')) {
         return $accessToken;
     }
 }
-

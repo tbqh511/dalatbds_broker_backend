@@ -85,6 +85,7 @@
                             <option value="Daily">Daily</option>
                             <option value="Monthly">Monthly</option>
                             <option value="Yearly">Yearly</option>
+                            <option value="Six Months">Six Months</option>
                             <option value="Quarterly">Quarterly</option>
                         </select>
                     </div>

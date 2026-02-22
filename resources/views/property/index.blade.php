@@ -96,7 +96,7 @@
 
                                     <th scope="col" data-field="category" data-align="center" data-sortable="true">
                                         {{ __('Category') }}</th>
-                                    <th scope="col" data-field="propery_type" data-align="center" data-sortable="true">
+                                    <th scope="col" data-field="property_type" data-align="center" data-sortable="true">
                                         {{ __('Type') }}</th>
                                     <th scope="col" data-field="status" data-align="center" data-sortable="false">
                                         {{ __('Status') }}</th>

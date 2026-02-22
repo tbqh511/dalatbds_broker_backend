@@ -93,7 +93,7 @@ class PropertController extends Controller
             $Saveproperty->description = $request->description;
             $Saveproperty->address = $request->address;
             $Saveproperty->client_address = $request->client_address;
-            $Saveproperty->propery_type = $request->property_type;
+            $Saveproperty->property_type = $request->property_type;
             $Saveproperty->price = $request->price;
             $Saveproperty->package_id = 0;
             $Saveproperty->city = (isset($request->city)) ? $request->city : '';
@@ -257,9 +257,7 @@ class PropertController extends Controller
             $UpdateProperty->description = $request->description;
             $UpdateProperty->address = $request->address;
             $UpdateProperty->client_address = $request->client_address;
-            $UpdateProperty->propery_type = $request->property_type;
-            $UpdateProperty->price = $request->price;
-            $UpdateProperty->propery_type = $request->property_type;
+            $UpdateProperty->property_type = $request->property_type;
             $UpdateProperty->price = $request->price;
             $UpdateProperty->state = (isset($request->state)) ? $request->state : '';
             $UpdateProperty->country = (isset($request->country)) ? $request->country : '';
@@ -492,7 +490,7 @@ class PropertController extends Controller
         }
         if ($_GET['type'] != '' && isset($_GET['type'])) {
             $type = $_GET['type'];
-            $sql = $sql->where('propery_type', $type);
+            $sql = $sql->where('property_type', $type);
         }
 
         if ($_GET['customer_id'] != '' && isset($_GET['customer_id'])) {
@@ -559,16 +557,16 @@ class PropertController extends Controller
             $tempRow['address'] = $row->address;
             $tempRow['client_address'] = $row->client_address;
             $tempRow['furnished'] = ($row->furnished == '0') ? 'Furnished' : (($row->furnished == '1') ? 'Semi-Furnished' : 'Not-Furnished');
-            if ($row->propery_type == 0) {
+            if ($row->property_type == 0) {
                 $type = "Sell";
-            } elseif ($row->propery_type == 1) {
+            } elseif ($row->property_type == 1) {
                 $type = "Rent";
-            } elseif ($row->propery_type == 2) {
+            } elseif ($row->property_type == 2) {
                 $type = "Sold";
-            } elseif ($row->propery_type == 3) {
+            } elseif ($row->property_type == 3) {
                 $type = "Rented";
             }
-            $tempRow['propery_type'] = $type;
+            $tempRow['property_type'] = $type;
             $tempRow['price'] = $row->price;
             $tempRow['title_image'] = ($row->title_image != '') ? '<a class="image-popup-no-margins" href="' . $row->title_image . '"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . $row->title_image . '" width="55"></a>' : '';
 

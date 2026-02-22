@@ -562,13 +562,13 @@ class ApiController extends Controller
                 $tempRow['property_price'] = $property->price;
 
 
-                if ($property->propery_type == 0) {
+                if ($property->property_type == 0) {
                     $tempRow['property_type'] = "sell";
-                } elseif ($property->propery_type == 1) {
+                } elseif ($property->property_type == 1) {
                     $tempRow['property_type'] = "rent";
-                } elseif ($property->propery_type == 2) {
+                } elseif ($property->property_type == 2) {
                     $tempRow['property_type'] = "sold";
-                } elseif ($property->propery_type == 3) {
+                } elseif ($property->property_type == 3) {
                     $tempRow['property_type'] = "Rented";
                 }
 
@@ -855,10 +855,10 @@ class ApiController extends Controller
         }
         if (isset($property_type)) {
             if ($property_type == 0 || $property_type == 2) {
-                $property = $property->where('propery_type', $property_type);
+                $property = $property->where('property_type', $property_type);
             }
             if ($property_type == 1 || $property_type == 3) {
-                $property = $property->where('propery_type', $property_type);
+                $property = $property->where('property_type', $property_type);
             }
         }
 
@@ -1083,18 +1083,18 @@ class ApiController extends Controller
                     $Saveproperty->client_address = (isset($request->client_address)) ? $request->client_address : '';
 
                     // HuyTBQ: Change backend for update property type
-                    //$Saveproperty->propery_type = (isset($request->property_type)) ? $request->property_type : 0;
+                    //$Saveproperty->property_type = (isset($request->property_type)) ? $request->property_type : 0;
                     if (isset($request->property_type)) {
                         if ($request->property_type == "Sell") {
-                            $Saveproperty->propery_type = 0;
+                            $Saveproperty->property_type = 0;
                         } elseif ($request->property_type == "Rent") {
-                            $Saveproperty->propery_type = 1;
+                            $Saveproperty->property_type = 1;
                         } elseif ($request->property_type == "Sold") {
-                            $Saveproperty->propery_type = 2;
+                            $Saveproperty->property_type = 2;
                         } elseif ($request->property_type == "Rented") {
-                            $Saveproperty->propery_type = 3;
+                            $Saveproperty->property_type = 3;
                         } else {
-                            $Saveproperty->propery_type = $request->property_type;
+                            $Saveproperty->property_type = $request->property_type;
                         }
                     }
                     $Saveproperty->price = (isset($request->price)) ? $request->price : 0;
@@ -1319,8 +1319,8 @@ class ApiController extends Controller
                         $property->client_address = $request->client_address;
                     }
 
-                    if (isset($request->propery_type)) {
-                        $property->propery_type = $request->propery_type;
+                    if (isset($request->propery_type) && !isset($request->property_type)) {
+                        $property->property_type = $request->propery_type;
                     }
                     if (isset($request->commission)) {
                         $property->commission = $request->commission;
@@ -1476,19 +1476,19 @@ class ApiController extends Controller
                     /// START :: HuyTBQ : Update property type
                     if (isset($request->property_type)) {
                         if ($request->property_type == "Sell") {
-                            $property->propery_type = 0;
+                            $property->property_type = 0;
                         } elseif ($request->property_type == "Rent") {
-                            $property->propery_type = 1;
+                            $property->property_type = 1;
                         } elseif ($request->property_type == "Sold") {
-                            $property->propery_type = 2;
+                            $property->property_type = 2;
                         } elseif ($request->property_type == "Rented") {
-                            $property->propery_type = 3;
+                            $property->property_type = 3;
                         } else {
-                            $property->propery_type = $request->property_type;
+                            $property->property_type = $request->property_type;
                         }
                     }
                     //HuyTBQ: test
-                    //$property->propery_type = 1;
+                    //$property->property_type = 1;
                     /// END :: HuyTBQ : Update property type
 
                     /// START :: HuyTBQ: Add host module
@@ -1904,7 +1904,7 @@ class ApiController extends Controller
                 $tempRow['property']['description'] = $row['property']->description;
                 $tempRow['property']['address'] = $row['property']->address;
                 $tempRow['property']['client_address'] = $row['property']->client_address;
-                $tempRow['property']['propery_type'] = ($row['property']->propery_type == '0') ? 'Sell' : 'Rent';
+                $tempRow['property']['property_type'] = ($row['property']->property_type == '0') ? 'Sell' : 'Rent';
                 $tempRow['property']['title_image'] = $row['property']->title_image;
                 $tempRow['property']['threeD_image'] = $row['property']->threeD_image;
                 $tempRow['property']['post_created'] = $row['property']->created_at->diffForHumans();
@@ -2345,14 +2345,14 @@ class ApiController extends Controller
 
         if (!$result->isEmpty()) {
             $result->transform(function ($property) {
-                if ($property->propery_type == 0) {
-                    $property->propery_type = "Sell";
-                } elseif ($property->propery_type == 1) {
-                    $property->propery_type = "Rent";
-                } elseif ($property->propery_type == 2) {
-                    $property->propery_type = "Sold";
-                } elseif ($property->propery_type == 3) {
-                    $property->propery_type = "Rented";
+                if ($property->property_type == 0) {
+                    $property->property_type = "Sell";
+                } elseif ($property->property_type == 1) {
+                    $property->property_type = "Rent";
+                } elseif ($property->property_type == 2) {
+                    $property->property_type = "Sold";
+                } elseif ($property->property_type == 3) {
+                    $property->property_type = "Rented";
                 }
                 return $property;
             });
@@ -2963,7 +2963,7 @@ class ApiController extends Controller
 
         ]);
         if (!$validator->fails()) {
-            $result = Property::select('id', 'price', 'latitude', 'longitude', 'propery_type')->where('city', 'LIKE', "%$request->city%")->where('status', 1)->get();
+            $result = Property::select('id', 'price', 'latitude', 'longitude', 'property_type')->where('city', 'LIKE', "%$request->city%")->where('status', 1)->get();
             $rows = array();
             $tempRow = array();
             $count = 1;
@@ -2975,13 +2975,13 @@ class ApiController extends Controller
                     $tempRow['price'] = $row->price;
                     $tempRow['latitude'] = $row->latitude;
                     $tempRow['longitude'] = $row->longitude;
-                    if ($row->propery_type == 0) {
+                    if ($row->property_type == 0) {
                         $tempRow['property_type'] = "Sell";
-                    } elseif ($row->propery_type == 1) {
+                    } elseif ($row->property_type == 1) {
                         $tempRow['property_type'] = "Rent";
-                    } elseif ($row->propery_type == 2) {
+                    } elseif ($row->property_type == 2) {
                         $tempRow['property_type'] = "Sold";
-                    } elseif ($row->propery_type == 3) {
+                    } elseif ($row->property_type == 3) {
                         $tempRow['property_type'] = "Rented";
                     }
                     $rows[] = $tempRow;

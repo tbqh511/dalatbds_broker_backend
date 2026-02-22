@@ -68,11 +68,11 @@
                             {{ Form::label('', __('Property Type'), ['class' => 'form-label col-12 ']) }}
 
                             <div class="col-md-6">
-                                {{ Form::radio('property_type', 0, null, ['class' => 'form-check-input', 'id' => 'property_type', 'required' => true, isset($list->propery_type) && $list->propery_type == 0 ? 'checked' : '']) }}
+                                {{ Form::radio('property_type', 0, null, ['class' => 'form-check-input', 'id' => 'property_type', 'required' => true, isset($list->property_type) && $list->property_type == 0 ? 'checked' : '']) }}
                                 {{ Form::label('property_type', __('For Sell'), ['class' => 'form-check-label']) }}
                             </div>
                             <div class="col-md-6">
-                                {{ Form::radio('property_type', 1, null, ['class' => 'form-check-input', 'id' => 'property_type', 'required' => true, isset($list->propery_type) && $list->propery_type == 1 ? 'checked' : '']) }}
+                                {{ Form::radio('property_type', 1, null, ['class' => 'form-check-input', 'id' => 'property_type', 'required' => true, isset($list->property_type) && $list->property_type == 1 ? 'checked' : '']) }}
                                 {{ Form::label('property_type', __('For Rent'), ['class' => 'form-check-label']) }}
                             </div>
                         </div>
@@ -87,6 +87,7 @@
                             <option value="Monthly" {{ $list->rentduration == 'Monthly' ? 'selected' : '' }}>Monthly
                             </option>
                             <option value="Yearly" {{ $list->rentduration == 'Yearly' ? 'selected' : '' }}>Yearly</option>
+                            <option value="Six Months" {{ $list->rentduration == 'Six Months' ? 'selected' : '' }}>Six Months</option>
                             <option value="Quarterly" {{ $list->rentduration == 'Quarterly' ? 'selected' : '' }}>Quarterly
                             </option>
                         </select>
