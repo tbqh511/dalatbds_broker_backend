@@ -7572,6 +7572,11 @@ section.single-par2  .scroll-down-wrap{
     z-index: 9999; /* Đảm bảo nút Zalo luôn nổi */
 }
 
+/* Hide in WebApp mode */
+body.webapp-mode .chat-zalo {
+    display: none !important;
+}
+
 .chat-zalo img {
     border-radius: 50%; /* Hình tròn */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Bóng mờ */
@@ -7589,6 +7594,11 @@ section.single-par2  .scroll-down-wrap{
     bottom: 120px; /* Đặt vị trí bên trên nút Zalo */
     left: 20px;
     z-index: 9999; /* Đảm bảo nút luôn nổi trên giao diện */
+}
+
+/* Hide in WebApp mode */
+body.webapp-mode .call-button {
+    display: none !important;
 }
 
 .call-button img {

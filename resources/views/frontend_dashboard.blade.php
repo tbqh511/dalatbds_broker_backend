@@ -23,6 +23,7 @@
     {{-- HuyTBQ: @if(Auth::guard('webapp')->check()) --}}
     @php($webappDevMode = env('WEBAPP_DEV_MODE', false))
     @if($webappDevMode || Auth::guard('webapp')->check())
+        <script>document.body.classList.add('webapp-mode');</script>
         @include('frontends.components.dashboard_home')
     @else
         {{-- User is NOT authenticated, show loader and run JS --}}

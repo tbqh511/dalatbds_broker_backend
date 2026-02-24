@@ -58,20 +58,20 @@
         @include('frontends.secondary_nav')
         @endunless
         <!--secondary-nav end -->
-        @unless(request()->routeIs('webapp.add_listing'))
+        @unless(request()->routeIs('webapp.*') || request()->routeIs('webapp.add_listing'))
         <a class="to-top color-bg"><i class="fas fa-caret-up"></i></a>
         <!--map-modal -->
         @include('frontends.map_model')
         <!--map-modal end -->
         <!-- Floating Chat Zalo -->
-        <div class="chat-zalo">
+        <div class="chat-zalo" style="display: block;">
             <a href="https://zalo.me/0918963878" target="_blank">
                 <img title="Chat Zalo" src="{{ asset('images/zalo-icon.png') }}" alt="zalo-icon" width="40" height="40" />
             </a>
         </div>
         <!-- Floating Chat Zalo End -->
         <!-- Floating Call Button -->
-        <div class="call-button">
+        <div class="call-button" style="display: block;">
             <a href="tel:0918963878" target="_self" title="0918963878">
                 <img title="Gọi ngay" src="{{ asset('images/call-icon.png') }}" alt="call-icon" width="40" height="40" />
             </a>

@@ -19,6 +19,8 @@ use App\Models\CrmHost;
 use App\Models\PropertyImages;
 use App\Models\PropertyLegalImage;
 use App\Models\AssignedOutdoorFacilities;
+use App\Models\CrmCustomer;
+use App\Models\CrmLead;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -1167,5 +1169,135 @@ class TelegramWebAppController extends Controller
             ->get();
 
         return response()->json($hosts);
+    }
+
+    public function addCustomer(Request $request)
+    {
+        // Get customer data for authenticating (optional if required by view)
+        $customer = Auth::guard('webapp')->user();
+
+        // 1. Property Types (Categories)
+        $dbCategories = Category::where('status', '1')->orderBy('order', 'asc')->get();
+        $propertyTypes = $dbCategories->map(function ($cat) {
+            $isHouse = !Str::contains(Str::lower($cat->category), ['đất', 'land']);
+            $parameterIds = [];
+            if ($cat->parameter_types) {
+                $parameterIds = array_map('intval', explode(',', $cat->parameter_types));
+            }
+            $icon = 'fa-house';
+            $lowerName = Str::lower($cat->category);
+            if (Str::contains($lowerName, 'biệt thự'))
+                $icon = 'fa-hotel';
+            elseif (Str::contains($lowerName, 'khách sạn'))
+                $icon = 'fa-bell-concierge';
+            elseif (Str::contains($lowerName, 'chung cư'))
+                $icon = 'fa-building';
+            elseif (Str::contains($lowerName, 'đất'))
+                $icon = 'fa-map-location-dot';
+
+            return [
+            'id' => $cat->id,
+            'name' => $cat->category,
+            'icon' => $icon,
+            'isHouse' => $isHouse,
+            'parameter_ids' => $parameterIds
+            ];
+        });
+
+        // 2. Wards
+        $districtCode = config('location.district_code');
+        $wards = LocationsWard::select('code', 'full_name')
+            ->where('district_code', $districtCode)
+            ->orderByRaw("CASE
+                            WHEN full_name LIKE 'phường%' THEN 1
+                            WHEN full_name LIKE 'Xã%' THEN 2
+                            ELSE 3 END,
+                          CAST(SUBSTRING_INDEX(full_name, ' ', -1) AS UNSIGNED),
+                          full_name")
+            ->get()
+            ->map(function ($w) {
+            return [
+            'id' => $w->code,
+            'name' => $w->full_name,
+            'icon' => 'fa-map-pin'
+            ];
+        });
+
+        return view('frontend_dashboard_add_customer', compact('propertyTypes', 'wards'));
+    }
+
+    public function storeCustomer(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $customer = Auth::guard('webapp')->user();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Vui lòng đăng nhập lại.'], 401);
+            }
+
+            // Validation
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|max:20',
+                'lead_type' => 'required|in:buy,rent',
+                'categories' => 'nullable|array',
+                'wards' => 'nullable|array',
+                'price_min' => 'nullable|numeric|min:0',
+                'price_max' => 'nullable|numeric|min:0',
+                'purpose' => 'nullable|string',
+            ], [
+                'name.required' => 'Vui lòng nhập tên khách hàng.',
+                'phone.required' => 'Vui lòng nhập số điện thoại.',
+                'lead_type.required' => 'Vui lòng chọn nhu cầu (Mua/Thuê).',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
+
+            // 1. Create or Update CrmCustomer
+            // Normalize phone
+            $rawPhone = $request->input('phone');
+            $phone = preg_replace('/[^0-9]/', '', $rawPhone);
+            if (substr($phone, 0, 1) === '0') {
+                $phone = '84' . substr($phone, 1);
+            }
+
+            $crmCustomer = CrmCustomer::firstOrNew(['contact' => $phone]);
+            $crmCustomer->full_name = $request->input('name');
+            $crmCustomer->contact = $phone;
+            $crmCustomer->save();
+
+            // 2. Create CrmLead
+            $lead = new CrmLead();
+            $lead->user_id = $customer->id; // The broker who added this customer
+            $lead->customer_id = $crmCustomer->id;
+            $lead->lead_type = $request->input('lead_type');
+            $lead->categories = $request->input('categories'); // Array casted in model
+            $lead->wards = $request->input('wards'); // Array casted in model
+            $lead->demand_rate_min = $request->input('price_min', 0);
+            $lead->demand_rate_max = $request->input('price_max', 0);
+            $lead->purpose = $request->input('purpose');
+            $lead->status = 'new';
+            $lead->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Thêm khách hàng thành công.',
+                'redirect_url' => route('webapp.leads') // Or back to dashboard
+            ]);
+
+        }
+        catch (\Exception $e) {
+            DB::rollBack();
+            Log::error($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

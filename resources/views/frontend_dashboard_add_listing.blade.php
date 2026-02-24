@@ -504,9 +504,20 @@ build. --}}
             },
 
             goToDashboardHome() { window.location.href = '/webapp'; },
-            getPropertyName() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.name : 'Bất động sản'; },
-            isHouseType() { const type = this.propertyTypes.find(t => t.id === this.formData.type); return type ? type.isHouse : false; },
-            getSelectedType() { return this.propertyTypes.find(t => t.id === this.formData.type) || this.propertyTypes[0]; },
+            getPropertyName() { 
+                const type = this.propertyTypes.find(t => t.id === this.formData.type); 
+                return type ? type.name : 'Bất động sản'; 
+            },
+            isHouseType() { 
+                const type = this.propertyTypes.find(t => t.id === this.formData.type); 
+                return type ? type.isHouse : false; 
+            },
+            getSelectedType() { 
+                if (!this.propertyTypes || this.propertyTypes.length === 0) {
+                    return { id: '', name: 'Bất động sản', icon: 'fa-house', isHouse: false };
+                }
+                return this.propertyTypes.find(t => t.id === this.formData.type) || this.propertyTypes[0]; 
+            },
             selectPropertyType(id) { this.formData.type = id; this.isTypeExpanded = false; },
             getFilteredParameters() {
                 if (!this.formData.type) return [];

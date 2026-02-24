@@ -89,6 +89,10 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/leads/{id}/edit', [CrmLeadController::class, 'edit'])->name('webapp.leads.edit');
     Route::put('/webapp/leads/{id}', [CrmLeadController::class, 'update'])->name('webapp.leads.update');
     Route::delete('/webapp/leads/{id}', [CrmLeadController::class, 'destroy'])->name('webapp.leads.destroy');
+    
+    // Add Customer (Custom UI)
+    Route::get('/webapp/add-customer', [TelegramWebAppController::class, 'addCustomer'])->name('webapp.add_customer');
+    Route::post('/webapp/add-customer', [TelegramWebAppController::class, 'storeCustomer'])->name('webapp.store_customer');
 });
 
 //property controller

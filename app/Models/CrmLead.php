@@ -17,6 +17,7 @@ class CrmLead extends Model
         'source_note',
         'lead_type',
         'categories',
+        'purpose',
         'wards',
         'demand_rate_min',
         'demand_rate_max',
