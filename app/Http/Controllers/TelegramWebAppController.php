@@ -72,7 +72,11 @@ class TelegramWebAppController extends Controller
             })->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count();
         }
 
-        return view('frontend_dashboard', compact('customer', 'stats'));
+        // Get the first page of the feed to display on the dashboard main page
+        $perPage = 10;
+        $properties = Property::with(['category', 'host'])->where('status', 1)->orderBy('created_at', 'desc')->paginate($perPage);
+
+        return view('frontend_dashboard', compact('customer', 'stats', 'properties'));
     //return view('frontend_dashboard_temp', compact('customer', 'stats'));
     }
 
@@ -176,6 +180,32 @@ class TelegramWebAppController extends Controller
                 return response()->json(['error' => 'Server Error'], 500);
             }
             return redirect()->back()->with('error', 'Không thể tải danh sách tin đăng, vui lòng thử lại sau.');
+        }
+    }
+
+    public function feed(Request $request)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+
+            $perPage = 10;
+            // Get properties with status = 1 (Active) and sort by newest
+            $query = Property::with(['category', 'host'])->where('status', 1)->orderBy('created_at', 'desc');
+
+            $properties = $query->paginate($perPage);
+
+            if ($request->ajax()) {
+                return view('frontends.components.dashboard_feed_items', compact('properties', 'customer'))->render();
+            }
+
+            return view('frontend_dashboard_feed', compact('customer', 'properties'));
+        }
+        catch (\Exception $e) {
+            Log::error($e);
+            if ($request->ajax()) {
+                return response()->json(['error' => 'Server Error'], 500);
+            }
+            return redirect()->route('webapp')->with('error', 'Không thể tải luồng tin.');
         }
     }
 
