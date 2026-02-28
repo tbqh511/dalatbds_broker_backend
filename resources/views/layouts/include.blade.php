@@ -4,6 +4,7 @@
     
 @endphp
 
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 @if ($lang)
     @if ($lang->rtl)
         <link rel="stylesheet" href="{{ url('assets/css/main/rtl.css') }}">

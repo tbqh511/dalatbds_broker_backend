@@ -450,6 +450,11 @@ class Property extends Model
         return $threeDimage != '' ? url('') . config('global.IMG_PATH') . config('global.3D_IMG_PATH') . $threeDimage : '';
     }
 
+    public function propery_image()
+    {
+        return $this->hasMany(PropertyImages::class, 'propertys_id');
+    }
+
     protected $casts = [
         'category_id' => 'integer',
     ];

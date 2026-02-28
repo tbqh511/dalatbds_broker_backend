@@ -18,6 +18,8 @@ use App\Models\Setting;
 use App\Models\Slider;
 use App\Models\Type;
 use App\Models\Usertokens;
+use App\Http\Requests\StorePropertyRequest;
+use App\Http\Requests\UpdatePropertyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -67,17 +69,14 @@ class PropertController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StorePropertyRequest $request)
     {
         // dd($request->toArray());
         $arr = [];
         if (!has_permissions('read', 'property')) {
             return redirect()->back()->with('error', PERMISSION_ERROR_MSG);
         } else {
-            $request->validate([
-                'gallery_images.*' => 'required|image|mimes:jpg,png,jpeg|max:2048',
-                'title_image.*' => 'required|image|mimes:jpg,png,jpeg|max:2048',
-            ]);
+            // Validation handled by StorePropertyRequest
 
             $destinationPath = public_path('images') . config('global.PROPERTY_TITLE_IMG_PATH');
             if (!is_dir($destinationPath)) {
@@ -239,7 +238,7 @@ class PropertController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdatePropertyRequest $request, $id)
     {
         // dd($request->toArray());
         if (!has_permissions('update', 'property')) {
@@ -474,7 +473,7 @@ class PropertController extends Controller
             $order = $_GET['order'];
         }
 
-        $sql = Property::with('category')->with('customer')->with('assignParameter.parameter')->with('interested_users')->orderBy($sort, $order);
+        $sql = Property::with('category', 'customer', 'assignParameter.parameter', 'interested_users.customer')->orderBy($sort, $order);
         // dd($sql->get()->toarray());
 
         if (isset($_GET['search']) && !empty($_GET['search'])) {
@@ -587,15 +586,13 @@ class PropertController extends Controller
                 $tempRow['mobile'] = '*********';
             }
 
+            $interested_users_details = [];
             foreach ($row->interested_users as $interested_user) {
-
-                if ($interested_user->property_id == $row->id) {
-
-                    $tempRow['interested_users_details'] = Customer::Where('id', $interested_user->customer_id);
-                    // array_push($interested_users, $interested_user->customer_id);
-                    // $s .= $interested_user->user_id . ',';
+                if ($interested_user->customer) {
+                    $interested_users_details[] = $interested_user->customer;
                 }
             }
+            $tempRow['interested_users_details'] = $interested_users_details;
             $tempRow['operate'] = $operate;
             $rows[] = $tempRow;
             $count++;

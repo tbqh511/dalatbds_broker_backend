@@ -70,10 +70,15 @@ use Tymon\JWTAuth\Claims\Issuer;
 //use Google\Client;
 use Google\Service\PlayIntegrity;
 use App\Http\Requests\VerifyIntegrityRequest;
-
+use App\Http\Resources\UserResource;
+use App\Services\UserService;
+use App\Services\PropertyService;
+use App\Http\Resources\PropertyResource;
 
 class ApiController extends Controller
 {
+    public function __construct(protected UserService $userService, protected PropertyService $propertyService) {}
+
     function update_subscription()
     {
         $data = UserPurchasedPackage::where('user_id', Auth::id())->where('end_date', Carbon::now());
@@ -147,131 +152,21 @@ class ApiController extends Controller
         ]);
 
         if (!$validator->fails()) {
-            $type = $request->input('type');
-            $firebase_id = $request->input('firebase_id');
-            $mobile = $request->filled('mobile') ? $request->input('mobile') : null;
+            $data = $request->all();
+            if ($request->hasFile('profile')) {
+                $data['profile_file'] = $request->file('profile');
+            }
 
-            $user = Customer::where(function ($query) use ($firebase_id, $mobile) {
-                $query->where('firebase_id', $firebase_id);
-
-                // Chỉ thêm điều kiện mobile nếu giá trị này không null
-                if (!is_null($mobile)) {
-                    $query->orWhere('mobile', $mobile);
-                }
-            })
-                ->where('logintype', $type)
-                ->first();
-
-            // $user = Customer::where('firebase_id', $firebase_id)->where('logintype', $type)->first();
-
-            //dd($user);
-            if (!$user) {
-                $saveCustomer = new Customer();
-                $saveCustomer->name = isset($request->name) ? $request->name : '';
-                $saveCustomer->email = isset($request->email) ? $request->email : '';
-                $saveCustomer->mobile = isset($request->mobile) ? $request->mobile : '';
-                // $saveCustomer->profile = isset($request->profile) ? $request->profile : '';
-                $saveCustomer->fcm_id = isset($request->fcm_id) ? $request->fcm_id : '';
-                $saveCustomer->logintype = isset($request->type) ? $request->type : '';
-                $saveCustomer->address = isset($request->address) ? $request->address : '';
-                $saveCustomer->firebase_id = isset($request->firebase_id) ? $request->firebase_id : '';
-                $saveCustomer->isActive = '1';
-
-
-                $destinationPath = public_path('images') . config('global.USER_IMG_PATH');
-                if (!is_dir($destinationPath)) {
-                    mkdir($destinationPath, 0777, true);
-                }
-                // image upload
-
-                if ($request->hasFile('profile')) {
-                    // dd('in');
-                    $profile = $request->file('profile');
-                    $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                    $profile->move($destinationPath, $imageName);
-                    $saveCustomer->profile = $imageName;
-                } else {
-                    $saveCustomer->profile = '';
-                }
-
-                $saveCustomer->save();
-
-                $start_date = Carbon::now();
-                $package = Package::find(1);
-                // dd($package->id);
-                if ($package && $package->status == 1) {
-                    $user_package = new UserPurchasedPackage();
-                    $user_package->modal()->associate($saveCustomer);
-                    $user_package->package_id = 1;
-                    $user_package->start_date = $start_date;
-                    $user_package->end_date = Carbon::now()->addDays($package->duration);
-                    $user_package->save();
-
-                    $saveCustomer->subscription = 1;
-                    $saveCustomer->update();
-                }
-                // $user_package = new UserPurchasedPackage();
-                // $user_package->modal()->associate($saveCustomer);
-                // $user_package->package_id = 1;
-                // $user_package->start_date = $start_date;
-                // $user_package->end_date =  Carbon::now()->addDays(30);
-                // $user_package->save();
-
-                // $saveCustomer->subscription = 1;
-                // $saveCustomer->update();
-
+            try {
+                $result = $this->userService->signup($data);
+                
                 $response['error'] = false;
-                $response['message'] = 'User Register Successfully';
-
-                $credentials = Customer::find($saveCustomer->id);
-                $token = JWTAuth::fromUser($credentials);
-                try {
-                    if (!$token) {
-                        $response['error'] = true;
-                        $response['message'] = 'Login credentials are invalid.';
-                    } else {
-                        $credentials->api_token = $token;
-
-                        $credentials->update();
-                    }
-                } catch (JWTException $e) {
-                    $response['error'] = true;
-                    $response['message'] = 'Could not create token.';
-                }
-                $response['token'] = $token;
-                $response['data'] = $credentials;
-            } else {
-                //$credentials = Customer::where('firebase_id', $firebase_id)->where('logintype', $type)->first();
-                $credentials = $user;
-                try {
-                    $token = JWTAuth::fromUser($credentials);
-                    if (!$token) {
-                        $response['error'] = true;
-                        $response['message'] = 'Login credentials are invalid.';
-                    } else {
-                        $credentials->api_token = $token;
-                        $credentials->update();
-                        //     $token_exist=Usertokens::where('fcm_id',$request->fcm_id)->count();
-
-                        // if(!$token_exist){
-                        // $user_token = new Usertokens();
-                        // $user_token->customer_id = $credentials->id;
-                        // $user_token->fcm_id = isset($request->fcm_id) ? $request->fcm_id : '';
-                        // $user_token->api_token = '';
-                        // $user_token->save();
-                        // }
-
-                    }
-                } catch (JWTException $e) {
-                    $response['error'] = true;
-                    $response['message'] = 'Could not create token.';
-                }
-
-
-                $response['error'] = false;
-                $response['message'] = 'Login Successfully';
-                $response['token'] = $token;
-                $response['data'] = $credentials;
+                $response['message'] = $result['message'];
+                $response['token'] = $result['token'];
+                $response['data'] = new UserResource($result['user']);
+            } catch (Exception $e) {
+                $response['error'] = true;
+                $response['message'] = $e->getMessage();
             }
         } else {
             $response['error'] = true;
@@ -312,116 +207,19 @@ class ApiController extends Controller
             ], 401);
         }
 
-        // 3. Chuẩn hóa số điện thoại
-        $rawPhone = $request->input('phone');
-        $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
-
-        $phoneVariants = [];
-        if (substr($cleanPhone, 0, 1) === '0') {
-            $phone84 = '84' . substr($cleanPhone, 1);
-            $phoneVariants[] = $phone84;
-            $phoneVariants[] = $cleanPhone; // 0xxx
-        } elseif (substr($cleanPhone, 0, 2) === '84') {
-            $phone0 = '0' . substr($cleanPhone, 2);
-            $phoneVariants[] = $cleanPhone; // 84...
-            $phoneVariants[] = $phone0; // 0...
-        } else {
-            $phoneVariants[] = $cleanPhone;
-            $phoneVariants[] = '0' . $cleanPhone;
-            $phoneVariants[] = '84' . $cleanPhone;
-        }
-
-        // remove duplicates
-        $phoneVariants = array_values(array_unique($phoneVariants));
-
-        // 4. Tìm user: ưu tiên cột 'mobile' (hiện có trong DB). Nếu bảng có cột 'phone', tìm cả hai.
-        $query = Customer::query();
-        $query->where(function ($q) use ($phoneVariants) {
-            $q->whereIn('mobile', $phoneVariants);
-            if (Schema::hasColumn('customers', 'phone')) {
-                $q->orWhereIn('phone', $phoneVariants);
-            }
-        });
-
-        $customer = $query->first();
-
-        if (!$customer) {
-            // Tự động đăng ký khách hàng mới
-            try {
-                $customer = new Customer();
-                // Sử dụng số điện thoại đã chuẩn hóa
-                $customer->mobile = $cleanPhone;
-                // Nếu bảng có cột phone thì cũng lưu vào để đồng bộ
-                if (Schema::hasColumn('customers', 'phone')) {
-                    $customer->phone = $cleanPhone;
-                }
-                
-                // Các thông tin cơ bản
-                $customer->name = $request->input('first_name', 'Khách hàng Mới');
-                $customer->telegram_id = $request->input('telegram_id');
-                
-                // Giá trị mặc định
-                $customer->isActive = 1;
-                $customer->logintype = 1; // Mobile login
-                $customer->notification = 1;
-                
-                // Các trường optional khác (để tránh lỗi null nếu DB yêu cầu)
-                $customer->email = $request->input('email', '');
-                $customer->firebase_id = $request->input('firebase_id', '');
-                $customer->address = '';
-                $customer->fcm_id = '';
-                
-                $customer->save();
-                
-                Log::info("Auto-registered new customer via API Login: ID {$customer->id}, Phone: {$customer->mobile}");
-                
-            } catch (\Exception $e) {
-                Log::error("Auto-registration failed: " . $e->getMessage());
-                return response()->json([
-                    'error' => true,
-                    'message' => 'Tự động đăng ký thất bại. Vui lòng thử lại sau.'
-                ], 500);
-            }
-        } else {
-             Log::info("Customer login: ID {$customer->id}, Phone: {$customer->mobile}");
-        }
-
-        // 5. Kiểm tra trạng thái tài khoản
-        if (isset($customer->isActive) && $customer->isActive == 0) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Tài khoản đã bị khóa.'
-            ], 401);
-        }
-
-        // 6. Cập nhật telegram_id / first_name nếu có
-        if ($request->has('telegram_id')) {
-            $customer->telegram_id = $request->input('telegram_id');
-            if ($request->has('first_name') && empty($customer->name)) {
-                $customer->name = $request->input('first_name');
-            }
-            $customer->save();
-        }
-
-        // 7. Cấp JWT
         try {
-            $token = JWTAuth::fromUser($customer);
-            if (!$token) {
-                return response()->json(['error' => true, 'message' => 'Tạo token thất bại'], 500);
-            }
-            $customer->api_token = $token;
-            $customer->save();
-        } catch (JWTException $e) {
-            return response()->json(['error' => true, 'message' => 'Tạo token thất bại'], 500);
-        }
+            $result = $this->userService->login($request->all());
 
-        return response()->json([
-            'error' => false,
-            'message' => 'Đăng nhập thành công',
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'data' => $customer
-        ]);
+            return response()->json([
+                'error' => false,
+                'message' => $result['message'],
+                'access_token' => $result['token'],
+                'token_type' => 'bearer',
+                'data' => new UserResource($result['user'])
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => true, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function check_telegram_user(Request $request)
@@ -522,74 +320,11 @@ class ApiController extends Controller
 
     public function get_slider(Request $request)
     {
-        $tempRow = array();
-        $slider = Slider::select('id', 'image', 'sequence', 'category_id', 'propertys_id')->orderBy('sequence', 'ASC')->get();
-        if (!$slider->isEmpty()) {
-
-            foreach ($slider as $row) {
-
-                $property = Property::with('parameters')->find($row->propertys_id);
-
-
-
-                $tempRow['id'] = $row->id;
-                // $tempRow['image'] = $row->image;
-                $tempRow['sequence'] = $row->sequence;
-                $tempRow['category_id'] = $row->category_id;
-                $tempRow['propertys_id'] = $row->propertys_id;
-
-                if (filter_var($row->image, FILTER_VALIDATE_URL) === false) {
-                    $property_img = Property::select('title_image')->find($row->propertys_id);
-                    // dd($property_img);
-                    $tempRow['image'] = ($row->image != '') ? url('') . config('global.IMG_PATH') . config('global.SLIDER_IMG_PATH') . $row->image : $property_img->title_image;
-                } else {
-
-
-
-                    $tempRow['image'] = $property->title_image;
-                }
-
-
-                $promoted = Slider::where('propertys_id', $row->propertys_id)->first();
-                // print_r($promoted);
-
-                if ($promoted) {
-                    $tempRow['promoted'] = true;
-                } else {
-                    $tempRow['promoted'] = false;
-                }
-                $tempRow['property_title'] = $property->title;
-                $tempRow['property_price'] = $property->price;
-
-
-                if ($property->property_type == 0) {
-                    $tempRow['property_type'] = "sell";
-                } elseif ($property->property_type == 1) {
-                    $tempRow['property_type'] = "rent";
-                } elseif ($property->property_type == 2) {
-                    $tempRow['property_type'] = "sold";
-                } elseif ($property->property_type == 3) {
-                    $tempRow['property_type'] = "Rented";
-                }
-
-                $tempRow['parameters'] = [];
-
-                foreach ($property->parameters as $res) {
-                    $parameter = [
-                        'id' => $res->id,
-                        'name' => $res->name,
-
-                        'value' => $res->pivot->value,
-                    ];
-                    array_push($tempRow['parameters'], $parameter);
-                }
-                $rows[] = $tempRow;
-            }
-
-
+        $data = $this->propertyService->getSlider();
+        if (count($data) > 0) {
             $response['error'] = false;
             $response['message'] = "Data Fetch Successfully";
-            $response['data'] = $rows;
+            $response['data'] = $data;
         } else {
             $response['error'] = false;
             $response['message'] = "No data found!";
@@ -643,75 +378,20 @@ class ApiController extends Controller
             'userid' => 'required',
         ]);
 
-
         if (!$validator->fails()) {
             $id = $request->userid;
-
             $customer = Customer::find($id);
 
             if (!empty($customer)) {
-                if (isset($request->name)) {
-                    $customer->name = ($request->name) ? $request->name : '';
-                }
-                if (isset($request->email)) {
-                    $customer->email = ($request->email) ? $request->email : '';
-                }
-                if (isset($request->mobile)) {
-                    $customer->mobile = ($request->mobile) ? $request->mobile : '';
-                }
-
-                if (isset($request->fcm_id)) {
-                    $token_exist = Usertokens::where('fcm_id', $request->fcm_id)->get();
-                    if (!count($token_exist)) {
-                        $user_token = new Usertokens();
-                        $user_token->customer_id = $customer->id;
-                        $user_token->fcm_id = isset($request->fcm_id) ? $request->fcm_id : '';
-                        $user_token->api_token = '';
-                        $user_token->save();
-                    }
-                    $customer->fcm_id = ($request->fcm_id) ? $request->fcm_id : '';
-                }
-                if (isset($request->address)) {
-                    $customer->address = ($request->address) ? $request->address : '';
-                }
-                if (isset($request->address)) {
-                    $customer->address = ($request->address) ? $request->address : '';
-                }
-
-                if (isset($request->firebase_id)) {
-                    $customer->firebase_id = ($request->firebase_id) ? $request->firebase_id : '';
-                }
-                if (isset($request->notification)) {
-                    $customer->notification = $request->notification;
-                }
-
-                $destinationPath = public_path('images') . config('global.USER_IMG_PATH');
-                if (!is_dir($destinationPath)) {
-                    mkdir($destinationPath, 0777, true);
-                }
-                // image upload
-
-
+                $data = $request->all();
                 if ($request->hasFile('profile')) {
-                    // dd('in');
-                    $old_image = $customer->profile;
-
-                    $profile = $request->file('profile');
-                    $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                    if ($profile->move($destinationPath, $imageName)) {
-                        $customer->profile = $imageName;
-                        if ($old_image != '') {
-                            if (file_exists(public_path('images') . config('global.USER_IMG_PATH') . $old_image)) {
-                                unlink(public_path('images') . config('global.USER_IMG_PATH') . $old_image);
-                            }
-                        }
-                    }
+                    $data['profile_file'] = $request->file('profile');
                 }
-                $customer->update();
-
-
+                
+                $customer = $this->userService->updateProfile($customer, $data);
+                
                 $response['error'] = false;
-                $response['data'] = $customer;
+                $response['data'] = new UserResource($customer);
             } else {
                 $response['error'] = false;
                 $response['message'] = "No data found!";
@@ -728,18 +408,21 @@ class ApiController extends Controller
     //* START :: get_user_by_id   *//
     public function get_user_by_id(Request $request)
     {
+        return $this->get_profile($request);
+    }
+
+    public function get_profile(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'userid' => 'required',
         ]);
 
         if (!$validator->fails()) {
             $id = $request->userid;
-
             $customer = Customer::find($id);
             if (!empty($customer)) {
-
                 $response['error'] = false;
-                $response['data'] = $customer;
+                $response['data'] = new UserResource($customer);
             } else {
                 $response['error'] = false;
                 $response['message'] = "No data found!";
@@ -763,234 +446,48 @@ class ApiController extends Controller
         } else {
             $current_user = null;
         }
-        return $this->getProperties($request, $current_user);
+        
+        $properties = $this->propertyService->getPropertyList($request, $current_user);
+        $data = PropertyResource::collection($properties);
+        
+        if ($data->count() > 0) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['total'] = $properties->count();
+            $response['data'] = $data;
+        } else {
+             $response['error'] = false;
+             $response['message'] = "No data found!";
+             $response['data'] = [];
+        }
+        return response()->json($response);
     }
 
     //* START :: get_property_public   *//
     public function get_property_public(Request $request)
     {
-        return $this->getProperties($request, null);
+        $properties = $this->propertyService->getPropertyList($request, null);
+        $data = PropertyResource::collection($properties);
+        
+        if ($data->count() > 0) {
+            $response['error'] = false;
+            $response['message'] = "Data Fetch Successfully";
+            $response['total'] = $properties->count();
+            $response['data'] = $data;
+        } else {
+             $response['error'] = false;
+             $response['message'] = "No data found!";
+             $response['data'] = [];
+        }
+        return response()->json($response);
     }
     //* END :: get_property_public   *//
 
+
     //* START :: getProperties (private method for shared logic)   *//
-    private function getProperties(Request $request, $current_user = null)
-    {
-        $offset = isset($request->offset) ? $request->offset : 0;
-        $limit = isset($request->limit) ? $request->limit : 10;
+    // Removed as part of refactoring to use PropertyService
+    //* END :: getProperties (private method for shared logic)   *//
 
-        DB::enableQueryLog();
-        $property = Property::with('customer')->with('user')->with('category:id,category,image')->with('assignfacilities.outdoorfacilities')->with('favourite')->with('parameters')->with('interested_users')->with('ward')->with('street')->with('host');
-
-        $property_type = $request->property_type; //0 : Buy 1:Rent
-        $max_price = $request->max_price;
-        $min_price = $request->min_price;
-        $top_rated = $request->top_rated;
-
-        $userid = $request->userid;
-        $posted_since = $request->posted_since;
-        $category_id = $request->category_id;
-        $id = $request->id;
-        $country = $request->country;
-        $state = $request->state;
-        $city = $request->city;
-
-        $furnished = $request->furnished;
-        $parameter_id = $request->parameter_id;
-
-        //HuyTBQ: Add address columns for propertys table
-        $street_number = $request->street_number;
-        $street_code = $request->street_code;
-        $ward_code = $request->ward_code;
-        $host_id = $request->host_id;
-        $price_sort = $request->price_sort;
-
-        // HuyTBQ: Add sorting logic for price
-        if (isset($price_sort)) {
-            if ($price_sort == 0) {
-                // Sắp xếp giá từ cao xuống thấp
-                $property = $property->orderBy('price', 'DESC');
-            } elseif ($price_sort == 1) {
-                // Sắp xếp giá từ thấp lên cao
-                $property = $property->orderBy('price', 'ASC');
-            }
-        }
-        //HuyTBQ: Add slug query
-        // Filter by slug
-        $slug = $request->slug;
-        if (isset($slug)) {
-            $property = $property->where('slug', $slug);
-        }
-
-        if (isset($street_number)) {
-            $property = $property->where('street_number', $street_number);
-        }
-        if (isset($street_code)) {
-            $property = $property->where('street_code', $street_code);
-        }
-        if (isset($ward_code)) {
-            $property = $property->where('ward_code', $ward_code);
-        }
-        if (isset($host_id)) {
-            $property = $property->where('host_id', $host_id);
-        }
-
-        if (isset($parameter_id)) {
-
-            $property = $property->whereHas('parameters', function ($q) use ($parameter_id) {
-                $q->where('parameter_id', $parameter_id);
-            });
-        }
-        if (isset($userid)) {
-            $property = $property
-                ->where('post_type', 1)
-                ->where('added_by', $userid);
-        } else {
-            $property = $property->where('status', 1);
-        }
-
-
-        if (isset($max_price) && isset($min_price)) {
-            $property = $property->whereBetween('price', [$min_price, $max_price]);
-        }
-        if (isset($property_type)) {
-            if ($property_type == 0 || $property_type == 2) {
-                $property = $property->where('property_type', $property_type);
-            }
-            if ($property_type == 1 || $property_type == 3) {
-                $property = $property->where('property_type', $property_type);
-            }
-        }
-
-        if (isset($posted_since)) {
-            // 0: last_week   1: yesterday
-            if ($posted_since == 0) {
-                $property = $property->whereBetween(
-                    'created_at',
-                    [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]
-                );
-            }
-            if ($posted_since == 1) {
-                $property = $property->whereDate('created_at', Carbon::yesterday());
-            }
-        }
-
-        if (isset($category_id)) {
-            $property = $property->where('category_id', $category_id);
-        }
-        if (isset($id)) {
-            $property = $property->where('id', $id);
-        }
-        if (isset($country)) {
-            $property = $property->where('country', $country);
-        }
-        if (isset($state)) {
-            $property = $property->where('state', $state);
-        }
-        if (isset($city) && $city != '') {
-            $property = $property->where('city', $city);
-        }
-
-        if (isset($furnished)) {
-            $property = $property->where('furnished', $furnished);
-        }
-        if (isset($request->promoted)) {
-            $adv = Advertisement::select('property_id')->where('is_enable', 1)->get();
-
-            $ad_arr = [];
-            foreach ($adv as $ad) {
-
-                array_push($ad_arr, $ad->property_id);
-            }
-
-            $property = $property->whereIn('id', $ad_arr);
-        } else {
-
-            $response['error'] = false;
-            $response['message'] = "No data found!";
-            $response['data'] = [];
-        }
-        if (isset($request->users_promoted)) {
-            $adv = Advertisement::select('property_id')->where('customer_id', $current_user)->where('is_enable', 1)->get();
-
-            $ad_arr = [];
-            foreach ($adv as $ad) {
-
-                array_push($ad_arr, $ad->property_id);
-            }
-            $property = $property->whereIn('id', $ad_arr);
-        } else {
-
-            $response['error'] = false;
-            $response['message'] = "No data found!";
-            $response['data'] = [];
-        }
-        if (isset($request->promoted)) {
-
-
-
-            if (!($property->Has('advertisement'))) {
-                $response['error'] = false;
-                $response['message'] = "No data found!";
-                $response['data'] = [];
-                return ($response);
-            }
-
-            $property = $property->with('advertisement');
-        }
-
-        if (isset($request->search) && !empty($request->search)) {
-            $search = $request->search;
-
-            $property = $property->where(function ($query) use ($search) {
-                $query->where('title', 'LIKE', "%$search%")->orwhere('address', 'LIKE', "%$search%")->orwhereHas('category', function ($query1) use ($search) {
-                    $query1->where('category', 'LIKE', "%$search%");
-                });
-            });
-        }
-        if (empty($request->search)) {
-            $property = $property;
-        }
-
-
-
-        if (isset($top_rated) && $top_rated == 1) {
-
-            $property = $property->orderBy('total_click', 'DESC');
-        }
-
-        if (!$request->most_liked && !$request->top_rated) {
-            $property = $property->orderBy('id', 'DESC');
-        }
-        if ($request->most_liked) {
-
-            $property = $property->withCount('favourite')
-                ->orderBy('favourite_count', 'DESC');
-        }
-        $total = $property->get()->count();
-
-        $result = $property->skip($offset)->take($limit)->get();
-
-        //dd(DB::getQueryLog());
-
-
-        if (!$result->isEmpty()) {
-            $property_details
-                = get_property_details($result, $current_user);
-
-
-            $response['error'] = false;
-            $response['message'] = "Data Fetch Successfully";
-            $response['total'] = $total;
-            $response['data'] = $property_details;
-        } else {
-
-            $response['error'] = false;
-            $response['message'] = "No data found!";
-            $response['data'] = [];
-        }
-        return ($response);
-    }
 
     //* START :: post_property   *//
     public function post_property(Request $request)
@@ -1010,259 +507,20 @@ class ApiController extends Controller
                 $current_user = null;
             }
 
+            try {
+                $Saveproperty = $this->propertyService->storeProperty($request, $current_user);
+                
+                $result = Property::with('customer')->with('category:id,category,image')->with('assignfacilities.outdoorfacilities')->with('favourite')->with('parameters')->with('interested_users')->where('id', $Saveproperty->id)->get();
+                $property_details = get_property_details($result);
 
-            $package = UserPurchasedPackage::where('modal_id', $current_user)->with([
-                'package' => function ($q) {
-                    $q->select('id', 'property_limit', 'advertisement_limit')->where('property_limit', '!=', NULL);
-                }
-            ])->first();
-
-
-            $arr = 0;
-
-            $prop_count = 0;
-            if (!($package)) {
                 $response['error'] = false;
-                $response['message'] = 'Package not found';
-                return response()->json($response);
-            } else {
-
-                if (!$package->package) {
-
-                    $response['error'] = false;
-                    $response['message'] = 'Package not found for add property';
-                    return response()->json($response);
-                }
-                $prop_count = $package->package->property_limit;
-
-                $arr = $package->id;
-
-
-
-                $propeerty_limit = Property::where('added_by', $current_user)->where('package_id', $request->package_id)->get();
-
-
-                if (($package->used_limit_for_property) < ($prop_count) || $prop_count == 0) {
-
-                    $validator = Validator::make($request->all(), [
-                        'userid' => 'required',
-                        'category_id' => 'required',
-
-                    ]);
-
-
-
-                    $destinationPath = public_path('images') . config('global.PROPERTY_TITLE_IMG_PATH');
-                    if (!is_dir($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
-                    }
-                    /// START :: HuyTBQ: Add host module
-                    // Extract host information from request
-                    $hostName = $request->host_name;
-                    $hostGender = $request->host_gender;
-                    $hostContact = $request->host_contact;
-                    $hostAbout = $request->host_about;
-
-                    // Check if a CRM Host with the provided contact exists
-                    $crmHost = CrmHost::create([
-                        'name' => $hostName,
-                        'gender' => $hostGender,
-                        'contact' => $hostContact,
-                        'about' => $hostAbout,
-                        // Thêm các trường khác nếu cần
-                    ]);
-                    $crmHost->save();
-                    /// END :: HuyTBQ: Add host module
-
-                    $Saveproperty = new Property();
-                    $Saveproperty->category_id = $request->category_id;
-
-                    $Saveproperty->title = $request->title;
-                    $Saveproperty->description = $request->description;
-                    $Saveproperty->address = $request->address;
-                    $Saveproperty->client_address = (isset($request->client_address)) ? $request->client_address : '';
-
-                    // HuyTBQ: Change backend for update property type
-                    //$Saveproperty->property_type = (isset($request->property_type)) ? $request->property_type : 0;
-                    if (isset($request->property_type)) {
-                        if ($request->property_type == "Sell") {
-                            $Saveproperty->property_type = 0;
-                        } elseif ($request->property_type == "Rent") {
-                            $Saveproperty->property_type = 1;
-                        } elseif ($request->property_type == "Sold") {
-                            $Saveproperty->property_type = 2;
-                        } elseif ($request->property_type == "Rented") {
-                            $Saveproperty->property_type = 3;
-                        } else {
-                            $Saveproperty->property_type = $request->property_type;
-                        }
-                    }
-                    $Saveproperty->price = (isset($request->price)) ? $request->price : 0;
-
-                    $Saveproperty->country = (isset($request->country)) ? $request->country : '';
-                    $Saveproperty->state = (isset($request->state)) ? $request->state : '';
-                    $Saveproperty->city = (isset($request->city)) ? $request->city : '';
-                    $Saveproperty->latitude = (isset($request->latitude)) ? $request->latitude : '';
-                    $Saveproperty->longitude = (isset($request->longitude)) ? $request->longitude : '';
-                    $Saveproperty->rentduration = (isset($request->rentduration)) ? $request->rentduration : '';
-
-
-                    //HuyTBQ: add address columns for properites table
-                    $Saveproperty->street_code = (isset($request->street_code)) ? $request->street_code : '';
-                    $Saveproperty->ward_code = (isset($request->ward_code)) ? $request->ward_code : '';
-                    $Saveproperty->street_number =  (isset($request->street_number)) ? $request->street_number : '';
-                    //HuyTBQ: add commission columns for properites table
-                    $Saveproperty->commission = (isset($request->commission)) ? $request->commission : 0;
-                    //HuyTBQ: add slug for create
-                    $Saveproperty->slug = (isset($request->slug)) ? $request->slug : '';
-
-                    $Saveproperty->added_by = $current_user;
-                    $Saveproperty->status = (isset($request->status)) ? $request->status : 0;
-                    $Saveproperty->video_link = (isset($request->video_link)) ? $request->video_link : "";
-
-                    $Saveproperty->package_id = $request->package_id;
-
-                    $Saveproperty->post_type = 1;
-                    if ($request->hasFile('title_image')) {
-                        $profile = $request->file('title_image');
-                        $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                        $profile->move($destinationPath, $imageName);
-                        $Saveproperty->title_image = $imageName;
-                    } else {
-                        $Saveproperty->title_image = '';
-                    }
-
-                    // threeD_image
-                    if ($request->hasFile('threeD_image')) {
-                        $destinationPath = public_path('images') . config('global.3D_IMG_PATH');
-                        if (!is_dir($destinationPath)) {
-                            mkdir($destinationPath, 0777, true);
-                        }
-                        // $Saveproperty->threeD_image_hash = get_hash($request->file('threeD_image'));
-                        $profile = $request->file('threeD_image');
-                        $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                        $profile->move($destinationPath, $imageName);
-                        $Saveproperty->threeD_image = $imageName;
-                    } else {
-                        $Saveproperty->threeD_image = '';
-                    }
-
-
-                    //HuyTBQ: Assign CRM Host ID to the property
-                    $Saveproperty->host_id = $crmHost->id;
-
-                    //print_r(json_encode($request->parameters));
-                    $Saveproperty->save();
-                    $package->used_limit_for_property
-                        = $package->used_limit_for_property + 1;
-                    $package->save();
-                    $destinationPathforparam = public_path('images') . config('global.PARAMETER_IMAGE_PATH');
-                    if (!is_dir($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
-                    }
-                    if ($request->facilities) {
-                        foreach ($request->facilities as $key => $value) {
-
-                            $facilities = new AssignedOutdoorFacilities();
-                            $facilities->facility_id = $value['facility_id'];
-                            $facilities->property_id = $Saveproperty->id;
-                            $facilities->distance = $value['distance'];
-                            $facilities->save();
-                        }
-                    }
-                    if ($request->parameters) {
-                        foreach ($request->parameters as $key => $parameter) {
-
-                            // dd($parameter['value']);
-                            $AssignParameters = new AssignParameters();
-
-                            $AssignParameters->modal()->associate($Saveproperty);
-
-                            $AssignParameters->parameter_id = $parameter['parameter_id'];
-                            if ($request->hasFile('parameters.' . $key . '.value')) {
-
-                                $profile = $request->file('parameters.' . $key . '.value');
-                                $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                                $profile->move($destinationPathforparam, $imageName);
-                                $AssignParameters->value = $imageName;
-                            } else if (filter_var($parameter['value'], FILTER_VALIDATE_URL)) {
-
-
-                                $ch = curl_init($parameter['value']);
-                                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                                $fileContents = curl_exec($ch);
-                                curl_close($ch);
-
-                                $filename
-                                    = microtime(true) . basename($parameter['value']);
-
-                                file_put_contents($destinationPathforparam . '/' . $filename, $fileContents);
-                                $AssignParameters->value = $filename;
-                            } else {
-                                $AssignParameters->value = $parameter['value'];
-                            }
-
-                            $AssignParameters->save();
-                        }
-                    }
-
-                    /// START :: UPLOAD GALLERY IMAGE
-
-                    $FolderPath = public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH');
-                    if (!is_dir($FolderPath)) {
-                        mkdir($FolderPath, 0777, true);
-                    }
-
-
-                    $destinationPath = public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . "/" . $Saveproperty->id;
-                    if (!is_dir($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
-                    }
-                    if ($request->hasfile('gallery_images')) {
-
-
-                        foreach ($request->file('gallery_images') as $file) {
-
-
-                            $name = time() . rand(1, 100) . '.' . $file->extension();
-                            $file->move($destinationPath, $name);
-
-                            $gallary_image = new PropertyImages();
-                            $gallary_image->image = $name;
-                            $gallary_image->propertys_id = $Saveproperty->id;
-
-                            $gallary_image->save();
-                        }
-                    }
-
-                    if ($request->hasfile('legal_images')) {
-
-
-                        foreach ($request->file('legal_images') as $file) {
-                            $name = time() . rand(1, 100) . '.' . $file->extension();
-                            $file->move($destinationPath, $name);
-
-                            $gallary_legal_image = new PropertyLegalImage();
-                            $gallary_legal_image->image = $name;
-                            $gallary_legal_image->propertys_id = $Saveproperty->id;
-
-                            $gallary_legal_image->save();
-                        }
-                    }
-
-                    /// END :: UPLOAD GALLERY IMAGE
-
-                    $result = Property::with('customer')->with('category:id,category,image')->with('assignfacilities.outdoorfacilities')->with('favourite')->with('parameters')->with('interested_users')->where('id', $Saveproperty->id)->get();
-                    $property_details = get_property_details($result);
-
-                    $response['error'] = false;
-                    $response['message'] = 'Property Post Succssfully';
-                    $response['data'] = $property_details;
-                } else {
-                    $response['error'] = false;
-                    $response['message'] = 'Package Limit is over';
-                }
+                $response['message'] = 'Property Post Succssfully';
+                $response['data'] = $property_details;
+            } catch (Exception $e) {
+                $response['error'] = true;
+                $response['message'] = $e->getMessage();
             }
+
         } else {
             $response['error'] = true;
             $response['message'] = $validator->errors()->first();
@@ -1289,368 +547,25 @@ class ApiController extends Controller
             $id = $request->id;
             $action_type = $request->action_type;
 
-            $property = Property::where('added_by', $current_user)->find($id);
-            if (($property)) {
-                // 0: Update 1: Delete
+            try {
                 if ($action_type == 0) {
-
-                    $destinationPath = public_path('images') . config('global.PROPERTY_TITLE_IMG_PATH');
-                    if (!is_dir($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
-                    }
-
-                    if (isset($request->category_id)) {
-                        $property->category_id = $request->category_id;
-                    }
-
-                    if (isset($request->title)) {
-                        $property->title = $request->title;
-                    }
-
-                    if (isset($request->description)) {
-                        $property->description = $request->description;
-                    }
-
-                    if (isset($request->address)) {
-                        $property->address = $request->address;
-                    }
-
-                    if (isset($request->client_address)) {
-                        $property->client_address = $request->client_address;
-                    }
-
-                    if (isset($request->propery_type) && !isset($request->property_type)) {
-                        $property->property_type = $request->propery_type;
-                    }
-                    if (isset($request->commission)) {
-                        $property->commission = $request->commission;
-                    }
-
-                    if (isset($request->price)) {
-                        $property->price = $request->price;
-                    }
-                    if (isset($request->country)) {
-                        $property->country = $request->country;
-                    }
-                    if (isset($request->state)) {
-                        $property->state = $request->state;
-                    }
-                    if (isset($request->city)) {
-                        $property->city = $request->city;
-                    }
-                    if (isset($request->status)) {
-                        $property->status = $request->status;
-                    }
-                    if (isset($request->latitude)) {
-                        $property->latitude = $request->latitude;
-                    }
-                    if (isset($request->longitude)) {
-                        $property->longitude = $request->longitude;
-                    }
-                    if (isset($request->rentduration)) {
-                        $property->rentduration = $request->rentduration;
-                    }
-                    if ($request->hasFile('title_image')) {
-                        $profile = $request->file('title_image');
-                        $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                        $profile->move($destinationPath, $imageName);
-
-
-                        if ($property->title_image != '') {
-                            if (file_exists(public_path('images') . config('global.PROPERTY_TITLE_IMG_PATH') . $property->title_image)) {
-                                unlink(public_path('images') . config('global.PROPERTY_TITLE_IMG_PATH') . $property->title_image);
-                            }
-                        }
-                        $property->title_image = $imageName;
-                    }
-                    if ($request->hasFile('threeD_image')) {
-                        $destinationPath1 = public_path('images') . config('global.3D_IMG_PATH');
-                        if (!is_dir($destinationPath1)) {
-                            mkdir($destinationPath1, 0777, true);
-                        }
-                        $profile = $request->file('threeD_image');
-                        $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                        $profile->move($destinationPath1, $imageName);
-
-
-                        if ($property->title_image != '') {
-                            if (file_exists(public_path('images') . config('global.3D_IMG_PATH') . $property->title_image)) {
-                                unlink(public_path('images') . config('global.3D_IMG_PATH') . $property->title_image);
-                            }
-                        }
-                        $property->threeD_image = $imageName;
-                    }
-                    if ($request->parameters) {
-                        $destinationPathforparam = public_path('images') . config('global.PARAMETER_IMAGE_PATH');
-                        if (!is_dir($destinationPath)) {
-                            mkdir($destinationPath, 0777, true);
-                        }
-                        // dd($request->parameters);
-
-                        foreach ($request->parameters as $key => $parameter) {
-                            // print_r($parameter);
-                            // echo $property->id;
-                            // return false;
-                            $AssignParameters = AssignParameters::where('modal_id', $property->id)->where('parameter_id', $parameter['parameter_id'])->pluck('id');
-                            // echo $AssignParameters[0] . 'idddd';
-                            // dd($parameter['parameter_id']);
-
-                            if (count($AssignParameters)) {
-                                $update_data = AssignParameters::find($AssignParameters[0]);
-
-                                if ($request->hasFile('parameters.' . $key . '.value')) {
-
-                                    $profile = $request->file('parameters.' . $key . '.value');
-                                    $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                                    $profile->move($destinationPathforparam, $imageName);
-                                    $update_data->value = $imageName;
-                                } else if (filter_var($parameter['value'], FILTER_VALIDATE_URL)) {
-
-
-
-                                    $ch = curl_init($parameter['value']);
-                                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                                    $fileContents = curl_exec($ch);
-                                    curl_close($ch);
-
-
-                                    $filename
-                                        = microtime(true) . basename($parameter['value']);
-                                    // dd($filename);
-                                    file_put_contents($destinationPathforparam . '/' . $filename, $fileContents);
-                                    $update_data->value = $filename;
-                                } else {
-                                    $update_data->value = $parameter['value'];
-                                }
-
-
-                                $update_data->save();
-                            } else {
-
-                                $AssignParameters = new AssignParameters();
-
-                                $AssignParameters->modal()->associate($property);
-
-                                $AssignParameters->parameter_id = $parameter['parameter_id'];
-                                if ($request->hasFile('parameters.' . $key . '.value')) {
-
-                                    $profile = $request->file('parameters.' . $key . '.value');
-                                    $imageName = microtime(true) . "." . $profile->getClientOriginalExtension();
-                                    $profile->move($destinationPathforparam, $imageName);
-                                    $AssignParameters->value = $imageName;
-                                } else if (filter_var($parameter['value'], FILTER_VALIDATE_URL)) {
-
-
-                                    $ch = curl_init($parameter['value']);
-                                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                                    $fileContents = curl_exec($ch);
-                                    curl_close($ch);
-
-                                    $filename
-                                        = microtime(true) . basename($parameter['value']);
-
-                                    file_put_contents($destinationPathforparam . '/' . $filename, $fileContents);
-                                    $AssignParameters->value = $filename;
-                                } else {
-                                    $AssignParameters->value = $parameter['value'];
-                                }
-
-                                $AssignParameters->save();
-                            }
-                        }
-
-                        // $AssignParameters->save();
-                    }
-                    AssignedOutdoorFacilities::where('property_id', $request->id)->delete();
-                    if ($request->facilities) {
-                        foreach ($request->facilities as $key => $value) {
-
-
-                            $facilities = new AssignedOutdoorFacilities();
-                            $facilities->facility_id = $value['facility_id'];
-                            $facilities->property_id = $request->id;
-                            $facilities->distance = $value['distance'];
-                            $facilities->save();
-                        }
-                    }
-                    /// START :: HuyTBQ : Update property type
-                    if (isset($request->property_type)) {
-                        if ($request->property_type == "Sell") {
-                            $property->property_type = 0;
-                        } elseif ($request->property_type == "Rent") {
-                            $property->property_type = 1;
-                        } elseif ($request->property_type == "Sold") {
-                            $property->property_type = 2;
-                        } elseif ($request->property_type == "Rented") {
-                            $property->property_type = 3;
-                        } else {
-                            $property->property_type = $request->property_type;
-                        }
-                    }
-                    //HuyTBQ: test
-                    //$property->property_type = 1;
-                    /// END :: HuyTBQ : Update property type
-
-                    /// START :: HuyTBQ: Add host module
-                    // Extract host information from request
-                    $hostName = $request->host_name;
-                    $hostGender = $request->host_gender;
-                    $hostContact = $request->host_contact;
-                    $hostAbout = $request->host_about;
-
-                    // Check if a CRM Host with the provided contact exists
-                    $crmHost = CrmHost::updateOrCreate(
-                        ['id' => $property->host_id], // Điều kiện tìm kiếm
-                        [
-                            'name' => $hostName,
-                            'gender' => $hostGender,
-                            'contact' => $hostContact,
-                            'about' => $hostAbout,
-                            // Thêm các trường khác nếu cần
-                        ]
-                    );
-                    $crmHost->save();
-                    //HuyTBQ: Assign CRM Host ID to the property
-                    $property->host_id = $crmHost->id;
-
-                    /// END :: HuyTBQ: Add host module
-
-                    /// START :: HuyTBQ : Update location module
-                    $property->street_code = (isset($request->street_code)) ? $request->street_code : '';
-                    $property->ward_code = (isset($request->ward_code)) ? $request->ward_code : '';
-                    $property->street_number =  (isset($request->street_number)) ? $request->street_number : '';
-                    /// END :: HuyTBQ : Update location module
-
-                    $property->update();
-                    $update_property = Property::with('customer')->with('category:id,category,image')->with('assignfacilities.outdoorfacilities')->with('favourite')->with('parameters')->with('interested_users')->where('id', $request->id)->get();
-
-                    /// START :: UPLOAD GALLERY IMAGE
-                    $FolderPath = public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH');
-                    if (!is_dir($FolderPath)) {
-                        mkdir($FolderPath, 0777, true);
-                    }
-
-                    $destinationPath = public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . "/" . $property->id;
-                    if (!is_dir($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
-                    }
-
-                    //gallery images
-                    if ($request->remove_gallery_images) {
-                        foreach ($request->remove_gallery_images as $key => $value) {
-                            $gallary_images = PropertyImages::find($value);
-                            if (file_exists(public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . $gallary_images->propertys_id . '/' . $gallary_images->image)) {
-
-                                unlink(public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . $gallary_images->propertys_id . '/' . $gallary_images->image);
-                            }
-                            $gallary_images->delete();
-                        }
-                    }
-                    if ($request->hasfile('gallery_images')) {
-                        foreach ($request->file('gallery_images') as $file) {
-                            $name = time() . rand(1, 100) . '.' . $file->extension();
-                            $file->move($destinationPath, $name);
-                            PropertyImages::create([
-                                'image' => $name,
-                                'propertys_id' => $property->id,
-                            ]);
-                        }
-                    }
-
-                    //HuyTBQ: add for update properties
-                    // legal images
-                    if ($request->remove_legal_images) {
-                        foreach ($request->remove_legal_images as $key => $value) {
-                            $legal_images = PropertyLegalImage::find($value);
-                            if (file_exists(public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . $legal_images->propertys_id . '/' . $legal_images->image)) {
-                                unlink(public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . $legal_images->propertys_id . '/' . $legal_images->image);
-                            }
-                            $legal_images->delete();
-                        }
-                    }
-                    if ($request->hasfile('legal_images')) {
-                        foreach ($request->file('legal_images') as $file) {
-                            $name = time() . rand(1, 100) . '.' . $file->extension();
-                            $file->move($destinationPath, $name);
-                            PropertyLegalImage::create([
-                                'image' => $name,
-                                'propertys_id' => $property->id,
-                            ]);
-                        }
-                    }
-
-                    /// END :: UPLOAD GALLERY IMAGE
-                    $payload = JWTAuth::getPayload($this->bearerToken($request));
-                    $current_user = ($payload['customer_id']);
+                    $this->propertyService->updateProperty($request, $current_user);
+                    
+                    $update_property = Property::with('customer')->with('category:id,category,image')->with('assignfacilities.outdoorfacilities')->with('favourite')->with('parameters')->with('interested_users')->where('id', $id)->get();
                     $property_details = get_property_details($update_property, $current_user);
+
                     $response['error'] = false;
                     $response['message'] = 'Property Update Successfully';
                     $response['data'] = $property_details;
+
                 } elseif ($action_type == 1) {
-                    if ($property->delete()) {
-
-                        $chat = Chats::where('property_id', $property->id);
-                        if ($chat) {
-                            $chat->delete();
-                        }
-
-                        $enquiry = PropertysInquiry::where('propertys_id', $property->id);
-                        if ($enquiry) {
-                            $enquiry->delete();
-                        }
-
-                        $slider = Slider::where('propertys_id', $property->id);
-                        if ($slider) {
-                            $slider->delete();
-                        }
-
-
-                        $notifications = Notifications::where('propertys_id', $property->id);
-                        if ($notifications) {
-                            $notifications->delete();
-                        }
-
-                        if ($property->title_image != '') {
-                            if (file_exists(public_path('images') . config('global.PROPERTY_TITLE_IMG_PATH') . $property->title_image)) {
-                                unlink(public_path('images') . config('global.PROPERTY_TITLE_IMG_PATH') . $property->title_image);
-                            }
-                        }
-                        foreach ($property->gallery as $row) {
-                            if (PropertyImages::where('id', $row->id)->delete()) {
-                                if ($row->image_url != '') {
-                                    if (file_exists(public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . $property->id . "/" . $row->image)) {
-                                        unlink(public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . $property->id . "/" . $row->image);
-                                    }
-                                }
-                            }
-                        }
-                        rmdir(public_path('images') . config('global.PROPERTY_GALLERY_IMG_PATH') . $property->id);
-
-                        Notifications::where('propertys_id', $id)->delete();
-
-
-                        $slider = Slider::where('propertys_id', $id)->get();
-
-                        foreach ($slider as $row) {
-                            $image = $row->image;
-
-                            if (Slider::where('id', $row->id)->delete()) {
-                                if (file_exists(public_path('images') . config('global.SLIDER_IMG_PATH') . $image)) {
-                                    unlink(public_path('images') . config('global.SLIDER_IMG_PATH') . $image);
-                                }
-                            }
-                        }
-
-                        $response['error'] = false;
-                        $response['message'] = 'Delete Successfully';
-                    } else {
-                        $response['error'] = true;
-                        $response['message'] = 'something wrong';
-                    }
+                    $this->propertyService->deleteProperty($id, $current_user);
+                    $response['error'] = false;
+                    $response['message'] = 'Delete Successfully';
                 }
-            } else {
+            } catch (Exception $e) {
                 $response['error'] = true;
-                $response['message'] = 'No Data Found: id = ' . $id . ' user ='  . $current_user . ' ,property: ' . $property;
+                $response['message'] = $e->getMessage();
             }
         } else {
             $response['error'] = true;
@@ -1689,43 +604,16 @@ class ApiController extends Controller
             ]);
         }
 
-        // Check if property belongs to current user
-        $property = Property::where('added_by', $current_user)->find($request->id);
-        if (!$property) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Property not found or you do not have permission to delete it',
-            ]);
-        }
-
         try {
-            DB::beginTransaction();
-
-            // Delete related records
-            Chats::where('property_id', $property->id)->delete();
-            PropertysInquiry::where('propertys_id', $property->id)->delete();
-            Slider::where('propertys_id', $property->id)->delete();
-            Notifications::where('propertys_id', $property->id)->delete();
-            Favourite::where('property_id', $property->id)->delete();
-            InterestedUser::where('property_id', $property->id)->delete();
-            AssignedOutdoorFacilities::where('property_id', $property->id)->delete();
-            AssignParameters::where('modal_id', $property->id)->delete();
-            PropertyImages::where('propertys_id', $property->id)->delete();
-            PropertyLegalImage::where('propertys_id', $property->id)->delete();
-
-            // Delete the property
-            $property->delete();
-
-            DB::commit();
-
+            $this->propertyService->deleteProperty($request->id, $current_user);
+            
             $response['error'] = false;
             $response['message'] = 'Property deleted successfully';
             return response()->json($response);
         } catch (Exception $e) {
-            DB::rollback();
             $response = array(
                 'error' => true,
-                'message' => 'Something went wrong while deleting property'
+                'message' => $e->getMessage()
             );
             return response()->json($response, 500);
         }
