@@ -56,6 +56,7 @@ class Customer extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [
+            'auth_model' => 'customer',
             'customer_id' => $this->id
         ];
     }

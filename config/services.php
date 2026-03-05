@@ -37,4 +37,12 @@ return [
         'place_api_key_web' => env('PLACE_API_KEY_WEB_APP', env('PLACE_API_KEY')),
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'groups' => [
+            'public_channel' => env('TELEGRAM_PUBLIC_CHANNEL_ID'),
+            'sale_admin' => env('TELEGRAM_SALE_ADMIN_GROUP_ID'),
+        ],
+    ],
+
 ];

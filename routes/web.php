@@ -42,12 +42,17 @@ use Illuminate\Support\Facades\Artisan;
 
 
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\Api\NewsCategoryApiController;
+use App\Http\Controllers\Api\NewsTagApiController;
+use App\Http\Controllers\Api\PropertyApiController;
+use App\Http\Controllers\Api\LeadApiController;
+use App\Http\Controllers\Api\DealApiController;
+use App\Http\Controllers\Api\CommissionApiController;
+use Illuminate\Http\Request;
 
 /*
  |--------------------------------------------------------------------------
  | Web Routes
- |--------------------------------------------------------------------------
- |
  | Here is where you can register web routes for your application. These
  | routes are loaded by the RouteServiceProvider within a group which
  | contains the "web" middleware group. Now create something great!
@@ -168,6 +173,12 @@ Route::get('customer-privacy-policy', [SettingController::class , 'show_privacy_
 
 Route::get('customer-terms-conditions', [SettingController::class , 'show_terms_conditions'])->name('customer-terms-conditions');
 
+
+Route::get('/telegram/leads/{id}', [LeadApiController::class, 'showWebApp'])->name('telegram.leads.show');
+Route::post('/telegram/leads/{id}/update', [LeadApiController::class, 'updateFromWebApp'])->name('telegram.leads.update');
+
+Route::get('/telegram/deals/{id}', [DealApiController::class, 'showWebApp'])->name('telegram.deals.show');
+Route::get('/telegram/commissions', [CommissionApiController::class, 'showWebApp'])->name('telegram.commissions.index');
 
 Auth::routes();
 

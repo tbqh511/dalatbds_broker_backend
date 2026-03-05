@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CommissionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,9 +21,14 @@ class CrmDealCommission extends Model
         'lead_commission',
         'owner_commission',
         'notes',
+        'status',
     ];
 
     protected $hidden = ['created_at', 'updated_at'];
+
+    protected $casts = [
+        'status' => CommissionStatus::class,
+    ];
 
     // Accessors
     public function getSaleCommissionAttribute($value)
@@ -41,10 +47,11 @@ class CrmDealCommission extends Model
         return $this->belongsTo(CrmDeal::class, 'deal_id', 'id');
     }
 
-    // Quan hệ: Một lead thuộc user app
+    // Quan hệ: Một lead thuộc user (Admin/Staff)
+    // Updated from Customer::class to User::class as per requirement
     public function sale()
     {
-        return $this->belongsTo(Customer::class, 'sale_id', 'id');
+        return $this->belongsTo(User::class, 'sale_id', 'id');
     }
 
     // Relationship: Thuộc về một property

@@ -392,7 +392,8 @@ class TelegramWebAppController extends Controller
 
         $commissionRates = [1, 1.5, 2, 2.5, 3];
 
-        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities', 'legalTypes', 'directions', 'commissionRates'));
+        // Task 3.4: Return the newly created blade view
+        return view('telegram.properties.create', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities', 'legalTypes', 'directions', 'commissionRates'));
     }
 
     public function submitForm(Request $request)

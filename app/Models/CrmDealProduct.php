@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DealsProductStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,11 +22,9 @@ class CrmDealProduct extends Model
 
     protected $hidden = ['created_at', 'updated_at'];
 
-    // Accessors
-    public function getStatusAttribute($value)
-    {
-        return ucfirst(str_replace('_', ' ', $value));
-    }
+    protected $casts = [
+        'status' => DealsProductStatus::class,
+    ];
 
     // Quan hệ: Thuộc về một deal
     public function deal()
@@ -37,5 +36,11 @@ class CrmDealProduct extends Model
     public function property()
     {
         return $this->belongsTo(Property::class, 'property_id', 'id');
+    }
+
+    // Relationship: Có nhiều bookings
+    public function bookings()
+    {
+        return $this->hasMany(CrmDealProductBooking::class, 'crm_deals_products_id', 'id');
     }
 }

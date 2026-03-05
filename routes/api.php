@@ -4,6 +4,12 @@ use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Api\NewsPostApiController;
 use App\Http\Controllers\Api\NewsCategoryApiController;
 use App\Http\Controllers\Api\NewsTagApiController;
+use App\Http\Controllers\Api\PropertyApiController;
+use App\Http\Controllers\Api\LeadApiController;
+use App\Http\Controllers\Api\DealApiController;
+use App\Http\Controllers\Api\DealProductApiController;
+use App\Http\Controllers\Api\BookingApiController;
+use App\Http\Controllers\Api\CommissionApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -83,6 +89,13 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::put('news_tags/{id}', [NewsTagApiController::class, 'update'])->middleware('role:admin,editor');
     Route::delete('news_tags/{id}', [NewsTagApiController::class, 'destroy'])->middleware('role:admin,editor');
 
+    // Properties API (New)
+    // Task 3.1: Create Property
+    Route::post('properties', [PropertyApiController::class, 'store']);
+    // Task 3.2: Verify Property (Admin/Operator only)
+    Route::patch('properties/{id}/verify', [PropertyApiController::class, 'verify']);
+
+
     Route::post('get_property', [ApiController::class, 'get_property']);
     Route::post('update_profile', [ApiController::class, 'update_profile']);
     Route::post('post_property', [ApiController::class, 'post_property']);
@@ -132,16 +145,22 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
     // CRM Leads
     Route::get('leads', [ApiController::class, 'get_leads']);
+    Route::get('leads/my-leads', [LeadApiController::class, 'myLeads']); // Task 4.4
     Route::get('leads/{id}', [ApiController::class, 'get_lead']);
-    Route::post('leads', [ApiController::class, 'create_lead']);
+    // Route::post('leads', [ApiController::class, 'create_lead']); // Replaced by LeadApiController
+    Route::post('leads', [LeadApiController::class, 'store']); // Task 4.1
     Route::put('leads/{id}', [ApiController::class, 'update_lead']);
     Route::delete('leads/{id}', [ApiController::class, 'delete_lead']);
     Route::post('leads/{id}/convert', [ApiController::class, 'convert_lead_to_deal']);
+    Route::post('leads/{id}/assign', [LeadApiController::class, 'assign']); // Task 4.2
 
     // CRM Deals
-    Route::get('deals', [ApiController::class, 'get_deals']);
-    Route::get('deals/{id}', [ApiController::class, 'get_deal']);
-    Route::post('deals', [ApiController::class, 'create_deal']);
+    // Route::get('deals', [ApiController::class, 'get_deals']); // Replaced by DealApiController
+    Route::get('deals', [DealApiController::class, 'index']); // Task 5.3
+    // Route::get('deals/{id}', [ApiController::class, 'get_deal']); // Replaced by DealApiController
+    Route::get('deals/{id}', [DealApiController::class, 'show']); // Task 5.4
+    // Route::post('deals', [ApiController::class, 'create_deal']); // Replaced by DealApiController
+    Route::post('deals', [DealApiController::class, 'store']); // Task 5.1 & 5.2
     Route::put('deals/{id}', [ApiController::class, 'update_deal']);
     Route::delete('deals/{id}', [ApiController::class, 'delete_deal']);
     Route::post('deals/{id}/status', [ApiController::class, 'update_deal_status']);
@@ -152,16 +171,27 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::delete('deals/{id}/assigned/{assigned_id}', [ApiController::class, 'remove_assigned_deal']);
 
     // CRM Deal Products
-    Route::post('deals/{id}/products', [ApiController::class, 'add_deal_product']);
-    Route::get('deals/{id}/products', [ApiController::class, 'get_deal_products']);
-    Route::put('deals/{id}/products/{product_id}', [ApiController::class, 'update_deal_product']);
+    // Route::post('deals/{id}/products', [ApiController::class, 'add_deal_product']); // Replaced by DealProductApiController
+    Route::post('deals/{id}/products', [DealProductApiController::class, 'store']); // Task 6.1
+    // Route::get('deals/{id}/products', [ApiController::class, 'get_deal_products']); // Replaced by DealProductApiController
+    Route::get('deals/{id}/products', [DealProductApiController::class, 'index']); // Task 6.3
+    // Route::put('deals/{id}/products/{product_id}', [ApiController::class, 'update_deal_product']); // Replaced by DealProductApiController
+    Route::patch('deals/products/{id}', [DealProductApiController::class, 'update']); // Task 6.2 (Note: using PATCH and ID of product record)
     Route::delete('deals/{id}/products/{product_id}', [ApiController::class, 'delete_deal_product']);
 
     // CRM Deal Commissions
-    Route::post('deals/{id}/commissions', [ApiController::class, 'add_deal_commission']);
-    Route::get('deals/{id}/commissions', [ApiController::class, 'get_deal_commission']);
-    Route::put('deals/{id}/commissions/{commission_id}', [ApiController::class, 'update_deal_commission']);
+    // Route::post('deals/{id}/commissions', [ApiController::class, 'add_deal_commission']); // Replaced
+    Route::post('deals/{id}/commissions', [CommissionApiController::class, 'store']); // Task 8.1
+    // Route::get('deals/{id}/commissions', [ApiController::class, 'get_deal_commission']); // Replaced
+    // Route::put('deals/{id}/commissions/{commission_id}', [ApiController::class, 'update_deal_commission']); // Replaced
+    Route::patch('commissions/{id}', [CommissionApiController::class, 'update']); // Task 8.2
     Route::delete('deals/{id}/commissions/{commission_id}', [ApiController::class, 'delete_deal_commission']);
+    Route::get('commissions/report', [CommissionApiController::class, 'report']); // Task 8.4
+
+    // CRM Bookings
+    Route::post('deals/products/{id}/bookings', [BookingApiController::class, 'store']); // Task 7.1
+    Route::patch('bookings/{id}', [BookingApiController::class, 'update']); // Task 7.2
+    Route::patch('bookings/{id}/reschedule', [BookingApiController::class, 'reschedule']); // Task 7.3
 
     // Reports and Analytics
     Route::get('reports/leads', [ApiController::class, 'get_leads_report']);

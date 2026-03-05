@@ -12,6 +12,7 @@ class CrmDeal extends Model
     protected $table = 'crm_deals';
 
     protected $fillable = [
+        'lead_id',
         'customer_id',
         'notes',
         'status',
@@ -34,6 +35,12 @@ class CrmDeal extends Model
     public function customer()
     {
         return $this->belongsTo(CrmCustomer::class, 'customer_id', 'id');
+    }
+
+    // Quan hệ: Một deal được tạo từ một lead
+    public function lead()
+    {
+        return $this->belongsTo(CrmLead::class, 'lead_id', 'id');
     }
 
     // Quan hệ: Một deal có nhiều nhân viên được gán

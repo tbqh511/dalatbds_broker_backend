@@ -23,11 +23,14 @@ class CrmLead extends Model
         'demand_rate_max',
         'note',
         'status',
+        'assigned_to',
+        'assigned_at',
     ];
 
     protected $casts = [
         'categories' => 'array',
         'wards' => 'array',
+        'assigned_at' => 'datetime',
     ];
 
     // Accessors
@@ -46,6 +49,12 @@ class CrmLead extends Model
     {
         return $this->belongsTo(Customer::class, 'user_id', 'id')
                     ->select(['id', 'name', 'email', 'profile']);
+    }
+
+    // Quan hệ: Một lead được assign cho sale
+    public function assignedSale()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     // Quan hệ: Một lead thuộc về một khách hàng
