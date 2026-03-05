@@ -21,6 +21,7 @@ use App\Models\PropertyLegalImage;
 use App\Models\AssignedOutdoorFacilities;
 use App\Models\CrmCustomer;
 use App\Models\CrmLead;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -392,8 +393,7 @@ class TelegramWebAppController extends Controller
 
         $commissionRates = [1, 1.5, 2, 2.5, 3];
 
-        // Task 3.4: Return the newly created blade view
-        return view('telegram.properties.create', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities', 'legalTypes', 'directions', 'commissionRates'));
+        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities', 'legalTypes', 'directions', 'commissionRates'));
     }
 
     public function submitForm(Request $request)
@@ -683,6 +683,8 @@ class TelegramWebAppController extends Controller
             }
 
             DB::commit();
+
+            $this->notifyNewListingToTelegram($property, $customer);
 
             return response()->json([
                 'success' => true,
@@ -1305,15 +1307,19 @@ class TelegramWebAppController extends Controller
             $lead->user_id = $customer->id; // The broker who added this customer
             $lead->customer_id = $crmCustomer->id;
             $lead->lead_type = $request->input('lead_type');
-            $lead->categories = $request->input('categories'); // Array casted in model
-            $lead->wards = $request->input('wards'); // Array casted in model
+            $lead->categories = $request->input('categories');
+            $lead->wards = $request->input('wards');
             $lead->demand_rate_min = $request->input('price_min', 0);
             $lead->demand_rate_max = $request->input('price_max', 0);
             $lead->purpose = $request->input('purpose');
+            $lead->source_note = 'telegram_webapp';
+            $lead->note = $request->input('purpose');
             $lead->status = 'new';
             $lead->save();
 
             DB::commit();
+
+            $this->notifyNewLeadToTelegram($lead, $crmCustomer, $customer);
 
             return response()->json([
                 'success' => true,
@@ -1330,5 +1336,75 @@ class TelegramWebAppController extends Controller
                 'message' => 'Lỗi hệ thống: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function notifyNewListingToTelegram(Property $property, $customer): void
+    {
+        try {
+            $notificationService = app(NotificationService::class);
+            $type = $property->property_type == 0 ? 'Bán' : 'Cho thuê';
+            $price = number_format((float) $property->price, 0, ',', '.');
+            $posterName = $customer->name ?? 'N/A';
+            $posterPhone = $customer->mobile ?? $customer->phone ?? 'N/A';
+            $propertyUrl = route('property.showid', ['id' => $property->id]);
+
+            $message = "🏠 *BĐS MỚI TỪ WEBAPP*\n";
+            $message .= "----------------\n";
+            $message .= "🆔 ID: `{$property->id}`\n";
+            $message .= "📌 Loại tin: {$type}\n";
+            $message .= "📝 Tiêu đề: " . $this->escapeTelegramText($property->title) . "\n";
+            $message .= "📍 Địa chỉ: " . $this->escapeTelegramText($property->address) . "\n";
+            $message .= "💰 Giá: {$price} VNĐ\n";
+            $message .= "👤 Người đăng: " . $this->escapeTelegramText($posterName) . "\n";
+            $message .= "📞 Liên hệ: " . $this->escapeTelegramText($posterPhone) . "\n";
+            $message .= "📊 Trạng thái: Chờ duyệt\n";
+            $message .= "🔗 [Xem tin]({$propertyUrl})";
+
+            $notificationService->sendToGroup('public_channel', $message);
+        } catch (\Exception $e) {
+            Log::warning('Failed to send listing telegram notification: ' . $e->getMessage());
+        }
+    }
+
+    private function notifyNewLeadToTelegram(CrmLead $lead, CrmCustomer $crmCustomer, $creator): void
+    {
+        try {
+            $notificationService = app(NotificationService::class);
+            $leadType = $lead->lead_type === 'rent' ? 'Cần thuê' : 'Cần mua';
+            $budgetMin = number_format((float) ($lead->demand_rate_min ?? 0), 0, ',', '.');
+            $budgetMax = number_format((float) ($lead->demand_rate_max ?? 0), 0, ',', '.');
+            $wards = is_array($lead->wards) && count($lead->wards) ? implode(', ', $lead->wards) : 'Không giới hạn';
+            $categories = is_array($lead->categories) && count($lead->categories) ? implode(', ', $lead->categories) : 'Không giới hạn';
+            $creatorName = $creator->name ?? 'N/A';
+            $creatorPhone = $creator->mobile ?? $creator->phone ?? 'N/A';
+            $leadUrl = route('webapp.leads');
+
+            $message = "🎯 *LEAD MỚI TỪ WEBAPP*\n";
+            $message .= "----------------\n";
+            $message .= "🆔 Lead ID: `{$lead->id}`\n";
+            $message .= "👤 Khách hàng: " . $this->escapeTelegramText($crmCustomer->full_name ?? 'N/A') . "\n";
+            $message .= "📞 SĐT khách: " . $this->escapeTelegramText($crmCustomer->contact ?? 'N/A') . "\n";
+            $message .= "🏷️ Nhu cầu: {$leadType}\n";
+            $message .= "💰 Ngân sách: {$budgetMin} - {$budgetMax} VNĐ\n";
+            $message .= "📍 Khu vực: " . $this->escapeTelegramText($wards) . "\n";
+            $message .= "🏠 Loại BĐS: " . $this->escapeTelegramText($categories) . "\n";
+            $message .= "🧭 Mục đích: " . $this->escapeTelegramText($lead->purpose ?? 'N/A') . "\n";
+            $message .= "👨‍💼 Người tạo: " . $this->escapeTelegramText($creatorName) . " - " . $this->escapeTelegramText($creatorPhone) . "\n";
+            $message .= "🔗 [Mở danh sách lead]({$leadUrl})";
+
+            $notificationService->sendToGroup('public_channel', $message);
+            $notificationService->sendToGroup('sale_admin', $message);
+        } catch (\Exception $e) {
+            Log::warning('Failed to send lead telegram notification: ' . $e->getMessage());
+        }
+    }
+
+    private function escapeTelegramText(?string $text): string
+    {
+        if (!$text) {
+            return '';
+        }
+
+        return str_replace(['*', '_', '`', '['], ['\*', '\_', '\`', '\['], $text);
     }
 }
