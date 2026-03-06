@@ -14,7 +14,7 @@
                 <div class="dasboard-widget-title fl-wrap"
                     style="display: flex; align-items: center; justify-content: space-between;">
                     <h5><i class="fal fa-users"></i>Danh sách Lead</h5>
-                    <a href="{{ route('webapp.leads.create') }}" class="mark-btn color-bg"
+                    <a href="{{ route('webapp.add_customer') }}" class="mark-btn color-bg"
                         style="position: static; margin: 0; transform: none; display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; color: #fff; font-weight: 500; box-shadow: 0 4px 12px rgba(50, 112, 252, 0.3);">
                         <i class="fal fa-plus"></i> Thêm mới
                     </a>

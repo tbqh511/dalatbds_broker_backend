@@ -26,5 +26,10 @@ class VerifyCsrfToken extends Middleware
         '/webapp/update-listing/*',
         '/webapp/listings/*',
         '/webapp/listings/*/toggle',
+
+        // Add Customer & CRM Leads
+        '/webapp/add-customer',
+        '/webapp/leads',
+        '/webapp/leads/*',
     ];
 }
