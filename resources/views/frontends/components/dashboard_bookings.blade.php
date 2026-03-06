@@ -9,11 +9,12 @@
             <!-- dashboard-title -->
             @include('components.dashboard.header', ['title' => 'Lịch hẹn'])
             <!-- dashboard-title end -->
-            
+
             <div class="dasboard-wrapper fl-wrap">
                 <div class="dasboard-widget-title fl-wrap">
                     <h5><i class="fal fa-comments-alt"></i>Lịch hẹn gần đây <span> ( +3 Mới ) </span></h5>
-                    <a href="#" class="mark-btn tolt" data-microtip-position="bottom" data-tooltip="Đánh dấu tất cả là đã đọc"><i class="far fa-comment-alt-check"></i> </a>
+                    <a href="#" class="mark-btn tolt" data-microtip-position="bottom"
+                        data-tooltip="Đánh dấu tất cả là đã đọc"><i class="far fa-comment-alt-check"></i> </a>
                 </div>
                 <div class="dasboard-widget-box fl-wrap">
                     <div class="dasboard-opt fl-wrap">
@@ -21,7 +22,7 @@
                         <div class="price-opt">
                             <span class="price-opt-title">Sắp xếp theo:</span>
                             <div class="listsearch-input-item">
-                                <select data-placeholder="Mới nhất" class="chosen-select no-search-select" >
+                                <select data-placeholder="Mới nhất" class="chosen-select no-search-select">
                                     <option>Mới nhất</option>
                                     <option>Cũ nhất</option>
                                 </select>
@@ -50,9 +51,12 @@
                                 <div class="bookings-item-footer fl-wrap">
                                     <span class="message-date">12 Tháng 12 2020</span>
                                     <ul>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Gửi tin nhắn"><i class="far fa-envelope"></i></a></li>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Xóa"><i class="far fa-trash"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gửi tin nhắn"><i class="far fa-envelope"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Xóa"><i class="far fa-trash"></i></a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -78,9 +82,12 @@
                                 <div class="bookings-item-footer fl-wrap">
                                     <span class="message-date">05 Tháng 10 2020</span>
                                     <ul>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Gửi tin nhắn"><i class="far fa-envelope"></i></a></li>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Xóa"><i class="far fa-trash"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gửi tin nhắn"><i class="far fa-envelope"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Xóa"><i class="far fa-trash"></i></a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -105,9 +112,12 @@
                                 <div class="bookings-item-footer fl-wrap">
                                     <span class="message-date">25 Tháng 5 2020</span>
                                     <ul>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Gửi tin nhắn"><i class="far fa-envelope"></i></a></li>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Xóa"><i class="far fa-trash"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gửi tin nhắn"><i class="far fa-envelope"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Xóa"><i class="far fa-trash"></i></a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -133,9 +143,12 @@
                                 <div class="bookings-item-footer fl-wrap">
                                     <span class="message-date">12 Tháng 12 2020</span>
                                     <ul>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Gửi tin nhắn"><i class="far fa-envelope"></i></a></li>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
-                                        <li><a href="#" class="tolt" data-microtip-position="top-left" data-tooltip="Xóa"><i class="far fa-trash"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gửi tin nhắn"><i class="far fa-envelope"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
+                                        <li><a href="#" class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Xóa"><i class="far fa-trash"></i></a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -155,9 +168,6 @@
                 <!-- pagination end-->
             </div>
         </div>
-        <!-- dashboard-footer -->
-        @include('components.dashboard.footer')
-        <!-- dashboard-footer end -->
     </div>
     <div class="dashbard-bg gray-bg"></div>
 </div>

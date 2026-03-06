@@ -12,7 +12,8 @@
             <div class="dasboard-wrapper fl-wrap">
                 <div class="dasboard-widget-title fl-wrap">
                     <h5><i class="fal fa-comments-alt"></i>Đánh giá mới nhất <span> ( +2 Mới ) </span></h5>
-                    <a href="#" class="mark-btn tolt" data-microtip-position="bottom" data-tooltip="Đánh dấu tất cả đã đọc"><i class="far fa-comment-alt-check"></i> </a>
+                    <a href="#" class="mark-btn tolt" data-microtip-position="bottom"
+                        data-tooltip="Đánh dấu tất cả đã đọc"><i class="far fa-comment-alt-check"></i> </a>
                 </div>
                 <div class="dasboard-widget-box fl-wrap">
                     <div class="dasboard-opt fl-wrap">
@@ -20,7 +21,7 @@
                         <div class="price-opt">
                             <span class="price-opt-title">Sắp xếp theo:</span>
                             <div class="listsearch-input-item">
-                                <select data-placeholder="Mới nhất" class="chosen-select no-search-select" >
+                                <select data-placeholder="Mới nhất" class="chosen-select no-search-select">
                                     <option>Mới nhất</option>
                                     <option>Cũ nhất</option>
                                     <option>Đánh giá trung bình</option>
@@ -42,10 +43,17 @@
                                 <a href="#"> <i class="fas fa-exclamation-triangle"></i> Báo cáo </a>
                             </div>
                             <h4><a href="#">Liza Rose <span>cho Biệt thự gia đình sang trọng </span></a></h4>
-                            <div class="listing-rating card-popup-rainingvis" data-starrating2="3"><span class="re_stars-title">Trung bình</span></div>
+                            <div class="listing-rating card-popup-rainingvis" data-starrating2="3"><span
+                                    class="re_stars-title">Trung bình</span></div>
                             <div class="clearfix"></div>
-                            <p>" Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. "</p>
-                            <div class="reviews-comments-item-date"><span class="reviews-comments-item-date-item"><i class="far fa-calendar-check"></i>12 Tháng 4 2020</span><a href="#" class="rate-review"><i class="fal fa-thumbs-up"></i>  Đánh giá hữu ích  <span>6</span> </a></div>
+                            <p>" Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat
+                                massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In
+                                enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede
+                                mollis pretium. "</p>
+                            <div class="reviews-comments-item-date"><span class="reviews-comments-item-date-item"><i
+                                        class="far fa-calendar-check"></i>12 Tháng 4 2020</span><a href="#"
+                                    class="rate-review"><i class="fal fa-thumbs-up"></i> Đánh giá hữu ích <span>6</span>
+                                </a></div>
                         </div>
                     </div>
                     <!--reviews-comments-item end-->
@@ -62,10 +70,15 @@
                                 <a href="#"> <i class="fas fa-exclamation-triangle"></i> Báo cáo </a>
                             </div>
                             <h4><a href="#">Adam Koncy <span>cho Nhà phố Kayak Point</span></a></h4>
-                            <div class="listing-rating card-popup-rainingvis" data-starrating2="5"><span class="re_stars-title">Tuyệt vời</span></div>
+                            <div class="listing-rating card-popup-rainingvis" data-starrating2="5"><span
+                                    class="re_stars-title">Tuyệt vời</span></div>
                             <div class="clearfix"></div>
-                            <p>" Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc posuere convallis purus non cursus. Cras metus neque, gravida sodales massa ut. "</p>
-                            <div class="reviews-comments-item-date"><span class="reviews-comments-item-date-item"><i class="far fa-calendar-check"></i>03 Tháng 12 2019</span><a href="#" class="rate-review"><i class="fal fa-thumbs-up"></i>  Đánh giá hữu ích  <span>2</span> </a></div>
+                            <p>" Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc posuere convallis purus
+                                non cursus. Cras metus neque, gravida sodales massa ut. "</p>
+                            <div class="reviews-comments-item-date"><span class="reviews-comments-item-date-item"><i
+                                        class="far fa-calendar-check"></i>03 Tháng 12 2019</span><a href="#"
+                                    class="rate-review"><i class="fal fa-thumbs-up"></i> Đánh giá hữu ích <span>2</span>
+                                </a></div>
                         </div>
                     </div>
                     <!--reviews-comments-item end-->
@@ -81,10 +94,17 @@
                                 <a href="#"> <i class="fas fa-exclamation-triangle"></i> Báo cáo </a>
                             </div>
                             <h4><a href="#">Mark Rose <span>cho Biệt thự đẹp cần bán </span></a></h4>
-                            <div class="listing-rating card-popup-rainingvis" data-starrating2="5"><span class="re_stars-title">Tuyệt vời</span></div>
+                            <div class="listing-rating card-popup-rainingvis" data-starrating2="5"><span
+                                    class="re_stars-title">Tuyệt vời</span></div>
                             <div class="clearfix"></div>
-                            <p>" Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. "</p>
-                            <div class="reviews-comments-item-date"><span class="reviews-comments-item-date-item"><i class="far fa-calendar-check"></i>06 Tháng 12 2018</span><a href="#" class="rate-review"><i class="fal fa-thumbs-up"></i>  Đánh giá hữu ích  <span>2</span> </a></div>
+                            <p>" Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat
+                                massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In
+                                enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede
+                                mollis pretium. "</p>
+                            <div class="reviews-comments-item-date"><span class="reviews-comments-item-date-item"><i
+                                        class="far fa-calendar-check"></i>06 Tháng 12 2018</span><a href="#"
+                                    class="rate-review"><i class="fal fa-thumbs-up"></i> Đánh giá hữu ích <span>2</span>
+                                </a></div>
                         </div>
                     </div>
                     <!--reviews-comments-item end-->
@@ -92,7 +112,7 @@
                 <!-- pagination-->
                 <div class="pagination float-pagination">
                     <a href="#" class="prevposts-link"><i class="fa fa-caret-left"></i></a>
-                    <a href="#" >1</a>
+                    <a href="#">1</a>
                     <a href="#" class="current-page">2</a>
                     <a href="#">3</a>
                     <a href="#">4</a>
@@ -101,11 +121,7 @@
                 <!-- pagination end-->
             </div>
         </div>
-        <!-- dashboard-footer -->
-        @include('components.dashboard.footer')
-        <!-- dashboard-footer end -->
+        <!-- content end -->
+
+        <div class="dashbard-bg gray-bg"></div>
     </div>
-    <!-- content end -->
-    
-    <div class="dashbard-bg gray-bg"></div>
-</div>

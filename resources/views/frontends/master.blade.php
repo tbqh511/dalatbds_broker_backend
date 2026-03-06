@@ -8,7 +8,8 @@
     <title>@yield('title', 'Đà Lạt BDS - Mạng lưới thổ địa Đà Lạt')</title>
     <meta name="robots" content="index, follow" />
     <meta name="keywords" content="@yield('meta_keywords', 'bất động sản, đà lạt, mua bán nhà đất, thổ địa')" />
-    <meta name="description" content="@yield('meta_description', 'Tìm kiếm và đầu tư bất động sản tại Đà Lạt. Mạng lưới thổ địa uy tín, thông tin chính xác.')" />
+    <meta name="description"
+        content="@yield('meta_description', 'Tìm kiếm và đầu tư bất động sản tại Đà Lạt. Mạng lưới thổ địa uy tín, thông tin chính xác.')" />
 
     <!-- Canonical URL -->
     <link rel="canonical" href="{{ url()->current() }}" />
@@ -42,11 +43,11 @@
             @yield('content')
             <!-- content end -->
             @unless(View::hasSection('hide_newsletter'))
-                @include('frontends.newsletter')
+            @include('frontends.newsletter')
             @endunless
 
             @unless(View::hasSection('hide_footer'))
-                @include('frontends.footer')
+            @include('frontends.footer')
             @endunless
         </div>
         <!-- wrapper end -->
@@ -58,6 +59,14 @@
         @include('frontends.secondary_nav')
         @endunless
         <!--secondary-nav end -->
+        @if((request()->routeIs('webapp.*') || request()->routeIs('webapp')) &&
+        !request()->routeIs('webapp.add_listing') &&
+        !request()->routeIs('webapp.add_customer') && !request()->routeIs('webapp.edit_listing') &&
+        !request()->routeIs('webapp.leads.create') && !request()->routeIs('webapp.leads.edit') &&
+        !request()->routeIs('webapp.submit_listing') && !request()->routeIs('webapp.update_listing') &&
+        !request()->routeIs('webapp.store_customer'))
+        @include('components.dashboard.footer')
+        @endif
         @unless(request()->routeIs('webapp.*') || request()->routeIs('webapp.add_listing'))
         <a class="to-top color-bg"><i class="fas fa-caret-up"></i></a>
         <!--map-modal -->
@@ -66,14 +75,16 @@
         <!-- Floating Chat Zalo -->
         <div class="chat-zalo" style="display: block;">
             <a href="https://zalo.me/0918963878" target="_blank">
-                <img title="Chat Zalo" src="{{ asset('images/zalo-icon.png') }}" alt="zalo-icon" width="40" height="40" />
+                <img title="Chat Zalo" src="{{ asset('images/zalo-icon.png') }}" alt="zalo-icon" width="40"
+                    height="40" />
             </a>
         </div>
         <!-- Floating Chat Zalo End -->
         <!-- Floating Call Button -->
         <div class="call-button" style="display: block;">
             <a href="tel:0918963878" target="_self" title="0918963878">
-                <img title="Gọi ngay" src="{{ asset('images/call-icon.png') }}" alt="call-icon" width="40" height="40" />
+                <img title="Gọi ngay" src="{{ asset('images/call-icon.png') }}" alt="call-icon" width="40"
+                    height="40" />
             </a>
         </div>
         <!-- Floating Call Button End -->
@@ -84,8 +95,10 @@
     <script src="{{asset('js/jquery.min.js')}}"></script>
     <script src="{{asset('js/plugins.js')}}"></script>
     <script src="{{asset('js/scripts.js')}}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=places,marker&v=weekly&map_ids=DEMO_MAP_ID&loading=async"></script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=places,marker&v=weekly&map_ids=DEMO_MAP_ID&loading=async"></script>
     <script src="{{asset('js/map-single.js')}}"></script>
     @stack('scripts')
 </body>
+
 </html>

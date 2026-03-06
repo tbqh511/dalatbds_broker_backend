@@ -113,23 +113,6 @@
                 <!-- pagination end-->
             </div>
         </div>
-        <!-- dashboard-footer -->
-        @include('components.dashboard.footer')
-        <!-- dashboard-footer end -->
     </div>
     <div class="dashbard-bg gray-bg"></div>
-</div>
-</div>
-<!-- pagination-->
-<div class="pagination" style="display: flex; justify-content: center; margin-top: 30px; gap: 5px;">
-    {{ $leads->links('pagination::bootstrap-4') }}
-</div>
-<!-- pagination end-->
-</div>
-</div>
-<!-- dashboard-footer -->
-@include('components.dashboard.footer')
-<!-- dashboard-footer end -->
-</div>
-<div class="dashbard-bg gray-bg"></div>
 </div>

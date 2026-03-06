@@ -43,26 +43,31 @@
                             <form method="post" class="custom-form">
                                 @csrf
                                 <label>Họ và tên <span class="dec-icon"><i class="far fa-user"></i></span></label>
-                                <input type="text" placeholder="Nhập họ tên" value="{{ auth()->check() ? auth()->user()->name : '' }}"/>
-                                
-                                <label>Địa chỉ Email <span class="dec-icon"><i class="far fa-envelope"></i></span></label>
-                                <input type="text" placeholder="example@domain.com" value="{{ auth()->check() ? auth()->user()->email : '' }}"/>
-                                
+                                <input type="text" placeholder="Nhập họ tên"
+                                    value="{{ auth()->check() ? auth()->user()->name : '' }}" />
+
+                                <label>Địa chỉ Email <span class="dec-icon"><i
+                                            class="far fa-envelope"></i></span></label>
+                                <input type="text" placeholder="example@domain.com"
+                                    value="{{ auth()->check() ? auth()->user()->email : '' }}" />
+
                                 <label>Số điện thoại<span class="dec-icon"><i class="far fa-phone"></i> </span></label>
-                                <input type="text" placeholder="+84..." value=""/>
-                                
+                                <input type="text" placeholder="+84..." value="" />
+
                                 <label>Địa chỉ <span class="dec-icon"><i class="fas fa-map-marker"></i> </span></label>
-                                <input type="text" placeholder="Đà Lạt, Lâm Đồng" value=""/>
-                                
+                                <input type="text" placeholder="Đà Lạt, Lâm Đồng" value="" />
+
                                 <label>Website <span class="dec-icon"><i class="far fa-globe"></i> </span></label>
-                                <input type="text" placeholder="dalatbds.com" value=""/>
-                                
-                                <label>Đại lý / Công ty<span class="dec-icon"><i class="far fa-home-lg-alt"></i> </span></label>
-                                <input type="text" placeholder="Tên công ty" value=""/>
-                                
+                                <input type="text" placeholder="dalatbds.com" value="" />
+
+                                <label>Đại lý / Công ty<span class="dec-icon"><i class="far fa-home-lg-alt"></i>
+                                    </span></label>
+                                <input type="text" placeholder="Tên công ty" value="" />
+
                                 <label>Ghi chú / Giới thiệu </label>
-                                <textarea cols="40" rows="3" placeholder="Giới thiệu về bản thân" style="margin-bottom:20px;"></textarea>
-                                
+                                <textarea cols="40" rows="3" placeholder="Giới thiệu về bản thân"
+                                    style="margin-bottom:20px;"></textarea>
+
                                 <button class="btn color-bg float-btn">Lưu thay đổi</button>
                             </form>
                         </div>
@@ -74,18 +79,21 @@
                         <div class="dasboard-widget-box fl-wrap">
                             <div class="custom-form">
                                 <div class="pass-input-wrap fl-wrap">
-                                    <label>Mật khẩu hiện tại<span class="dec-icon"><i class="far fa-lock-open-alt"></i></span></label>
-                                    <input type="password" class="pass-input" placeholder="" value=""/>
+                                    <label>Mật khẩu hiện tại<span class="dec-icon"><i
+                                                class="far fa-lock-open-alt"></i></span></label>
+                                    <input type="password" class="pass-input" placeholder="" value="" />
                                     <span class="eye"><i class="far fa-eye" aria-hidden="true"></i> </span>
                                 </div>
                                 <div class="pass-input-wrap fl-wrap">
-                                    <label>Mật khẩu mới<span class="dec-icon"><i class="far fa-lock-alt"></i></span></label>
-                                    <input type="password" class="pass-input" placeholder="" value=""/>
+                                    <label>Mật khẩu mới<span class="dec-icon"><i
+                                                class="far fa-lock-alt"></i></span></label>
+                                    <input type="password" class="pass-input" placeholder="" value="" />
                                     <span class="eye"><i class="far fa-eye" aria-hidden="true"></i> </span>
                                 </div>
                                 <div class="pass-input-wrap fl-wrap">
-                                    <label>Xác nhận mật khẩu mới<span class="dec-icon"><i class="far fa-shield-check"></i> </span></label>
-                                    <input type="password" class="pass-input" placeholder="" value=""/>
+                                    <label>Xác nhận mật khẩu mới<span class="dec-icon"><i
+                                                class="far fa-shield-check"></i> </span></label>
+                                    <input type="password" class="pass-input" placeholder="" value="" />
                                     <span class="eye"><i class="far fa-eye" aria-hidden="true"></i> </span>
                                 </div>
                                 <button class="btn color-bg float-btn">Lưu thay đổi</button>
@@ -97,13 +105,13 @@
                         <div class="dasboard-widget-box fl-wrap">
                             <div class="custom-form">
                                 <label>Facebook <span class="dec-icon"><i class="fab fa-facebook"></i></span></label>
-                                <input type="text" placeholder="https://www.facebook.com/" value=""/>
+                                <input type="text" placeholder="https://www.facebook.com/" value="" />
                                 <label>Twitter <span class="dec-icon"><i class="fab fa-twitter"></i></span></label>
-                                <input type="text" placeholder="https://twitter.com/" value=""/>
+                                <input type="text" placeholder="https://twitter.com/" value="" />
                                 <label>Instagram<span class="dec-icon"><i class="fab fa-instagram"></i> </span></label>
-                                <input type="text" placeholder="https://www.instagram.com/" value=""/>
+                                <input type="text" placeholder="https://www.instagram.com/" value="" />
                                 <label>Zalo<span class="dec-icon"><i class="fas fa-comment-dots"></i> </span></label>
-                                <input type="text" placeholder="https://zalo.me/..." value=""/>
+                                <input type="text" placeholder="https://zalo.me/..." value="" />
                                 <button class="btn color-bg float-btn">Lưu thay đổi</button>
                             </div>
                         </div>
@@ -111,11 +119,8 @@
                 </div>
             </div>
             <!-- dasboard-wrapper end -->
-            
+
         </div>
-        <!-- dashboard-footer -->
-        @include('components.dashboard.footer')
-        <!-- dashboard-footer end -->
     </div>
     <div class="dashbard-bg gray-bg"></div>
 </div>

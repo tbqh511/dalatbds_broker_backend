@@ -167,9 +167,6 @@
             </div> --}}
         </div>
     </div>
-    <!-- dashboard-footer -->
-    @include('components.dashboard.footer')
-    <!-- dashboard-footer end -->
 </div>
 <div class="dashbard-bg gray-bg"></div>
 

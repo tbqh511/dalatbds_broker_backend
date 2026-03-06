@@ -9,13 +9,14 @@
             <!-- dashboard-title -->
             @include('components.dashboard.header', ['title' => 'Tin nhắn'])
             <!-- dashboard-title end -->
-            
+
             <div class="dasboard-wrapper fl-wrap no-pag">
                 <!-- dashboard-list-box-->
                 <div class="dashboard-list-box fl-wrap">
                     <div class="dasboard-widget-title fl-wrap">
                         <h5><i class="fas fa-comment-alt"></i>Tin nhắn gần đây<span> ( +3 Mới ) </span></h5>
-                        <a href="#" class="mark-btn tolt" data-microtip-position="bottom" data-tooltip="Đánh dấu tất cả là đã đọc"><i class="far fa-comment-alt-check"></i> </a>
+                        <a href="#" class="mark-btn tolt" data-microtip-position="bottom"
+                            data-tooltip="Đánh dấu tất cả là đã đọc"><i class="far fa-comment-alt-check"></i> </a>
                     </div>
                     <div class="chat-wrapper fl-wrap">
                         <!-- chat-box-->
@@ -28,7 +29,9 @@
                                         <span class="chat-message-user-name cmun_sm">Andy</span>
                                     </div>
                                     <span class="massage-date">25 th5 2018 <span>7.51 CH</span></span>
-                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed, ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed dolor.</p>
+                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed,
+                                        ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed
+                                        dolor.</p>
                                 </div>
                                 <!-- message end-->
                                 <!-- message-->
@@ -48,7 +51,8 @@
                                         <span class="chat-message-user-name cmun_sm">Andy</span>
                                     </div>
                                     <span class="massage-date">25 th5 2018 <span>7.51 CH</span></span>
-                                    <p>Sed non neque faucibus, condimentum lectus at, accumsan enim. Fusce pretium egestas cursus..</p>
+                                    <p>Sed non neque faucibus, condimentum lectus at, accumsan enim. Fusce pretium
+                                        egestas cursus..</p>
                                 </div>
                                 <!-- message end-->
                                 <!-- message-->
@@ -58,7 +62,10 @@
                                         <span class="chat-message-user-name cmun_sm">Bạn</span>
                                     </div>
                                     <span class="massage-date">25 th5 2018 <span>7.51 CH</span></span>
-                                    <p>Donec a consectetur nulla. Nulla posuere sapien vitae lectus suscipit, et pulvinar nisi tincidunt. Aliquam erat volutpat. Curabitur convallis fringilla diam sed aliquam. Sed tempor iaculis massa faucibus feugiat. In fermentum facilisis massa, a consequat .</p>
+                                    <p>Donec a consectetur nulla. Nulla posuere sapien vitae lectus suscipit, et
+                                        pulvinar nisi tincidunt. Aliquam erat volutpat. Curabitur convallis fringilla
+                                        diam sed aliquam. Sed tempor iaculis massa faucibus feugiat. In fermentum
+                                        facilisis massa, a consequat .</p>
                                 </div>
                                 <!-- message end-->
                             </div>
@@ -79,7 +86,9 @@
                                 <div class="chat-contacts-item-text">
                                     <h4>Mark Rose</h4>
                                     <span>27 Th12 2018 </span>
-                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed, ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed dolor.</p>
+                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed,
+                                        ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed
+                                        dolor.</p>
                                 </div>
                             </a>
                             <!-- chat-contacts-item -->
@@ -91,7 +100,9 @@
                                 <div class="chat-contacts-item-text">
                                     <h4>Adam Koncy</h4>
                                     <span>27 Th12 2018 </span>
-                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed, ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed dolor.</p>
+                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed,
+                                        ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed
+                                        dolor.</p>
                                 </div>
                             </a>
                             <!-- chat-contacts-item -->
@@ -104,7 +115,9 @@
                                 <div class="chat-contacts-item-text">
                                     <h4>Andy Smith</h4>
                                     <span>27 Th12 2018 </span>
-                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed, ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed dolor.</p>
+                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed,
+                                        ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed
+                                        dolor.</p>
                                 </div>
                             </a>
                             <!-- chat-contacts-item -->
@@ -117,7 +130,9 @@
                                 <div class="chat-contacts-item-text">
                                     <h4>Joe Frick</h4>
                                     <span>27 Th12 2018 </span>
-                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed, ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed dolor.</p>
+                                    <p>Vivamus lobortis vel nibh nec maximus. Donec dolor erat, rutrum ut feugiat sed,
+                                        ornare vitae nunc. Donec massa nisl, bibendum id ultrices sed, accumsan sed
+                                        dolor.</p>
                                 </div>
                             </a>
                             <!-- chat-contacts-item -->
@@ -128,9 +143,6 @@
                 </div>
             </div>
         </div>
-        <!-- dashboard-footer -->
-        @include('components.dashboard.footer')
-        <!-- dashboard-footer end -->
     </div>
     <div class="dashbard-bg gray-bg"></div>
 </div>
