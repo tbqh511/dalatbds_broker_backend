@@ -75,28 +75,76 @@
         <!-- SCROLLABLE CONTENT -->
         <form @submit.prevent="submitForm" class="flex-1 px-6 py-6 pb-40">
 
-            <!-- Contact Info -->
-            <div class="mb-6">
+            <!-- ===================== CONTACT INFO ===================== -->
+            <div class="mb-6" x-data="{
+                isEditing: true,
+                get isHasData() {
+                    return $data.form.phone && $data.isPhoneValid && $data.form.name && $data.isNameValid;
+                }
+            }" @click.outside="if(isHasData) { isEditing = false; }">
                 <h3
                     class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide flex items-center justify-center border-2 border-dashed border-primary/30 rounded-xl p-2 bg-blue-50/30">
                     <i class="fa-solid fa-user-tag mr-2 text-primary"></i> Nhập thông tin liên hệ
                 </h3>
 
-                <div class="space-y-3 mt-4">
-                    <div class="relative group">
-                        <input type="text" x-model="form.name" placeholder="Tên liên hệ"
-                            class="input-field border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
-                    </div>
+                <!-- VIEW MODE: Thẻ tóm tắt (chỉ hiện khi không edit và đã có data) -->
+                <div x-show="!isEditing && isHasData" @click="isEditing = true"
+                    class="py-2 px-2 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition shadow-sm animate-fade-in-up flex flex-col items-center justify-center">
+                    <p class="text-lg font-bold text-primary text-center">
+                        <span x-text="form.name"></span>
+                        <span> - </span>
+                        <span class="text-green-600">*******<span
+                                x-text="form.phone ? form.phone.slice(-3) : ''"></span></span>
+                    </p>
+                </div>
 
-                    <div class="relative group">
-                        <input type="tel" x-model="form.phone" placeholder="Số điện thoại"
-                            class="input-field border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
+                <!-- EDIT MODE: Form nhập liệu -->
+                <div x-show="isEditing || !isHasData" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <div class="space-y-3 mt-4">
+                        <!-- SĐT Input (ĐẶT LÊN TRƯỚC) -->
+                        <div class="relative group">
+                            <input type="tel" x-model="form.phone"
+                                @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })"
+                                placeholder="Số điện thoại (Nhập để bắt đầu)"
+                                :class="{'!border-red-500 !bg-red-50 focus:!border-red-500': form.phone && !isPhoneValid}"
+                                class="input-field border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
+                            <p x-show="form.phone && !isPhoneValid"
+                                class="text-xs text-red-500 mt-1 text-left ml-1">
+                                <i class="fa-solid fa-circle-exclamation mr-1"></i> Số điện thoại không đúng định dạng (VN)
+                            </p>
+                            <div class="relative text-green-600 font-medium flex items-center opacity-100 transition-opacity text-xs mt-1 ml-1"
+                                x-show="form.phone && isPhoneValid">
+                                <i class="fa-solid fa-shield-halved mr-1"></i> Thông tin này được bảo mật.
+                            </div>
+                        </div>
+
+                        <!-- Tên liên hệ Input (CHỈ HIỆN SAU KHI SĐT HỢP LỆ) -->
+                        <div class="relative group" x-show="form.phone && isPhoneValid"
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 -translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0">
+                            <input type="text" x-model="form.name"
+                                @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })"
+                                placeholder="Tên liên hệ"
+                                :class="{'!border-red-500 !bg-red-50 focus:!border-red-500': form.name && !isNameValid}"
+                                class="input-field border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
+                            <p x-show="form.name && !isNameValid"
+                                class="text-xs text-red-500 mt-1 text-left ml-1">
+                                <i class="fa-solid fa-circle-exclamation mr-1"></i> Tên phải có ít nhất 2 ký tự và không chứa ký tự đặc biệt
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Need Type -->
-            <div class="mb-6">
+            <!-- ===================== NEED TYPE (Cần mua / Cần thuê) ===================== -->
+            <div class="mb-6"
+                x-show="form.phone && isPhoneValid && form.name && isNameValid"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0">
                 <label class="block text-sm font-bold text-gray-800 mb-3">Chọn khách có nhu cầu</label>
                 <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
                     <button type="button" @click="form.lead_type = 'buy'"
@@ -112,10 +160,25 @@
                 </div>
             </div>
 
-            <!-- Property Types -->
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-800 mb-3">Chọn loại BĐS</label>
-                <div class="grid grid-cols-4 gap-3">
+            <!-- ===================== PROPERTY TYPES — Collapsible ===================== -->
+            <div class="mb-6"
+                x-show="form.lead_type"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0">
+                <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                    Chọn loại BĐS
+                    <button type="button" x-show="!isCategoryExpanded && form.categories.length > 0"
+                        @click="isCategoryExpanded = true"
+                        class="text-xs font-normal text-primary hover:underline">
+                        Thay đổi
+                    </button>
+                </label>
+
+                <!-- STATE 1: GRID MỞ RỘNG -->
+                <div x-show="isCategoryExpanded" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="grid grid-cols-4 gap-3">
                     <template x-for="type in propertyTypes" :key="type.id">
                         <button type="button" @click="toggleCategory(type.id)"
                             :class="form.categories.includes(type.id)
@@ -128,14 +191,58 @@
                         </button>
                     </template>
                 </div>
+
+                <!-- NÚT XÁC NHẬN CHỌN (hiện khi grid mở và đã chọn ít nhất 1) -->
+                <div x-show="isCategoryExpanded && form.categories.length > 0" class="mt-3 flex justify-center">
+                    <button type="button" @click="isCategoryExpanded = false"
+                        class="bg-primary/10 text-primary px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors">
+                        <i class="fa-solid fa-check mr-1"></i> Xác nhận (<span x-text="form.categories.length"></span> đã chọn)
+                    </button>
+                </div>
+
+                <!-- STATE 2: THẺ TÓM TẮT (thu gọn) -->
+                <div x-show="!isCategoryExpanded && form.categories.length > 0"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <div @click="isCategoryExpanded = true"
+                        class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                        <div class="flex items-center">
+                            <div
+                                class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                <i :class="['fas', getSelectedCategoryIcon(), 'text-lg']"></i>
+                            </div>
+                            <div class="flex flex-col text-left">
+                                <span class="text-xs text-blue-100 font-medium">Đã chọn loại:</span>
+                                <span class="font-bold text-sm leading-tight" x-text="getSelectedCategoryNames()"></span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                    </div>
+                </div>
             </div>
 
-            <!-- Financial Range -->
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-800 mb-3">Chọn mức tài chính</label>
-                <div class="grid grid-cols-4 gap-2">
+            <!-- ===================== FINANCIAL RANGE — Collapsible ===================== -->
+            <div class="mb-6"
+                x-show="form.categories.length > 0 && !isCategoryExpanded"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0">
+                <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                    Chọn mức tài chính
+                    <button type="button" x-show="!isPriceExpanded && hasPriceSelected()"
+                        @click="isPriceExpanded = true"
+                        class="text-xs font-normal text-primary hover:underline">
+                        Thay đổi
+                    </button>
+                </label>
+
+                <!-- STATE 1: GRID MỞ RỘNG -->
+                <div x-show="isPriceExpanded" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="grid grid-cols-4 gap-2">
                     <template x-for="range in priceRanges" :key="range.label">
-                        <button type="button" @click="setPriceRange(range)"
+                        <button type="button" @click="setPriceRange(range); isPriceExpanded = false;"
                             :class="isPriceSelected(range)
                                 ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
                                 : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:text-primary'"
@@ -145,14 +252,50 @@
                         </button>
                     </template>
                 </div>
+
+                <!-- STATE 2: THẺ TÓM TẮT -->
+                <div x-show="!isPriceExpanded && hasPriceSelected()"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <div @click="isPriceExpanded = true"
+                        class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                        <div class="flex items-center">
+                            <div
+                                class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-coins text-lg"></i>
+                            </div>
+                            <div class="flex flex-col text-left">
+                                <span class="text-xs text-blue-100 font-medium">Mức tài chính:</span>
+                                <span class="font-bold text-lg leading-tight" x-text="getSelectedPriceLabel()"></span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                    </div>
+                </div>
             </div>
 
-            <!-- Purpose -->
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-800 mb-3">Mục đích giao dịch</label>
-                <div class="grid grid-cols-4 gap-2">
+            <!-- ===================== PURPOSE — Collapsible ===================== -->
+            <div class="mb-6"
+                x-show="hasPriceSelected() && !isPriceExpanded"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0">
+                <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                    Mục đích giao dịch
+                    <button type="button" x-show="!isPurposeExpanded && form.purpose"
+                        @click="isPurposeExpanded = true"
+                        class="text-xs font-normal text-primary hover:underline">
+                        Thay đổi
+                    </button>
+                </label>
+
+                <!-- STATE 1: GRID MỞ RỘNG -->
+                <div x-show="isPurposeExpanded" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="grid grid-cols-4 gap-2">
                     <template x-for="p in purposes" :key="p.label">
-                        <button type="button" @click="form.purpose = p.value"
+                        <button type="button" @click="form.purpose = p.value; isPurposeExpanded = false;"
                             :class="form.purpose === p.value
                                 ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
                                 : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:text-primary'"
@@ -163,12 +306,48 @@
                         </button>
                     </template>
                 </div>
+
+                <!-- STATE 2: THẺ TÓM TẮT -->
+                <div x-show="!isPurposeExpanded && form.purpose"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <div @click="isPurposeExpanded = true"
+                        class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                        <div class="flex items-center">
+                            <div
+                                class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                <i :class="['fas', getSelectedPurposeIcon(), 'text-lg']"></i>
+                            </div>
+                            <div class="flex flex-col text-left">
+                                <span class="text-xs text-blue-100 font-medium">Mục đích:</span>
+                                <span class="font-bold text-lg leading-tight" x-text="form.purpose"></span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                    </div>
+                </div>
             </div>
 
-            <!-- Area -->
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-800 mb-3">Ưu tiên khu vực</label>
-                <div class="grid grid-cols-4 gap-2">
+            <!-- ===================== AREA (Khu vực) — Collapsible ===================== -->
+            <div class="mb-6"
+                x-show="form.purpose && !isPurposeExpanded"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0">
+                <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                    Ưu tiên khu vực
+                    <button type="button" x-show="!isWardExpanded && form.wards.length > 0"
+                        @click="isWardExpanded = true"
+                        class="text-xs font-normal text-primary hover:underline">
+                        Thay đổi
+                    </button>
+                </label>
+
+                <!-- STATE 1: GRID MỞ RỘNG -->
+                <div x-show="isWardExpanded" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="grid grid-cols-4 gap-2">
                     <template x-for="ward in wards" :key="ward.id">
                         <button type="button" @click="toggleWard(ward.id)"
                             :class="form.wards.includes(ward.id)
@@ -182,6 +361,35 @@
                         </button>
                     </template>
                 </div>
+
+                <!-- NÚT XÁC NHẬN CHỌN (hiện khi grid mở và đã chọn ít nhất 1) -->
+                <div x-show="isWardExpanded && form.wards.length > 0" class="mt-3 flex justify-center">
+                    <button type="button" @click="isWardExpanded = false"
+                        class="bg-primary/10 text-primary px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors">
+                        <i class="fa-solid fa-check mr-1"></i> Xác nhận (<span x-text="form.wards.length"></span> khu vực)
+                    </button>
+                </div>
+
+                <!-- STATE 2: THẺ TÓM TẮT -->
+                <div x-show="!isWardExpanded && form.wards.length > 0"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <div @click="isWardExpanded = true"
+                        class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                        <div class="flex items-center">
+                            <div
+                                class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-map-location-dot text-lg"></i>
+                            </div>
+                            <div class="flex flex-col text-left">
+                                <span class="text-xs text-blue-100 font-medium">Khu vực ưu tiên:</span>
+                                <span class="font-bold text-sm leading-tight" x-text="getSelectedWardNames()"></span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                    </div>
+                </div>
             </div>
 
         </form>
@@ -191,8 +399,8 @@
             class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center">
             <div class="w-full max-w-md flex justify-between gap-3">
                 <!-- Nút Lưu -->
-                <button type="button" @click="submitForm" :disabled="loading"
-                    class="w-full bg-success text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed">
+                <button type="button" @click="submitForm" :disabled="loading || !isFormValid"
+                    class="w-full bg-success text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed">
                     <span x-show="!loading">Lưu Khách Hàng</span>
                     <span x-show="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> Đang lưu...</span>
                 </button>
@@ -210,6 +418,13 @@
             propertyTypes: @json($propertyTypes),
             wards: @json($wards),
             loading: false,
+
+            // Collapse/Expand flags
+            isCategoryExpanded: true,
+            isPriceExpanded: true,
+            isPurposeExpanded: true,
+            isWardExpanded: true,
+
             form: {
                 name: '',
                 phone: '',
@@ -239,6 +454,30 @@
                 { label: 'Khác', value: 'Khác', icon: 'fas fa-question' }
             ],
 
+            // =========== VALIDATION ===========
+            get isPhoneValid() {
+                let phone = this.form.phone;
+                if (!phone) return false;
+                phone = phone.replace(/\D/g, '');
+                const regex = /^0(3|5|7|8|9)[0-9]{8}$/;
+                return regex.test(phone);
+            },
+
+            get isNameValid() {
+                const name = this.form.name;
+                if (!name) return false;
+                if (name.length < 2) return false;
+                const regex = /^[a-zA-ZÀ-ỹ\s]+$/;
+                return regex.test(name);
+            },
+
+            get isFormValid() {
+                return this.form.name && this.isNameValid &&
+                       this.form.phone && this.isPhoneValid &&
+                       this.form.lead_type;
+            },
+
+            // =========== TOGGLE HELPERS ===========
             toggleCategory(id) {
                 if (this.form.categories.includes(id)) {
                     this.form.categories = this.form.categories.filter(c => c !== id);
@@ -264,9 +503,55 @@
                 return this.form.price_min === range.min && this.form.price_max === range.max;
             },
 
+            hasPriceSelected() {
+                return this.form.price_min !== 0 || this.form.price_max !== 0;
+            },
+
+            // =========== COLLAPSED CARD HELPERS ===========
+            getSelectedCategoryIcon() {
+                if (this.form.categories.length === 0) return 'fa-house';
+                const first = this.propertyTypes.find(t => t.id === this.form.categories[0]);
+                return first ? first.icon : 'fa-house';
+            },
+
+            getSelectedCategoryNames() {
+                return this.form.categories
+                    .map(id => {
+                        const t = this.propertyTypes.find(pt => pt.id === id);
+                        return t ? t.name : '';
+                    })
+                    .filter(n => n)
+                    .join(', ');
+            },
+
+            getSelectedPriceLabel() {
+                const found = this.priceRanges.find(r => r.min === this.form.price_min && r.max === this.form.price_max);
+                return found ? found.label : '';
+            },
+
+            getSelectedPurposeIcon() {
+                const found = this.purposes.find(p => p.value === this.form.purpose);
+                return found ? found.icon : 'fa-question';
+            },
+
+            getSelectedWardNames() {
+                return this.form.wards
+                    .map(id => {
+                        const w = this.wards.find(ward => ward.id === id);
+                        return w ? w.name.replace('Phường ', '').replace('Xã ', '') : '';
+                    })
+                    .filter(n => n)
+                    .join(', ');
+            },
+
+            // =========== SUBMIT ===========
             async submitForm() {
-                if (!this.form.name || !this.form.phone) {
-                    alert('Vui lòng nhập tên và số điện thoại');
+                if (!this.form.name || !this.isNameValid) {
+                    alert('Vui lòng nhập tên hợp lệ (ít nhất 2 ký tự, không chứa ký tự đặc biệt)');
+                    return;
+                }
+                if (!this.form.phone || !this.isPhoneValid) {
+                    alert('Vui lòng nhập số điện thoại hợp lệ (10 số, bắt đầu bằng 0)');
                     return;
                 }
 

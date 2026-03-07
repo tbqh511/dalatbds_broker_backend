@@ -1256,7 +1256,18 @@ class TelegramWebAppController extends Controller
             ];
         });
 
-        return view('frontend_dashboard_add_customer', compact('propertyTypes', 'wards'));
+        // 3. Streets
+        $streets = LocationsStreet::select('code', 'street_name')
+            ->where('district_code', $districtCode)
+            ->get()
+            ->map(function ($s) {
+            return [
+            'id' => $s->code,
+            'name' => $s->street_name
+            ];
+        });
+
+        return view('frontend_dashboard_add_customer', compact('propertyTypes', 'wards', 'streets'));
     }
 
     public function storeCustomer(Request $request)
@@ -1313,7 +1324,19 @@ class TelegramWebAppController extends Controller
             $lead->demand_rate_max = $request->input('price_max', 0);
             $lead->purpose = $request->input('purpose');
             $lead->source_note = 'telegram_webapp';
-            $lead->note = $request->input('purpose');
+
+            $note = $request->input('purpose', '');
+            if ($request->filled('street')) {
+                $streetCode = $request->input('street');
+                $streetObj = LocationsStreet::where('code', $streetCode)->first();
+                if ($streetObj) {
+                    if ($note)
+                        $note .= ' - ';
+                    $note .= 'Tên đường: ' . $streetObj->street_name;
+                }
+            }
+            $lead->note = $note;
+
             $lead->status = 'new';
             $lead->save();
 
@@ -1343,7 +1366,7 @@ class TelegramWebAppController extends Controller
         try {
             $notificationService = app(NotificationService::class);
             $type = $property->property_type == 0 ? 'Bán' : 'Cho thuê';
-            $price = number_format((float) $property->price, 0, ',', '.');
+            $price = number_format((float)$property->price, 0, ',', '.');
             $posterName = $customer->name ?? 'N/A';
             $posterPhone = $customer->mobile ?? $customer->phone ?? 'N/A';
             $propertyUrl = route('property.showid', ['id' => $property->id]);
@@ -1361,7 +1384,8 @@ class TelegramWebAppController extends Controller
             $message .= "🔗 [Xem tin]({$propertyUrl})";
 
             $notificationService->sendToGroup('public_channel', $message);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::warning('Failed to send listing telegram notification: ' . $e->getMessage());
         }
     }
@@ -1371,8 +1395,8 @@ class TelegramWebAppController extends Controller
         try {
             $notificationService = app(NotificationService::class);
             $leadType = $lead->lead_type === 'rent' ? 'Cần thuê' : 'Cần mua';
-            $budgetMin = number_format((float) ($lead->demand_rate_min ?? 0), 0, ',', '.');
-            $budgetMax = number_format((float) ($lead->demand_rate_max ?? 0), 0, ',', '.');
+            $budgetMin = number_format((float)($lead->demand_rate_min ?? 0), 0, ',', '.');
+            $budgetMax = number_format((float)($lead->demand_rate_max ?? 0), 0, ',', '.');
             $wards = is_array($lead->wards) && count($lead->wards) ? implode(', ', $lead->wards) : 'Không giới hạn';
             $categories = is_array($lead->categories) && count($lead->categories) ? implode(', ', $lead->categories) : 'Không giới hạn';
             $creatorName = $creator->name ?? 'N/A';
@@ -1394,7 +1418,8 @@ class TelegramWebAppController extends Controller
 
             $notificationService->sendToGroup('public_channel', $message);
             $notificationService->sendToGroup('sale_admin', $message);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::warning('Failed to send lead telegram notification: ' . $e->getMessage());
         }
     }
