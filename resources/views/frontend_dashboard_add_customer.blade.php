@@ -8,6 +8,7 @@
 @push('styles')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/dashboard-style.css') }}">
 <link rel="stylesheet" href="{{ asset('css/webapp.css') }}">
 <style>
@@ -39,6 +40,26 @@
         border-color: #22c55e;
         ring: 2px;
         ring-color: #bbf7d0;
+    }
+
+    .ts-control {
+        border-radius: 0.75rem;
+        padding: 12px 16px;
+        border: 1px solid #E5E7EB;
+        box-shadow: none;
+        background-color: white;
+        font-size: 1rem;
+    }
+
+    .ts-control:focus {
+        border-color: #3270FC;
+    }
+
+    .ts-dropdown {
+        border-radius: 0.75rem;
+        border: 1px solid #E5E7EB;
+        margin-top: 4px;
+        z-index: 1000003 !important;
     }
 </style>
 @endpush
@@ -392,6 +413,34 @@
                 </div>
             </div>
 
+            <!-- ===================== STREET SELECTION — TomSelect ===================== -->
+            <div class="mb-6"
+                x-show="form.wards.length > 0 && !isWardExpanded"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0">
+                <label class="block text-sm font-bold text-gray-700 mb-1.5 text-left">Tên đường</label>
+                <div class="relative">
+                    <select id="select-street-customer" x-model="form.street" x-init="$nextTick(() => {
+                                new TomSelect($el, {
+                                    create: false,
+                                    sortField: { field: 'text', direction: 'asc' },
+                                    plugins: ['dropdown_input'],
+                                    maxOptions: null,
+                                    dropdownParent: document.body,
+                                    onChange: (value) => { 
+                                        form.street = value;
+                                    }
+                                });
+                            })" placeholder="Tìm tên đường..." autocomplete="off">
+                        <option value="">Chọn đường...</option>
+                        <template x-for="st in streets" :key="st.id">
+                            <option :value="st.id" x-text="st.name"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
         </form>
 
         <!-- FOOTER: FIXED BOTTOM NAVIGATION -->
@@ -410,6 +459,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
@@ -417,6 +467,7 @@
         return {
             propertyTypes: @json($propertyTypes),
             wards: @json($wards),
+            streets: @json($streets),
             loading: false,
 
             // Collapse/Expand flags
@@ -433,6 +484,7 @@
                 wards: [],
                 price_min: 0,
                 price_max: 0,
+                street: '',
                 purpose: ''
             },
             priceRanges: [
