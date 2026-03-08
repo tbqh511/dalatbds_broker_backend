@@ -1397,24 +1397,33 @@ class TelegramWebAppController extends Controller
             $leadType = $lead->lead_type === 'rent' ? 'Cần thuê' : 'Cần mua';
             $budgetMin = number_format((float)($lead->demand_rate_min ?? 0), 0, ',', '.');
             $budgetMax = number_format((float)($lead->demand_rate_max ?? 0), 0, ',', '.');
-            $wards = is_array($lead->wards) && count($lead->wards) ? implode(', ', $lead->wards) : 'Không giới hạn';
-            $categories = is_array($lead->categories) && count($lead->categories) ? implode(', ', $lead->categories) : 'Không giới hạn';
+            $wards = 'Không giới hạn';
+            if (is_array($lead->wards) && count($lead->wards) > 0) {
+                $wardNames = LocationsWard::whereIn('code', $lead->wards)->pluck('full_name')->toArray();
+                $wards = count($wardNames) > 0 ? implode(', ', $wardNames) : implode(', ', $lead->wards);
+            }
+
+            $categories = 'Không giới hạn';
+            if (is_array($lead->categories) && count($lead->categories) > 0) {
+                $categoryNames = Category::whereIn('id', $lead->categories)->pluck('category')->toArray();
+                $categories = count($categoryNames) > 0 ? implode(', ', $categoryNames) : implode(', ', $lead->categories);
+            }
             $creatorName = $creator->name ?? 'N/A';
             $creatorPhone = $creator->mobile ?? $creator->phone ?? 'N/A';
             $leadUrl = route('webapp.leads');
 
-            $message = "🎯 *LEAD MỚI TỪ WEBAPP*\n";
+            $message = "🎯 [ĐÀ LẠT BĐS] - KHÁCH HÀNG MỚI\n";
             $message .= "----------------\n";
             $message .= "🆔 Lead ID: `{$lead->id}`\n";
             $message .= "👤 Khách hàng: " . $this->escapeTelegramText($crmCustomer->full_name ?? 'N/A') . "\n";
-            $message .= "📞 SĐT khách: " . $this->escapeTelegramText($crmCustomer->contact ?? 'N/A') . "\n";
+            //$message .= "📞 SĐT khách: " . $this->escapeTelegramText($crmCustomer->contact ?? 'N/A') . "\n";
             $message .= "🏷️ Nhu cầu: {$leadType}\n";
             $message .= "💰 Ngân sách: {$budgetMin} - {$budgetMax} VNĐ\n";
             $message .= "📍 Khu vực: " . $this->escapeTelegramText($wards) . "\n";
             $message .= "🏠 Loại BĐS: " . $this->escapeTelegramText($categories) . "\n";
             $message .= "🧭 Mục đích: " . $this->escapeTelegramText($lead->purpose ?? 'N/A') . "\n";
-            $message .= "👨‍💼 Người tạo: " . $this->escapeTelegramText($creatorName) . " - " . $this->escapeTelegramText($creatorPhone) . "\n";
-            $message .= "🔗 [Mở danh sách lead]({$leadUrl})";
+            //$message .= "👨‍💼 Người tạo: " . $this->escapeTelegramText($creatorName) . " - " . $this->escapeTelegramText($creatorPhone) . "\n";
+            //$message .= "🔗 [Mở danh sách lead]({$leadUrl})";
 
             $notificationService->sendToGroup('public_channel', $message);
             $notificationService->sendToGroup('sale_admin', $message);

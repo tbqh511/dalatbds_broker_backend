@@ -37,22 +37,42 @@ class TelegramMessageTemplates
     }
 
     /**
-     * Lead mới
+     * Lead mới được tạo
      */
     public static function newLead(CrmLead $lead)
     {
-        $customerName = self::escape($lead->customer->name ?? 'N/A');
-        $phone = self::escape($lead->customer->mobile ?? 'N/A');
+        $customerName = self::escape($lead->customer->full_name ?? 'N/A');
+        $phone = self::escape($lead->customer->contact ?? 'N/A');
         $demand = number_format($lead->demand_rate_min) . ' - ' . number_format($lead->demand_rate_max);
-        $areas = self::escape(implode(', ', $lead->wards ?? []));
+        $leadType = ucfirst($lead->lead_type ?? 'N/A');
         
         return "🎯 *LEAD MỚI*\n" .
                "----------------\n" .
                "👤 Khách hàng: {$customerName}\n" .
                "📞 SĐT: {$phone}\n" .
-               "💰 Nhu cầu: {$demand} VNĐ\n" .
-               "📍 Khu vực: {$areas}\n" .
+               "🏠 Loại: {$leadType}\n" .
+               "💰 Ngân sách: {$demand} VNĐ\n" .
                "📝 Ghi chú: " . self::escape($lead->note);
+    }
+
+    /**
+     * Lead được gán cho Sale
+     */
+    public static function leadAssigned(CrmLead $lead): string
+    {
+        $customerName = self::escape($lead->customer->full_name ?? 'N/A');
+        $phone = self::escape($lead->customer->contact ?? 'N/A');
+        $leadType = ucfirst($lead->lead_type ?? 'N/A');
+        $budget = number_format($lead->demand_rate_min) . ' - ' . number_format($lead->demand_rate_max);
+        $note = self::escape($lead->note ?? '');
+
+        return "🔔 *LEAD MỚI ĐƯỢC GIAO*\n" .
+               "----------------\n" .
+               "📋 Khách hàng: {$customerName}\n" .
+               "📞 SĐT: {$phone}\n" .
+               "🏠 Loại: {$leadType}\n" .
+               "💰 Ngân sách: {$budget} VNĐ\n" .
+               "📝 Ghi chú: {$note}";
     }
 
     /**

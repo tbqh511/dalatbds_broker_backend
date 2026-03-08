@@ -42,6 +42,7 @@ return [
         'groups' => [
             'public_channel' => env('TELEGRAM_PUBLIC_CHANNEL_ID'),
             'sale_admin' => env('TELEGRAM_SALE_ADMIN_GROUP_ID'),
+            'bds_admin' => env('TELEGRAM_BDS_ADMIN_GROUP_ID'),
         ],
     ],
 

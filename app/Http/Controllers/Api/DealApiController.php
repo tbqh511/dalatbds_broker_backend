@@ -9,6 +9,7 @@ use App\Models\CrmLead;
 use App\Models\CrmDealAssigned;
 use App\Models\User;
 use App\Services\NotificationService;
+use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -33,13 +34,13 @@ class DealApiController extends Controller
         // In real app, use Auth::id() or Auth::guard('api')->id()
         $user = $request->user();
         $saleId = $user ? $user->id : $request->sale_id;
-        
+
         $query = CrmDeal::query()->with(['customer', 'products', 'assigneds.sale']);
 
         // Filter by Sale (if not Admin, or if requested)
         if ($saleId) {
             // Check if sale is assigned to deal
-            $query->whereHas('assigneds', function($q) use ($saleId) {
+            $query->whereHas('assigneds', function ($q) use ($saleId) {
                 $q->where('user_id', $saleId);
             });
         }
@@ -55,16 +56,17 @@ class DealApiController extends Controller
         }
 
         $deals = $query->orderBy('updated_at', 'desc')->paginate(10);
-        
+
         // Append counts
         $deals->getCollection()->transform(function ($deal) {
             $deal->products_count = $deal->products->count();
             // Assuming bookings are related to products
-            $deal->bookings_count = $deal->products->sum(function($product) {
-                return $product->bookings()->count();
+            $deal->bookings_count = $deal->products->sum(function ($product) {
+                    return $product->bookings()->count();
+                }
+                );
+                return $deal;
             });
-            return $deal;
-        });
 
         return response()->json([
             'success' => true,
@@ -79,11 +81,11 @@ class DealApiController extends Controller
     public function show($id)
     {
         $deal = CrmDeal::with([
-            'customer', 
+            'customer',
             'lead',
             'assigneds.sale',
-            'products.property', 
-            'products.bookings', 
+            'products.property',
+            'products.bookings',
             'commissions'
         ])->find($id);
 
@@ -104,13 +106,13 @@ class DealApiController extends Controller
     public function showWebApp($id)
     {
         $deal = CrmDeal::with([
-            'customer', 
+            'customer',
             'products.property',
-            'products.bookings' => function($q) {
-                $q->latest()->limit(1);
-            }
+            'products.bookings' => function ($q) {
+            $q->latest()->limit(1);
+        }
         ])->findOrFail($id);
-        
+
         return view('telegram.deals.show', compact('deal'));
     }
 
@@ -147,7 +149,7 @@ class DealApiController extends Controller
                 if (!$customerId) {
                     $customerId = $lead->customer_id;
                 }
-                
+
                 // Update Lead Status
                 $lead->status = 'converted';
                 $lead->save();
@@ -181,7 +183,8 @@ class DealApiController extends Controller
                 'data' => $deal
             ], 201);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
@@ -195,16 +198,13 @@ class DealApiController extends Controller
      */
     protected function notifyDealCreation($deal, $saleId)
     {
+        // Load relationships needed for template
+        $deal->load(['customer', 'assigneds.sale']);
         $sale = User::find($saleId);
-        $customer = CrmCustomer::find($deal->customer_id);
+        $customer = $deal->customer;
 
-        $message = "🎉 *New Deal Created!* 🎉\n\n";
-        $message .= "🆔 *Deal ID:* #{$deal->id}\n";
-        $message .= "👤 *Customer:* " . ($customer->full_name ?? 'N/A') . "\n";
-        $message .= "💼 *Sale:* " . ($sale->name ?? 'N/A') . "\n";
-        // $deal->amount is already formatted by Accessor
-        $message .= "💰 *Amount:* " . $deal->amount . "\n";
-        $message .= "📅 *Date:* " . $deal->created_at->format('d/m/Y H:i') . "\n";
+        // Dùng template tập trung — chỉ sửa TelegramMessageTemplates.php để thay đổi nội dung
+        $message = TelegramMessageTemplates::dealCreated($deal);
 
         // 1. Notify Public Group (e.g. Company Channel)
         $this->notificationService->sendToGroup('public_channel', $message);
@@ -214,14 +214,14 @@ class DealApiController extends Controller
 
         // 3. Notify Assigned Sale (if they have telegram_id)
         if ($sale && $sale->telegram_id) {
-            $this->notificationService->sendToUser($sale, "You have been assigned to Deal #{$deal->id}.\n\n" . $message);
+            $saleMsg = "🎉 Bạn được giao Deal mới \#{$deal->id}\n\n" . $message;
+            $this->notificationService->sendToUser($sale, $saleMsg);
         }
 
-        // 4. Notify Customer (Optional - maybe generic welcome message)
+        // 4. Notify Customer (xác nhận đơn giản, không lộ thông tin nội bộ)
         if ($customer && $customer->telegram_id) {
-             // Usually we don't send internal deal info to customer, maybe just a confirmation
-             $customerMsg = "Xin chào {$customer->full_name}, hồ sơ giao dịch của bạn đã được khởi tạo. Mã hồ sơ: #{$deal->id}. Chúng tôi sẽ sớm liên hệ lại.";
-             $this->notificationService->sendToCustomer($customer, $customerMsg);
+            $customerMsg = "Xin chào {$customer->full_name}, hồ sơ giao dịch của bạn đã được khởi tạo. Mã hồ sơ: \#{$deal->id}. Chúng tôi sẽ sớm liên hệ lại.";
+            $this->notificationService->sendToCustomer($customer, $customerMsg);
         }
     }
 }

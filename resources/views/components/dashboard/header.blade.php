@@ -2,27 +2,30 @@
     <div class="dashboard-title-item"><span>{{ $title }}</span></div>
     <div class="dashbard-menu-header">
         @php
-            $currentUser = null;
-            $userAvatar = asset('images/avatar/1.jpg');
-            $userName = 'Khách';
+        $currentUser = null;
+        $userAvatar = asset('images/avatar/1.jpg');
+        $userName = 'Khách';
 
-            if (Auth::guard('webapp')->check()) {
-                $currentUser = Auth::guard('webapp')->user();
-                $userName = $currentUser->name;
-                // Customer model has getProfileAttribute which returns full URL or default
-                $userAvatar = $currentUser->profile; 
-            } elseif (auth()->check()) {
-                $currentUser = auth()->user();
-                $userName = $currentUser->name;
-                $userAvatar = asset('images/avatar/'.($currentUser->avatar ?? '1.jpg'));
-            }
+        if (Auth::guard('webapp')->check()) {
+        $currentUser = Auth::guard('webapp')->user();
+        $userName = $currentUser->name;
+        // Customer model has getProfileAttribute which returns full URL or default
+        $userAvatar = $currentUser->profile;
+        } elseif (auth()->check()) {
+        $currentUser = auth()->user();
+        $userName = $currentUser->name;
+        $userAvatar = asset('images/avatar/'.($currentUser->avatar ?? '1.jpg'));
+        }
         @endphp
         <div class="dashbard-menu-avatar fl-wrap">
             <img src="{{ $userAvatar }}" alt="{{ $userName }}" style="object-fit: cover;">
             <h4>Xin chào, <span>{{ $userName }}</span></h4>
         </div>
         <!-- Shutdown button: always shown. Attempts Telegram.WebApp.close(), then window.close(), then fallback redirect -->
-        <a href="javascript:void(0)" onclick="event.preventDefault(); (window.handleShutdownClick ? window.handleShutdownClick(event) : null);" class="log-out-btn tolt" data-microtip-position="bottom" data-tooltip="Tắt ứng dụng"><i class="far fa-power-off"></i></a>
+        <a href="javascript:void(0)"
+            onclick="event.preventDefault(); (window.handleShutdownClick ? window.handleShutdownClick(event) : null);"
+            class="log-out-btn tolt" data-microtip-position="bottom" data-tooltip="Tắt ứng dụng"><i
+                class="far fa-power-off"></i></a>
 
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
 

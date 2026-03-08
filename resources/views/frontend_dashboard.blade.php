@@ -134,41 +134,63 @@
 <script src="{{ asset('js/charts.js') }}"></script>
 <script src="{{ asset('js/dashboard.js') }}"></script>
 <script>
-    //         ram WebApp Logic (Run on every page        f (window.Tel        dow.Te            
-    const tg = window.Tel                  tg.expand();
-    try {
-        tg.setHeaderColor('#32                tg.set            '#ffffff'); // Set background color to match
-        } catc              nswag    pp setHeaderColor faile    
+    // Global Telegram WebApp Logic (Run on every page load)
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        if (tg.isVersionAtLeast && tg.isVersionAtLeast('6.1')) {
+            try {
+                tg.setHeaderColor('#3270FC');
+                tg.setBackgroundColor('#ffffff'); // Set background color to match
+            } catch (e) {
+                console.warn('Telegram WebApp setHeaderColor failed:', e);
+            }
         }
     }
 </script>
 @if(!env('WEBAPP_DEV_MODE', false) && !Auth::guard('webapp')->check())
 <script>
-          ecific Logic
-    async function ini                const tg = windo        ebApp;
-    // ... (rest of logic)
+    // Auth-specific Logic
+    async function initWebApp() {
+        const tg = window.Telegram.WebApp;
+        // ... (rest of logic)
 
-    // Set a timeout to show err        g takes too long (e                    setTimeout(() => {
-    const statusEl = doc            ById('webapp-status');
-    if (                .innerText) {
-        statusEl.innerText = "Đang kết nối máy chủ.            m                              15000);
+        // Set a timeout to show error if loading takes too long (e.g. 15 seconds)
+        setTimeout(() => {
+            const statusEl = document.getElementById('webapp-status');
+            if (statusEl && !statusEl.innerText) {
+                statusEl.innerText = "Đang kết nối máy chủ... (Vui lòng kiểm tra mạng)";
+            }
+        }, 15000);
 
-        const initDa        Data;
-        if                       console.warn("Non-Telegram environment det                  document.getElementById('webapp-status').innerText = "Vui lòng mở ứng dụng trong Telegr              return icate with Laravel Backend
-            = await axios.post('/api/webapp/login', {
-
+        const initData = tg.initData;
+        if (!initData) {
+            console.warn("Non-Telegram environment detected.");
+            document.getElementById('webapp-status').innerText = "Vui lòng mở ứng dụng trong Telegram.";
+            return;
+        }
+        try {
+            // Authenticate with Laravel Backend
+            const response = await axios.post('/api/webapp/login', {
+                initData: initData
             });
-        data;
-        if (data.statu            ated') {
+            const data = response.data;
+            if (data.status === 'authenticated') {
                 // Success
-                   ad to let S                e handle the rest
-        window.location.reload                se if (data.status === 'gu                    document.getElementById('webap = "Bạn chưa có tài khoản.";
-        tg.showPopup({
-            khoản',
-                          Vui lòng quay lại Bot chat v                    để tạo tài khoản.',
+                // Reload to let Server-side Middleware handle the rest
+                window.location.reload();
+            } else if (data.status === 'guest') {
+                document.getElementById('webapp-status').innerText = "Bạn chưa có tài khoản.";
+                tg.showPopup({
+                    title: 'Chưa có tài khoản',
+                    message: 'Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.',
                     buttons: [{ type: 'close' }]
-                                      } catc h(error) {
-            r("A            or           document.getEle            -status').innerText = "Lỗi kết nối má             }
+                });
+            }
+        } catch (error) {
+            console.error("Auth Error:", error);
+            document.getElementById('webapp-status').innerText = "Lỗi kết nối máy chủ.";
+        }
     }
     window.onload = function () {
         initWebApp();
