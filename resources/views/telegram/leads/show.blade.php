@@ -73,7 +73,7 @@
             {{ ucfirst($lead->lead_type) }} 
             @if($lead->demand_rate_min > 0)
                 <br>
-                <small>{{ number_format($lead->demand_rate_min) }} - {{ number_format($lead->demand_rate_max) }}</small>
+                <small>{{ format_vnd($lead->demand_rate_min) }} – {{ format_vnd($lead->demand_rate_max) }}</small>
             @endif
         </div>
         

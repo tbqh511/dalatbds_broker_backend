@@ -11,87 +11,94 @@
             <!-- dashboard-title end -->
 
             <div class="dasboard-wrapper fl-wrap">
-                <div class="dasboard-widget-title fl-wrap"
-                    style="display: flex; align-items: center; justify-content: space-between;">
+                <div class="dasboard-widget-title fl-wrap">
                     <h5><i class="fal fa-users"></i>Danh sách Lead</h5>
-                    <a href="{{ route('webapp.add_customer') }}" class="mark-btn color-bg"
-                        style="position: static; margin: 0; transform: none; display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; color: #fff; font-weight: 500; box-shadow: 0 4px 12px rgba(50, 112, 252, 0.3);">
-                        <i class="fal fa-plus"></i> Thêm mới
-                    </a>
                 </div>
                 <div class="dasboard-widget-box fl-wrap">
-                    <div class="dasboard-opt fl-wrap">
-                        <!-- price-opt-->
-                        <div class="price-opt">
-                            <span class="price-opt-title">Lọc theo trạng thái:</span>
-                            <div class="listsearch-input-item">
-                                <form action="{{ route('webapp.leads') }}" method="GET" id="filter-form">
-                                    <select name="status" data-placeholder="Tất cả"
-                                        class="chosen-select no-search-select" onchange="this.form.submit()">
-                                        <option value="">Tất cả</option>
-                                        <option value="new" {{ request('status')=='new' ? 'selected' : '' }}>Mới
-                                        </option>
-                                        <option value="contacted" {{ request('status')=='contacted' ? 'selected' : ''
-                                            }}>Đã liên hệ</option>
-                                        <option value="converted" {{ request('status')=='converted' ? 'selected' : ''
-                                            }}>Đã chuyển đổi</option>
-                                        <option value="lost" {{ request('status')=='lost' ? 'selected' : '' }}>Thất bại
-                                        </option>
-                                    </select>
-                                </form>
-                            </div>
-                        </div>
-                        <!-- price-opt end-->
+                    <!-- Status filter pills -->
+                    <div class="webapp-filter-pills">
+                        <a href="{{ route('webapp.leads') }}"
+                            class="filter-pill {{ !request('status') ? 'pill-active' : '' }}">Tất cả</a>
+                        <a href="{{ route('webapp.leads', ['status' => 'new']) }}"
+                            class="filter-pill pill-new {{ request('status') == 'new' ? 'pill-active' : '' }}">Mới</a>
+                        <a href="{{ route('webapp.leads', ['status' => 'contacted']) }}"
+                            class="filter-pill pill-contacted {{ request('status') == 'contacted' ? 'pill-active' : '' }}">Đã liên hệ</a>
+                        <a href="{{ route('webapp.leads', ['status' => 'converted']) }}"
+                            class="filter-pill pill-converted {{ request('status') == 'converted' ? 'pill-active' : '' }}">Chuyển đổi</a>
+                        <a href="{{ route('webapp.leads', ['status' => 'lost']) }}"
+                            class="filter-pill pill-lost {{ request('status') == 'lost' ? 'pill-active' : '' }}">Thất bại</a>
                     </div>
+                    @php
+                        $statusLabels = [
+                            'New'       => 'Mới',
+                            'Contacted' => 'Đã liên hệ',
+                            'Converted' => 'Chuyển đổi',
+                            'Lost'      => 'Thất bại',
+                        ];
+                    @endphp
                     <div class="row">
                         @forelse($leads as $lead)
+                        @php
+                            // Loại BĐS
+                            $catNames = collect($lead->categories ?? [])
+                                ->map(fn($id) => $categoryMap[$id] ?? null)
+                                ->filter()
+                                ->implode(', ');
+
+                            // Khu vực
+                            $wardNames = collect($lead->wards ?? [])
+                                ->map(fn($code) => $wardMap[$code] ?? null)
+                                ->filter()
+                                ->implode(', ');
+
+                            // Đường (lấy từ note: "... - Tên đường: X")
+                            $streetName = '';
+                            if ($lead->note && str_contains($lead->note, 'Tên đường:')) {
+                                $streetName = trim(substr($lead->note, strpos($lead->note, 'Tên đường:') + strlen('Tên đường:')));
+                            }
+
+                            $statusLabel = $statusLabels[$lead->status] ?? $lead->status;
+                            $rawStatus   = strtolower($lead->getRawOriginal('status'));
+                        @endphp
                         <!-- bookings-item -->
                         <div class="col-md-6">
                             <div class="bookings-item fl-wrap">
                                 <div class="bookings-item-header fl-wrap">
-                                    <img src="{{ $lead->customer && $lead->customer->avatar ? asset($lead->customer->avatar) : asset('images/avatar/1.jpg') }}"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/avatar/1.jpg') }}';"
-                                        alt="" width="60" height="60" style="object-fit: cover;">
                                     <h4>{{ $lead->customer ? $lead->customer->full_name : 'Khách vãng lai' }}</h4>
-                                    <span class="new-bookmark status-{{ $lead->status }}">{{ $lead->status }}</span>
+                                    <span class="new-bookmark status-{{ $rawStatus }}">{{ $statusLabel }}</span>
                                 </div>
                                 <div class="bookings-item-content fl-wrap">
                                     <ul>
-                                        <li>Điện thoại: <span>{{ $lead->customer ? $lead->customer->contact : 'N/A'
-                                                }}</span></li>
-                                        <li>Loại nhu cầu: <span>{{ $lead->lead_type == 'buy' ? 'Mua' : 'Thuê' }}</span>
-                                        </li>
-                                        <li>Ngân sách: <span>{{ number_format($lead->demand_rate_min) }} - {{
-                                                number_format($lead->demand_rate_max) }}</span></li>
-                                        <li>Ngày tạo: <span>{{ $lead->created_at->format('d/m/Y H:i') }}</span></li>
+                                        @if($catNames)
+                                        <li>Loại BĐS: <span>{{ $catNames }}</span></li>
+                                        @endif
+                                        <li>Nhu cầu: <span>{{ $lead->lead_type === 'Buy' ? 'Mua' : 'Thuê' }}</span></li>
+                                        <li>Ngân sách: <span>{{ format_vnd($lead->demand_rate_min) }} – {{ format_vnd($lead->demand_rate_max) }}</span></li>
+                                        @if($wardNames)
+                                        <li>Khu vực: <span>{{ $wardNames }}</span></li>
+                                        @endif
+                                        @if($streetName)
+                                        <li>Đường: <span>{{ $streetName }}</span></li>
+                                        @endif
                                     </ul>
-                                    @if($lead->source_note)
-                                    <p>Ghi chú: {{ $lead->source_note }}</p>
-                                    @endif
                                 </div>
                                 <div class="bookings-item-footer fl-wrap">
-                                    <ul
-                                        style="display: flex; align-items: center; list-style: none; padding: 0; margin: 0;">
-                                        <li style="margin-right: 10px;"><a
-                                                href="tel:{{ $lead->customer ? $lead->customer->contact : '' }}"
-                                                class="tolt" data-microtip-position="top-left" data-tooltip="Gọi điện"
-                                                style="display: flex; align-items: center; justify-content: center;"><i
-                                                    class="far fa-phone"></i></a></li>
-                                        <li style="margin-right: 10px;"><a
-                                                href="{{ route('webapp.leads.edit', $lead->id) }}" class="tolt"
-                                                data-microtip-position="top-left" data-tooltip="Chỉnh sửa"
-                                                style="display: flex; align-items: center; justify-content: center;"><i
-                                                    class="far fa-edit"></i></a></li>
+                                    <div class="message-date">{{ $lead->created_at->format('d/m/Y') }}</div>
+                                    <ul>
+                                        <li><a href="tel:{{ $lead->customer ? $lead->customer->contact : '' }}"
+                                                class="tolt" data-microtip-position="top-left"
+                                                data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
+                                        <li><a href="{{ route('webapp.leads.edit', $lead->id) }}" class="tolt"
+                                                data-microtip-position="top-left"
+                                                data-tooltip="Chỉnh sửa"><i class="far fa-edit"></i></a></li>
                                         <li>
                                             <form action="{{ route('webapp.leads.destroy', $lead->id) }}" method="POST"
-                                                style="display:inline; margin: 0;"
                                                 onsubmit="return confirm('Bạn có chắc muốn xóa lead này?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="tolt"
-                                                    style="background:none;border:none;padding:0;color:#666; display: flex; align-items: center; justify-content: center;"
-                                                    data-microtip-position="top-left" data-tooltip="Xóa"><i
-                                                        class="far fa-trash"></i></button>
+                                                <button type="submit" class="tolt bookings-footer-btn"
+                                                    data-microtip-position="top-left"
+                                                    data-tooltip="Xóa"><i class="far fa-trash"></i></button>
                                             </form>
                                         </li>
                                     </ul>

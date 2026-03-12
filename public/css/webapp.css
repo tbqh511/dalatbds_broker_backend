@@ -253,3 +253,92 @@ body.webapp-mode .call-button {
     padding-right: 0.25rem; /* pr-1 */
     margin-bottom: 0.25rem; /* mb-1 */
 }
+
+/* ── Status filter pills (Leads page) ─────────────────── */
+.webapp-filter-pills {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 12px 0 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.webapp-filter-pills::-webkit-scrollbar { display: none; }
+
+.filter-pill {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #566985;
+    background: #f1f4f8;
+    border: 1.5px solid transparent;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.filter-pill:hover {
+    background: #e2e8f2;
+    color: #144273;
+    text-decoration: none;
+}
+.filter-pill.pill-active {
+    background: #3270FC;
+    color: #fff;
+    border-color: #3270FC;
+    box-shadow: 0 2px 8px rgba(50,112,252,0.3);
+}
+
+/* Status-coloured inactive pills */
+.filter-pill.pill-new        { border-color: #40B69E; color: #40B69E; }
+.filter-pill.pill-new.pill-active        { background: #40B69E; border-color: #40B69E; color: #fff; }
+.filter-pill.pill-contacted  { border-color: #F9B930; color: #b07e00; }
+.filter-pill.pill-contacted.pill-active  { background: #F9B930; border-color: #F9B930; color: #fff; }
+.filter-pill.pill-converted  { border-color: #3270FC; color: #3270FC; }
+.filter-pill.pill-converted.pill-active  { background: #3270FC; border-color: #3270FC; color: #fff; }
+.filter-pill.pill-lost       { border-color: #F87171; color: #c94040; }
+.filter-pill.pill-lost.pill-active       { background: #F87171; border-color: #F87171; color: #fff; }
+
+/* ── Bookings footer delete button (match <a> link style) ─ */
+.bookings-footer-btn {
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    float: left;
+    border-left: 1px solid #eee;
+    background: #fff;
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 0;
+    color: #666;
+    cursor: pointer;
+    text-align: center;
+}
+.bookings-footer-btn:hover {
+    background: #F5F7FB;
+}
+
+/* ── Mobile layout improvements ────────────────────────── */
+@media (max-width: 800px) {
+    /* Lead cards: full width, slightly tighter padding */
+    .bookings-item {
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+        margin-bottom: 12px;
+    }
+
+    /* Wider content area on mobile (sidebar is hidden) */
+    .dashboard-content {
+        padding: 20px 16px 100px 16px;
+    }
+
+    /* Dashboard title: smaller on mobile */
+    .dashboard-title-item {
+        font-size: 14px;
+    }
+}

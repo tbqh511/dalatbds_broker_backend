@@ -24,6 +24,28 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Pool;
 
+if (!function_exists('format_vnd')) {
+    /**
+     * Format a number into Vietnamese currency shorthand.
+     * e.g. 1_500_000_000 → "1,5 tỷ", 500_000_000 → "500 triệu"
+     */
+    function format_vnd($amount): string
+    {
+        $amount = (float) $amount;
+        if ($amount >= 1_000_000_000) {
+            $val = $amount / 1_000_000_000;
+            $str = rtrim(rtrim(number_format($val, 1, ',', '.'), '0'), ',');
+            return $str . ' tỷ';
+        }
+        if ($amount >= 1_000_000) {
+            $val = $amount / 1_000_000;
+            $str = rtrim(rtrim(number_format($val, 1, ',', '.'), '0'), ',');
+            return $str . ' triệu';
+        }
+        return number_format($amount, 0, ',', '.') . ' đ';
+    }
+}
+
 if (!function_exists('system_setting')) {
 
     function system_setting($type)

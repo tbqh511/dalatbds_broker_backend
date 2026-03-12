@@ -145,12 +145,23 @@
                         <div class="relative group" x-show="form.phone && isPhoneValid"
                             x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0 -translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0">
-                            <input type="text" x-model="form.name"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-init="$watch('isPhoneValid', v => { if (v) $nextTick(() => $el.querySelector('input') && $el.querySelector('input').focus()) })">
+                            <input type="text" x-model="form.name" x-ref="nameInput"
                                 @focus="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })"
+                                @blur="nameTouched = true"
                                 placeholder="Tên liên hệ"
-                                :class="{'!border-red-500 !bg-red-50 focus:!border-red-500': form.name && !isNameValid}"
+                                :class="{
+                                    '!border-red-500 !bg-red-50 focus:!border-red-500': (nameTouched || form.name) && !isNameValid,
+                                    '!border-orange-400 !bg-orange-50': isPhoneValid && !form.name && nameTouched
+                                }"
                                 class="input-field border-green-200 focus:border-green-500 focus:ring-green-200 bg-green-50/30">
+                            <!-- Hint: bỏ trống sau khi đã chạm vào -->
+                            <p x-show="isPhoneValid && !form.name && nameTouched"
+                                class="text-xs text-orange-500 mt-1 text-left ml-1">
+                                <i class="fa-solid fa-arrow-up mr-1"></i> Vui lòng nhập tên để tiếp tục
+                            </p>
+                            <!-- Lỗi: đã nhập nhưng không hợp lệ -->
                             <p x-show="form.name && !isNameValid"
                                 class="text-xs text-red-500 mt-1 text-left ml-1">
                                 <i class="fa-solid fa-circle-exclamation mr-1"></i> Tên phải có ít nhất 2 ký tự và không chứa ký tự đặc biệt
@@ -378,7 +389,7 @@
                             <i
                                 :class="['fas', ward.icon, form.wards.includes(ward.id) ? 'text-white' : 'text-primary group-hover:text-primary', 'text-lg mb-1']"></i>
                             <span class="text-[10px] font-medium text-center leading-tight"
-                                x-text="ward.name.replace('Phường ', '').replace('Xã ', '')"></span>
+                                x-text="ward.name"></span>
                         </button>
                     </template>
                 </div>
@@ -449,8 +460,15 @@
             <div class="w-full max-w-md flex justify-between gap-3">
                 <!-- Nút Lưu -->
                 <button type="button" @click="submitForm" :disabled="loading || !isFormValid"
-                    class="w-full bg-success text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-green-200 hover:bg-green-600 transition-transform transform active:scale-[0.98] flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span x-show="!loading">Lưu Khách Hàng</span>
+                    :class="(isFormValid && !loading)
+                        ? 'bg-success text-white shadow-lg shadow-green-200 hover:bg-green-600 active:scale-[0.98] cursor-pointer'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'"
+                    class="w-full px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 transform flex justify-center items-center">
+                    <span x-show="!loading" class="flex items-center gap-2">
+                        <i class="fas fa-floppy-disk" x-show="isFormValid"></i>
+                        <i class="fas fa-lock" x-show="!isFormValid"></i>
+                        Lưu Khách Hàng
+                    </span>
                     <span x-show="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> Đang lưu...</span>
                 </button>
             </div>
@@ -469,6 +487,7 @@
             wards: @json($wards),
             streets: @json($streets),
             loading: false,
+            nameTouched: false,
 
             // Collapse/Expand flags
             isCategoryExpanded: true,
@@ -479,7 +498,7 @@
             form: {
                 name: '',
                 phone: '',
-                lead_type: 'buy',
+                lead_type: '',
                 categories: [],
                 wards: [],
                 price_min: 0,
@@ -590,7 +609,7 @@
                 return this.form.wards
                     .map(id => {
                         const w = this.wards.find(ward => ward.id === id);
-                        return w ? w.name.replace('Phường ', '').replace('Xã ', '') : '';
+                        return w ? w.name : '';
                     })
                     .filter(n => n)
                     .join(', ');

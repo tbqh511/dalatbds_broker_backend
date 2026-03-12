@@ -8,6 +8,8 @@ use App\Services\CrmLeadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CrmLead;
+use App\Models\Category;
+use App\Models\LocationsWard;
 
 class CrmLeadController extends Controller
 {
@@ -33,7 +35,11 @@ class CrmLeadController extends Controller
 
         $leads = $this->leadService->getLeads($customer->id, 10, $filters);
 
-        return view('frontend_dashboard_leads', compact('leads', 'customer'));
+        $categoryMap = Category::where('status', '1')->pluck('category', 'id');
+        $districtCode = config('location.district_code');
+        $wardMap = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
+
+        return view('frontend_dashboard_leads', compact('leads', 'customer', 'categoryMap', 'wardMap'));
     }
 
     public function create()
