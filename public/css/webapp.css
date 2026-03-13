@@ -342,3 +342,194 @@ body.webapp-mode .call-button {
         font-size: 14px;
     }
 }
+
+/* =============================================
+   Pagination fix for webapp leads/listings
+   ============================================= */
+.pagination-wrap {
+    width: 100%;
+    margin: 35px 0 25px;
+    clear: both;
+    display: block;
+}
+
+.pagination-wrap .pagination {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    float: none;
+    width: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pagination-wrap .pagination li {
+    display: inline-flex;
+}
+
+.pagination-wrap .pagination li a,
+.pagination-wrap .pagination li span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    font-size: 13px;
+    color: #555;
+    background: #fff;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+.pagination-wrap .pagination li.active span {
+    background: #3270FC;
+    border-color: #3270FC;
+    color: #fff;
+    font-weight: 600;
+}
+
+.pagination-wrap .pagination li.disabled span {
+    color: #ccc;
+    border-color: #eee;
+    background: #fafafa;
+    cursor: default;
+}
+
+.pagination-wrap .pagination li a:hover {
+    background: #3270FC;
+    border-color: #3270FC;
+    color: #fff;
+}
+
+/* ── Leads search bar ───────────────────────────────────── */
+.leads-search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.leads-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9aa5b4;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.leads-search-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 40px 0 38px;
+    border: 1.5px solid #e0e6ef;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #333;
+    background: #f8fafc;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.leads-search-input:focus {
+    border-color: #3270FC;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(50,112,252,0.1);
+}
+
+.leads-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9aa5b4;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.leads-search-clear:hover { color: #555; }
+
+
+/* ── Lead Detail Page ─────────────────────────── */
+.lead-header-actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.lead-header-actions .btn-sm { display:inline-flex; align-items:center; gap:5px; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:500; text-decoration:none; border:none; cursor:pointer; }
+.color-btn-light { background:#f0f4ff; color:#3270FC; }
+.color-btn-light:hover { background:#e0eaff; }
+
+.lead-detail-section-title { font-size:14px; font-weight:600; color:#444; margin-bottom:12px; display:flex; align-items:center; gap:7px; }
+.lead-detail-section-title i { color:#3270FC; }
+
+.lead-detail-info-list { list-style:none; padding:0; margin:0; }
+.lead-detail-info-list li { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:1px solid #f2f4f8; font-size:14px; color:#444; }
+.lead-detail-info-list li:last-child { border-bottom:none; }
+.ldi-label { color:#888; min-width:100px; flex-shrink:0; }
+
+.lead-call-btn { color:#3270FC; text-decoration:none; display:inline-flex; align-items:center; gap:5px; }
+.lead-call-btn:hover { text-decoration:underline; }
+
+.lead-assign-wrap { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.lead-assign-select { border:1px solid #dde2ef; border-radius:8px; padding:6px 10px; font-size:13px; color:#333; background:#fff; }
+
+/* ── Activity Timeline ────────────────────────── */
+.lead-timeline { display:flex; flex-direction:column; gap:0; }
+.lead-timeline-item { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #f2f4f8; }
+.lead-timeline-item:last-child { border-bottom:none; }
+.lt-icon { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; }
+.lt-icon-call { background:#e8f4ff; color:#3270FC; }
+.lt-icon-note { background:#fff8e1; color:#f59e0b; }
+.lt-icon-assignment { background:#f0fdf4; color:#22c55e; }
+.lt-icon-status_change { background:#fdf4ff; color:#a855f7; }
+
+.lt-body { flex:1; min-width:0; }
+.lt-header { display:flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:13px; }
+.lt-actor { color:#888; }
+.lt-time { color:#aaa; margin-left:auto; font-size:12px; }
+.lt-content { font-size:13px; color:#555; margin-top:4px; white-space:pre-line; }
+
+.lead-note-form { display:flex; flex-direction:column; }
+.lead-note-input { width:100%; border:1px solid #dde2ef; border-radius:8px; padding:10px; font-size:13px; resize:none; box-sizing:border-box; }
+
+/* ── Deal Product Cards ───────────────────────── */
+.deal-product-card { border:1px solid #eaecf0; border-radius:10px; padding:14px; margin-bottom:14px; }
+.dpc-header { display:flex; gap:12px; align-items:flex-start; }
+.dpc-thumb { width:70px; height:55px; object-fit:cover; border-radius:6px; flex-shrink:0; }
+.dpc-info { flex:1; min-width:0; }
+.dpc-title { font-size:14px; font-weight:600; color:#333; margin-bottom:4px; }
+.dpc-status { display:inline-block; font-size:12px; background:#e8f4ff; color:#3270FC; padding:2px 8px; border-radius:10px; }
+.dpc-reason { font-size:12px; color:#ef4444; margin-top:4px; }
+.dpc-bookings { border-top:1px solid #f2f4f8; margin-top:10px; padding-top:10px; }
+.dpc-booking-item { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dashed #f2f4f8; font-size:13px; }
+.dpc-booking-item:last-child { border-bottom:none; }
+.dpc-booking-date { color:#555; }
+.dpc-booking-status { background:#f0fdf4; color:#22c55e; padding:2px 8px; border-radius:10px; font-size:12px; }
+.dpc-feedback { width:100%; color:#555; font-style:italic; font-size:12px; padding-top:2px; }
+
+/* ── Sale Admin Dashboard ─────────────────────── */
+.stat-card { background:#f8fafc; border-radius:10px; padding:16px; border:1px solid #eaecf0; }
+.stat-card.stat-warning { background:#fffbeb; border-color:#fde68a; }
+.stat-card.stat-success { background:#f0fdf4; border-color:#bbf7d0; }
+.stat-card.stat-info { background:#eff6ff; border-color:#bfdbfe; }
+.stat-number { font-size:28px; font-weight:700; color:#3270FC; }
+.stat-label { font-size:12px; color:#888; margin-top:2px; }
+
+.sale-team-item { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f2f4f8; }
+.sale-team-item:last-child { border-bottom:none; }
+.sti-info { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.sti-role { font-size:12px; padding:2px 8px; border-radius:10px; }
+.sale-role-sale { background:#e8f4ff; color:#3270FC; }
+.sale-role-sale_admin { background:#fdf4ff; color:#a855f7; }
+.sti-call { color:#3270FC; font-size:16px; }
+
+.unassigned-lead-item { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f2f4f8; gap:10px; }
+.unassigned-lead-item:last-child { border-bottom:none; }
+.uli-info { flex:1; min-width:0; }

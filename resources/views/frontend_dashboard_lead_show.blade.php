@@ -5,7 +5,7 @@
 @section('hide_secondary_nav')@endsection
 
 @section('content')
-    @include('frontends.components.dashboard_leads')
+    @include('frontends.components.dashboard_lead_detail')
 @endsection
 
 @push('styles')
@@ -20,16 +20,13 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
     <script src="{{ asset('js/dashboard.js') }}"></script>
     <script>
-        // Global Telegram WebApp Logic (Run on every page load)
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             tg.expand();
             try {
                 tg.setHeaderColor('#3270FC');
-                tg.setBackgroundColor('#ffffff'); // Set background color to match
-            } catch (e) {
-                console.warn('Telegram WebApp setHeaderColor failed:', e);
-            }
+                tg.setBackgroundColor('#ffffff');
+            } catch (e) {}
         }
     </script>
 @endpush

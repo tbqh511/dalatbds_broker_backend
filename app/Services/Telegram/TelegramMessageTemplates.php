@@ -7,8 +7,10 @@ use App\Models\CrmDealCommission;
 use App\Models\CrmDealProduct;
 use App\Models\CrmDealProductBooking;
 use App\Models\CrmLead;
+use App\Models\Customer;
 use App\Models\Property;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class TelegramMessageTemplates
 {
@@ -53,6 +55,45 @@ class TelegramMessageTemplates
                "🏠 Loại: {$leadType}\n" .
                "💰 Ngân sách: {$demand} VNĐ\n" .
                "📝 Ghi chú: " . self::escape($lead->note);
+    }
+
+    /**
+     * Lead mới — gửi vào group sale_admin kèm inline keyboard để chọn sales phụ trách.
+     * Trả về ['text' => string, 'keyboard' => array] để NotificationService dùng.
+     *
+     * @param  CrmLead      $lead
+     * @param  Collection   $salesTeam  Collection<Customer> có các field id, name
+     * @return array{text: string, keyboard: array}
+     */
+    public static function newLeadForGroup(CrmLead $lead, Collection $salesTeam): array
+    {
+        $customerName = self::escape($lead->customer->full_name ?? 'N/A');
+        $phone        = self::escape($lead->customer->contact ?? 'N/A');
+        $leadType     = $lead->lead_type === 'buy' ? 'Mua' : 'Thuê';
+        $budget       = number_format($lead->demand_rate_min) . ' – ' . number_format($lead->demand_rate_max);
+        $brokerName   = self::escape($lead->user->name ?? 'N/A');
+        $note         = self::escape($lead->note ?? '');
+
+        $text = "🎯 *LEAD MỚI CẦN PHÂN CÔNG*\n" .
+                "────────────────\n" .
+                "👤 Khách: {$customerName}\n" .
+                "📞 SĐT: {$phone}\n" .
+                "🏠 Nhu cầu: {$leadType}\n" .
+                "💰 Ngân sách: {$budget} VNĐ\n" .
+                "📝 Ghi chú: {$note}\n" .
+                "🙋 Broker: {$brokerName}\n" .
+                "────────────────\n" .
+                "👇 *Chọn sale phụ trách:*";
+
+        // Build inline keyboard — 2 buttons per row
+        $buttons  = $salesTeam->map(fn (Customer $s) => [
+            'text'          => $s->name,
+            'callback_data' => "assign_lead:{$lead->id}:{$s->id}",
+        ])->values()->all();
+
+        $keyboard = array_chunk($buttons, 2); // 2 tên/hàng
+
+        return ['text' => $text, 'keyboard' => $keyboard];
     }
 
     /**

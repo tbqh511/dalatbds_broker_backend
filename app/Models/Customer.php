@@ -29,6 +29,7 @@ class Customer extends Authenticatable implements JWTSubject
         'fcm_id',
         'logintype',
         'isActive',
+        'role',
     ];
 
     protected $hidden = [
@@ -86,6 +87,16 @@ class Customer extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Usertokens::class, 'customer_id');
     }
+    public function isSale(): bool
+    {
+        return in_array($this->role, ['sale', 'sale_admin']);
+    }
+
+    public function isSaleAdmin(): bool
+    {
+        return $this->role === 'sale_admin';
+    }
+
     //HuyTBQ: get list locationsWards
     public function getAgentWardsAttribute()
     {

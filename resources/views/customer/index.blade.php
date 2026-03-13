@@ -52,6 +52,9 @@
                                     <th scope="col" data-field="isActive" data-sortable="false" data-align="center">
                                         {{ __('Active Status') }}
                                     </th>
+                                    <th scope="col" data-field="role" data-sortable="false" data-align="center">
+                                        {{ __('Role') }}
+                                    </th>
                                     <th scope="col" data-field="operate" data-sortable="false" data-align="center">
                                         {{ __('Action') }}</th>
                                 </tr>
@@ -112,6 +115,26 @@
                 }
             });
         }
+
+        // Role change handler — delegated from bootstrap-table rendered HTML
+        $(document).on('change', '.role-select', function () {
+            const id = $(this).data('id');
+            const role = $(this).val();
+            $.ajax({
+                url: '/customer/' + id + '/role',
+                type: 'PATCH',
+                data: { '_token': "{{ csrf_token() }}", role: role },
+                success: function (result) {
+                    Toastify({
+                        text: result.error ? result.message : 'Role đã cập nhật',
+                        duration: 3000, close: true,
+                        backgroundColor: result.error
+                            ? 'linear-gradient(to right, #ff5f6d, #ffc371)'
+                            : 'linear-gradient(to right, #00b09b, #96c93d)'
+                    }).showToast();
+                }
+            });
+        });
 
         function active(id) {
             $.ajax({

@@ -21,6 +21,7 @@ use App\Models\PropertyLegalImage;
 use App\Models\AssignedOutdoorFacilities;
 use App\Models\CrmCustomer;
 use App\Models\CrmLead;
+use App\Models\Customer;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1426,7 +1427,38 @@ class TelegramWebAppController extends Controller
             //$message .= "🔗 [Mở danh sách lead]({$leadUrl})";
 
             $notificationService->sendToGroup('public_channel', $message);
-            $notificationService->sendToGroup('sale_admin', $message);
+
+            // Gửi vào group sale_admin kèm inline keyboard để phân công
+            $salesTeam = Customer::query()->where('role', '=', 'sale')->orWhere('role', '=', 'sale_admin')->get(['id', 'name']);
+
+            if ($salesTeam->isNotEmpty()) {
+                $buttons  = $salesTeam->map(fn (Customer $s) => [
+                    'text'          => $s->name,
+                    'callback_data' => "assign_lead:{$lead->id}:{$s->id}",
+                ])->values()->all();
+                $keyboard = array_chunk($buttons, 2);
+                $notificationService->sendWithInlineKeyboard(
+                    (string) config('services.telegram.groups.sale_admin'),
+                    $message,
+                    $keyboard
+                );
+            } else {
+                $notificationService->sendToGroup('sale_admin', $message);
+            }
+
+            // Gửi xác nhận đến broker tạo lead
+            if ($creator && $creator->telegram_id) {
+                $brokerMsg  = "✅ *Đà Lạt BĐS đã tiếp nhận thông tin khách hàng của bạn!*\n";
+                $brokerMsg .= "Đội ngũ chúng tôi sẽ hỗ trợ tư vấn và kết nối sớm nhất có thể.\n";
+                $brokerMsg .= "----------------\n";
+                $brokerMsg .= "🆔 Lead ID: `{$lead->id}`\n";
+                $brokerMsg .= "👤 Khách hàng: " . $this->escapeTelegramText($crmCustomer->full_name ?? 'N/A') . "\n";
+                $brokerMsg .= "🏷️ Nhu cầu: {$leadType}\n";
+                $brokerMsg .= "💰 Ngân sách: {$budgetMin} - {$budgetMax} VNĐ\n";
+                $brokerMsg .= "📍 Khu vực: " . $this->escapeTelegramText($wards) . "\n";
+                $brokerMsg .= "🏠 Loại BĐS: " . $this->escapeTelegramText($categories) . "\n";
+                $notificationService->sendToCustomer($creator, $brokerMsg);
+            }
         }
         catch (\Exception $e) {
             Log::warning('Failed to send lead telegram notification: ' . $e->getMessage());

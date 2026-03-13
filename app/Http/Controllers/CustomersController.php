@@ -44,6 +44,21 @@ class CustomersController extends Controller
 
 
 
+    public function updateRole(Request $request, $id)
+    {
+        if (!has_permissions('delete', 'customer')) {
+            return response()->json(['error' => true, 'message' => PERMISSION_ERROR_MSG]);
+        }
+
+        $role = $request->input('role');
+        if (!in_array($role, ['customer', 'sale', 'sale_admin', 'admin', 'editor'])) {
+            return response()->json(['error' => true, 'message' => 'Role không hợp lệ']);
+        }
+
+        Customer::where('id', $id)->update(['role' => $role]);
+        return response()->json(['error' => false]);
+    }
+
     public function customerList()
     {
         $offset = 0;
@@ -103,6 +118,12 @@ class CustomersController extends Controller
             $tempRow['address'] = $row->address;
             $tempRow['firebase_id'] = $row->firebase_id;
             $tempRow['isActive'] = ($row->isActive == '0') ? '<span class="badge rounded-pill bg-danger">Inactive</span>' : '<span class="badge rounded-pill bg-success">Active</span>';
+            $roleLabels = ['customer' => 'Khách', 'sale' => 'Sale', 'sale_admin' => 'Sale Admin', 'admin' => 'Admin', 'editor' => 'Editor'];
+            $tempRow['role'] = '<select class="form-select form-select-sm role-select" data-id="' . $row->id . '" style="min-width:110px">'
+                . collect(['customer', 'sale', 'sale_admin'])->map(fn ($r) =>
+                    '<option value="' . $r . '"' . ($row->role === $r ? ' selected' : '') . '>' . ($roleLabels[$r] ?? $r) . '</option>'
+                )->implode('')
+                . '</select>';
             $tempRow['profile'] = ($row->profile != '') ? '<a class="image-popup-no-margins" href="' . $row->profile . '" width="55" height="55"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . $row->profile . '" width="55" height="55"></a>' : '';
 
             $tempRow['fcm_id'] = $row->fcm_id;

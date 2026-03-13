@@ -12,11 +12,13 @@ class NotificationService
 {
     protected string $botToken;
     protected string $apiUrl;
+    protected string $editUrl;
 
     public function __construct()
     {
         $this->botToken = Config::get('services.telegram.bot_token');
         $this->apiUrl = "https://api.telegram.org/bot{$this->botToken}/sendMessage";
+        $this->editUrl = "https://api.telegram.org/bot{$this->botToken}/editMessageText";
     }
 
     /**
@@ -59,6 +61,61 @@ class NotificationService
         }
 
         return $this->sendRaw($chatId, $message, $options);
+    }
+
+    /**
+     * Send message with Telegram inline keyboard to a chat.
+     * Returns the message_id of the sent message, or null on failure.
+     */
+    public function sendWithInlineKeyboard(string $chatId, string $message, array $inlineKeyboard): ?int
+    {
+        if (!$this->botToken) {
+            Log::error("NotificationService: Telegram Bot Token is not configured.");
+            return null;
+        }
+
+        try {
+            $response = Http::retry(3, 100)->post($this->apiUrl, [
+                'chat_id'      => $chatId,
+                'text'         => $message,
+                'parse_mode'   => 'Markdown',
+                'reply_markup' => json_encode(['inline_keyboard' => $inlineKeyboard]),
+            ]);
+
+            if ($response->successful()) {
+                Log::info("NotificationService: Message with keyboard sent to {$chatId}.");
+                return $response->json('result.message_id');
+            }
+
+            Log::error("NotificationService: Failed to send keyboard message to {$chatId}. Response: " . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::error("NotificationService: Exception sending keyboard message to {$chatId}. Error: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Edit an existing message (e.g. to remove inline keyboard after assignment).
+     */
+    public function editMessage(string $chatId, int $messageId, string $newText): bool
+    {
+        if (!$this->botToken) return false;
+
+        try {
+            $response = Http::retry(3, 100)->post($this->editUrl, [
+                'chat_id'      => $chatId,
+                'message_id'   => $messageId,
+                'text'         => $newText,
+                'parse_mode'   => 'Markdown',
+                'reply_markup' => json_encode(['inline_keyboard' => []]),
+            ]);
+
+            return $response->successful();
+        } catch (\Exception $e) {
+            Log::error("NotificationService: Exception editing message {$messageId}. Error: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**

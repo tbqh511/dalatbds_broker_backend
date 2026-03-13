@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\TelegramBotController;
 use App\Http\Controllers\Api\NewsPostApiController;
 use App\Http\Controllers\Api\NewsCategoryApiController;
 use App\Http\Controllers\Api\NewsTagApiController;
@@ -26,6 +27,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+
+// Telegram Bot Webhook — no auth, verified by X-Telegram-Bot-Api-Secret-Token header
+Route::post('telegram/webhook', [TelegramBotController::class, 'webhook']);
 
 // Artisan::call('migrate');
 Route::post('get_system_settings', [ApiController::class, 'get_system_settings']);

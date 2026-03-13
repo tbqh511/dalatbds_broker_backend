@@ -4,16 +4,23 @@ namespace App\Services;
 
 use App\Repositories\CrmLeadRepositoryInterface;
 use App\Models\CrmCustomer;
+use App\Models\Customer;
+use App\Services\NotificationService;
+use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
 class CrmLeadService
 {
     protected $leadRepository;
+    protected NotificationService $notificationService;
 
-    public function __construct(CrmLeadRepositoryInterface $leadRepository)
-    {
-        $this->leadRepository = $leadRepository;
+    public function __construct(
+        CrmLeadRepositoryInterface $leadRepository,
+        NotificationService $notificationService
+    ) {
+        $this->leadRepository      = $leadRepository;
+        $this->notificationService = $notificationService;
     }
 
     public function getLeads($userId, $perPage = 10, $filters = [])
@@ -51,8 +58,12 @@ class CrmLeadService
             ];
 
             $lead = $this->leadRepository->create($leadData);
-            
+
             DB::commit();
+
+            // Notify sale_admin group with inline keyboard for assignment
+            $this->notifyGroupForAssignment($lead->load(['customer', 'user']));
+
             return $lead;
         } catch (Exception $e) {
             DB::rollBack();
@@ -94,5 +105,25 @@ class CrmLeadService
     public function getLead($id)
     {
         return $this->leadRepository->find($id);
+    }
+
+    /**
+     * Send new-lead notification to sale_admin group with inline keyboard for assignment.
+     */
+    protected function notifyGroupForAssignment(\App\Models\CrmLead $lead): void
+    {
+        $groupChatId = config('services.telegram.groups.sale_admin');
+        if (!$groupChatId) return;
+
+        $salesTeam = Customer::query()
+            ->where(fn ($q) => $q->where('role', 'sale')->orWhere('role', 'sale_admin'))
+            ->get(['id', 'name']);
+
+        if ($salesTeam->isEmpty()) return;
+
+        ['text' => $text, 'keyboard' => $keyboard] =
+            TelegramMessageTemplates::newLeadForGroup($lead, $salesTeam);
+
+        $this->notificationService->sendWithInlineKeyboard((string) $groupChatId, $text, $keyboard);
     }
 }

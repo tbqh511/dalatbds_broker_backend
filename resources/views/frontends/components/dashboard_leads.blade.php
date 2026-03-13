@@ -10,116 +10,201 @@
             @include('components.dashboard.header', ['title' => 'Quản lý Lead'])
             <!-- dashboard-title end -->
 
-            <div class="dasboard-wrapper fl-wrap">
+            <div class="dasboard-wrapper fl-wrap" x-data="leadsApp()">
+
                 <div class="dasboard-widget-title fl-wrap">
                     <h5><i class="fal fa-users"></i>Danh sách Lead</h5>
                 </div>
+
                 <div class="dasboard-widget-box fl-wrap">
+
+                    <!-- Search bar -->
+                    <div class="leads-search-wrap">
+                        <i class="fal fa-search leads-search-icon"></i>
+                        <input
+                            type="text"
+                            class="leads-search-input"
+                            placeholder="Tìm theo tên hoặc số điện thoại..."
+                            x-model="search"
+                            @input="onSearch()"
+                        >
+                        <button
+                            type="button"
+                            class="leads-search-clear"
+                            x-show="search.length > 0"
+                            @click="search = ''; fetchLeads(true)"
+                            title="Xóa"
+                        ><i class="fal fa-times"></i></button>
+                    </div>
+
                     <!-- Status filter pills -->
                     <div class="webapp-filter-pills">
-                        <a href="{{ route('webapp.leads') }}"
-                            class="filter-pill {{ !request('status') ? 'pill-active' : '' }}">Tất cả</a>
-                        <a href="{{ route('webapp.leads', ['status' => 'new']) }}"
-                            class="filter-pill pill-new {{ request('status') == 'new' ? 'pill-active' : '' }}">Mới</a>
-                        <a href="{{ route('webapp.leads', ['status' => 'contacted']) }}"
-                            class="filter-pill pill-contacted {{ request('status') == 'contacted' ? 'pill-active' : '' }}">Đã liên hệ</a>
-                        <a href="{{ route('webapp.leads', ['status' => 'converted']) }}"
-                            class="filter-pill pill-converted {{ request('status') == 'converted' ? 'pill-active' : '' }}">Chuyển đổi</a>
-                        <a href="{{ route('webapp.leads', ['status' => 'lost']) }}"
-                            class="filter-pill pill-lost {{ request('status') == 'lost' ? 'pill-active' : '' }}">Thất bại</a>
+                        <button type="button" @click="setStatus('')"
+                            :class="status === '' ? 'filter-pill pill-active' : 'filter-pill'">Tất cả</button>
+                        <button type="button" @click="setStatus('new')"
+                            :class="status === 'new' ? 'filter-pill pill-new pill-active' : 'filter-pill pill-new'">Mới</button>
+                        <button type="button" @click="setStatus('contacted')"
+                            :class="status === 'contacted' ? 'filter-pill pill-contacted pill-active' : 'filter-pill pill-contacted'">Đã liên hệ</button>
+                        <button type="button" @click="setStatus('converted')"
+                            :class="status === 'converted' ? 'filter-pill pill-converted pill-active' : 'filter-pill pill-converted'">Chuyển đổi</button>
+                        <button type="button" @click="setStatus('lost')"
+                            :class="status === 'lost' ? 'filter-pill pill-lost pill-active' : 'filter-pill pill-lost'">Thất bại</button>
                     </div>
-                    @php
-                        $statusLabels = [
-                            'New'       => 'Mới',
-                            'Contacted' => 'Đã liên hệ',
-                            'Converted' => 'Chuyển đổi',
-                            'Lost'      => 'Thất bại',
-                        ];
-                    @endphp
-                    <div class="row">
-                        @forelse($leads as $lead)
-                        @php
-                            // Loại BĐS
-                            $catNames = collect($lead->categories ?? [])
-                                ->map(fn($id) => $categoryMap[$id] ?? null)
-                                ->filter()
-                                ->implode(', ');
 
-                            // Khu vực
-                            $wardNames = collect($lead->wards ?? [])
-                                ->map(fn($code) => $wardMap[$code] ?? null)
-                                ->filter()
-                                ->implode(', ');
-
-                            // Đường (lấy từ note: "... - Tên đường: X")
-                            $streetName = '';
-                            if ($lead->note && str_contains($lead->note, 'Tên đường:')) {
-                                $streetName = trim(substr($lead->note, strpos($lead->note, 'Tên đường:') + strlen('Tên đường:')));
-                            }
-
-                            $statusLabel = $statusLabels[$lead->status] ?? $lead->status;
-                            $rawStatus   = strtolower($lead->getRawOriginal('status'));
-                        @endphp
-                        <!-- bookings-item -->
-                        <div class="col-md-6">
-                            <div class="bookings-item fl-wrap">
-                                <div class="bookings-item-header fl-wrap">
-                                    <h4>{{ $lead->customer ? $lead->customer->full_name : 'Khách vãng lai' }}</h4>
-                                    <span class="new-bookmark status-{{ $rawStatus }}">{{ $statusLabel }}</span>
-                                </div>
-                                <div class="bookings-item-content fl-wrap">
-                                    <ul>
-                                        @if($catNames)
-                                        <li>Loại BĐS: <span>{{ $catNames }}</span></li>
-                                        @endif
-                                        <li>Nhu cầu: <span>{{ $lead->lead_type === 'Buy' ? 'Mua' : 'Thuê' }}</span></li>
-                                        <li>Ngân sách: <span>{{ format_vnd($lead->demand_rate_min) }} – {{ format_vnd($lead->demand_rate_max) }}</span></li>
-                                        @if($wardNames)
-                                        <li>Khu vực: <span>{{ $wardNames }}</span></li>
-                                        @endif
-                                        @if($streetName)
-                                        <li>Đường: <span>{{ $streetName }}</span></li>
-                                        @endif
-                                    </ul>
-                                </div>
-                                <div class="bookings-item-footer fl-wrap">
-                                    <div class="message-date">{{ $lead->created_at->format('d/m/Y') }}</div>
-                                    <ul>
-                                        <li><a href="tel:{{ $lead->customer ? $lead->customer->contact : '' }}"
-                                                class="tolt" data-microtip-position="top-left"
-                                                data-tooltip="Gọi điện"><i class="far fa-phone"></i></a></li>
-                                        <li><a href="{{ route('webapp.leads.edit', $lead->id) }}" class="tolt"
-                                                data-microtip-position="top-left"
-                                                data-tooltip="Chỉnh sửa"><i class="far fa-edit"></i></a></li>
-                                        <li>
-                                            <form action="{{ route('webapp.leads.destroy', $lead->id) }}" method="POST"
-                                                onsubmit="return confirm('Bạn có chắc muốn xóa lead này?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="tolt bookings-footer-btn"
+                    <!-- Lead cards -->
+                    <div class="row" id="leads-container">
+                        <template x-for="(lead, index) in leads" :key="lead.id">
+                            <div class="col-md-6">
+                                <div class="bookings-item fl-wrap">
+                                    <div class="bookings-item-header fl-wrap">
+                                        <h4 x-text="lead.customer_name"></h4>
+                                        <span class="new-bookmark" :class="'status-' + lead.status_raw" x-text="lead.status_label"></span>
+                                    </div>
+                                    <div class="bookings-item-content fl-wrap">
+                                        <ul>
+                                            <template x-if="lead.categories">
+                                                <li>Loại BĐS: <span x-text="lead.categories"></span></li>
+                                            </template>
+                                            <li>Nhu cầu: <span x-text="lead.lead_type"></span></li>
+                                            <li>Ngân sách: <span x-text="lead.budget"></span></li>
+                                            <template x-if="lead.wards">
+                                                <li>Khu vực: <span x-text="lead.wards"></span></li>
+                                            </template>
+                                            <template x-if="lead.street">
+                                                <li>Đường: <span x-text="lead.street"></span></li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                    <div class="bookings-item-footer fl-wrap">
+                                        <div class="message-date" x-text="lead.date"></div>
+                                        <ul>
+                                            <li>
+                                                <a :href="'tel:' + lead.customer_contact"
+                                                    class="tolt" data-microtip-position="top-left"
+                                                    data-tooltip="Gọi điện"><i class="far fa-phone"></i></a>
+                                            </li>
+                                            <li>
+                                                <a :href="lead.show_url" class="tolt"
                                                     data-microtip-position="top-left"
-                                                    data-tooltip="Xóa"><i class="far fa-trash"></i></button>
-                                            </form>
-                                        </li>
-                                    </ul>
+                                                    data-tooltip="Chi tiết"><i class="far fa-eye"></i></a>
+                                            </li>
+                                            <li>
+                                                <a :href="lead.edit_url" class="tolt"
+                                                    data-microtip-position="top-left"
+                                                    data-tooltip="Chỉnh sửa"><i class="far fa-edit"></i></a>
+                                            </li>
+                                            <li>
+                                                <button type="button"
+                                                    class="tolt bookings-footer-btn"
+                                                    data-microtip-position="top-left"
+                                                    data-tooltip="Xóa"
+                                                    @click="deleteLead(lead)">
+                                                    <i class="far fa-trash"></i>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <!--bookings-item end-->
-                        @empty
-                        <div class="col-md-12">
-                            <p>Không tìm thấy lead nào.</p>
-                        </div>
-                        @endforelse
+                        </template>
                     </div>
+
+                    <!-- Empty state -->
+                    <div x-show="!loading && leads.length === 0" class="col-md-12" style="padding: 30px 0; text-align: center; color: #888;">
+                        <i class="fal fa-inbox" style="font-size: 32px; display:block; margin-bottom:10px;"></i>
+                        Không tìm thấy lead nào.
+                    </div>
+
+                    <!-- Loading spinner -->
+                    <div x-show="loading" style="text-align:center; padding: 20px 0;">
+                        <i class="fal fa-spinner fa-spin" style="font-size: 24px; color: #3270FC;"></i>
+                    </div>
+
+                    <!-- Infinite scroll sentinel -->
+                    <div id="scroll-sentinel" x-ref="sentinel"></div>
+
                 </div>
-                <!-- pagination-->
-                <div class="pagination" style="display: flex; justify-content: center; margin-top: 30px; gap: 5px;">
-                    {{ $leads->links('pagination::bootstrap-4') }}
-                </div>
-                <!-- pagination end-->
             </div>
         </div>
     </div>
     <div class="dashbard-bg gray-bg"></div>
 </div>
+
+<script>
+function leadsApp() {
+    return {
+        leads: [],
+        search: '',
+        status: '',
+        loading: false,
+        hasMore: false,
+        nextPage: 1,
+        searchTimeout: null,
+
+        init() {
+            this.fetchLeads(true);
+            this.setupIntersectionObserver();
+        },
+
+        setupIntersectionObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && this.hasMore && !this.loading) {
+                    this.fetchLeads(false);
+                }
+            }, { rootMargin: '100px' });
+            observer.observe(this.$refs.sentinel);
+        },
+
+        onSearch() {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => this.fetchLeads(true), 400);
+        },
+
+        setStatus(s) {
+            this.status = s;
+            this.fetchLeads(true);
+        },
+
+        async fetchLeads(reset) {
+            if (this.loading) return;
+            if (reset) {
+                this.leads = [];
+                this.nextPage = 1;
+                this.hasMore = false;
+            }
+            this.loading = true;
+            try {
+                const params = new URLSearchParams({ page: this.nextPage });
+                if (this.search) params.set('search', this.search);
+                if (this.status) params.set('status', this.status);
+
+                const resp = await axios.get('{{ route('webapp.leads') }}?' + params.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                this.leads.push(...resp.data.leads);
+                this.hasMore    = resp.data.has_more;
+                this.nextPage   = resp.data.next_page;
+            } catch (e) {
+                console.error('Failed to load leads', e);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async deleteLead(lead) {
+            if (!confirm('Bạn có chắc muốn xóa lead này?')) return;
+            try {
+                await axios.delete(lead.delete_url, {
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                this.leads = this.leads.filter(l => l.id !== lead.id);
+            } catch (e) {
+                alert('Xóa thất bại, vui lòng thử lại.');
+            }
+        }
+    }
+}
+</script>

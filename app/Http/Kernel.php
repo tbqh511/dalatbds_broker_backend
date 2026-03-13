@@ -50,5 +50,6 @@ class Kernel extends HttpKernel
         'language' => \App\Http\Middleware\LanguageManager::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'telegram.webapp' => \App\Http\Middleware\TelegramWebAppAuth::class,
+        'webapp.role' => \App\Http\Middleware\WebAppRoleMiddleware::class,
     ];
 }

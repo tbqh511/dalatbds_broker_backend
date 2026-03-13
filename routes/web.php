@@ -36,6 +36,9 @@ use App\Http\Controllers\PostCategoryController;
 use App\Http\Controllers\PostTagController;
 use App\Http\Controllers\TelegramWebAppController;
 use App\Http\Controllers\CrmLeadController;
+use App\Http\Controllers\CrmLeadActivityController;
+use App\Http\Controllers\SaleLeadController;
+use App\Http\Controllers\SaleAdminController;
 use App\Models\Payments;
 use App\Models\PropertysInquiry;
 use Illuminate\Support\Facades\Artisan;
@@ -91,9 +94,24 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/leads', [CrmLeadController::class , 'index'])->name('webapp.leads');
     Route::get('/webapp/leads/create', [CrmLeadController::class , 'create'])->name('webapp.leads.create');
     Route::post('/webapp/leads', [CrmLeadController::class , 'store'])->name('webapp.leads.store');
+    Route::get('/webapp/leads/{id}', [CrmLeadController::class , 'show'])->name('webapp.leads.show');
     Route::get('/webapp/leads/{id}/edit', [CrmLeadController::class , 'edit'])->name('webapp.leads.edit');
     Route::put('/webapp/leads/{id}', [CrmLeadController::class , 'update'])->name('webapp.leads.update');
     Route::delete('/webapp/leads/{id}', [CrmLeadController::class , 'destroy'])->name('webapp.leads.destroy');
+    Route::patch('/webapp/leads/{id}/status', [CrmLeadController::class , 'updateStatus'])->name('webapp.leads.update-status');
+
+    // Sale routes (sale + sale_admin only)
+    Route::middleware(['webapp.role:sale,sale_admin'])->group(function () {
+        Route::get('/webapp/sale/leads', [SaleLeadController::class, 'index'])->name('webapp.sale.leads');
+        Route::post('/webapp/leads/{id}/activities', [CrmLeadActivityController::class, 'store'])->name('webapp.leads.activities.store');
+        Route::post('/webapp/leads/{id}/deal', [CrmLeadController::class, 'createDeal'])->name('webapp.leads.create-deal');
+    });
+
+    // Sale Admin routes (sale_admin only)
+    Route::middleware(['webapp.role:sale_admin'])->group(function () {
+        Route::post('/webapp/leads/{id}/assign-sale', [CrmLeadController::class, 'assignSale'])->name('webapp.leads.assign-sale');
+        Route::get('/webapp/sale-admin', [SaleAdminController::class, 'index'])->name('webapp.sale-admin');
+    });
 
     // Add Customer (Custom UI)
     Route::get('/webapp/add-customer', [TelegramWebAppController::class , 'addCustomer'])->name('webapp.add_customer');
@@ -259,6 +277,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
             Route::resource('customer', CustomersController::class);
             Route::get('customerList', [CustomersController::class , 'customerList']);
             Route::post('customerstatus', [CustomersController::class , 'update'])->name('customer.customerstatus');
+            Route::patch('customer/{id}/role', [CustomersController::class , 'updateRole'])->name('customer.updaterole');
             /// END :: CUSTOMER ROUTE
     
             /// START :: SLIDER ROUTE

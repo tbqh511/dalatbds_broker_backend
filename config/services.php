@@ -38,11 +38,12 @@ return [
     ],
 
     'telegram' => [
-        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'bot_token'      => env('TELEGRAM_BOT_TOKEN'),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
         'groups' => [
             'public_channel' => env('TELEGRAM_PUBLIC_CHANNEL_ID'),
-            'sale_admin' => env('TELEGRAM_SALE_ADMIN_GROUP_ID'),
-            'bds_admin' => env('TELEGRAM_BDS_ADMIN_GROUP_ID'),
+            'sale_admin'     => env('TELEGRAM_SALE_ADMIN_GROUP_ID'),
+            'bds_admin'      => env('TELEGRAM_BDS_ADMIN_GROUP_ID'),
         ],
     ],
 

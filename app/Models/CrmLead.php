@@ -25,6 +25,7 @@ class CrmLead extends Model
         'status',
         'assigned_to',
         'assigned_at',
+        'sale_id',
     ];
 
     protected $casts = [
@@ -63,10 +64,22 @@ class CrmLead extends Model
         return $this->belongsTo(CrmCustomer::class, 'customer_id', 'id');
     }
 
+    // Quan hệ: Sale person (Customer) được assign xử lý lead này
+    public function sale()
+    {
+        return $this->belongsTo(Customer::class, 'sale_id');
+    }
+
     // Quan hệ: Một lead có thể được chuyển đổi thành một deal
     public function deal()
     {
         return $this->hasOne(CrmDeal::class, 'lead_id', 'id');
+    }
+
+    // Quan hệ: Lịch sử hoạt động chăm sóc lead
+    public function activities()
+    {
+        return $this->hasMany(CrmLeadActivity::class, 'lead_id')->orderBy('created_at', 'asc');
     }
 }
 
