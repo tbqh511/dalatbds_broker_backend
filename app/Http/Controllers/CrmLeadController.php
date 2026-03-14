@@ -338,7 +338,13 @@ class CrmLeadController extends Controller
             ['id' => $id]
         );
 
-        return view('frontend_dashboard_assign_lead', compact('lead', 'salesList', 'postUrl'));
+        $districtCode  = config('location.district_code');
+        $categoryMap   = Category::where('status', '1')->pluck('category', 'id');
+        $wardMap       = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
+        $categoryNames = collect($lead->categories ?? [])->map(fn ($id) => $categoryMap[$id] ?? null)->filter()->values()->all();
+        $wardNames     = collect($lead->wards ?? [])->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->all();
+
+        return view('frontend_dashboard_assign_lead', compact('lead', 'salesList', 'postUrl', 'categoryNames', 'wardNames'));
     }
 
     /**
