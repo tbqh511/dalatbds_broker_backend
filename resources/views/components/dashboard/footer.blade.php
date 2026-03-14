@@ -90,13 +90,19 @@
             item.addEventListener('click', closeFab);
         });
 
-        // Open sidebar on Menu tap
+        // Toggle sidebar on Menu tap
         if (menuBtn) {
             menuBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 if (typeof $ !== 'undefined') {
-                    $('.dashbard-menu-wrap').addClass('dashbard-menu-wrap_vis');
-                    $('.dashbard-menu-overlay').fadeIn(100);
+                    var isOpen = $('.dashbard-menu-wrap').hasClass('dashbard-menu-wrap_vis');
+                    if (isOpen) {
+                        $('.dashbard-menu-wrap').removeClass('dashbard-menu-wrap_vis');
+                        $('.dashbard-menu-overlay').fadeOut(100);
+                    } else {
+                        $('.dashbard-menu-wrap').addClass('dashbard-menu-wrap_vis');
+                        $('.dashbard-menu-overlay').fadeIn(100);
+                    }
                 }
             });
         }
