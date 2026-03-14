@@ -58,6 +58,46 @@ class TelegramMessageTemplates
     }
 
     /**
+     * Lead mới — gửi vào group sale_admin với 1 nút web_app để mở trang phân công.
+     * Trả về ['text' => string, 'keyboard' => array] để NotificationService dùng.
+     *
+     * @param  CrmLead  $lead
+     * @param  string   $assignUrl  Signed URL của trang phân công
+     * @return array{text: string, keyboard: array}
+     */
+    public static function newLeadForGroupWebApp(CrmLead $lead, string $assignUrl): array
+    {
+        $customerName = self::escape($lead->customer->full_name ?? 'N/A');
+        $phone        = self::escape($lead->customer->contact ?? 'N/A');
+        $leadType     = ($lead->getRawOriginal('lead_type') ?? $lead->lead_type) === 'buy' ? 'Mua' : 'Thuê';
+        $budget       = number_format($lead->demand_rate_min) . ' – ' . number_format($lead->demand_rate_max);
+        $brokerName   = self::escape($lead->user->name ?? 'N/A');
+        $note         = self::escape($lead->note ?? '');
+
+        $text = "🎯 *LEAD MỚI CẦN PHÂN CÔNG*\n" .
+                "────────────────\n" .
+                "👤 Khách: {$customerName}\n" .
+                "📞 SĐT: {$phone}\n" .
+                "🏠 Nhu cầu: {$leadType}\n" .
+                "💰 Ngân sách: {$budget} VNĐ\n" .
+                "📝 Ghi chú: {$note}\n" .
+                "🙋 Broker: {$brokerName}";
+
+        // Telegram chỉ chấp nhận https:// trong inline keyboard URL buttons.
+        // Khi dev local (http://), đưa link vào text để tránh lỗi 400.
+        if (str_starts_with($assignUrl, 'https://')) {
+            $keyboard = [[
+                ['text' => '👤 Phân công Sale', 'url' => $assignUrl],
+            ]];
+        } else {
+            $text    .= "\n🔗 Phân công: " . $assignUrl;
+            $keyboard = [];
+        }
+
+        return ['text' => $text, 'keyboard' => $keyboard];
+    }
+
+    /**
      * Lead mới — gửi vào group sale_admin kèm inline keyboard để chọn sales phụ trách.
      * Trả về ['text' => string, 'keyboard' => array] để NotificationService dùng.
      *

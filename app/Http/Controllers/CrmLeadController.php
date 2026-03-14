@@ -12,6 +12,8 @@ use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Carbon;
 use App\Models\CrmLead;
 use App\Models\Category;
 use App\Models\LocationsWard;
@@ -194,7 +196,8 @@ class CrmLeadController extends Controller
             return response()->json(['success' => false, 'message' => 'Sale không hợp lệ'], 422);
         }
 
-        $lead->sale_id = $sale->id;
+        $lead->sale_id     = $sale->id;
+        $lead->assigned_at = Carbon::now();
         $lead->save();
 
         CrmLeadActivity::create([
@@ -311,5 +314,80 @@ class CrmLeadController extends Controller
             return response()->json(['success' => true, 'message' => 'Lead deleted']);
         }
         return redirect()->route('webapp.leads')->with('success', 'Lead deleted');
+    }
+
+    /**
+     * Show the assign-lead page (opened via Telegram web_app button, signed URL auth).
+     * GET /webapp/leads/{id}/assign?signature=...
+     */
+    public function assignPage(Request $request, $id)
+    {
+        $lead = CrmLead::with(['customer', 'sale'])->find($id);
+
+        if (!$lead) {
+            abort(404, 'Lead không tồn tại');
+        }
+
+        $salesList = Customer::query()
+            ->where(fn ($q) => $q->where('role', 'sale')->orWhere('role', 'sale_admin'))
+            ->get(['id', 'name', 'mobile', 'role']);
+
+        $postUrl = URL::temporarySignedRoute(
+            'webapp.leads.do-assign',
+            Carbon::now()->addHours(24),
+            ['id' => $id]
+        );
+
+        return view('frontend_dashboard_assign_lead', compact('lead', 'salesList', 'postUrl'));
+    }
+
+    /**
+     * Process the lead assignment (signed URL auth, no session required).
+     * POST /webapp/leads/{id}/assign?signature=...
+     */
+    public function doAssign(Request $request, $id)
+    {
+        $lead = CrmLead::with(['customer'])->find($id);
+
+        if (!$lead) {
+            return response()->json(['success' => false, 'message' => 'Lead không tồn tại'], 404);
+        }
+
+        if ($lead->sale_id) {
+            $existingSale = Customer::find($lead->sale_id);
+            return response()->json([
+                'success'          => false,
+                'already_assigned' => true,
+                'sale_name'        => $existingSale?->name ?? 'N/A',
+            ], 409);
+        }
+
+        $saleId = (int) $request->input('sale_id');
+        $sale = Customer::query()
+            ->where('id', $saleId)
+            ->where(fn ($q) => $q->where('role', 'sale')->orWhere('role', 'sale_admin'))
+            ->first();
+
+        if (!$sale) {
+            return response()->json(['success' => false, 'message' => 'Sale không hợp lệ'], 422);
+        }
+
+        $lead->sale_id     = $sale->id;
+        $lead->assigned_at = Carbon::now();
+        $lead->save();
+
+        CrmLeadActivity::create([
+            'lead_id'  => $lead->id,
+            'actor_id' => null,
+            'type'     => 'assignment',
+            'content'  => "Phân công qua WebApp (Telegram) cho: {$sale->name}",
+        ]);
+
+        if ($sale->telegram_id) {
+            $message = TelegramMessageTemplates::leadAssigned($lead);
+            $this->notificationService->sendToCustomer($sale, $message);
+        }
+
+        return response()->json(['success' => true, 'sale_name' => $sale->name]);
     }
 }

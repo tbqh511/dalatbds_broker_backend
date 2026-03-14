@@ -73,6 +73,14 @@ Route::post('/api/webapp/login', [ApiController::class , 'loginViaMiniApp']);
 
 Route::get('/', [FrontEndHomeController::class , 'index'])->name('index');
 Route::get('/webapp/temp', [TelegramWebAppController::class , 'tempui'])->name('webapp');
+
+// Lead assignment via signed URL (no session required — opened from Telegram group button)
+Route::get('/webapp/leads/{id}/assign', [CrmLeadController::class, 'assignPage'])
+    ->name('webapp.leads.assign-page')
+    ->middleware('signed');
+Route::post('/webapp/leads/{id}/assign', [CrmLeadController::class, 'doAssign'])
+    ->name('webapp.leads.do-assign')
+    ->middleware('signed');
 Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp', [TelegramWebAppController::class , 'index'])->name('webapp');
     Route::get('/webapp/profile', [TelegramWebAppController::class , 'profile'])->name('webapp.profile');

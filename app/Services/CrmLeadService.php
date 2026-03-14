@@ -4,10 +4,11 @@ namespace App\Services;
 
 use App\Repositories\CrmLeadRepositoryInterface;
 use App\Models\CrmCustomer;
-use App\Models\Customer;
 use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Exception;
 
 class CrmLeadService
@@ -108,21 +109,21 @@ class CrmLeadService
     }
 
     /**
-     * Send new-lead notification to sale_admin group with inline keyboard for assignment.
+     * Send new-lead notification to sale_admin group with a single web_app button for assignment.
      */
     protected function notifyGroupForAssignment(\App\Models\CrmLead $lead): void
     {
         $groupChatId = config('services.telegram.groups.sale_admin');
         if (!$groupChatId) return;
 
-        $salesTeam = Customer::query()
-            ->where(fn ($q) => $q->where('role', 'sale')->orWhere('role', 'sale_admin'))
-            ->get(['id', 'name']);
-
-        if ($salesTeam->isEmpty()) return;
+        $assignUrl = URL::temporarySignedRoute(
+            'webapp.leads.assign-page',
+            Carbon::now()->addHours(24),
+            ['id' => $lead->id]
+        );
 
         ['text' => $text, 'keyboard' => $keyboard] =
-            TelegramMessageTemplates::newLeadForGroup($lead, $salesTeam);
+            TelegramMessageTemplates::newLeadForGroupWebApp($lead, $assignUrl);
 
         $this->notificationService->sendWithInlineKeyboard((string) $groupChatId, $text, $keyboard);
     }

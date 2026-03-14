@@ -25,8 +25,10 @@ use App\Models\Customer;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Services\Telegram\TelegramMessageTemplates;
 
 class TelegramWebAppController extends Controller
 {
@@ -1482,26 +1484,19 @@ class TelegramWebAppController extends Controller
 
             $notificationService->sendToGroup('public_channel', $message);
 
-            // Gửi vào group sale_admin kèm inline keyboard để phân công
-            $salesTeam = Customer::query()->where('role', '=', 'sale')->orWhere('role', '=', 'sale_admin')->get(['id', 'name']);
+            // Gửi vào group sale_admin với 1 nút web_app để mở trang phân công
+            $assignUrl = URL::temporarySignedRoute(
+                'webapp.leads.assign-page',
+                Carbon::now()->addHours(24),
+                ['id' => $lead->id]
+            );
 
-            $buttons = $salesTeam->map(fn(Customer $s) => [
-            'text' => $s->name,
-            'callback_data' => "assign_lead:{$lead->id}:{$s->id}",
-            ])->values()->all();
+            ['text' => $groupMessage, 'keyboard' => $keyboard] =
+                TelegramMessageTemplates::newLeadForGroupWebApp($lead->load(['customer', 'user']), $assignUrl);
 
-            // Fallback test button khi chưa có sale nào được cấu hình
-            if (empty($buttons)) {
-                $buttons = [[
-                        'text' => ' Chưa có sale',
-                        'callback_data' => "assign_lead:{$lead->id}:0",
-                    ]];
-            }
-
-            $keyboard = array_chunk($buttons, 2);
             $notificationService->sendWithInlineKeyboard(
-                (string)config('services.telegram.groups.sale_admin'),
-                $message,
+                (string) config('services.telegram.groups.sale_admin'),
+                $groupMessage,
                 $keyboard
             );
 
