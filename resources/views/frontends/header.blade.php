@@ -27,14 +27,14 @@
     </div> --}}
     <!--  header-opt_btn end -->
     <!--  cart-btn   -->
-    {{-- <div class="cart-btn  tolt show-header-modal" data-microtip-position="bottom"
+    <div class="cart-btn  tolt show-header-modal" data-microtip-position="bottom"
         data-tooltip="Your Wishlist / Compare">
         <i class="fal fa-bell"></i>
         <span class="cart-btn_counter color-bg">5</span>
-    </div> --}}
+    </div>
     <!--  cart-btn end -->
     <!--  login btn -->
-    {{-- <div class="show-reg-form modal-open"><i class="fas fa-user"></i><span>Đăng nhập</span></div> --}}
+    <div class="show-reg-form modal-open"><i class="fas fa-user"></i><span>Đăng nhập</span></div>
     <!--  login btn  end -->
     <!--  navigation -->
     <div class="nav-holder main-menu">
@@ -111,7 +111,8 @@
         <div class="custom-form">
             <form method="GET" name="registerform" action="{{ route('properties.index') }}">
                 <label>Cho thuê & Bán</label>
-                <select name="property_type" data-placeholder="Tình trạng" class="chosen-select on-radius no-search-select" style="z-index: 1;">
+                <select name="property_type" data-placeholder="Tình trạng"
+                    class="chosen-select on-radius no-search-select" style="z-index: 1;">
                     <option value="">Cho thuê & Bán</option>
                     <option value="0" {{ request()->input('property_type') == '0' ? 'selected' :
                         ''}}>Bán</option>
@@ -119,11 +120,13 @@
                         ''}}>Cho Thuê</option>
                 </select>
                 <label>Loại BDS</label>
-                <select name="category" data-placeholder="Loại BDS" class="chosen-select on-radius no-search-select" style="z-index: 1;">
+                <select name="category" data-placeholder="Loại BDS" class="chosen-select on-radius no-search-select"
+                    style="z-index: 1;">
                     <option value="">Loại BDS</option>
                     @isset($categories)
                     @foreach ($categories as $categorie)
-                    <option value="{{ $categorie->category }}" {{ request()->input('category') == $categorie->category ? 'selected' : ''
+                    <option value="{{ $categorie->category }}" {{ request()->input('category') == $categorie->category ?
+                        'selected' : ''
                         }}>
                         {{ $categorie->category }}
                     </option>
@@ -135,11 +138,13 @@
                 </select>
 
                 <label>BDS Phướng / Xã</label>
-                <select name="ward" data-placeholder="Phường Xã" class="chosen-select on-radius no-search-select" style="z-index: 1;">
+                <select name="ward" data-placeholder="Phường Xã" class="chosen-select on-radius no-search-select"
+                    style="z-index: 1;">
                     <option value="">Phường Xã</option>
                     @isset($locationsWards)
                     @foreach ($locationsWards as $locationsWard)
-                    <option value="{{$locationsWard->code}}" {{ request()->input('ward') == $locationsWard->code ? 'selected' : '' }}>
+                    <option value="{{$locationsWard->code}}" {{ request()->input('ward') == $locationsWard->code ?
+                        'selected' : '' }}>
                         {{$locationsWard->full_name}}
                     </option>
                     @endforeach

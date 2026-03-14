@@ -5,7 +5,7 @@
     <!-- dashboard content -->
     <div class="dashboard-content">
         @include('components.dashboard.mobile_btn')
-        <div class="container dasboard-container">
+        <div class="dasboard-container leads-fullwidth-container">
             <!-- dashboard-title -->
             @include('components.dashboard.header', ['title' => 'Quản lý Lead'])
             <!-- dashboard-title end -->

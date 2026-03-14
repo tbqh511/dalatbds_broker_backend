@@ -76,46 +76,52 @@ Route::get('/webapp/temp', [TelegramWebAppController::class , 'tempui'])->name('
 Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp', [TelegramWebAppController::class , 'index'])->name('webapp');
     Route::get('/webapp/profile', [TelegramWebAppController::class , 'profile'])->name('webapp.profile');
+    Route::post('/webapp/profile', [TelegramWebAppController::class , 'updateProfile'])->name('webapp.profile.update');
+    Route::post('/webapp/profile/avatar', [TelegramWebAppController::class , 'updateAvatar'])->name('webapp.profile.avatar');
     Route::get('/webapp/messages', [TelegramWebAppController::class , 'messages'])->name('webapp.messages');
     Route::get('/webapp/listings', [TelegramWebAppController::class , 'listings'])->name('webapp.listings');
     Route::get('/webapp/agents', [TelegramWebAppController::class , 'agents'])->name('webapp.agents');
     Route::get('/webapp/bookings', [TelegramWebAppController::class , 'bookings'])->name('webapp.bookings');
     Route::get('/webapp/reviews', [TelegramWebAppController::class , 'reviews'])->name('webapp.reviews');
-    Route::get('/webapp/add-listing', [TelegramWebAppController::class , 'addListing'])->name('webapp.add_listing');
-    Route::post('/webapp/submit-listing', [TelegramWebAppController::class , 'submitForm'])->name('webapp.submit_listing');
-    Route::get('/webapp/listing-success', [TelegramWebAppController::class , 'addListingSuccess'])->name('webapp.add_listing_success');
-    Route::get('/webapp/check-host-phone', [TelegramWebAppController::class , 'checkHostPhone'])->name('webapp.check_host_phone');
-    Route::delete('/webapp/listings/{id}', [TelegramWebAppController::class , 'destroy'])->name('webapp.listings.destroy');
-    Route::patch('/webapp/listings/{id}/toggle', [TelegramWebAppController::class , 'toggleStatus'])->name('webapp.listings.toggle');
-    Route::get('/webapp/edit-listing/{id}', [TelegramWebAppController::class , 'editListing'])->name('webapp.edit_listing');
-    Route::post('/webapp/update-listing/{id}', [TelegramWebAppController::class , 'updateForm'])->name('webapp.update_listing');
+    // Routes yêu cầu phải có số điện thoại
+    Route::middleware(['webapp.require_phone'])->group(function () {
+        // Đăng tin BĐS
+        Route::get('/webapp/add-listing', [TelegramWebAppController::class , 'addListing'])->name('webapp.add_listing');
+        Route::post('/webapp/submit-listing', [TelegramWebAppController::class , 'submitForm'])->name('webapp.submit_listing');
+        Route::get('/webapp/listing-success', [TelegramWebAppController::class , 'addListingSuccess'])->name('webapp.add_listing_success');
+        Route::get('/webapp/check-host-phone', [TelegramWebAppController::class , 'checkHostPhone'])->name('webapp.check_host_phone');
+        Route::delete('/webapp/listings/{id}', [TelegramWebAppController::class , 'destroy'])->name('webapp.listings.destroy');
+        Route::patch('/webapp/listings/{id}/toggle', [TelegramWebAppController::class , 'toggleStatus'])->name('webapp.listings.toggle');
+        Route::get('/webapp/edit-listing/{id}', [TelegramWebAppController::class , 'editListing'])->name('webapp.edit_listing');
+        Route::post('/webapp/update-listing/{id}', [TelegramWebAppController::class , 'updateForm'])->name('webapp.update_listing');
 
-    // CRM Leads Routes
-    Route::get('/webapp/leads', [CrmLeadController::class , 'index'])->name('webapp.leads');
-    Route::get('/webapp/leads/create', [CrmLeadController::class , 'create'])->name('webapp.leads.create');
-    Route::post('/webapp/leads', [CrmLeadController::class , 'store'])->name('webapp.leads.store');
-    Route::get('/webapp/leads/{id}', [CrmLeadController::class , 'show'])->name('webapp.leads.show');
-    Route::get('/webapp/leads/{id}/edit', [CrmLeadController::class , 'edit'])->name('webapp.leads.edit');
-    Route::put('/webapp/leads/{id}', [CrmLeadController::class , 'update'])->name('webapp.leads.update');
-    Route::delete('/webapp/leads/{id}', [CrmLeadController::class , 'destroy'])->name('webapp.leads.destroy');
-    Route::patch('/webapp/leads/{id}/status', [CrmLeadController::class , 'updateStatus'])->name('webapp.leads.update-status');
+        // CRM Leads Routes
+        Route::get('/webapp/leads', [CrmLeadController::class , 'index'])->name('webapp.leads');
+        Route::get('/webapp/leads/create', [CrmLeadController::class , 'create'])->name('webapp.leads.create');
+        Route::post('/webapp/leads', [CrmLeadController::class , 'store'])->name('webapp.leads.store');
+        Route::get('/webapp/leads/{id}', [CrmLeadController::class , 'show'])->name('webapp.leads.show');
+        Route::get('/webapp/leads/{id}/edit', [CrmLeadController::class , 'edit'])->name('webapp.leads.edit');
+        Route::put('/webapp/leads/{id}', [CrmLeadController::class , 'update'])->name('webapp.leads.update');
+        Route::delete('/webapp/leads/{id}', [CrmLeadController::class , 'destroy'])->name('webapp.leads.destroy');
+        Route::patch('/webapp/leads/{id}/status', [CrmLeadController::class , 'updateStatus'])->name('webapp.leads.update-status');
 
-    // Sale routes (sale + sale_admin only)
-    Route::middleware(['webapp.role:sale,sale_admin'])->group(function () {
-        Route::get('/webapp/sale/leads', [SaleLeadController::class, 'index'])->name('webapp.sale.leads');
-        Route::post('/webapp/leads/{id}/activities', [CrmLeadActivityController::class, 'store'])->name('webapp.leads.activities.store');
-        Route::post('/webapp/leads/{id}/deal', [CrmLeadController::class, 'createDeal'])->name('webapp.leads.create-deal');
+        // Sale routes (sale + sale_admin only)
+        Route::middleware(['webapp.role:sale,sale_admin'])->group(function () {
+            Route::get('/webapp/sale/leads', [SaleLeadController::class, 'index'])->name('webapp.sale.leads');
+            Route::post('/webapp/leads/{id}/activities', [CrmLeadActivityController::class, 'store'])->name('webapp.leads.activities.store');
+            Route::post('/webapp/leads/{id}/deal', [CrmLeadController::class, 'createDeal'])->name('webapp.leads.create-deal');
+        });
+
+        // Sale Admin routes (sale_admin only)
+        Route::middleware(['webapp.role:sale_admin'])->group(function () {
+            Route::post('/webapp/leads/{id}/assign-sale', [CrmLeadController::class, 'assignSale'])->name('webapp.leads.assign-sale');
+            Route::get('/webapp/sale-admin', [SaleAdminController::class, 'index'])->name('webapp.sale-admin');
+        });
+
+        // Add Customer (Custom UI)
+        Route::get('/webapp/add-customer', [TelegramWebAppController::class , 'addCustomer'])->name('webapp.add_customer');
+        Route::post('/webapp/add-customer', [TelegramWebAppController::class , 'storeCustomer'])->name('webapp.store_customer');
     });
-
-    // Sale Admin routes (sale_admin only)
-    Route::middleware(['webapp.role:sale_admin'])->group(function () {
-        Route::post('/webapp/leads/{id}/assign-sale', [CrmLeadController::class, 'assignSale'])->name('webapp.leads.assign-sale');
-        Route::get('/webapp/sale-admin', [SaleAdminController::class, 'index'])->name('webapp.sale-admin');
-    });
-
-    // Add Customer (Custom UI)
-    Route::get('/webapp/add-customer', [TelegramWebAppController::class , 'addCustomer'])->name('webapp.add_customer');
-    Route::post('/webapp/add-customer', [TelegramWebAppController::class , 'storeCustomer'])->name('webapp.store_customer');
 
     // Feed
     Route::get('/webapp/feed', [TelegramWebAppController::class , 'feed'])->name('webapp.feed');

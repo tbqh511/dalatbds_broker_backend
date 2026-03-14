@@ -11,6 +11,20 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/dashboard-style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/webapp.css') }}">
+    <style>
+        .leads-fullwidth-container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+        }
+        @media (max-width: 800px) {
+            .leads-fullwidth-container .dasboard-wrapper {
+                margin-left: -16px;
+                margin-right: -16px;
+                width: calc(100% + 32px);
+            }
+        }
+    </style>
 @endpush
 @push('head_scripts')
     <script src="https://telegram.org/js/telegram-web-app.js"></script>

@@ -1,86 +1,101 @@
-<div class="dashboard-footer">
-    {{-- <div class="dashboard-footer-links fl-wrap">
-        <a href="{{ route('webapp.add_listing') }}" class="btn color-bg">Thêm BĐS</a>
-        <a href="#" class="btn color-bg">Thêm Khách</a>
-    </div> --}}
-    <a href="#main" class="dashbord-totop custom-scroll-link"><i class="fas fa-caret-up"></i></a>
+{{-- WebApp Bottom Navigation Bar --}}
+
+{{-- FAB Backdrop --}}
+<div id="wab-backdrop"></div>
+
+{{-- FAB Sub Menu --}}
+<div id="wab-fab-menu">
+    <a href="{{ route('webapp.add_customer') }}" class="wab-fab-item">
+        <div class="wab-fab-item-icon" style="background: #3270FC;">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <span>Thêm Khách hàng</span>
+    </a>
+    <a href="{{ route('webapp.add_listing') }}" class="wab-fab-item">
+        <div class="wab-fab-item-icon" style="background: #40B69E;">
+            <i class="fas fa-building"></i>
+        </div>
+        <span>Đăng tin BĐS</span>
+    </a>
 </div>
 
-<!-- FAB Backdrop -->
-<div id="menu-backdrop" class="fab-backdrop"></div>
+{{-- Bottom Navigation --}}
+<div id="wab-bottom-nav">
 
-<!-- FAB Container -->
-<div id="fab-container">
-    
-    <!-- Main Button -->
-    <button id="main-fab" class="btn-main btn-pulse" aria-label="Thêm mới">
+    {{-- SVG bar background with curved notch --}}
+    <svg id="wab-nav-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 70" preserveAspectRatio="none" overflow="visible">
+        <path d="M0,0 L130,0 C145,0 153,-32 187.5,-32 C222,-32 230,0 245,0 L375,0 L375,70 L0,70 Z" fill="#ffffff"/>
+    </svg>
+
+    {{-- Center FAB Button --}}
+    <button id="wab-fab-btn" aria-label="Thêm mới">
         <i class="fas fa-plus"></i>
     </button>
 
-    <!-- Sub Buttons Container -->
-    <div class="fab-sub-buttons">
-        
-        <!-- Sub Button 1: Khách -->
-        <a href="{{ route('webapp.add_customer') }}" class="menu-item item-1">
-            <div class="menu-item-icon">
-                <i class="fas fa-user-plus"></i>
-            </div>
-            <span class="menu-item-text">Thêm Khách</span>
+    {{-- Nav Items --}}
+    <div id="wab-nav-items">
+        <a href="{{ route('webapp') }}" class="wab-nav-item {{ request()->routeIs('webapp') ? 'wab-active' : '' }}">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
         </a>
-
-        <!-- Sub Button 2: Thêm BĐS -->
-        <a href="{{ route('webapp.add_listing') }}" class="menu-item item-2">
-            <div class="menu-item-icon">
-                <i class="fas fa-building"></i>
-            </div>
-            <span class="menu-item-text">Thêm BĐS</span>
+        <a href="{{ route('webapp.leads') }}" class="wab-nav-item {{ request()->routeIs('webapp.leads*') ? 'wab-active' : '' }}">
+            <i class="fas fa-users"></i>
+            <span>Leads</span>
         </a>
-        
+        {{-- Center spacer for FAB --}}
+        <div class="wab-nav-spacer"></div>
+        <a href="{{ route('webapp.profile') }}" class="wab-nav-item {{ request()->routeIs('webapp.profile') ? 'wab-active' : '' }}">
+            <i class="fas fa-user"></i>
+            <span>Hồ sơ</span>
+        </a>
+        <button class="wab-nav-item" id="wab-menu-btn">
+            <i class="fas fa-cog"></i>
+            <span>Menu</span>
+        </button>
     </div>
-    
+
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const fabContainer = document.getElementById('fab-container');
-        const mainFab = document.getElementById('main-fab');
-        const backdrop = document.getElementById('menu-backdrop');
+document.addEventListener('DOMContentLoaded', function () {
+    var fabBtn    = document.getElementById('wab-fab-btn');
+    var fabMenu   = document.getElementById('wab-fab-menu');
+    var backdrop  = document.getElementById('wab-backdrop');
+    var menuBtn   = document.getElementById('wab-menu-btn');
 
-        // Toggle Menu Function
-        const toggleMenu = () => {
-            fabContainer.classList.toggle('menu-open');
-            backdrop.classList.toggle('menu-open-backdrop');
-        };
+    function openFab() {
+        fabBtn.classList.add('wab-open');
+        fabMenu.classList.add('wab-open');
+        backdrop.classList.add('wab-open');
+    }
+    function closeFab() {
+        fabBtn.classList.remove('wab-open');
+        fabMenu.classList.remove('wab-open');
+        backdrop.classList.remove('wab-open');
+    }
 
-        // Click on main FAB
-        if(mainFab) {
-             mainFab.addEventListener('click', toggleMenu);
-        }
+    if (fabBtn) {
+        fabBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            fabBtn.classList.contains('wab-open') ? closeFab() : openFab();
+        });
+    }
+    if (backdrop) {
+        backdrop.addEventListener('click', closeFab);
+    }
+    document.querySelectorAll('.wab-fab-item').forEach(function (item) {
+        item.addEventListener('click', closeFab);
+    });
 
-        // Click outside or on backdrop to close
-        document.addEventListener('click', (e) => {
-            if (fabContainer && fabContainer.classList.contains('menu-open') &&
-                !fabContainer.contains(e.target) && e.target !== mainFab && !mainFab.contains(e.target)) {
-                fabContainer.classList.remove('menu-open');
-                backdrop.classList.remove('menu-open-backdrop');
+    // Open sidebar on Menu tap
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (typeof $ !== 'undefined') {
+                $('.dashbard-menu-wrap').addClass('dashbard-menu-wrap_vis');
+                $('.dashbard-menu-overlay').fadeIn(100);
             }
         });
-        
-        // Also close when clicking backdrop specifically
-        if(backdrop) {
-            backdrop.addEventListener('click', () => {
-                fabContainer.classList.remove('menu-open');
-                backdrop.classList.remove('menu-open-backdrop');
-            });
-        }
-
-        // Close menu when clicking items
-        const menuItems = document.querySelectorAll('.menu-item');
-        menuItems.forEach(item => {
-            item.addEventListener('click', () => {
-                fabContainer.classList.remove('menu-open');
-                backdrop.classList.remove('menu-open-backdrop');
-            });
-        });
-    });
+    }
+});
 </script>

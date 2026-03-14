@@ -90,7 +90,61 @@ class TelegramWebAppController extends Controller
     }
     public function profile(Request $request)
     {
-        return view('frontend_dashboard_myprofile');
+        $customer = Auth::guard('webapp')->user();
+        return view('frontend_dashboard_myprofile', compact('customer'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        $validated = $request->validate([
+            'name'    => ['required', 'string', 'max:255'],
+            'email'   => ['required', 'email', 'max:255'],
+            'mobile'  => ['nullable', 'string', 'regex:/^(0[3-9][0-9]{8})$/'],
+            'address' => ['nullable', 'string', 'max:500'],
+        ], [
+            'name.required'   => 'Họ và tên không được để trống.',
+            'email.required'  => 'Email không được để trống.',
+            'email.email'     => 'Email không đúng định dạng.',
+            'mobile.regex'    => 'Số điện thoại phải là số VN 10 chữ số (bắt đầu bằng 03-09).',
+        ]);
+
+        $customer->fill($validated)->save();
+
+        return redirect()->route('webapp.profile')->with('success', 'Cập nhật hồ sơ thành công!');
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        $request->validate([
+            'avatar' => ['required', 'image', 'max:2048'],
+        ], [
+            'avatar.required' => 'Vui lòng chọn ảnh.',
+            'avatar.image'    => 'File phải là ảnh (jpg, png, gif...).',
+            'avatar.max'      => 'Ảnh không được vượt quá 2MB.',
+        ]);
+
+        $file = $request->file('avatar');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $destinationPath = public_path('images') . config('global.USER_IMG_PATH');
+
+        if (!is_dir($destinationPath)) {
+            mkdir($destinationPath, 0777, true);
+        }
+
+        $file->move($destinationPath, $filename);
+
+        // Lưu raw filename (accessor sẽ build full URL)
+        $customer->setRawAttributes(array_merge($customer->getAttributes(), ['profile' => $filename]));
+        $customer->save();
+
+        return response()->json([
+            'success' => true,
+            'url'     => url('images' . config('global.USER_IMG_PATH') . $filename),
+        ]);
     }
 
     public function messages(Request $request)
@@ -1431,24 +1485,29 @@ class TelegramWebAppController extends Controller
             // Gửi vào group sale_admin kèm inline keyboard để phân công
             $salesTeam = Customer::query()->where('role', '=', 'sale')->orWhere('role', '=', 'sale_admin')->get(['id', 'name']);
 
-            if ($salesTeam->isNotEmpty()) {
-                $buttons  = $salesTeam->map(fn (Customer $s) => [
-                    'text'          => $s->name,
-                    'callback_data' => "assign_lead:{$lead->id}:{$s->id}",
-                ])->values()->all();
-                $keyboard = array_chunk($buttons, 2);
-                $notificationService->sendWithInlineKeyboard(
-                    (string) config('services.telegram.groups.sale_admin'),
-                    $message,
-                    $keyboard
-                );
-            } else {
-                $notificationService->sendToGroup('sale_admin', $message);
+            $buttons = $salesTeam->map(fn(Customer $s) => [
+            'text' => $s->name,
+            'callback_data' => "assign_lead:{$lead->id}:{$s->id}",
+            ])->values()->all();
+
+            // Fallback test button khi chưa có sale nào được cấu hình
+            if (empty($buttons)) {
+                $buttons = [[
+                        'text' => ' Chưa có sale',
+                        'callback_data' => "assign_lead:{$lead->id}:0",
+                    ]];
             }
+
+            $keyboard = array_chunk($buttons, 2);
+            $notificationService->sendWithInlineKeyboard(
+                (string)config('services.telegram.groups.sale_admin'),
+                $message,
+                $keyboard
+            );
 
             // Gửi xác nhận đến broker tạo lead
             if ($creator && $creator->telegram_id) {
-                $brokerMsg  = "✅ *Đà Lạt BĐS đã tiếp nhận thông tin khách hàng của bạn!*\n";
+                $brokerMsg = "✅ *Đà Lạt BĐS đã tiếp nhận thông tin khách hàng của bạn!*\n";
                 $brokerMsg .= "Đội ngũ chúng tôi sẽ hỗ trợ tư vấn và kết nối sớm nhất có thể.\n";
                 $brokerMsg .= "----------------\n";
                 $brokerMsg .= "🆔 Lead ID: `{$lead->id}`\n";

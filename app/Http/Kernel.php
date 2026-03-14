@@ -51,5 +51,6 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'telegram.webapp' => \App\Http\Middleware\TelegramWebAppAuth::class,
         'webapp.role' => \App\Http\Middleware\WebAppRoleMiddleware::class,
+        'webapp.require_phone' => \App\Http\Middleware\RequireCustomerPhone::class,
     ];
 }

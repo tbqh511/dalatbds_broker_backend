@@ -79,7 +79,7 @@ class NotificationService
                 'chat_id'      => $chatId,
                 'text'         => $message,
                 'parse_mode'   => 'Markdown',
-                'reply_markup' => json_encode(['inline_keyboard' => $inlineKeyboard]),
+                'reply_markup' => ['inline_keyboard' => $inlineKeyboard],
             ]);
 
             if ($response->successful()) {
@@ -108,7 +108,7 @@ class NotificationService
                 'message_id'   => $messageId,
                 'text'         => $newText,
                 'parse_mode'   => 'Markdown',
-                'reply_markup' => json_encode(['inline_keyboard' => []]),
+                'reply_markup' => ['inline_keyboard' => []],
             ]);
 
             return $response->successful();

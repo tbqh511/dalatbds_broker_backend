@@ -11,9 +11,22 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/dashboard-style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/webapp.css') }}">
+    <style>
+        .dashboard-content .container.dasboard-container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+    </style>
 @endpush
 @push('head_scripts')
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+@endpush
+
+@push('head_scripts')
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 @endpush
 
 @push('scripts')
