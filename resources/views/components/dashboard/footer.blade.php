@@ -12,7 +12,7 @@
         <span>Thêm Khách hàng</span>
     </a>
     <a href="{{ route('webapp.add_listing') }}" class="wab-fab-item">
-        <div class="wab-fab-item-icon" style="background: #40B69E;">
+        <div class="wab-fab-item-icon" style="background: #3270FC;">
             <i class="fas fa-building"></i>
         </div>
         <span>Đăng tin BĐS</span>
@@ -23,8 +23,9 @@
 <div id="wab-bottom-nav">
 
     {{-- SVG bar background with curved notch --}}
-    <svg id="wab-nav-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 70" preserveAspectRatio="none" overflow="visible">
-        <path d="M0,0 L130,0 C145,0 153,-32 187.5,-32 C222,-32 230,0 245,0 L375,0 L375,70 L0,70 Z" fill="#ffffff"/>
+    <svg id="wab-nav-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 70" preserveAspectRatio="none"
+        overflow="visible">
+        <path d="M0,0 L375,0 L375,70 L0,70 Z" fill="#ffffff" />
     </svg>
 
     {{-- Center FAB Button --}}
@@ -38,15 +39,17 @@
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="{{ route('webapp.leads') }}" class="wab-nav-item {{ request()->routeIs('webapp.leads*') ? 'wab-active' : '' }}">
-            <i class="fas fa-users"></i>
-            <span>Leads</span>
+        <a href="{{ route('webapp.listings') }}"
+            class="wab-nav-item {{ request()->routeIs('webapp.listings*') ? 'wab-active' : '' }}">
+            <i class="fas fa-building"></i>
+            <span>BĐS</span>
         </a>
         {{-- Center spacer for FAB --}}
         <div class="wab-nav-spacer"></div>
-        <a href="{{ route('webapp.profile') }}" class="wab-nav-item {{ request()->routeIs('webapp.profile') ? 'wab-active' : '' }}">
-            <i class="fas fa-user"></i>
-            <span>Hồ sơ</span>
+        <a href="{{ route('webapp.leads') }}"
+            class="wab-nav-item {{ request()->routeIs('webapp.leads*') ? 'wab-active' : '' }}">
+            <i class="fas fa-users"></i>
+            <span>Leads</span>
         </a>
         <button class="wab-nav-item" id="wab-menu-btn">
             <i class="fas fa-cog"></i>
@@ -57,45 +60,45 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    var fabBtn    = document.getElementById('wab-fab-btn');
-    var fabMenu   = document.getElementById('wab-fab-menu');
-    var backdrop  = document.getElementById('wab-backdrop');
-    var menuBtn   = document.getElementById('wab-menu-btn');
+    document.addEventListener('DOMContentLoaded', function () {
+        var fabBtn = document.getElementById('wab-fab-btn');
+        var fabMenu = document.getElementById('wab-fab-menu');
+        var backdrop = document.getElementById('wab-backdrop');
+        var menuBtn = document.getElementById('wab-menu-btn');
 
-    function openFab() {
-        fabBtn.classList.add('wab-open');
-        fabMenu.classList.add('wab-open');
-        backdrop.classList.add('wab-open');
-    }
-    function closeFab() {
-        fabBtn.classList.remove('wab-open');
-        fabMenu.classList.remove('wab-open');
-        backdrop.classList.remove('wab-open');
-    }
+        function openFab() {
+            fabBtn.classList.add('wab-open');
+            fabMenu.classList.add('wab-open');
+            backdrop.classList.add('wab-open');
+        }
+        function closeFab() {
+            fabBtn.classList.remove('wab-open');
+            fabMenu.classList.remove('wab-open');
+            backdrop.classList.remove('wab-open');
+        }
 
-    if (fabBtn) {
-        fabBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            fabBtn.classList.contains('wab-open') ? closeFab() : openFab();
+        if (fabBtn) {
+            fabBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                fabBtn.classList.contains('wab-open') ? closeFab() : openFab();
+            });
+        }
+        if (backdrop) {
+            backdrop.addEventListener('click', closeFab);
+        }
+        document.querySelectorAll('.wab-fab-item').forEach(function (item) {
+            item.addEventListener('click', closeFab);
         });
-    }
-    if (backdrop) {
-        backdrop.addEventListener('click', closeFab);
-    }
-    document.querySelectorAll('.wab-fab-item').forEach(function (item) {
-        item.addEventListener('click', closeFab);
+
+        // Open sidebar on Menu tap
+        if (menuBtn) {
+            menuBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (typeof $ !== 'undefined') {
+                    $('.dashbard-menu-wrap').addClass('dashbard-menu-wrap_vis');
+                    $('.dashbard-menu-overlay').fadeIn(100);
+                }
+            });
+        }
     });
-
-    // Open sidebar on Menu tap
-    if (menuBtn) {
-        menuBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            if (typeof $ !== 'undefined') {
-                $('.dashbard-menu-wrap').addClass('dashbard-menu-wrap_vis');
-                $('.dashbard-menu-overlay').fadeIn(100);
-            }
-        });
-    }
-});
 </script>
