@@ -8,9 +8,11 @@ use App\Models\Customer;
 use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 class TelegramBotController extends Controller
 {
@@ -42,6 +44,11 @@ class TelegramBotController extends Controller
         $callbackData    = $callbackQuery['data'] ?? '';
         $callbackQueryId = $callbackQuery['id'];
         $message         = $callbackQuery['message'] ?? null;
+
+        if (str_starts_with($callbackData, 'open_assign_lead:')) {
+            $this->handleOpenAssignLead($callbackQuery);
+            return;
+        }
 
         if (!str_starts_with($callbackData, 'assign_lead:')) {
             return;
@@ -106,6 +113,74 @@ class TelegramBotController extends Controller
         if ($sale->telegram_id) {
             $privateMsg = TelegramMessageTemplates::leadAssigned($lead);
             $this->notificationService->sendToCustomer($sale, $privateMsg);
+        }
+    }
+
+    /**
+     * Xử lý callback open_assign_lead:{lead_id}:
+     * Gửi private message đến người click chứa web_app button để mở Mini App phân công.
+     */
+    protected function handleOpenAssignLead(array $callbackQuery): void
+    {
+        $callbackData    = $callbackQuery['data'] ?? '';
+        $callbackQueryId = $callbackQuery['id'];
+        $fromId          = (string) ($callbackQuery['from']['id'] ?? '');
+
+        // Parse: open_assign_lead:{lead_id}
+        $parts  = explode(':', $callbackData);
+        $leadId = (int) ($parts[1] ?? 0);
+
+        if (!$leadId || !$fromId) {
+            $this->answerCallbackQuery($callbackQueryId, '❌ Dữ liệu không hợp lệ.');
+            return;
+        }
+
+        $lead = CrmLead::with(['customer', 'sale'])->find($leadId);
+        if (!$lead) {
+            $this->answerCallbackQuery($callbackQueryId, '❌ Không tìm thấy lead.');
+            return;
+        }
+
+        // Nếu lead đã được assign, thông báo luôn
+        if ($lead->sale_id) {
+            $this->answerCallbackQuery(
+                $callbackQueryId,
+                "⚠️ Lead đã được gán cho {$lead->sale?->name}.",
+                true
+            );
+            return;
+        }
+
+        $assignUrl = URL::temporarySignedRoute(
+            'webapp.leads.assign-page',
+            Carbon::now()->addHours(24),
+            ['id' => $leadId]
+        );
+
+        $customerName = $lead->customer?->full_name ?? 'Khách hàng';
+        $token        = Config::get('services.telegram.bot_token');
+
+        // Gửi private message đến người click với web_app button
+        $response = Http::post(
+            "https://api.telegram.org/bot{$token}/sendMessage",
+            [
+                'chat_id'      => $fromId,
+                'text'         => "🎯 *Phân công Lead #{$leadId}*\nKhách: " . $this->escape($customerName) . "\n\nBấm nút bên dưới để chọn sale phụ trách:",
+                'parse_mode'   => 'Markdown',
+                'reply_markup' => [
+                    'inline_keyboard' => [[
+                        ['text' => '👤 Mở trang phân công', 'web_app' => ['url' => $assignUrl]],
+                    ]],
+                ],
+            ]
+        );
+
+        if ($response->successful()) {
+            $this->answerCallbackQuery($callbackQueryId, '📩 Kiểm tra tin nhắn riêng của bạn!');
+        } else {
+            Log::warning("TelegramBot: Failed to send assign DM to {$fromId}. Response: " . $response->body());
+            // Fallback: nếu không gửi được DM (user chưa chat với bot), đưa URL vào toast
+            $this->answerCallbackQuery($callbackQueryId, "🔗 {$assignUrl}", true);
         }
     }
 

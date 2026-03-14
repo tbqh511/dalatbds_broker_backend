@@ -83,16 +83,11 @@ class TelegramMessageTemplates
                 "📝 Ghi chú: {$note}\n" .
                 "🙋 Broker: {$brokerName}";
 
-        // Telegram chỉ chấp nhận https:// trong inline keyboard URL buttons.
-        // Khi dev local (http://), đưa link vào text để tránh lỗi 400.
-        if (str_starts_with($assignUrl, 'https://')) {
-            $keyboard = [[
-                ['text' => '👤 Phân công Sale', 'url' => $assignUrl],
-            ]];
-        } else {
-            $text    .= "\n🔗 Phân công: " . $assignUrl;
-            $keyboard = [];
-        }
+        // Dùng callback_data để bot gửi private message với web_app button khi người dùng click.
+        // Cách này hoạt động trong group và cho phép mở Mini App thật sự (không phải in-app browser).
+        $keyboard = [[
+            ['text' => '👤 Phân công Sale', 'callback_data' => "open_assign_lead:{$lead->id}"],
+        ]];
 
         return ['text' => $text, 'keyboard' => $keyboard];
     }
