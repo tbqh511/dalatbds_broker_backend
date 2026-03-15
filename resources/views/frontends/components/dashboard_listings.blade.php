@@ -18,8 +18,7 @@
                                 placeholder="Tìm kiếm theo tên đường, phường..." value="">
                             <button type="submit"><i class="far fa-search"></i></button>
                         </div>
-                        <a href="{{ route('webapp.add_listing') }}" class="gradient-bg dashboard-addnew_btn">Đăng tin
-                            mới <i class="fal fa-plus"></i></a>
+
                         <!-- price-opt-->
                         <div class="price-opt">
                             <span class="price-opt-title">Sắp xếp theo:</span>

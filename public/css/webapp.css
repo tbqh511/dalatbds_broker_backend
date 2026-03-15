@@ -334,12 +334,16 @@ body.webapp-mode .call-button {
 
     /* Wider content area on mobile (sidebar is hidden) */
     .dashboard-content {
-        padding: 20px 16px 100px 16px;
+        padding: 0 0 100px 0;
     }
 
-    /* Dashboard title: smaller on mobile */
-    .dashboard-title-item {
-        font-size: 14px;
+    .dasboard-widget-box {
+        padding: 19px 15px;
+    }
+
+    /* Hide dashboard title on mobile — takes up too much space */
+    .dashboard-title {
+        display: none;
     }
 }
 
@@ -626,7 +630,7 @@ body.webapp-mode .call-button {
 /* Center FAB button */
 #wab-fab-btn {
     position: absolute;
-    bottom: calc(70px - 30px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(70px - 40px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: 60px;

@@ -1,5 +1,40 @@
 @extends('frontends.master')
+
+@push('head_scripts')
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+@endpush
+
 @section('content')
+<!-- Webapp back bar: shown when accessed from /webapp/* or inside Telegram WebApp -->
+<div id="webapp-back-bar" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9999; background:rgba(20,20,20,0.92); padding:10px 16px;">
+    <a href="javascript:history.back()" style="color:#fff; font-size:15px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+        <i class="fas fa-arrow-left"></i> Quay lại
+    </a>
+</div>
+
+@push('scripts')
+<script>
+(function () {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    var fromWebapp = document.referrer && document.referrer.indexOf('/webapp') !== -1;
+    var inTelegram = tg && tg.initData && tg.initData.length > 0;
+
+    if (inTelegram) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(function () {
+            window.history.back();
+        });
+    }
+
+    if (fromWebapp || inTelegram) {
+        document.getElementById('webapp-back-bar').style.display = 'block';
+        // Push page content down so sticky bar doesn't overlap hero
+        document.querySelector('#sec1') && (document.querySelector('#sec1').style.marginTop = '44px');
+    }
+})();
+</script>
+@endpush
+
 <!-- content -->
 <div class="content">
     <section class="hidden-section   single-hero-section" data-scrollax-parent="true" id="sec1">

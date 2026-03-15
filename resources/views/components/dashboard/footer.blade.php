@@ -49,7 +49,7 @@
         <a href="{{ route('webapp.leads') }}"
             class="wab-nav-item {{ request()->routeIs('webapp.leads*') ? 'wab-active' : '' }}">
             <i class="fas fa-users"></i>
-            <span>Leads</span>
+            <span>Khách</span>
         </a>
         <button class="wab-nav-item" id="wab-menu-btn">
             <i class="fas fa-cog"></i>
