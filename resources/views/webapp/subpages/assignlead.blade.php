@@ -2,7 +2,7 @@
   <div class="subpage" id="subpage-assignlead">
     <div class="sp-header">
       <button class="sp-back" onclick="closeSubpage('assignlead')">←</button>
-      <div class="sp-title">📋 Assign Lead cho Sale</div>
+      <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Assign Lead cho Sale</span></div>
     </div>
 
     <!-- Pool summary -->
@@ -42,8 +42,8 @@
           <div class="ul-info">
             <div class="ul-name">Nguyễn Văn Tuấn</div>
             <div class="ul-meta">
-              <span>📞 0912.345.678</span>
-              <span style="color:var(--danger);font-weight:600;">🔥 2 giờ trước</span>
+              <span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.93a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></span>0912.345.678</span>
+              <span style="color:var(--danger);font-weight:600;display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-7 6-7 12a7 7 0 0 0 14 0c0-6-7-12-7-12z"/></svg> 2 giờ trước</span>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
@@ -59,11 +59,11 @@
         </div>
         <div class="ul-tags">
           <span class="ul-tag">Biệt thự</span><span class="ul-tag">3–5 tỷ</span><span class="ul-tag">Lâm Viên</span>
-          <span class="ul-tag" style="background:#fee2e2;color:#dc2626;">🔥 Ưu tiên cao</span>
+          <span class="ul-tag" style="background:#fee2e2;color:#dc2626;display:inline-flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-7 6-7 12a7 7 0 0 0 14 0c0-6-7-12-7-12z"/></svg> Ưu tiên cao</span>
         </div>
         <div class="ul-footer">
           <span style="font-size:11px;color:var(--text-tertiary);">Gợi ý: Huy Thái (phù hợp khu vực)</span>
-          <button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker(['ul1'])">🎯 Assign ngay</button>
+          <button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker(['ul1'])"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Assign ngay</span></button>
         </div>
       </div>
 
@@ -74,7 +74,7 @@
           <div style="width:38px;height:38px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">BT</div>
           <div class="ul-info">
             <div class="ul-name">Anh Bảo Trâm</div>
-            <div class="ul-meta"><span>📞 0966.111.222</span><span style="color:var(--warning);font-weight:600;">6 giờ trước</span></div>
+            <div class="ul-meta"><span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.93a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></span>0966.111.222</span><span style="color:var(--warning);font-weight:600;">6 giờ trước</span></div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
             <span class="badge badge-amber">Trung bình</span>
@@ -90,7 +90,7 @@
         <div class="ul-tags"><span class="ul-tag">Khách sạn</span><span class="ul-tag">KD du lịch</span></div>
         <div class="ul-footer">
           <span style="font-size:11px;color:var(--text-tertiary);">Gợi ý: Minh Khoa (chuyên KD)</span>
-          <button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker(['ul2'])">🎯 Assign ngay</button>
+          <button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker(['ul2'])"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Assign ngay</span></button>
         </div>
       </div>
 
@@ -101,7 +101,7 @@
           <div style="width:38px;height:38px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">LT</div>
           <div class="ul-info">
             <div class="ul-name">Chị Lan Trinh</div>
-            <div class="ul-meta"><span>📞 0944.777.888</span><span>Hôm qua</span></div>
+            <div class="ul-meta"><span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.93a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></span>0944.777.888</span><span>Hôm qua</span></div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
             <span class="badge badge-blue">Bình thường</span>
@@ -117,7 +117,7 @@
         <div class="ul-tags"><span class="ul-tag">Nhà phố</span><span class="ul-tag">1.5–2 tỷ</span></div>
         <div class="ul-footer">
           <span style="font-size:11px;color:var(--text-tertiary);">Gợi ý: Anh Linh (khu vực Cam Ly)</span>
-          <button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker(['ul3'])">🎯 Assign ngay</button>
+          <button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker(['ul3'])"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Assign ngay</span></button>
         </div>
       </div>
 
@@ -128,7 +128,7 @@
           <div style="width:38px;height:38px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">PD</div>
           <div class="ul-info">
             <div class="ul-name">Anh Phong Dũng</div>
-            <div class="ul-meta"><span>📞 0988.222.444</span><span>2 ngày trước</span></div>
+            <div class="ul-meta"><span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.93a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></span>0988.222.444</span><span>2 ngày trước</span></div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
             <span class="badge badge-gray">Thấp</span>
@@ -144,7 +144,7 @@
         <div class="ul-tags"><span class="ul-tag">Đất nền</span><span class="ul-tag">Đầu tư</span></div>
         <div class="ul-footer">
           <span style="font-size:11px;color:var(--text-tertiary);">Gợi ý: Thu Nga hoặc Đức Huy</span>
-          <button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker(['ul4'])">🎯 Assign ngay</button>
+          <button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker(['ul4'])"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Assign ngay</span></button>
         </div>
       </div>
 
@@ -186,7 +186,7 @@
         <div class="assign-cta-count" id="assignCtaCount">0 lead được chọn</div>
         <div class="assign-cta-sub">Chọn lead rồi assign cho Sale</div>
       </div>
-      <button class="assign-cta-btn" id="assignCtaBtn" onclick="openSalePicker(getSelectedLeads())">🎯 Assign cho Sale</button>
+      <button class="assign-cta-btn" id="assignCtaBtn" onclick="openSalePicker(getSelectedLeads())"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Assign cho Sale</span></button>
     </div>
 
   </div><!-- end subpage-assignlead -->
@@ -195,14 +195,14 @@
   <div class="sale-picker" id="salePicker">
     <div class="sale-picker-inner">
       <div class="sp-inner-handle"></div>
-      <div class="sp-inner-title">🎯 Chọn Sale để Assign</div>
+      <div class="sp-inner-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Chọn Sale để Assign</span></div>
       <div class="sp-inner-sub" id="salePickerSub">Đang assign 1 lead · Chọn Sale phù hợp</div>
       <div id="salePickerList">
         <div class="sale-pick-item" onclick="selectSalePick(this,'HT')">
           <div class="spi-avatar" style="background:var(--primary)">HT</div>
           <div class="spi-info">
             <div class="spi-name">Huy Thái</div>
-            <div class="spi-meta">7 deal đang chăm · 🔥 Top tháng</div>
+            <div class="spi-meta">7 deal đang chăm · <span style="display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-7 6-7 12a7 7 0 0 0 14 0c0-6-7-12-7-12z"/></svg></span> Top tháng</div>
           </div>
           <div class="spi-workload">
             <span class="spi-leads mid">7 deals</span>
@@ -224,7 +224,7 @@
           <div class="spi-avatar" style="background:#f59e0b">AL</div>
           <div class="spi-info">
             <div class="spi-name">Anh Linh</div>
-            <div class="spi-meta">3 deal · ⚠ Cần hỗ trợ</div>
+            <div class="spi-meta">3 deal · <span style="display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Cần hỗ trợ</div>
           </div>
           <div class="spi-workload">
             <span class="spi-leads low">3 deals</span>

@@ -2,9 +2,9 @@
   <div class="subpage" id="subpage-approvecomm">
     <div class="sp-header">
       <button class="sp-back" onclick="closeSubpage('approvecomm')">←</button>
-      <div class="sp-title">💳 Duyệt hoa hồng</div>
+      <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Duyệt hoa hồng</span></div>
       <div class="sp-actions">
-        <button class="sp-action-btn" onclick="showToast('Xuất sao kê hoa hồng')">📄</button>
+        <button class="sp-action-btn" onclick="showToast('Xuất sao kê hoa hồng')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>
       </div>
     </div>
 
@@ -30,7 +30,7 @@
       <!-- COMM APPROVE 1 — Chốt deal, cần duyệt để sang trạng thái Chờ cọc -->
       <div class="acomm-card" id="acomm1">
         <div class="acomm-head">
-          <div class="acomm-icon" style="background:var(--warning-light);">🏡</div>
+          <div class="acomm-icon" style="background:var(--warning-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg></div>
           <div class="acomm-info">
             <div class="acomm-name">Biệt thự View Đồi Chè Cầu Đất</div>
             <div class="acomm-sub">Chị Thu Hà · Sale: Huy Thái</div>
@@ -92,7 +92,7 @@
 
         <div class="acomm-actions">
           <button class="acomm-btn hold" onclick="showToast('Yêu cầu kiểm tra thêm...')">⏸ Giữ lại</button>
-          <button class="acomm-btn detail" onclick="showToast('Xem hợp đồng...')">📋 Hợp đồng</button>
+          <button class="acomm-btn detail" onclick="showToast('Xem hợp đồng...')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Hợp đồng</span></button>
           <button class="acomm-btn approve" onclick="approveComm('acomm1','Biệt thự Cầu Đất','240 triệu')">✓ Xác nhận & Chờ cọc</button>
         </div>
       </div>
@@ -100,7 +100,7 @@
       <!-- COMM APPROVE 2 -->
       <div class="acomm-card" id="acomm2">
         <div class="acomm-head">
-          <div class="acomm-icon" style="background:var(--primary-light);">🏠</div>
+          <div class="acomm-icon" style="background:var(--primary-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg></div>
           <div class="acomm-info">
             <div class="acomm-name">Nhà phố Trần Phú, P.1</div>
             <div class="acomm-sub">Anh Ngọc Lâm · Sale: Minh Khoa</div>
@@ -148,7 +148,7 @@
 
         <div class="acomm-actions">
           <button class="acomm-btn hold" onclick="showToast('Giữ lại kiểm tra...')">⏸ Giữ lại</button>
-          <button class="acomm-btn detail" onclick="showToast('Xem hợp đồng...')">📋 Hợp đồng</button>
+          <button class="acomm-btn detail" onclick="showToast('Xem hợp đồng...')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Hợp đồng</span></button>
           <button class="acomm-btn approve" onclick="approveComm('acomm2','Nhà phố Trần Phú','84 triệu')">✓ Xác nhận & Chờ cọc</button>
         </div>
       </div>
@@ -162,7 +162,7 @@
       <!-- Comm processing 1 — Đang công chứng -->
       <div class="acomm-card" style="opacity:.85;">
         <div class="acomm-head">
-          <div class="acomm-icon" style="background:var(--success-light);">🌱</div>
+          <div class="acomm-icon" style="background:var(--success-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.97-5 9-8.58 9-12A9 9 0 0 0 3 10c0 3.42 4.03 7 9 12z"/></svg></div>
           <div class="acomm-info">
             <div class="acomm-name">Đất ở Phường 3, 200m²</div>
             <div class="acomm-sub">Chị Lan Hương · Sale: Huy Thái</div>
@@ -177,12 +177,12 @@
           <div class="cs-line done"></div>
           <div class="cs-step"><div class="cs-dot done">✓</div><div class="cs-label done">Đặt cọc</div></div>
           <div class="cs-line done"></div>
-          <div class="cs-step"><div class="cs-dot active">🖊</div><div class="cs-label active">Công chứng</div></div>
+          <div class="cs-step"><div class="cs-dot active" style="display:flex;align-items:center;justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div><div class="cs-label active">Công chứng</div></div>
           <div class="cs-line"></div>
           <div class="cs-step"><div class="cs-dot">5</div><div class="cs-label">Hoàn tất</div></div>
         </div>
         <div class="acomm-actions">
-          <button class="acomm-btn detail" onclick="showToast('Xem chi tiết...')">📋 Chi tiết</button>
+          <button class="acomm-btn detail" onclick="showToast('Xem chi tiết...')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Chi tiết</span></button>
           <button class="acomm-btn approve" onclick="showToast('✓ Cập nhật: Hoàn tất công chứng!')">✓ Xác nhận Hoàn tất</button>
         </div>
       </div>

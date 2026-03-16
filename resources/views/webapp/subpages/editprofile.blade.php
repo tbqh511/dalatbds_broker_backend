@@ -2,7 +2,7 @@
   <div class="subpage" id="subpage-editprofile">
     <div class="sp-header">
       <button class="sp-back" onclick="closeSubpage('editprofile')">←</button>
-      <div class="sp-title">🪪 Chỉnh sửa hồ sơ</div>
+      <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><line x1="7" y1="8" x2="7.01" y2="8"/><line x1="11" y1="8" x2="17" y2="8"/><line x1="7" y1="11" x2="7.01" y2="11"/><line x1="11" y1="11" x2="17" y2="11"/></svg> Chỉnh sửa hồ sơ</span></div>
     </div>
 
     <div class="sp-scroll" style="padding-bottom:80px;">
@@ -11,14 +11,14 @@
       <div class="profile-edit-avatar">
         <div class="pea-circle">
           HT
-          <div class="pea-edit-btn" onclick="showToast('Chọn ảnh từ thư viện...')">✏️</div>
+          <div class="pea-edit-btn" onclick="showToast('Chọn ảnh từ thư viện...')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
         </div>
         <div class="pea-name">Huy Thái</div>
         <div class="pea-role">
-          <span class="badge badge-blue" style="font-size:10px;">💼 Sale</span>
+          <span class="badge badge-blue" style="font-size:10px;display:inline-flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> Sale</span>
           <span>Đà Lạt BĐS</span>
         </div>
-        <div class="pea-change-photo" onclick="showToast('Chọn ảnh từ thư viện...')">📷 Đổi ảnh đại diện</div>
+        <div class="pea-change-photo" onclick="showToast('Chọn ảnh từ thư viện...')"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Đổi ảnh đại diện</span></div>
       </div>
 
       <!-- Thông tin cơ bản -->
@@ -64,7 +64,7 @@
         <div class="form-row">
           <span class="form-row-label">Facebook</span>
           <input class="form-row-value" type="text" value="" placeholder="Link Facebook cá nhân...">
-          <span class="form-row-icon">🔗</span>
+          <span class="form-row-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
         </div>
       </div>
 
@@ -72,7 +72,7 @@
       <div class="form-section">
         <div class="form-section-title">Giấy tờ & Chứng chỉ</div>
         <div class="cert-item">
-          <div class="cert-icon">🪪</div>
+          <div class="cert-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><line x1="7" y1="8" x2="7.01" y2="8"/><line x1="11" y1="8" x2="17" y2="8"/><line x1="7" y1="11" x2="7.01" y2="11"/><line x1="11" y1="11" x2="17" y2="11"/></svg></div>
           <div class="cert-info">
             <div class="cert-name">CMND / CCCD</div>
             <div class="cert-status" style="color:var(--success);">✓ Đã xác minh</div>
@@ -80,7 +80,7 @@
           <span class="cert-action" onclick="showToast('Xem ảnh CMND...')">Xem</span>
         </div>
         <div class="cert-item">
-          <div class="cert-icon">📜</div>
+          <div class="cert-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
           <div class="cert-info">
             <div class="cert-name">Chứng chỉ môi giới BĐS</div>
             <div class="cert-status" style="color:var(--success);">✓ Hợp lệ · Hết hạn 12/2026</div>
@@ -88,7 +88,7 @@
           <span class="cert-action" onclick="showToast('Xem chứng chỉ...')">Xem</span>
         </div>
         <div class="cert-item">
-          <div class="cert-icon" style="border:1.5px dashed var(--border);">📷</div>
+          <div class="cert-icon" style="border:1.5px dashed var(--border);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           <div class="cert-info">
             <div class="cert-name">Ảnh thực địa / Portfolio</div>
             <div class="cert-status" style="color:var(--text-tertiary);">Chưa upload</div>

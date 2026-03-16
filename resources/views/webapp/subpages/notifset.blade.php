@@ -2,7 +2,7 @@
   <div class="subpage" id="subpage-notifset">
     <div class="sp-header">
       <button class="sp-back" onclick="closeSubpage('notifset')">←</button>
-      <div class="sp-title">🔔 Cài đặt thông báo</div>
+      <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Cài đặt thông báo</span></div>
     </div>
 
     <div class="sp-scroll" style="padding-bottom:80px;">
@@ -23,7 +23,7 @@
       <!-- CRM Notifications — Sale -->
       <div class="notif-category role-sale">
         <div class="nc-header">
-          <div class="nc-icon" style="background:var(--danger-light);">🎯</div>
+          <div class="nc-icon" style="background:var(--danger-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
           <div class="nc-title">Lead & Khách hàng</div>
         </div>
         <div class="notif-row">
@@ -41,7 +41,7 @@
           <div class="toggle-wrap"><input type="checkbox" class="ios-toggle" checked></div>
         </div>
         <div class="channel-row">
-          <span class="channel-label">📢 Kênh nhận</span>
+          <span class="channel-label"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Kênh nhận</span></span>
           <div class="channel-badges">
             <span class="ch-badge active" onclick="toggleChBadge(this)">Telegram Bot</span>
             <span class="ch-badge active" onclick="toggleChBadge(this)">In-app</span>
@@ -52,7 +52,7 @@
 
       <div class="notif-category role-sale">
         <div class="nc-header">
-          <div class="nc-icon" style="background:var(--purple-light);">🤝</div>
+          <div class="nc-icon" style="background:var(--purple-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           <div class="nc-title">Deal & Giao dịch</div>
         </div>
         <div class="notif-row">
@@ -77,7 +77,7 @@
           <div class="toggle-wrap"><input type="checkbox" class="ios-toggle" checked></div>
         </div>
         <div class="channel-row">
-          <span class="channel-label">📢 Kênh nhận</span>
+          <span class="channel-label"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Kênh nhận</span></span>
           <div class="channel-badges">
             <span class="ch-badge active" onclick="toggleChBadge(this)">Telegram Bot</span>
             <span class="ch-badge active" onclick="toggleChBadge(this)">In-app</span>
@@ -87,7 +87,7 @@
 
       <div class="notif-category role-sale">
         <div class="nc-header">
-          <div class="nc-icon" style="background:var(--primary-light);">📅</div>
+          <div class="nc-icon" style="background:var(--primary-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
           <div class="nc-title">Lịch hẹn & Booking</div>
         </div>
         <div class="notif-row">
@@ -112,7 +112,7 @@
           <div class="toggle-wrap"><input type="checkbox" class="ios-toggle" checked></div>
         </div>
         <div class="channel-row">
-          <span class="channel-label">📢 Kênh nhận</span>
+          <span class="channel-label"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Kênh nhận</span></span>
           <div class="channel-badges">
             <span class="ch-badge active" onclick="toggleChBadge(this)">Telegram Bot</span>
             <span class="ch-badge active" onclick="toggleChBadge(this)">In-app</span>
@@ -122,7 +122,7 @@
 
       <div class="notif-category role-sale">
         <div class="nc-header">
-          <div class="nc-icon" style="background:var(--success-light);">💰</div>
+          <div class="nc-icon" style="background:var(--success-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
           <div class="nc-title">Hoa hồng</div>
         </div>
         <div class="notif-row">
@@ -140,7 +140,7 @@
           <div class="toggle-wrap"><input type="checkbox" class="ios-toggle" checked></div>
         </div>
         <div class="channel-row">
-          <span class="channel-label">📢 Kênh nhận</span>
+          <span class="channel-label"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Kênh nhận</span></span>
           <div class="channel-badges">
             <span class="ch-badge active" onclick="toggleChBadge(this)">Telegram Bot</span>
             <span class="ch-badge active" onclick="toggleChBadge(this)">In-app</span>
@@ -152,7 +152,7 @@
       <!-- BĐS Notifications — Broker -->
       <div class="notif-category role-broker">
         <div class="nc-header">
-          <div class="nc-icon" style="background:var(--amber-light,#fef3c7);">🏡</div>
+          <div class="nc-icon" style="background:var(--amber-light,#fef3c7);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg></div>
           <div class="nc-title">Bất động sản của tôi</div>
         </div>
         <div class="notif-row">
@@ -177,7 +177,7 @@
           <div class="toggle-wrap"><input type="checkbox" class="ios-toggle"></div>
         </div>
         <div class="channel-row">
-          <span class="channel-label">📢 Kênh nhận</span>
+          <span class="channel-label"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Kênh nhận</span></span>
           <div class="channel-badges">
             <span class="ch-badge active" onclick="toggleChBadge(this)">Telegram Bot</span>
             <span class="ch-badge active" onclick="toggleChBadge(this)">In-app</span>
@@ -188,7 +188,7 @@
       <!-- Marketing -->
       <div class="notif-category">
         <div class="nc-header">
-          <div class="nc-icon" style="background:var(--bg-secondary);">📢</div>
+          <div class="nc-icon" style="background:var(--bg-secondary);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
           <div class="nc-title">Tin tức & Thị trường</div>
         </div>
         <div class="notif-row">
@@ -217,7 +217,7 @@
       <!-- Quiet hours -->
       <div class="notif-category">
         <div class="nc-header">
-          <div class="nc-icon" style="background:#f1f5f9;">🌙</div>
+          <div class="nc-icon" style="background:#f1f5f9;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
           <div class="nc-title">Giờ yên lặng (Quiet Hours)</div>
         </div>
         <div class="notif-row">

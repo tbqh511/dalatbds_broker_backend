@@ -300,7 +300,7 @@ class Property extends Model
         }
 
         // Calculate formatted price
-        if ($price > $ty) {
+        if ($price >= $ty) {
             $formattedPrice = number_format($price / $ty, ($price % $ty == 0) ? 0 : 1) . ' tỷ';
         } elseif ($price > 0) {
             $formattedPrice = number_format($price / $trieu, 0) . ' triệu';

@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
         );
 
 
+        $this->call(MarketPriceSeeder::class);
+
         DB::table('settings')->insert(
             [
                 [

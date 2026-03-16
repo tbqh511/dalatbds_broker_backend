@@ -732,4 +732,120 @@ window.switchRefTab = function(btn, tab){
   document.getElementById('refTabHistory').style.display = tab==='history' ? '' : 'none';
 };
 
+// ============ HOME FEED — LAZY LOADING ============
+
+function renderPropertyCard(p) {
+  const imgHtml = p.title_image
+    ? `<img src="${p.title_image}" class="prop-img-inner" style="object-fit:cover;width:100%;height:100%;" alt="">`
+    : `<div class="img-prop1 prop-img-inner"><div class="img-center">🏠</div></div>`;
+
+  const categoryBadge = p.category_name
+    ? `<span class="badge badge-blue">${p.category_name}</span>` : '';
+
+  const areaMeta = p.area ? `<div class="prop-meta-item">📐 <span>${p.area} m²</span></div>` : '';
+  const legalMeta = p.legal ? `<div class="prop-meta-item">⚖️ <span>${p.legal}</span></div>` : '';
+  const roomMeta = p.number_room
+    ? `<div class="prop-meta-item role-broker role-bds_admin role-sale role-sale_admin role-admin">🛏 <span>${p.number_room} PN</span></div>` : '';
+
+  return `
+    <div class="prop-card" onclick="openPropertyDetail(${p.id})">
+      <div class="prop-img">
+        ${imgHtml}
+        <div class="prop-img-gradient"></div>
+        <div class="prop-img-tags">${categoryBadge}</div>
+        <div class="prop-img-price">${p.price || ''}</div>
+        <div class="prop-actions">
+          <div class="prop-action-btn">❤️</div>
+          <div class="prop-action-btn">↗️</div>
+        </div>
+      </div>
+      <div class="prop-body">
+        <div class="prop-title">${p.title || ''}</div>
+        <div class="prop-location">📍 ${p.location || ''}</div>
+        <div class="prop-meta">${areaMeta}${legalMeta}${roomMeta}</div>
+      </div>
+      <div class="prop-footer">
+        <div class="prop-views">👁 ${p.total_click || 0} lượt xem</div>
+        <div class="prop-quick-actions">
+          <div class="prop-quick-btn role-broker role-bds_admin role-sale role-sale_admin role-admin">✏️</div>
+          <div class="prop-quick-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);border-color:transparent;">🤝</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+let homeFeedFilters = { type: '', category: '' };
+
+window.resetHomeFeed = function(chip) {
+  const bar = document.getElementById('home-filter-bar');
+  if (!bar) return;
+  homeFeedFilters.type = chip.dataset.type || '';
+  homeFeedFilters.category = chip.dataset.category || '';
+
+  const feed = document.getElementById('prop-feed');
+  const sentinel = document.getElementById('feed-sentinel');
+  if (feed) feed.innerHTML = '';
+  if (sentinel) {
+    sentinel.dataset.page = '1';
+    sentinel.dataset.hasMore = 'true';
+    sentinel.dataset.loading = 'false';
+    const spinner = document.getElementById('feed-spinner');
+    if (spinner) spinner.style.display = '';
+  }
+  loadHomeFeedPage();
+};
+
+function loadHomeFeedPage() {
+  const sentinel = document.getElementById('feed-sentinel');
+  if (!sentinel) return;
+  if (sentinel.dataset.hasMore !== 'true') return;
+  if (sentinel.dataset.loading === 'true') return;
+
+  const page = parseInt(sentinel.dataset.page) || 1;
+  sentinel.dataset.loading = 'true';
+
+  const spinner = document.getElementById('feed-spinner');
+  if (spinner) spinner.style.display = '';
+
+  const params = new URLSearchParams({ page });
+  if (homeFeedFilters.type !== '') params.set('type', homeFeedFilters.type);
+  if (homeFeedFilters.category !== '') params.set('category_id', homeFeedFilters.category);
+
+  fetch(`/webapp/home-feed?${params}`, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+  })
+    .then(r => r.json())
+    .then(data => {
+      const feed = document.getElementById('prop-feed');
+      if (feed && data.properties) {
+        data.properties.forEach(p => {
+          feed.insertAdjacentHTML('beforeend', renderPropertyCard(p));
+        });
+        // Re-apply current role visibility to newly inserted cards
+        if (typeof setRole === 'function') {
+          setRole(currentRole, null);
+        }
+      }
+      sentinel.dataset.loading = 'false';
+      sentinel.dataset.hasMore = data.has_more ? 'true' : 'false';
+      sentinel.dataset.page = data.next_page || (page + 1);
+      if (!data.has_more && spinner) spinner.style.display = 'none';
+    })
+    .catch(() => {
+      sentinel.dataset.loading = 'false';
+    });
+}
+
+// Intersection Observer — trigger lazy load when sentinel is visible
+const homeFeedObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      loadHomeFeedPage();
+    }
+  });
+}, { rootMargin: '200px' });
+
+const feedSentinel = document.getElementById('feed-sentinel');
+if (feedSentinel) homeFeedObserver.observe(feedSentinel);
+
 }); // end DOMContentLoaded

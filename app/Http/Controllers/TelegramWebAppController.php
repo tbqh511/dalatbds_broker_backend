@@ -22,6 +22,7 @@ use App\Models\AssignedOutdoorFacilities;
 use App\Models\CrmCustomer;
 use App\Models\CrmLead;
 use App\Models\Customer;
+use App\Models\MarketPrice;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -76,11 +77,16 @@ class TelegramWebAppController extends Controller
             })->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count();
         }
 
-        // Get the first page of the feed to display on the dashboard main page
-        $perPage = 10;
-        $properties = Property::with(['category', 'host'])->where('status', 1)->orderBy('created_at', 'desc')->paginate($perPage);
+        // Market prices for the home page strip
+        $marketPrices = MarketPrice::latestMonth()->orderByDesc('avg_price_m2')->take(3)->get();
 
-        return view('webapp.layout', compact('customer', 'stats', 'properties'));
+        // First batch of properties for server-side render
+        $properties = Property::with(['category', 'ward'])
+            ->where('status', 1)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices'));
     //return view('frontend_dashboard', compact('customer', 'stats', 'properties'));
     }
 
@@ -90,6 +96,50 @@ class TelegramWebAppController extends Controller
     {
         return view('frontend_dashboard_temp');
     }
+
+    public function homeFeed(Request $request)
+    {
+        $page = (int) $request->get('page', 1);
+        $categoryId = $request->get('category_id');
+        $type = $request->get('type'); // null=all, '0'=buy, '1'=rent
+
+        $query = Property::with(['category', 'ward'])
+            ->where('status', 1)
+            ->orderBy('created_at', 'desc');
+
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+        if ($type !== null && $type !== '') {
+            $query->where('property_type', (int) $type);
+        }
+
+        $paginator = $query->paginate(10, ['*'], 'page', $page);
+
+        $items = $paginator->map(function ($p) {
+            return [
+                'id'            => $p->id,
+                'title'         => $p->title_by_address,
+                'price'         => $p->formatted_prices,
+                'location'      => $p->address_location,
+                'area'          => $p->area,
+                'legal'         => $p->legal,
+                'number_room'   => $p->number_room,
+                'total_click'   => $p->total_click,
+                'title_image'   => $p->title_image ?: null,
+                'category_name' => $p->category?->name,
+                'type_label'    => $p->type,
+                'property_type' => $p->property_type,
+            ];
+        });
+
+        return response()->json([
+            'properties' => $items,
+            'has_more'   => $paginator->hasMorePages(),
+            'next_page'  => $paginator->currentPage() + 1,
+        ]);
+    }
+
     public function profile(Request $request)
     {
         $customer = Auth::guard('webapp')->user();

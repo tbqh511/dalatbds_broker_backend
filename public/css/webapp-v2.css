@@ -222,14 +222,15 @@ img{display:block;max-width:100%;}
   opacity:0.5;
 }
 .stat-icon{
-  width:32px;height:32px;
-  border-radius:var(--radius-sm);
+  width:36px;height:36px;
+  border-radius:10px;
   background:var(--icon-bg,var(--primary-light));
   color:var(--icon-color,var(--primary));
   display:flex;align-items:center;justify-content:center;
-  font-size:15px;
   margin-bottom:10px;
+  flex-shrink:0;
 }
+.stat-icon svg{stroke:var(--icon-color,var(--primary));}
 .stat-label{font-size:11px;color:var(--text-secondary);margin-bottom:3px;}
 .stat-value{font-size:22px;font-weight:700;color:var(--text-primary);line-height:1;}
 .stat-delta{font-size:10px;color:var(--success);margin-top:4px;}
@@ -265,7 +266,8 @@ img{display:block;max-width:100%;}
 }
 .prop-img-price{
   position:absolute;bottom:10px;left:10px;
-  font-size:15px;font-weight:700;color:#fff;
+  font-size:15px;font-weight:700;color:var(--primary);
+  background:rgba(255,255,255,0.92);border-radius:6px;padding:2px 8px;
 }
 .prop-img-status{
   position:absolute;bottom:10px;right:10px;
@@ -279,7 +281,6 @@ img{display:block;max-width:100%;}
   background:rgba(255,255,255,0.85);
   border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:14px;
   backdrop-filter:blur(4px);
 }
 .prop-body{padding:12px 14px 14px;}
@@ -320,7 +321,7 @@ img{display:block;max-width:100%;}
   background:var(--bg-card);
   border:1px solid var(--border);
   display:flex;align-items:center;justify-content:center;
-  font-size:13px;color:var(--text-secondary);
+  color:var(--text-secondary);
 }
 
 /* ============ MARKET SECTION ============ */
@@ -461,7 +462,8 @@ img{display:block;max-width:100%;}
   padding:0 4px;
 }
 .nav-item.active{color:var(--primary);}
-.nav-item .nav-icon{font-size:20px;line-height:1;}
+.nav-item .nav-icon{display:flex;align-items:center;justify-content:center;width:24px;height:24px;}
+.nav-item .nav-icon svg{transition:stroke 0.15s;}
 .nav-item.fab-wrap{
   position:relative;
   overflow:visible;
@@ -948,7 +950,7 @@ img{display:block;max-width:100%;}
 .img-prop4{background:linear-gradient(160deg,#064e3b 0%,#065f46 50%,#0d9488 100%);}
 .img-center{
   display:flex;align-items:center;justify-content:center;
-  height:100%;color:rgba(255,255,255,0.5);font-size:48px;
+  height:100%;
 }
 
 /* ============ SEARCH PAGE — NEW ============ */

@@ -5,18 +5,18 @@
       <button class="dh-btn" onclick="closeDetail()"><span>←</span></button>
       <div class="dh-title" id="detailHeaderTitle">Chi tiết BĐS</div>
       <div class="dh-actions">
-        <button class="dh-btn" onclick="toggleBookmark(this)" id="bookmarkBtn"><span>🤍</span></button>
-        <button class="dh-btn" onclick="shareDetail()"><span>↗️</span></button>
+        <button class="dh-btn" onclick="toggleBookmark(this)" id="bookmarkBtn"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span></button>
+        <button class="dh-btn" onclick="shareDetail()"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span></button>
       </div>
     </div>
 
     <!-- gallery -->
     <div class="detail-gallery">
       <div class="gallery-slides" id="gallerySlides">
-        <div class="gallery-slide gs1">🏡</div>
-        <div class="gallery-slide gs2">🌿</div>
-        <div class="gallery-slide gs3">🏠</div>
-        <div class="gallery-slide gs4">🌄</div>
+        <div class="gallery-slide gs1" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="gallery-slide gs2" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div class="gallery-slide gs3" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="gallery-slide gs4" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
       </div>
       <div class="gallery-price-badge">
         <div class="price-big" id="detailPrice">1,000 triệu</div>
@@ -47,28 +47,28 @@
           Bán Đất ở phân quyền, Đường Yersin, Phường Cam Ly, Đà Lạt
         </div>
         <div class="detail-addr">
-          <span class="detail-addr-icon">📍</span>
+          <span class="detail-addr-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
           <span id="detailAddr">Đường Yersin, Phường Cam Ly, Thành phố Đà Lạt, Lâm Đồng</span>
         </div>
         <!-- 4 stat boxes -->
         <div class="detail-stats-row">
           <div class="ds-item">
-            <div class="ds-icon">📐</div>
+            <div class="ds-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
             <div class="ds-val" id="detailArea">250 m²</div>
             <div class="ds-lbl">Diện tích</div>
           </div>
           <div class="ds-item">
-            <div class="ds-icon">🏠</div>
+            <div class="ds-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
             <div class="ds-val" id="detailRoom">—</div>
             <div class="ds-lbl">Phòng ngủ</div>
           </div>
           <div class="ds-item">
-            <div class="ds-icon">🧭</div>
+            <div class="ds-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
             <div class="ds-val">Đông Nam</div>
             <div class="ds-lbl">Hướng</div>
           </div>
           <div class="ds-item">
-            <div class="ds-icon">👁</div>
+            <div class="ds-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
             <div class="ds-val">3</div>
             <div class="ds-lbl">Lượt xem</div>
           </div>
@@ -78,7 +78,7 @@
       <!-- THÔNG SỐ KỸ THUẬT -->
       <div class="detail-section">
         <div class="detail-section-header" onclick="toggleSection(this)">
-          <div class="detail-section-title">📋 Thông số chi tiết</div>
+          <div class="detail-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Thông số chi tiết</span></div>
           <span class="detail-section-toggle open">▾</span>
         </div>
         <div class="detail-section-body">
@@ -138,7 +138,7 @@
       <!-- PHÁP LÝ -->
       <div class="detail-section">
         <div class="detail-section-header" onclick="toggleSection(this)">
-          <div class="detail-section-title">⚖️ Pháp lý & Hồ sơ</div>
+          <div class="detail-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Pháp lý & Hồ sơ</span></div>
           <span class="detail-section-toggle open">▾</span>
         </div>
         <div class="detail-section-body">
@@ -175,12 +175,12 @@
                 <div style="font-size:12px;font-weight:600;color:var(--primary-dark);">Thông tin chủ nhà (Broker only)</div>
                 <div style="font-size:12px;color:var(--primary);">Nguyễn Văn A · <strong>0912.345.678</strong></div>
               </div>
-              <button style="padding:5px 10px;background:var(--primary);color:#fff;border-radius:8px;font-size:11px;font-weight:600;" onclick="callOwner()">📞 Gọi</button>
+              <button style="padding:5px 10px;background:var(--primary);color:#fff;border-radius:8px;font-size:11px;font-weight:600;" onclick="callOwner()"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Gọi</span></button>
             </div>
           </div>
           <div class="role-guest" style="margin-top:8px;">
             <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);padding:10px;text-align:center;border:1px dashed var(--border);">
-              <div style="font-size:12px;color:var(--text-tertiary);">🔒 Đăng ký eBroker để xem thông tin liên hệ chủ nhà</div>
+              <div style="font-size:12px;color:var(--text-tertiary);display:flex;align-items:center;justify-content:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Đăng ký eBroker để xem thông tin liên hệ chủ nhà</div>
             </div>
           </div>
         </div>
@@ -189,7 +189,7 @@
       <!-- MÔ TẢ -->
       <div class="detail-section">
         <div class="detail-section-header" onclick="toggleSection(this)">
-          <div class="detail-section-title">📝 Mô tả</div>
+          <div class="detail-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Mô tả</span></div>
           <span class="detail-section-toggle open">▾</span>
         </div>
         <div class="detail-section-body">
@@ -207,22 +207,22 @@
       <!-- VỊ TRÍ -->
       <div class="detail-section">
         <div class="detail-section-header" onclick="toggleSection(this)">
-          <div class="detail-section-title">🗺️ Vị trí</div>
+          <div class="detail-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Vị trí</span></div>
           <span class="detail-section-toggle open">▾</span>
         </div>
         <div class="detail-section-body">
           <div class="map-preview">
             <div class="map-pin-center"></div>
             <div class="map-preview-label">
-              <span class="role-guest">📍 Phường Cam Ly, Đà Lạt · Vị trí ẩn với Guest</span>
-              <span class="role-broker role-bds_admin role-sale role-bds_admin role-sale_admin role-admin">📍 Đường Yersin, Phường Cam Ly · <span style="color:var(--primary);font-weight:600;">Xem bản đồ đầy đủ →</span></span>
+              <span class="role-guest"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Phường Cam Ly, Đà Lạt · Vị trí ẩn với Guest</span></span>
+              <span class="role-broker role-bds_admin role-sale role-bds_admin role-sale_admin role-admin"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Đường Yersin, Phường Cam Ly · <span style="color:var(--primary);font-weight:600;">Xem bản đồ đầy đủ →</span></span></span>
             </div>
           </div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">🏥 BV Hoàn Mỹ <span style="color:var(--primary);">1.2 km</span></div>
-            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">🏫 Trường Marie Curie <span style="color:var(--primary);">800 m</span></div>
-            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">🛒 AEON <span style="color:var(--primary);">2.1 km</span></div>
-            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">🏙 Trung tâm TP <span style="color:var(--primary);">3.5 km</span></div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> BV Hoàn Mỹ <span style="color:var(--primary);">1.2 km</span></div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Trường Marie Curie <span style="color:var(--primary);">800 m</span></div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> AEON <span style="color:var(--primary);">2.1 km</span></div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> Trung tâm TP <span style="color:var(--primary);">3.5 km</span></div>
           </div>
         </div>
       </div>
@@ -230,7 +230,7 @@
       <!-- LỊCH SỬ GIÁ -->
       <div class="detail-section">
         <div class="detail-section-header" onclick="toggleSection(this)">
-          <div class="detail-section-title">📊 Lịch sử giá</div>
+          <div class="detail-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Lịch sử giá</span></div>
           <span class="detail-section-toggle open">▾</span>
         </div>
         <div class="detail-section-body">
@@ -273,7 +273,7 @@
       <!-- BROKER / CHỦ ĐẤT -->
       <div class="detail-section">
         <div class="detail-section-header" style="cursor:default;">
-          <div class="detail-section-title">👤 Người đăng</div>
+          <div class="detail-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Người đăng</span></div>
         </div>
         <div class="owner-card">
           <div class="owner-avatar">HT</div>
@@ -287,14 +287,14 @@
             </div>
           </div>
           <div class="owner-actions">
-            <div class="owner-btn role-broker role-bds_admin role-sale role-bds_admin role-sale_admin role-admin" onclick="callOwner()">📞</div>
-            <div class="owner-btn">💬</div>
+            <div class="owner-btn role-broker role-bds_admin role-sale role-bds_admin role-sale_admin role-admin" onclick="callOwner()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+            <div class="owner-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
           </div>
         </div>
         <!-- CRM: Gửi cho khách nhanh — Sale+ -->
         <div class="role-sale role-bds_admin role-sale_admin role-admin" style="margin:0 16px 14px;">
           <div style="background:var(--purple-light);border-radius:var(--radius-md);padding:10px 12px;display:flex;align-items:center;gap:10px;">
-            <span style="font-size:18px;">📤</span>
+            <span style="display:inline-flex;align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
             <div style="flex:1;">
               <div style="font-size:12px;font-weight:600;color:var(--purple);">Gửi BĐS này cho khách đang deal</div>
               <div style="font-size:11px;color:var(--text-secondary);">3 deal đang active có thể phù hợp</div>
@@ -307,32 +307,32 @@
       <!-- BĐS TƯƠNG TỰ -->
       <div class="detail-section" style="padding-bottom:4px;">
         <div class="detail-section-header" style="cursor:default;">
-          <div class="detail-section-title">🏘️ BĐS tương tự</div>
+          <div class="detail-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> BĐS tương tự</span></div>
         </div>
         <div class="similar-scroll">
           <div class="similar-card" onclick="openDetail({title:'Đất ở Đường Trần Phú',price:'850 triệu',type:'Đất ở',area:'200 m²',addr:'P.Cam Ly',room:'—',slide:1})">
-            <div class="similar-img gs2">🌿</div>
+            <div class="similar-img gs2" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
             <div class="similar-body">
               <div class="similar-price">850 triệu</div>
               <div class="similar-area">200 m² · P.Cam Ly</div>
             </div>
           </div>
           <div class="similar-card" onclick="openDetail({title:'Biệt thự View Đồi Cam Ly',price:'4,200 triệu',type:'Biệt thự',area:'350 m²',addr:'P.Cam Ly',room:'4 PN',slide:2})">
-            <div class="similar-img gs3">🏡</div>
+            <div class="similar-img gs3" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
             <div class="similar-body">
               <div class="similar-price">4,200 triệu</div>
               <div class="similar-area">350 m² · 4 PN</div>
             </div>
           </div>
           <div class="similar-card" onclick="openDetail({title:'Nhà phố Lâm Viên',price:'1,500 triệu',type:'Nhà phố',area:'120 m²',addr:'P.Lâm Viên',room:'3 PN',slide:3})">
-            <div class="similar-img gs4">🏠</div>
+            <div class="similar-img gs4" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
             <div class="similar-body">
               <div class="similar-price">1,500 triệu</div>
               <div class="similar-area">120 m² · 3 PN</div>
             </div>
           </div>
           <div class="similar-card" onclick="openDetail({title:'Đất nền Lâm Viên',price:'650 triệu',type:'Đất ở',area:'180 m²',addr:'P.Lâm Viên',room:'—',slide:0})">
-            <div class="similar-img gs1">🌄</div>
+            <div class="similar-img gs1" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
             <div class="similar-body">
               <div class="similar-price">650 triệu</div>
               <div class="similar-area">180 m² · P.Lâm Viên</div>
@@ -348,23 +348,23 @@
     <!-- Sale+ -->
     <div class="crm-action-bar role-sale role-bds_admin role-sale_admin role-admin" id="crmActionBar">
       <div class="crm-action-secondary">
-        <button class="crm-secondary-btn" onclick="toggleBookmark(document.getElementById('bookmarkBtn'))" title="Lưu">🤍</button>
-        <button class="crm-secondary-btn" onclick="openSendModal()" title="Gửi cho khách">📤</button>
+        <button class="crm-secondary-btn" onclick="toggleBookmark(document.getElementById('bookmarkBtn'))" title="Lưu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="crm-secondary-btn" onclick="openSendModal()" title="Gửi cho khách"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
       </div>
-      <button class="crm-primary-btn green" onclick="openBookingForm()">📅 Đặt lịch xem</button>
-      <button class="crm-primary-btn purple" onclick="openSendModal()">🤝 Gửi Deal</button>
+      <button class="crm-primary-btn green" onclick="openBookingForm()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Đặt lịch xem</span></button>
+      <button class="crm-primary-btn purple" onclick="openSendModal()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Gửi Deal</span></button>
     </div>
     <!-- Broker -->
     <div class="crm-action-bar role-broker" id="brokerActionBar">
       <div class="crm-action-secondary">
-        <button class="crm-secondary-btn" onclick="toggleBookmark(document.getElementById('bookmarkBtn'))">🤍</button>
-        <button class="crm-secondary-btn" onclick="shareDetail()">↗️</button>
+        <button class="crm-secondary-btn" onclick="toggleBookmark(document.getElementById('bookmarkBtn'))"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="crm-secondary-btn" onclick="shareDetail()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
       </div>
-      <button class="crm-primary-btn" onclick="callOwner()">📞 Liên hệ chủ nhà</button>
+      <button class="crm-primary-btn" onclick="callOwner()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Liên hệ chủ nhà</span></button>
     </div>
     <!-- Guest CTA -->
     <div class="guest-cta-bar role-guest">
-      <div class="guest-cta-hint">🔒 Đăng ký để xem địa chỉ & liên hệ trực tiếp</div>
+      <div class="guest-cta-hint"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Đăng ký để xem địa chỉ & liên hệ trực tiếp</span></div>
       <div class="guest-cta-btns">
         <button class="guest-cta-register">Đăng ký Broker</button>
         <button class="guest-cta-contact" onclick="showToast('Yêu cầu đã gửi!')">Gửi yêu cầu</button>
@@ -375,7 +375,7 @@
     <div id="bookingFormOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:650;align-items:flex-end;justify-content:center;">
       <div style="background:var(--bg-card);border-radius:20px 20px 0 0;padding:8px 0 32px;width:100%;max-width:430px;">
         <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
-        <div style="font-size:16px;font-weight:700;padding:0 20px 14px;border-bottom:1px solid var(--border);color:var(--text-primary);">📅 Đặt lịch xem nhà</div>
+        <div style="font-size:16px;font-weight:700;padding:0 20px 14px;border-bottom:1px solid var(--border);color:var(--text-primary);display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Đặt lịch xem nhà</div>
         <div style="padding:16px 20px;">
           <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">BĐS</div>
           <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:14px;padding:10px 12px;background:var(--bg-secondary);border-radius:var(--radius-sm);" id="bookingPropName">Đất ở Đường Yersin, Cam Ly</div>
@@ -405,7 +405,7 @@
   <div class="send-modal-overlay" id="sendModalOverlay">
     <div class="send-modal">
       <div class="send-modal-handle"></div>
-      <div class="send-modal-title">📤 Gửi BĐS cho khách đang Deal</div>
+      <div class="send-modal-title"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi BĐS cho khách đang Deal</span></div>
       <div id="dealPickList">
         <div class="deal-pick-item" onclick="selectDeal(this,1)">
           <div class="deal-pick-avatar">MT</div>
