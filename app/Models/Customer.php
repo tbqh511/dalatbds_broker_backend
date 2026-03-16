@@ -87,14 +87,62 @@ class Customer extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Usertokens::class, 'customer_id');
     }
+    // Danh sách role hợp lệ của webapp
+    public const VALID_ROLES = ['guest', 'broker', 'bds_admin', 'sale', 'sale_admin', 'admin'];
+
+    // Hierarchy: mỗi role kế thừa quyền của các role thấp hơn (đồng bộ với webapp-v2.js)
+    public static function roleHierarchy(): array
+    {
+        return [
+            'guest'      => ['guest'],
+            'broker'     => ['guest', 'broker'],
+            'bds_admin'  => ['guest', 'broker', 'bds_admin'],
+            'sale'       => ['guest', 'broker', 'sale'],
+            'sale_admin' => ['guest', 'broker', 'sale', 'sale_admin'],
+            'admin'      => ['guest', 'broker', 'bds_admin', 'sale', 'sale_admin', 'admin'],
+        ];
+    }
+
+    /**
+     * Tính role hiệu lực theo logic nghiệp vụ:
+     * - Không có SĐT → guest (dù role DB là gì)
+     * - Có SĐT, role được cấp (broker/sale/sale_admin/bds_admin/admin) → dùng role đó
+     * - Có SĐT, role DB là 'customer'/null/unknown → broker (mặc định)
+     */
+    public function getEffectiveRole(): string
+    {
+        if (empty($this->mobile)) {
+            return 'guest';
+        }
+
+        if (in_array($this->role, self::VALID_ROLES)) {
+            return $this->role;
+        }
+
+        return 'broker';
+    }
+
+    // Kiểm tra role với hierarchy (admin có quyền của mọi role thấp hơn)
+    public function hasRole(string ...$roles): bool
+    {
+        $hierarchy = self::roleHierarchy();
+        $allowed = $hierarchy[$this->getEffectiveRole()] ?? ['guest'];
+        return count(array_intersect($allowed, $roles)) > 0;
+    }
+
     public function isSale(): bool
     {
-        return in_array($this->role, ['sale', 'sale_admin']);
+        return $this->hasRole('sale', 'sale_admin');
     }
 
     public function isSaleAdmin(): bool
     {
-        return $this->role === 'sale_admin';
+        return $this->hasRole('sale_admin');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 
     //HuyTBQ: get list locationsWards

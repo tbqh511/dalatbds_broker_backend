@@ -64,7 +64,7 @@
 
 <script>
   window.WEBAPP_CONFIG = {
-    customerRole: @json($customer->role ?? 'guest'),
+    customerRole: @json(isset($customer) ? $customer->getEffectiveRole() : 'guest'),
     customerName: @json($customer->name ?? 'Khách'),
     customerId: @json($customer->id ?? null),
     csrfToken: @json(csrf_token()),

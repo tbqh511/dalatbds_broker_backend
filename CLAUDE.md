@@ -122,40 +122,115 @@ Tính năng CRM mới nên theo pattern này, không đặt logic trực tiếp 
 
 Đây là **Telegram Mini App** — giao diện dành cho broker chạy bên trong Telegram. Tất cả route dưới `/webapp/*` đều yêu cầu middleware `telegram.webapp` (session guard `webapp`, model `Customer`).
 
+### Middleware WebApp
+
+| Middleware | Đăng ký | Chức năng |
+|---|---|---|
+| `telegram.webapp` | `TelegramWebAppAuth` | Xác thực session guard `webapp` (bỏ qua khi dev mode) |
+| `webapp.require_phone` | `RequirePhoneVerified` | Chặn truy cập nếu chưa xác minh SĐT |
+| `webapp.role:sale,sale_admin` | `WebAppRoleMiddleware` | Phân quyền theo role của `Customer` |
+
+### Phân quyền theo role
+
+Hệ thống role phân cấp: `guest → broker → bds_admin/sale → sale_admin → admin`
+
+| Role | Quyền truy cập thêm |
+|---|---|
+| `broker` | Quản lý BĐS, leads, khách hàng |
+| `sale` | Xem leads được giao, log hoạt động, convert deal |
+| `sale_admin` | Giao leads cho sale, dashboard sale admin |
+| `admin` / `bds_admin` | Toàn quyền |
+
 ### Danh sách trang
+
+**Không cần xác thực:**
+
+| URL | View file | Mô tả |
+|---|---|---|
+| `/webapp/temp` | `frontend_dashboard_temp.blade.php` | Giao diện V2 mới (dev/test) |
+| `/webapp/leads/{id}/assign` | `frontend_dashboard_assign_lead.blade.php` | Nhận lead qua signed URL từ Telegram |
+
+**Xác thực cơ bản (`telegram.webapp`):**
 
 | URL | View file | Mô tả |
 |---|---|---|
 | `/webapp` | `frontend_dashboard.blade.php` | Dashboard chính (thống kê, menu) |
 | `/webapp/profile` | `frontend_dashboard_myprofile.blade.php` | Hồ sơ broker |
+| `/webapp/messages` | `frontend_dashboard_messages.blade.php` | Tin nhắn |
 | `/webapp/listings` | `frontend_dashboard_listings.blade.php` | Danh sách BĐS của broker |
+| `/webapp/agents` | `frontend_dashboard_agents.blade.php` | Danh sách agents |
+| `/webapp/bookings` | `frontend_dashboard_bookings.blade.php` | Lịch xem BĐS |
+| `/webapp/reviews` | `frontend_dashboard_reviews.blade.php` | Đánh giá từ khách hàng |
+| `/webapp/feed` | `frontend_dashboard_feed.blade.php` | Feed BĐS |
+
+**Yêu cầu xác minh SĐT (`webapp.require_phone`):**
+
+| URL | View file | Mô tả |
+|---|---|---|
 | `/webapp/add-listing` | `frontend_dashboard_add_listing.blade.php` | Đăng tin BĐS mới |
-| `/webapp/edit-listing/{id}` | (dùng lại view add-listing) | Chỉnh sửa tin BĐS |
+| `/webapp/edit-listing/{id}` | `frontend_dashboard_edit_listing.blade.php` | Chỉnh sửa tin BĐS |
 | `/webapp/add-customer` | `frontend_dashboard_add_customer.blade.php` | Thêm khách hàng + tạo lead |
 | `/webapp/leads` | `frontend_dashboard_leads.blade.php` | Danh sách leads |
 | `/webapp/leads/create` | `frontend_dashboard_lead_create.blade.php` | Tạo lead thủ công |
+| `/webapp/leads/{id}` | `frontend_dashboard_lead_show.blade.php` | Chi tiết lead |
 | `/webapp/leads/{id}/edit` | `frontend_dashboard_lead_edit.blade.php` | Chỉnh sửa lead |
-| `/webapp/messages` | `frontend_dashboard_messages.blade.php` | Tin nhắn |
-| `/webapp/bookings` | `frontend_dashboard_bookings.blade.php` | Lịch xem BĐS |
-| `/webapp/feed` | `frontend_dashboard_feed.blade.php` | Feed BĐS |
-| `/webapp/agents` | `frontend_dashboard_agents.blade.php` | Danh sách agents |
+
+**Chỉ dành cho sale / sale_admin:**
+
+| URL | View file | Mô tả |
+|---|---|---|
+| `/webapp/sale/leads` | `frontend_dashboard_sale_leads.blade.php` | Leads được giao cho sale |
+| `/webapp/sale-admin` | `frontend_dashboard_sale_admin.blade.php` | Dashboard quản lý sale |
 
 ### Controller chính
 
-**`TelegramWebAppController`** — xử lý toàn bộ WebApp views và form submissions:
-- `addCustomer()` / `storeCustomer()` — tạo `CrmCustomer` + `CrmLead` cùng lúc; `user_id` trong lead là `Customer.id` của broker đang login (không lưu `telegram_id` trực tiếp, truy xuất qua `$lead->user->telegram_id`)
-- `submitForm()` / `updateForm()` — đăng / cập nhật tin BĐS (`Property`)
-- `toggleStatus()` — bật/tắt trạng thái tin đăng
+**`TelegramWebAppController`** (`app/Http/Controllers/TelegramWebAppController.php`) — xử lý toàn bộ WebApp views và form submissions:
 
-**`CrmLeadController`** — CRUD leads từ WebApp (dùng guard `webapp`).
+- `index()` — dashboard với thống kê (BĐS, lượt xem, đánh giá, yêu thích)
+- `tempui()` — giao diện V2 mới tại `/webapp/temp`
+- `profile()` / `updateProfile()` / `updateAvatar()` — quản lý hồ sơ broker
+- `listings()` — danh sách BĐS với bộ lọc
+- `addListing()` / `submitForm()` — đăng tin BĐS (dùng DB transaction, xử lý ảnh + thông số + tiện ích)
+- `editListing()` / `updateForm()` — chỉnh sửa tin BĐS
+- `destroy()` — xóa tin BĐS
+- `toggleStatus()` — bật/tắt trạng thái tin đăng
+- `addCustomer()` / `storeCustomer()` — tạo `CrmCustomer` + `CrmLead` cùng lúc; `user_id` trong lead là `Customer.id` của broker đang login (không lưu `telegram_id` trực tiếp, truy xuất qua `$lead->user->telegram_id`)
+- `checkHostPhone()` — kiểm tra định dạng SĐT chủ nhà
+- `addListingSuccess()` — trang xác nhận sau khi đăng tin
+
+**`CrmLeadController`** — CRUD leads từ WebApp (dùng guard `webapp`); hỗ trợ thêm:
+- `updateStatus()` — cập nhật trạng thái lead
+- `storeActivity()` — ghi nhật ký hoạt động (sale)
+- `convertToDeal()` — chuyển lead thành deal (sale)
+- `assignSale()` — giao lead cho nhân viên sale (sale_admin)
 
 ### Frontend stack của WebApp
 
-- **Alpine.js** (CDN) — reactive UI, form validation
+- **Alpine.js** (CDN) — reactive UI, form validation, state management
 - **TomSelect** (CDN) — dropdown tìm kiếm đường phố
 - **Axios** (CDN) — AJAX submit form
 - **Tailwind CSS** — styling (build qua Vite)
+- **`public/js/webapp-v2.js`** — thư viện JS cho giao diện V2 (xem chi tiết bên dưới)
 - Tất cả WebApp views đều `@extends('frontends.master')` với `@section('hide_newsletter')` và `@section('hide_footer')`
+
+### Giao diện V2 (`webapp-v2.js`)
+
+File: `public/js/webapp-v2.js` — thư viện JS mới cho giao diện V2 tại `/webapp/temp`.
+
+**Cấu trúc 5 trang:** `home`, `search`, `post`, `activity`, `profile` — chuyển trang bằng `goTo(page)`.
+
+**Hệ thống role động:**
+- `setRole(role, btn)` — chuyển role, ẩn/hiện phần tử theo class `.role-*`
+- Dùng để dev/test UI cho từng role mà không cần đăng xuất
+
+**Các thành phần UI chính:**
+- **Search:** state machine `discovery → suggestions → results`; chuyển list/map view
+- **Property Detail:** swipe gallery (touch), sticky header, bookmark, share, modal gửi BĐS cho khách, form đặt lịch
+- **CRM Leads:** expand/collapse lead (`toggleLeadExpand(id)`), tạo deal, chọn action, quản lý kết quả booking (success/danger/warning)
+- **Admin:** duyệt/từ chối BĐS, duyệt hoa hồng, lọc báo cáo theo kỳ
+- **Sale Lead Assignment:** chọn nhiều lead chưa giao, chọn nhân viên sale, badge đếm, toast notification
+- **Bottom sheet:** modal filter, notification detail, cài đặt giờ im lặng, toggle thông báo tổng
+- **Referral:** copy mã giới thiệu, chia sẻ qua Telegram/Zalo
 
 ### Form `/webapp/add-customer` — Logic quan trọng
 
@@ -178,6 +253,15 @@ File: `resources/views/frontend_dashboard_add_customer.blade.php`
 - Auto-focus vào ô tên khi số điện thoại vừa hợp lệ (dùng `$watch('isPhoneValid', ...)`)
 - Nút "Lưu Khách Hàng": xám + icon khóa khi `!isFormValid`; xanh + icon lưu khi valid
 - `isFormValid` yêu cầu: `phone` hợp lệ + `name` hợp lệ + `lead_type` được chọn
+
+### Form đăng tin BĐS V2 — 4 bước (giao diện mới)
+
+Dùng trong `frontend_dashboard_temp.blade.php` với Alpine.js:
+
+1. **Loại BĐS & vị trí** — loại (nhà/đất), phường, đường, số nhà, loại giao dịch (bán/cho thuê)
+2. **Thông tin liên hệ & cơ bản** — SĐT chủ nhà, diện tích, tỉ lệ hoa hồng, mô tả
+3. **Thông số kỹ thuật** — số tầng, phòng ngủ, phòng tắm, kích thước, hướng (chỉ hiện nếu là nhà)
+4. **Tiện ích** — chọn các tiện ích xung quanh
 
 ### Chạy WebApp ở local (dev mode)
 

@@ -21,12 +21,13 @@ window.toggleSearch = function(){goTo('search');};
 // ============ ROLE SYSTEM ============
 let currentRole = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.customerRole) || 'guest';
 const roleHierarchy={
-  guest:['guest'],
-  broker:['guest','broker'],
-  bds_admin:['guest','broker','bds_admin'],
-  sale:['guest','broker','sale'],
-  sale_admin:['guest','broker','sale','sale_admin'],
-  admin:['guest','broker','bds_admin','sale','sale_admin','admin']
+  guest:      ['guest'],
+  broker:     ['guest','broker'],
+  customer:   ['guest','broker'],   // legacy alias → broker
+  bds_admin:  ['guest','broker','bds_admin'],
+  sale:       ['guest','broker','sale'],
+  sale_admin: ['guest','broker','sale','sale_admin'],
+  admin:      ['guest','broker','bds_admin','sale','sale_admin','admin']
 };
 
 // Elements với multi-role classes cần logic khác:

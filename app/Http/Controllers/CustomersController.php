@@ -51,7 +51,7 @@ class CustomersController extends Controller
         }
 
         $role = $request->input('role');
-        if (!in_array($role, ['customer', 'sale', 'sale_admin', 'admin', 'editor'])) {
+        if (!in_array($role, Customer::VALID_ROLES)) {
             return response()->json(['error' => true, 'message' => 'Role không hợp lệ']);
         }
 
@@ -118,10 +118,18 @@ class CustomersController extends Controller
             $tempRow['address'] = $row->address;
             $tempRow['firebase_id'] = $row->firebase_id;
             $tempRow['isActive'] = ($row->isActive == '0') ? '<span class="badge rounded-pill bg-danger">Inactive</span>' : '<span class="badge rounded-pill bg-success">Active</span>';
-            $roleLabels = ['customer' => 'Khách', 'sale' => 'Sale', 'sale_admin' => 'Sale Admin', 'admin' => 'Admin', 'editor' => 'Editor'];
-            $tempRow['role'] = '<select class="form-select form-select-sm role-select" data-id="' . $row->id . '" style="min-width:110px">'
-                . collect(['customer', 'sale', 'sale_admin'])->map(fn ($r) =>
-                    '<option value="' . $r . '"' . ($row->role === $r ? ' selected' : '') . '>' . ($roleLabels[$r] ?? $r) . '</option>'
+            $roleLabels = [
+                'guest'      => '👤 Guest',
+                'broker'     => '🏠 Broker',
+                'bds_admin'  => '🏘️ BĐS Admin',
+                'sale'       => '💼 Sale',
+                'sale_admin' => '📋 Sale Admin',
+                'admin'      => '👑 Admin',
+            ];
+            $effectiveRole = $row->getEffectiveRole();
+            $tempRow['role'] = '<select class="form-select form-select-sm role-select" data-id="' . $row->id . '" style="min-width:130px">'
+                . collect(Customer::VALID_ROLES)->map(fn ($r) =>
+                    '<option value="' . $r . '"' . ($effectiveRole === $r ? ' selected' : '') . '>' . ($roleLabels[$r] ?? $r) . '</option>'
                 )->implode('')
                 . '</select>';
             $tempRow['profile'] = ($row->profile != '') ? '<a class="image-popup-no-margins" href="' . $row->profile . '" width="55" height="55"><img class="rounded avatar-md shadow img-fluid" alt="dalat-bds" src="' . $row->profile . '" width="55" height="55"></a>' : '';

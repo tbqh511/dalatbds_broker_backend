@@ -12,7 +12,7 @@ class WebAppRoleMiddleware
     {
         $user = Auth::guard('webapp')->user();
 
-        if (!$user || !in_array($user->role, $roles)) {
+        if (!$user || !$user->hasRole(...$roles)) {
             if ($request->ajax()) {
                 return response()->json(['message' => 'Không có quyền truy cập'], 403);
             }
