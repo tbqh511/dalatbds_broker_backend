@@ -36,7 +36,7 @@ window.setRole = function(role, btn){
   document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
 
-  const allowed = roleHierarchy[role]; // e.g. ['guest','broker','sale']
+  const allowed = roleHierarchy[role] || roleHierarchy['guest']; // fallback to guest if role not found
   const allRoles = ['guest','broker','bds_admin','sale','sale_admin','admin'];
 
   // Find every element that has at least one role- class
