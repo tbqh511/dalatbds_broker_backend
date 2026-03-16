@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Đà Lạt BĐS — WebApp</title>
-<link rel="stylesheet" href="{{ asset('css/webapp-v2.css') }}">
+<link rel="stylesheet" href="{{ asset('css/webapp-v2.css') }}?v={{ filemtime(public_path('css/webapp-v2.css')) }}">
 </head>
 <body>
 
@@ -75,6 +75,6 @@
     }
   };
 </script>
-<script src="{{ asset('js/webapp-v2.js') }}"></script>
+<script src="{{ asset('js/webapp-v2.js') }}?v={{ filemtime(public_path('js/webapp-v2.js')) }}"></script>
 </body>
 </html>
