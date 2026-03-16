@@ -80,8 +80,8 @@ class TelegramWebAppController extends Controller
         $perPage = 10;
         $properties = Property::with(['category', 'host'])->where('status', 1)->orderBy('created_at', 'desc')->paginate($perPage);
 
-        return view('frontend_dashboard', compact('customer', 'stats', 'properties'));
-    //return view('frontend_dashboard_temp', compact('customer', 'stats'));
+        return view('webapp.layout', compact('customer', 'stats', 'properties'));
+    //return view('frontend_dashboard', compact('customer', 'stats', 'properties'));
     }
 
 
