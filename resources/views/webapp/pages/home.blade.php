@@ -147,7 +147,28 @@
 
       <div id="prop-feed">
         @foreach($properties as $p)
-          <div class="prop-card" onclick="openPropertyDetail({{ $p->id }})">
+          @php
+            $galleryBase = url('') . config('global.IMG_PATH') . config('global.PROPERTY_GALLERY_IMG_PATH');
+            $galleryImgs = $p->propery_image
+                ->filter(fn($img) => $img->image)
+                ->map(fn($img) => $galleryBase . $p->id . '/' . $img->image)
+                ->values()->toArray();
+            $propData = [
+              'title'     => $p->title_by_address,
+              'price'     => $p->formatted_prices,
+              'type'      => $p->category?->category ?? 'BĐS',
+              'area'      => $p->area ? $p->area.' m²' : '—',
+              'room'      => $p->number_room ? $p->number_room.' PN' : '—',
+              'addr'      => $p->address_location,
+              'views'     => $p->total_click,
+              'images'    => count($galleryImgs) ? $galleryImgs : ($p->title_image ? [$p->title_image] : []),
+              'priceM2'   => $p->formatted_price_m2 ?? '',
+              'direction' => $p->direction ?? '—',
+            ];
+          @endphp
+          <div class="prop-card"
+            data-prop='@json($propData)'
+            onclick="if(!event.target.closest('.prop-quick-btn,.prop-action-btn'))openDetail(JSON.parse(this.dataset.prop))">
             <div class="prop-img">
               @if($p->title_image)
                 <img src="{{ $p->title_image }}" class="prop-img-inner" style="object-fit:cover;width:100%;height:100%;" alt="">

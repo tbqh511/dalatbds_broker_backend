@@ -2694,6 +2694,74 @@ textarea.form-row-value{
 }
 .dh-actions{display:flex;gap:6px;}
 
+/* detail role switcher */
+.detail-role-switcher{
+  background:var(--text-primary);
+  padding:5px 16px;
+  display:flex;
+  gap:4px;overflow-x:auto;
+  flex-shrink:0;
+  scrollbar-width:none;
+  z-index:5;
+}
+.detail-role-switcher::-webkit-scrollbar{display:none;}
+
+/* gallery nav arrows */
+.gallery-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(0,0,0,0.35);backdrop-filter:blur(6px);
+  border:none;color:#fff;font-size:16px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:5;transition:background 0.15s;
+  flex-shrink:0;
+}
+.gallery-nav:active{background:rgba(0,0,0,0.6);}
+.gallery-nav-prev{left:10px;}
+.gallery-nav-next{right:10px;}
+
+/* gallery slide label */
+.gs-label{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:28px 14px 10px;
+  background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 100%);
+  display:flex;align-items:center;gap:6px;
+}
+.gs-tag{
+  background:rgba(255,255,255,0.18);backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,0.3);
+  border-radius:10px;padding:2px 8px;
+  font-size:10px;font-weight:600;color:#fff;
+}
+.gallery-slide{position:relative;overflow:hidden;}
+.gallery-slide-emoji{font-size:64px;opacity:.25;}
+
+/* amenities */
+.amenity-wrap{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;}
+.amenity-chip{
+  display:flex;align-items:center;gap:5px;
+  background:var(--bg-secondary);
+  border:1px solid var(--border);
+  border-radius:20px;padding:5px 10px;
+  font-size:12px;color:var(--text-secondary);
+}
+.amenity-chip.yes{background:var(--success-light);border-color:transparent;color:var(--success);}
+.amenity-chip.no{background:var(--bg);border-color:var(--border);color:var(--text-tertiary);opacity:.6;}
+
+/* commission box */
+.comm-box{
+  background:linear-gradient(135deg,var(--primary-light) 0%,#ede9fe 100%);
+  border-radius:var(--radius-md);
+  padding:14px 16px;
+  border:1px solid var(--primary-light);
+}
+.comm-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.comm-row:last-child{margin-bottom:0;}
+.comm-label{font-size:12px;color:var(--primary-dark);}
+.comm-val{font-size:14px;font-weight:700;color:var(--primary-dark);}
+.comm-val.big{font-size:18px;color:var(--primary);}
+.comm-divider{border:none;border-top:1px dashed var(--primary-light);margin:8px 0;}
+
 /* gallery */
 .detail-gallery{
   height:280px;
@@ -2713,7 +2781,27 @@ textarea.form-row-value{
   font-size:72px;
   color:rgba(255,255,255,0.25);
   flex-shrink:0;
+  position:relative;
+  overflow:hidden;
 }
+.gallery-slide img{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+  z-index:0;
+}
+/* dim overlay để price/tag dễ đọc trên ảnh sáng */
+.gallery-slide::after{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.1) 45%, transparent 100%);
+  z-index:1;
+  pointer-events:none;
+}
+/* gs-label nằm trong slide nên cần z-index cao hơn ::after overlay */
+.gs-label{position:relative;z-index:2;}
+/* fallback gradients khi chưa có ảnh */
 .gs1{background:linear-gradient(160deg,#1e3a5f 0%,#2d6a4f 60%,#1b4332 100%);}
 .gs2{background:linear-gradient(160deg,#1e40af 0%,#1d4ed8 50%,#0284c7 100%);}
 .gs3{background:linear-gradient(160deg,#064e3b 0%,#065f46 60%,#0d9488 100%);}
@@ -5346,14 +5434,17 @@ textarea.form-row-value{
     <!-- gallery -->
     <div class="detail-gallery">
       <div class="gallery-slides" id="gallerySlides">
-        <div class="gallery-slide gs1">🏡</div>
-        <div class="gallery-slide gs2">🌿</div>
-        <div class="gallery-slide gs3">🏠</div>
-        <div class="gallery-slide gs4">🌄</div>
+        <div class="gallery-slide gs1"><img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=860&q=80" alt="Tổng thể" loading="eager"><div class="gs-label"><span class="gs-tag">Tổng thể</span></div></div>
+        <div class="gallery-slide gs2"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=860&q=80" alt="Khuôn viên" loading="lazy"><div class="gs-label"><span class="gs-tag">Khuôn viên</span></div></div>
+        <div class="gallery-slide gs3"><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=860&q=80" alt="Mặt tiền" loading="lazy"><div class="gs-label"><span class="gs-tag">Mặt tiền</span></div></div>
+        <div class="gallery-slide gs4"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=860&q=80" alt="View" loading="lazy"><div class="gs-label"><span class="gs-tag">View xung quanh</span></div></div>
       </div>
+      <!-- nav arrows -->
+      <button class="gallery-nav gallery-nav-prev" onclick="prevSlide()">‹</button>
+      <button class="gallery-nav gallery-nav-next" onclick="nextSlide()">›</button>
       <div class="gallery-price-badge">
         <div class="price-big" id="detailPrice">1,000 triệu</div>
-        <div class="price-unit">≈ 4 tr/m² · Có thương lượng</div>
+        <div class="price-unit" id="detailPriceUnit">≈ 4 tr/m² · Có thương lượng</div>
       </div>
       <div class="gallery-bottom">
         <div class="gallery-counter"><span id="galleryIdx">1</span> / <span id="galleryTotal">4</span> ảnh</div>
@@ -5364,6 +5455,16 @@ textarea.form-row-value{
           <div class="gdot"></div>
         </div>
       </div>
+    </div>
+
+    <!-- ROLE SWITCHER (dev tool) -->
+    <div class="detail-role-switcher">
+      <button class="rbtn" onclick="setRole('guest',this)">👤 Guest</button>
+      <button class="rbtn" onclick="setRole('broker',this)">🏠 Broker</button>
+      <button class="rbtn" onclick="setRole('bds_admin',this)">🏘️ BĐS Admin</button>
+      <button class="rbtn active" onclick="setRole('sale',this)">💼 Sale</button>
+      <button class="rbtn" onclick="setRole('sale_admin',this)">📋 Sale Admin</button>
+      <button class="rbtn" onclick="setRole('admin',this)">👑 Admin</button>
     </div>
 
     <!-- scrollable content -->
@@ -5397,12 +5498,12 @@ textarea.form-row-value{
           </div>
           <div class="ds-item">
             <div class="ds-icon">🧭</div>
-            <div class="ds-val">Đông Nam</div>
+            <div class="ds-val" id="detailDirection">Đông Nam</div>
             <div class="ds-lbl">Hướng</div>
           </div>
           <div class="ds-item">
             <div class="ds-icon">👁</div>
-            <div class="ds-val">3</div>
+            <div class="ds-val" id="detailViews">3</div>
             <div class="ds-lbl">Lượt xem</div>
           </div>
         </div>
@@ -5418,51 +5519,51 @@ textarea.form-row-value{
           <div class="spec-grid">
             <div class="spec-item">
               <span class="spec-label">Loại BĐS</span>
-              <span class="spec-value blue">Đất ở phân quyền</span>
+              <span class="spec-value blue" id="specType">Đất ở phân quyền</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Mục đích</span>
-              <span class="spec-value">Ở / Đầu tư</span>
+              <span class="spec-value" id="specPurpose">Ở / Đầu tư</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Diện tích đất</span>
-              <span class="spec-value">250 m²</span>
+              <span class="spec-value" id="specLandArea">250 m²</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Diện tích XD</span>
-              <span class="spec-value">—</span>
+              <span class="spec-value" id="specBuildArea">—</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Mặt tiền</span>
-              <span class="spec-value">12 m</span>
+              <span class="spec-value" id="specFrontage">12 m</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Chiều sâu</span>
-              <span class="spec-value">20.8 m</span>
+              <span class="spec-value" id="specDepth">20.8 m</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Hướng</span>
-              <span class="spec-value">Đông Nam</span>
+              <span class="spec-value" id="specDirection">Đông Nam</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Đường trước</span>
-              <span class="spec-value">6 m (nhựa)</span>
+              <span class="spec-value" id="specRoad">6 m (nhựa)</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Số tầng</span>
-              <span class="spec-value">—</span>
+              <span class="spec-value" id="specFloors">—</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Năm xây</span>
-              <span class="spec-value">—</span>
+              <span class="spec-value" id="specYear">—</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Giá / m²</span>
-              <span class="spec-value green">4 triệu/m²</span>
+              <span class="spec-value green" id="specPricePerM2">4 triệu/m²</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Thương lượng</span>
-              <span class="spec-value green">✓ Có</span>
+              <span class="spec-value green" id="specNegotiable">✓ Có</span>
             </div>
           </div>
         </div>
@@ -5637,38 +5738,103 @@ textarea.form-row-value{
         </div>
       </div>
 
+      <!-- TIỆN ÍCH -->
+      <div class="detail-section">
+        <div class="detail-section-header" onclick="toggleSection(this)">
+          <div class="detail-section-title">✨ Tiện ích</div>
+          <span class="detail-section-toggle open">▾</span>
+        </div>
+        <div class="detail-section-body">
+          <div class="amenity-wrap" id="amenityWrap">
+            <span class="amenity-chip yes">✓ Điện 3 pha</span>
+            <span class="amenity-chip yes">✓ Nước máy TP</span>
+            <span class="amenity-chip yes">✓ Cáp quang</span>
+            <span class="amenity-chip yes">✓ Đường nhựa</span>
+            <span class="amenity-chip yes">✓ Camera an ninh</span>
+            <span class="amenity-chip no">✗ Bể bơi</span>
+            <span class="amenity-chip no">✗ Thang máy</span>
+            <span class="amenity-chip yes">✓ Gần trường học</span>
+            <span class="amenity-chip yes">✓ Gần bệnh viện</span>
+            <span class="amenity-chip yes">✓ Gần chợ / siêu thị</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOA HỒNG — Broker+ -->
+      <div class="detail-section role-broker role-bds_admin role-sale role-sale_admin role-admin">
+        <div class="detail-section-header" onclick="toggleSection(this)">
+          <div class="detail-section-title">💰 Hoa hồng môi giới</div>
+          <span class="detail-section-toggle open">▾</span>
+        </div>
+        <div class="detail-section-body">
+          <div class="comm-box">
+            <div class="comm-row">
+              <span class="comm-label">Tỉ lệ hoa hồng</span>
+              <span class="comm-val big" id="commRate">2%</span>
+            </div>
+            <hr class="comm-divider">
+            <div class="comm-row">
+              <span class="comm-label">Giá bán</span>
+              <span class="comm-val" id="commPrice">1,000 triệu</span>
+            </div>
+            <div class="comm-row">
+              <span class="comm-label">Hoa hồng ước tính</span>
+              <span class="comm-val" id="commValue" style="color:var(--success);font-size:16px;">20 triệu</span>
+            </div>
+            <div class="comm-row">
+              <span class="comm-label">Chủ nhà trả</span>
+              <span class="comm-val" style="font-size:12px;">Toàn bộ hoa hồng</span>
+            </div>
+          </div>
+          <!-- Sale: chia hoa hồng -->
+          <div class="role-sale role-sale_admin role-admin" style="margin-top:10px;">
+            <div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px 12px;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Phân chia (Theo cơ cấu sale)</div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+                <span style="color:var(--text-secondary);">Sale (bạn)</span>
+                <span style="font-weight:700;color:var(--primary);" id="commSale">12 triệu <span style="font-weight:400;color:var(--text-tertiary);">(60%)</span></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;">
+                <span style="color:var(--text-secondary);">Sàn / Admin</span>
+                <span style="font-weight:600;color:var(--text-secondary);" id="commFloor">8 triệu <span style="font-weight:400;color:var(--text-tertiary);">(40%)</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- BĐS TƯƠNG TỰ -->
       <div class="detail-section" style="padding-bottom:4px;">
         <div class="detail-section-header" style="cursor:default;">
           <div class="detail-section-title">🏘️ BĐS tương tự</div>
         </div>
         <div class="similar-scroll">
-          <div class="similar-card" onclick="openDetail({title:'Đất ở Đường Trần Phú',price:'850 triệu',type:'Đất ở',area:'200 m²',addr:'P.Cam Ly',room:'—',slide:1})">
+          <div class="similar-card" onclick="openDetail('p1')">
             <div class="similar-img gs2">🌿</div>
             <div class="similar-body">
               <div class="similar-price">850 triệu</div>
               <div class="similar-area">200 m² · P.Cam Ly</div>
             </div>
           </div>
-          <div class="similar-card" onclick="openDetail({title:'Biệt thự View Đồi Cam Ly',price:'4,200 triệu',type:'Biệt thự',area:'350 m²',addr:'P.Cam Ly',room:'4 PN',slide:2})">
+          <div class="similar-card" onclick="openDetail('p2')">
             <div class="similar-img gs3">🏡</div>
             <div class="similar-body">
               <div class="similar-price">4,200 triệu</div>
               <div class="similar-area">350 m² · 4 PN</div>
             </div>
           </div>
-          <div class="similar-card" onclick="openDetail({title:'Nhà phố Lâm Viên',price:'1,500 triệu',type:'Nhà phố',area:'120 m²',addr:'P.Lâm Viên',room:'3 PN',slide:3})">
+          <div class="similar-card" onclick="openDetail('p3')">
             <div class="similar-img gs4">🏠</div>
             <div class="similar-body">
-              <div class="similar-price">1,500 triệu</div>
-              <div class="similar-area">120 m² · 3 PN</div>
+              <div class="similar-price">2,800 triệu</div>
+              <div class="similar-area">120 m² · Trần Phú</div>
             </div>
           </div>
-          <div class="similar-card" onclick="openDetail({title:'Đất nền Lâm Viên',price:'650 triệu',type:'Đất ở',area:'180 m²',addr:'P.Lâm Viên',room:'—',slide:0})">
+          <div class="similar-card" onclick="openDetail('p4')">
             <div class="similar-img gs1">🌄</div>
             <div class="similar-body">
-              <div class="similar-price">650 triệu</div>
-              <div class="similar-area">180 m² · P.Lâm Viên</div>
+              <div class="similar-price">8,500 triệu</div>
+              <div class="similar-area">580 m² · 5 PN</div>
             </div>
           </div>
         </div>
@@ -9637,6 +9803,12 @@ function setRole(role, btn){
   const roleLabels={guest:'Khách vãng lai',broker:'eBroker',bds_admin:'BĐS Admin',sale:'Sale',sale_admin:'Sale Admin',admin:'Admin'};
   const profileRole = document.querySelector('.profile-role');
   if(profileRole) profileRole.innerHTML = '💼 '+roleLabels[role];
+
+  // Sync detail role switcher với home role switcher
+  const roleMap = {guest:'Guest',broker:'Broker',bds_admin:'BĐS',sale:'Sale',sale_admin:'Sale Admin',admin:'Admin'};
+  document.querySelectorAll('.detail-role-switcher .rbtn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().includes(roleMap[role]||''));
+  });
 }
 
 // init role
@@ -10080,51 +10252,184 @@ const PROP_DATA = {
   default:{
     title:'Bán Đất ở phân quyền, Đường Yersin, Phường Cam Ly, Đà Lạt',
     price:'1,000 triệu',
+    priceUnit:'≈ 4 tr/m² · Có thương lượng',
     type:'Đất ở',
     area:'250 m²',
-    addr:'Đường Yersin, Phường Cam Ly, TP Đà Lạt',
     room:'—',
+    direction:'Đông Nam',
+    views:3,
+    addr:'Đường Yersin, Phường Cam Ly, TP Đà Lạt',
+    desc:'Lô đất phân quyền sở hữu riêng, vị trí đẹp trên đường Yersin, Phường Cam Ly, Thành phố Đà Lạt. Lô đất có diện tích 250m², mặt tiền rộng 12m, hướng Đông Nam mát mẻ, phù hợp để ở hoặc đầu tư.\n\nKhu vực Phường Cam Ly nổi tiếng với khí hậu mát mẻ, view nhìn ra thung lũng, gần Thác Cam Ly và trung tâm thành phố. Hạ tầng hoàn thiện: đường nhựa 6m, điện 3 pha, nước máy thành phố, cáp quang.\n\nChủ đất cần bán gấp, giá có thể thương lượng với người thiện chí. Hỗ trợ thủ tục sang tên nhanh trong vòng 7–10 ngày làm việc.',
+    spec:{
+      type:'Đất ở phân quyền', purpose:'Ở / Đầu tư',
+      landArea:'250 m²', buildArea:'—',
+      frontage:'12 m', depth:'20.8 m',
+      direction:'Đông Nam', road:'6 m (nhựa)',
+      floors:'—', year:'—',
+      pricePerM2:'4 triệu/m²', negotiable:'✓ Có'
+    },
+    amenities:['✓ Điện 3 pha','✓ Nước máy TP','✓ Cáp quang','✓ Đường nhựa','✓ Camera an ninh','✗ Bể bơi','✗ Thang máy','✓ Gần trường học','✓ Gần bệnh viện','✓ Gần chợ / siêu thị'],
+    commission:{rate:'2%', value:'20 triệu', sale:'12 triệu (60%)', floor:'8 triệu (40%)'},
+    images:[
+      {bg:'gs1', tag:'Tổng thể',      url:'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=860&q=80'},
+      {bg:'gs2', tag:'Khuôn viên',    url:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=860&q=80'},
+      {bg:'gs3', tag:'Mặt tiền',      url:'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=860&q=80'},
+      {bg:'gs4', tag:'View xung quanh',url:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=860&q=80'}
+    ],
+    slide:0
+  },
+  /* các property mẫu khác */
+  p1:{
+    title:'Đất ở Đường Trần Phú, Phường Cam Ly, Đà Lạt',
+    price:'850 triệu', priceUnit:'≈ 4.25 tr/m² · Thương lượng',
+    type:'Đất ở', area:'200 m²', room:'—', direction:'Tây',
+    views:12,
+    addr:'Đường Trần Phú, Phường Cam Ly, TP Đà Lạt',
+    desc:'Lô đất vị trí thuận lợi trên đường Trần Phú, gần trung tâm thành phố. Khu dân cư đông đúc, tiện ích đầy đủ, phù hợp xây nhà ở hoặc kinh doanh.',
+    spec:{type:'Đất ở',purpose:'Ở / KD',landArea:'200 m²',buildArea:'—',frontage:'10 m',depth:'20 m',direction:'Tây',road:'8 m (nhựa)',floors:'—',year:'—',pricePerM2:'4.25 tr/m²',negotiable:'✓ Có'},
+    amenities:['✓ Điện 3 pha','✓ Nước máy TP','✓ Cáp quang','✓ Đường nhựa','✓ Mặt tiền kinh doanh','✗ Bể bơi','✓ Gần trường học','✓ Gần chợ / siêu thị'],
+    commission:{rate:'1.5%', value:'12.75 triệu', sale:'7.65 triệu (60%)', floor:'5.1 triệu (40%)'},
+    images:[
+      {bg:'gs2', tag:'Tổng thể',      url:'https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=860&q=80'},
+      {bg:'gs1', tag:'Nhìn từ đường', url:'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=860&q=80'},
+      {bg:'gs4', tag:'View phía sau', url:'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?w=860&q=80'},
+      {bg:'gs3', tag:'Góc cạnh',      url:'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=860&q=80'}
+    ],
+    slide:0
+  },
+  p2:{
+    title:'Biệt thự View Đồi Cam Ly, Đà Lạt',
+    price:'4,200 triệu', priceUnit:'≈ 12 tr/m² · Giá tốt',
+    type:'Biệt thự', area:'350 m²', room:'4 PN', direction:'Nam',
+    views:87,
+    addr:'Đường Hùng Vương, Phường Cam Ly, TP Đà Lạt',
+    desc:'Biệt thự view đồi thoáng đãng, thiết kế kiến trúc Pháp cổ điển. Khuôn viên rộng rãi, vườn hoa, hồ bơi riêng. Vị trí cao, nhìn ra toàn cảnh thành phố Đà Lạt.',
+    spec:{type:'Biệt thự',purpose:'Ở / Nghỉ dưỡng',landArea:'500 m²',buildArea:'350 m²',frontage:'18 m',depth:'27 m',direction:'Nam',road:'10 m (nhựa)',floors:'3',year:'2018',pricePerM2:'12 tr/m²',negotiable:'✗ Không'},
+    amenities:['✓ Điện 3 pha','✓ Nước máy TP','✓ Cáp quang','✓ Đường nhựa','✓ Hồ bơi riêng','✓ Sân vườn','✓ Camera an ninh','✓ Thang máy','✓ Gần trường quốc tế'],
+    commission:{rate:'2%', value:'84 triệu', sale:'50.4 triệu (60%)', floor:'33.6 triệu (40%)'},
+    images:[
+      {bg:'gs3', tag:'Mặt tiền',  url:'https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?w=860&q=80'},
+      {bg:'gs2', tag:'Sân vườn',  url:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=860&q=80'},
+      {bg:'gs4', tag:'View đồi',  url:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=860&q=80'},
+      {bg:'gs1', tag:'Nội thất',  url:'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=860&q=80'},
+      {bg:'gs3', tag:'Hồ bơi',    url:'https://images.unsplash.com/photo-1572612977861-7ef3d6ab9b36?w=860&q=80'}
+    ],
+    slide:0
+  },
+  p3:{
+    title:'Nhà phố mặt tiền Trần Phú, Phường 1, Đà Lạt',
+    price:'2,800 triệu', priceUnit:'≈ 23.3 tr/m² · Giá thị trường',
+    type:'Nhà phố', area:'120 m²', room:'4 PN', direction:'Đông',
+    views:45,
+    addr:'Đường Trần Phú, Phường 1, TP Đà Lạt',
+    desc:'Nhà mặt tiền vị trí đắc địa trên con đường sầm uất nhất Đà Lạt. Thích hợp kinh doanh café, boutique, khách sạn mini hoặc ở. Sổ hồng đầy đủ, sang tên nhanh.',
+    spec:{type:'Nhà phố',purpose:'KD / Ở',landArea:'90 m²',buildArea:'120 m²',frontage:'6 m',depth:'15 m',direction:'Đông',road:'20 m (bê tông)',floors:'4',year:'2015',pricePerM2:'23.3 tr/m²',negotiable:'✓ Ít'},
+    amenities:['✓ Điện 3 pha','✓ Nước máy TP','✓ Cáp quang','✓ Mặt tiền kinh doanh','✓ Thang máy','✓ Camera an ninh','✓ Gần chợ Đà Lạt','✓ Trung tâm TP','✗ Bể bơi'],
+    commission:{rate:'1.5%', value:'42 triệu', sale:'25.2 triệu (60%)', floor:'16.8 triệu (40%)'},
+    images:[
+      {bg:'gs4', tag:'Mặt tiền',        url:'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=860&q=80'},
+      {bg:'gs2', tag:'Phố thương mại',  url:'https://images.unsplash.com/photo-1478827536114-da961b7f86d2?w=860&q=80'},
+      {bg:'gs1', tag:'Nội thất tầng 1', url:'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=860&q=80'},
+      {bg:'gs3', tag:'Tầng thượng – View', url:'https://images.unsplash.com/photo-1499346030926-9a72daac6c63?w=860&q=80'}
+    ],
+    slide:0
+  },
+  p4:{
+    title:'Biệt thự View Đồi Chè Cầu Đất, Đà Lạt',
+    price:'8,500 triệu', priceUnit:'≈ 14.6 tr/m² · Hiếm có',
+    type:'Biệt thự', area:'580 m²', room:'5 PN', direction:'Tây Nam',
+    views:156,
+    addr:'Xã Xuân Trường, Huyện Đà Lạt, Lâm Đồng',
+    desc:'Biệt thự nghỉ dưỡng hạng sang giữa đồi chè Cầu Đất, không khí trong lành, khung cảnh tuyệt vời. Thiết kế kiến trúc hiện đại, nội thất cao cấp nhập khẩu. Phù hợp đầu tư homestay hoặc nghỉ dưỡng gia đình.',
+    spec:{type:'Biệt thự nghỉ dưỡng',purpose:'Đầu tư / Nghỉ dưỡng',landArea:'1200 m²',buildArea:'580 m²',frontage:'24 m',depth:'50 m',direction:'Tây Nam',road:'12 m (nhựa)',floors:'3',year:'2022',pricePerM2:'14.6 tr/m²',negotiable:'✗ Không'},
+    amenities:['✓ Điện 3 pha','✓ Nước giếng sạch','✓ Cáp quang','✓ Đường nhựa','✓ Hồ bơi riêng','✓ Sân vườn rộng','✓ Nhà kho','✓ Camera an ninh','✓ Thang máy','✓ View đồi chè'],
+    commission:{rate:'2%', value:'170 triệu', sale:'102 triệu (60%)', floor:'68 triệu (40%)'},
+    images:[
+      {bg:'gs2', tag:'Toàn cảnh', url:'https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=860&q=80'},
+      {bg:'gs1', tag:'Biệt thự',  url:'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=860&q=80'},
+      {bg:'gs4', tag:'Đồi chè',   url:'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=860&q=80'},
+      {bg:'gs3', tag:'Hồ bơi',    url:'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=860&q=80'},
+      {bg:'gs2', tag:'Sân vườn',  url:'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?w=860&q=80'}
+    ],
     slide:0
   }
 };
 
 function openDetail(data){
-  const d = data || PROP_DATA.default;
-  // populate
-  document.getElementById('detailTitle').textContent = d.title || PROP_DATA.default.title;
-  document.getElementById('detailPrice').textContent = d.price || PROP_DATA.default.price;
+  const d = (typeof data === 'string' ? PROP_DATA[data] : data) || PROP_DATA.default;
+  const def = PROP_DATA.default;
+
+  // === Header & basic ===
+  const title = d.title || def.title;
+  document.getElementById('detailTitle').textContent = title;
+  document.getElementById('detailHeaderTitle').textContent = title;
+  document.getElementById('detailPrice').textContent = d.price || def.price;
+  document.getElementById('detailPriceUnit').textContent = d.priceUnit || def.priceUnit;
   document.getElementById('detailType').textContent = d.type || 'Đất ở';
-  document.getElementById('detailArea').textContent = d.area || '250 m²';
+  document.getElementById('detailArea').textContent = d.area || def.area;
   document.getElementById('detailRoom').textContent = d.room || '—';
-  document.getElementById('detailAddr').textContent = d.addr || PROP_DATA.default.addr;
-  document.getElementById('detailHeaderTitle').textContent = d.title || PROP_DATA.default.title;
-  document.getElementById('bookingPropName').textContent = (d.title||PROP_DATA.default.title).substring(0,50);
+  document.getElementById('detailDirection').textContent = d.direction || '—';
+  document.getElementById('detailViews').textContent = d.views || 0;
+  document.getElementById('detailAddr').textContent = d.addr || def.addr;
+  document.getElementById('bookingPropName').textContent = title.substring(0,50);
 
-  // reset gallery
-  galleryCurrentIdx = d.slide||0;
-  gallerTotal = 4;
-  updateGallery();
+  // === Spec grid ===
+  const sp = d.spec || def.spec;
+  const setV = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val||'—'; };
+  setV('specType', sp.type); setV('specPurpose', sp.purpose);
+  setV('specLandArea', sp.landArea); setV('specBuildArea', sp.buildArea);
+  setV('specFrontage', sp.frontage); setV('specDepth', sp.depth);
+  setV('specDirection', sp.direction); setV('specRoad', sp.road);
+  setV('specFloors', sp.floors); setV('specYear', sp.year);
+  setV('specPricePerM2', sp.pricePerM2); setV('specNegotiable', sp.negotiable);
 
-  // reset desc
+  // === Mô tả ===
+  document.getElementById('descText').innerHTML = (d.desc||def.desc).replace(/\n/g,'<br>');
   descExpanded = false;
-  const dt = document.getElementById('descText');
-  dt.classList.add('clamped');
+  document.getElementById('descText').classList.add('clamped');
   document.getElementById('readMoreBtn').textContent = 'Xem thêm ▾';
 
-  // reset scroll
-  const ds = document.getElementById('detailScroll');
-  ds.scrollTop = 0;
+  // === Tiện ích ===
+  const amenities = d.amenities || def.amenities;
+  document.getElementById('amenityWrap').innerHTML = amenities.map(a =>
+    `<span class="amenity-chip ${a.startsWith('✓')?'yes':'no'}">${a}</span>`
+  ).join('');
 
-  // reset header
+  // === Hoa hồng ===
+  const comm = d.commission || def.commission;
+  setV('commRate', comm.rate); setV('commPrice', d.price||def.price);
+  setV('commValue', comm.value); setV('commSale', comm.sale); setV('commFloor', comm.floor);
+
+  // === Gallery: rebuild slides ===
+  const images = d.images || def.images;
+  gallerTotal = images.length;
+  document.getElementById('gallerySlides').innerHTML = images.map(img => {
+    const imgTag = img.url
+      ? `<img src="${img.url}" alt="${img.tag}" loading="lazy" onerror="this.style.display='none'">`
+      : '';
+    return `<div class="gallery-slide ${img.bg}">${imgTag}<div class="gs-label"><span class="gs-tag">${img.tag}</span></div></div>`;
+  }).join('');
+  document.getElementById('galleryDots').innerHTML = images.map((_,i) =>
+    `<div class="gdot${i===0?' active':''}"></div>`
+  ).join('');
+  document.getElementById('galleryTotal').textContent = gallerTotal;
+  galleryCurrentIdx = d.slide||0;
+  updateGallery();
+
+  // === Reset scroll & header ===
+  document.getElementById('detailScroll').scrollTop = 0;
   document.getElementById('detailStickyHeader').classList.remove('scrolled');
 
-  // update role-based elements
+  // sync role switcher trong detail
+  const roleMap = {guest:'Guest',broker:'Broker',bds_admin:'BĐS',sale:'Sale',sale_admin:'Sale Admin',admin:'Admin'};
+  document.querySelectorAll('.detail-role-switcher .rbtn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().includes(roleMap[currentRole]||''));
+  });
+
   applyDetailRole();
 
   // slide in
   document.getElementById('page-detail').classList.add('open');
-
-  // hide main header & bottom nav while in detail
   document.querySelector('.app-header').style.zIndex='0';
   document.querySelector('.bottom-nav').style.transform='translateY(100%)';
 }

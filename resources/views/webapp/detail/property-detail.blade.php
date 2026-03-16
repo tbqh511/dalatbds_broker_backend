@@ -10,17 +10,27 @@
       </div>
     </div>
 
+    <!-- ROLE SWITCHER (dev tool) -->
+    <div class="detail-role-switcher" style="display:flex;gap:6px;padding:8px 12px;background:rgba(0,0,0,0.65);overflow-x:auto;scrollbar-width:none;flex-shrink:0;">
+      <button class="rbtn" onclick="setRole('guest',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👤 Guest</button>
+      <button class="rbtn" onclick="setRole('broker',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏠 Broker</button>
+      <button class="rbtn" onclick="setRole('bds_admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏘️ BĐS Admin</button>
+      <button class="rbtn active" onclick="setRole('sale',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:#3270FC;color:#fff;white-space:nowrap;">💼 Sale</button>
+      <button class="rbtn" onclick="setRole('sale_admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">📋 Sale Admin</button>
+      <button class="rbtn" onclick="setRole('admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👑 Admin</button>
+    </div>
+
     <!-- gallery -->
     <div class="detail-gallery">
       <div class="gallery-slides" id="gallerySlides">
-        <div class="gallery-slide gs1" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <div class="gallery-slide gs2" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-        <div class="gallery-slide gs3" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <div class="gallery-slide gs4" style="display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <div class="gallery-slide" id="gslide-0" style="background:#1e2a3a;"><img src="" alt="Ảnh BĐS 1" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+        <div class="gallery-slide" id="gslide-1" style="background:#162032;"><img src="" alt="Ảnh BĐS 2" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+        <div class="gallery-slide" id="gslide-2" style="background:#1a2840;"><img src="" alt="Ảnh BĐS 3" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+        <div class="gallery-slide" id="gslide-3" style="background:#0f1c2e;"><img src="" alt="Ảnh BĐS 4" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
       </div>
       <div class="gallery-price-badge">
         <div class="price-big" id="detailPrice">1,000 triệu</div>
-        <div class="price-unit">≈ 4 tr/m² · Có thương lượng</div>
+        <div class="price-unit" id="detailPriceM2">≈ 4 tr/m² · Có thương lượng</div>
       </div>
       <div class="gallery-bottom">
         <div class="gallery-counter"><span id="galleryIdx">1</span> / <span id="galleryTotal">4</span> ảnh</div>
@@ -64,12 +74,12 @@
           </div>
           <div class="ds-item">
             <div class="ds-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
-            <div class="ds-val">Đông Nam</div>
+            <div class="ds-val" id="detailDirection">Đông Nam</div>
             <div class="ds-lbl">Hướng</div>
           </div>
           <div class="ds-item">
             <div class="ds-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
-            <div class="ds-val">3</div>
+            <div class="ds-val" id="detailViews">3</div>
             <div class="ds-lbl">Lượt xem</div>
           </div>
         </div>
@@ -85,51 +95,51 @@
           <div class="spec-grid">
             <div class="spec-item">
               <span class="spec-label">Loại BĐS</span>
-              <span class="spec-value blue">Đất ở phân quyền</span>
+              <span class="spec-value blue" id="specType">Đất ở phân quyền</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Mục đích</span>
-              <span class="spec-value">Ở / Đầu tư</span>
+              <span class="spec-value" id="specPurpose">Ở / Đầu tư</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Diện tích đất</span>
-              <span class="spec-value">250 m²</span>
+              <span class="spec-value" id="specLandArea">250 m²</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Diện tích XD</span>
-              <span class="spec-value">—</span>
+              <span class="spec-value" id="specFloorArea">—</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Mặt tiền</span>
-              <span class="spec-value">12 m</span>
+              <span class="spec-value" id="specFrontage">12 m</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Chiều sâu</span>
-              <span class="spec-value">20.8 m</span>
+              <span class="spec-value" id="specDepth">20.8 m</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Hướng</span>
-              <span class="spec-value">Đông Nam</span>
+              <span class="spec-value" id="specDirection">Đông Nam</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Đường trước</span>
-              <span class="spec-value">6 m (nhựa)</span>
+              <span class="spec-value" id="specRoadWidth">6 m (nhựa)</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Số tầng</span>
-              <span class="spec-value">—</span>
+              <span class="spec-value" id="specFloors">—</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Năm xây</span>
-              <span class="spec-value">—</span>
+              <span class="spec-value" id="specYear">—</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Giá / m²</span>
-              <span class="spec-value green">4 triệu/m²</span>
+              <span class="spec-value green" id="specPriceM2">4 triệu/m²</span>
             </div>
             <div class="spec-item">
               <span class="spec-label">Thương lượng</span>
-              <span class="spec-value green">✓ Có</span>
+              <span class="spec-value green" id="specNegotiable">✓ Có</span>
             </div>
           </div>
         </div>
@@ -276,10 +286,10 @@
           <div class="detail-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Người đăng</span></div>
         </div>
         <div class="owner-card">
-          <div class="owner-avatar">HT</div>
+          <div class="owner-avatar" id="ownerInitials">HT</div>
           <div class="owner-info">
-            <div class="owner-name">Huy Thái</div>
-            <div class="owner-role">eBroker · Đà Lạt BĐS</div>
+            <div class="owner-name" id="ownerName">Huy Thái</div>
+            <div class="owner-role" id="ownerRole">eBroker · Đà Lạt BĐS</div>
             <div class="owner-rating">
               <span class="stars">★★★★★</span>
               <span style="font-size:12px;font-weight:600;">4.8</span>

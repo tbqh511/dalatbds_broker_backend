@@ -71,6 +71,17 @@ window.setRole = function(role, btn){
   const roleLabels={guest:'Khách vãng lai',broker:'eBroker',bds_admin:'BĐS Admin',sale:'Sale',sale_admin:'Sale Admin',admin:'Admin'};
   const profileRole = document.querySelector('.profile-role');
   if(profileRole) profileRole.innerHTML = '💼 '+roleLabels[role];
+
+  // Sync detail-role-switcher with current role
+  const roleTextMap = {guest:'Guest',broker:'Broker',bds_admin:'BĐS Admin',sale:'Sale',sale_admin:'Sale Admin',admin:'Admin'};
+  document.querySelectorAll('.detail-role-switcher .rbtn').forEach(b => {
+    const match = roleTextMap[role] || '';
+    const isActive = b.textContent.trim().replace(/^[^\s]+\s*/,'') === match ||
+                     b.textContent.trim().includes(match);
+    b.classList.toggle('active', isActive);
+    b.style.background = isActive ? '#3270FC' : 'rgba(255,255,255,0.12)';
+    b.style.color = isActive ? '#fff' : 'rgba(255,255,255,0.6)';
+  });
 };
 
 // init role from server config
@@ -519,7 +530,7 @@ const PROP_DATA = {
 
 window.openDetail = function(data){
   const d = data || PROP_DATA.default;
-  // populate
+  // populate basic fields
   document.getElementById('detailTitle').textContent = d.title || PROP_DATA.default.title;
   document.getElementById('detailPrice').textContent = d.price || PROP_DATA.default.price;
   document.getElementById('detailType').textContent = d.type || 'Đất ở';
@@ -529,9 +540,74 @@ window.openDetail = function(data){
   document.getElementById('detailHeaderTitle').textContent = d.title || PROP_DATA.default.title;
   document.getElementById('bookingPropName').textContent = (d.title||PROP_DATA.default.title).substring(0,50);
 
-  // reset gallery
-  galleryCurrentIdx = d.slide||0;
-  gallerTotal = 4;
+  // stat boxes
+  const dirEl = document.getElementById('detailDirection');
+  if(dirEl) dirEl.textContent = d.direction || '—';
+  const viewsEl = document.getElementById('detailViews');
+  if(viewsEl) viewsEl.textContent = d.views !== undefined ? d.views : '0';
+  const pm2El = document.getElementById('detailPriceM2');
+  if(pm2El) pm2El.textContent = d.priceM2 || '';
+
+  // spec grid
+  const specs = {
+    specType: d.specType || d.type || '—',
+    specPurpose: d.specPurpose || '—',
+    specLandArea: d.area || '—',
+    specFloorArea: d.specFloorArea || '—',
+    specFrontage: d.specFrontage || '—',
+    specDepth: d.specDepth || '—',
+    specDirection: d.direction || '—',
+    specRoadWidth: d.specRoadWidth || '—',
+    specFloors: d.specFloors || '—',
+    specYear: d.specYear || '—',
+    specPriceM2: d.specPriceM2 || '—',
+    specNegotiable: d.specNegotiable !== undefined ? (d.specNegotiable ? '✓ Có' : '✗ Không') : '✓ Có'
+  };
+  Object.entries(specs).forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.textContent=val; });
+
+  // description
+  const descEl = document.getElementById('descText');
+  if(descEl && d.desc) descEl.innerHTML = d.desc;
+
+  // owner card
+  const ownerInit = document.getElementById('ownerInitials');
+  if(ownerInit) ownerInit.textContent = d.ownerInitials || 'BK';
+  const ownerName = document.getElementById('ownerName');
+  if(ownerName) ownerName.textContent = d.ownerName || 'Môi giới';
+  const ownerRole = document.getElementById('ownerRole');
+  if(ownerRole) ownerRole.textContent = d.ownerRoleLabel || 'eBroker · Đà Lạt BĐS';
+
+  // gallery: populate images dynamically
+  const images = d.images || [];
+  gallerTotal = images.length > 0 ? images.length : 1;
+  for(let i=0; i<4; i++){
+    const slide = document.getElementById('gslide-'+i);
+    if(!slide) continue;
+    const img = slide.querySelector('img');
+    if(i < images.length){
+      if(img){ img.src = images[i]; img.style.display = 'block'; }
+      slide.style.display = '';
+    } else if(i === 0 && images.length === 0){
+      // no images: show first slide as placeholder
+      if(img){ img.src = ''; img.style.display = 'none'; }
+      slide.style.display = '';
+    } else {
+      slide.style.display = 'none';
+    }
+  }
+  // rebuild dots
+  const dotsEl = document.getElementById('galleryDots');
+  if(dotsEl){
+    dotsEl.innerHTML = '';
+    for(let i=0; i<gallerTotal; i++){
+      const dot = document.createElement('div');
+      dot.className = 'gdot' + (i===0 ? ' active' : '');
+      dotsEl.appendChild(dot);
+    }
+  }
+  document.getElementById('galleryTotal').textContent = gallerTotal;
+
+  galleryCurrentIdx = d.slide || 0;
   updateGallery();
 
   // reset desc
@@ -683,19 +759,7 @@ window.showToast = function(msg){
   toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
 };
 
-// wire up prop-cards to open detail
-document.querySelectorAll('.prop-card').forEach(card=>{
-  card.addEventListener('click',function(e){
-    if(e.target.closest('.prop-quick-btn')||e.target.closest('.prop-action-btn')) return;
-    const title = this.querySelector('.prop-title')?.textContent||'';
-    const price = this.querySelector('.prop-img-price')?.textContent||'';
-    const typeEl = this.querySelector('.badge-blue');
-    const type = typeEl?.textContent||'BĐS';
-    const areaEl = this.querySelector('.prop-meta-item');
-    const area = areaEl?.querySelector('span')?.textContent||'';
-    openDetail({title,price,type,area,room:'—',addr:'Đà Lạt, Lâm Đồng',slide:0});
-  });
-});
+// prop-cards: handled via inline onclick + data-prop attribute
 
 // also wire send-modal close on backdrop
 document.getElementById('sendModalOverlay')?.addEventListener('click',function(e){
@@ -747,8 +811,21 @@ function renderPropertyCard(p) {
   const roomMeta = p.number_room
     ? `<div class="prop-meta-item role-broker role-bds_admin role-sale role-sale_admin role-admin">🛏 <span>${p.number_room} PN</span></div>` : '';
 
+  const propJson = JSON.stringify({
+    title: p.title || '',
+    price: p.price || '',
+    type: p.category_name || 'BĐS',
+    area: p.area ? `${p.area} m²` : '—',
+    room: p.number_room ? `${p.number_room} PN` : '—',
+    addr: p.location || 'Đà Lạt, Lâm Đồng',
+    views: p.total_click || 0,
+    images: (p.gallery_images && p.gallery_images.length) ? p.gallery_images : (p.title_image ? [p.title_image] : []),
+    priceM2: p.price_m2 || '',
+    direction: p.direction || '—',
+  }).replace(/'/g, '\\u0027');
+
   return `
-    <div class="prop-card" onclick="openPropertyDetail(${p.id})">
+    <div class="prop-card" data-prop='${propJson}' onclick="if(!event.target.closest('.prop-quick-btn,.prop-action-btn'))openDetail(JSON.parse(this.dataset.prop))">
       <div class="prop-img">
         ${imgHtml}
         <div class="prop-img-gradient"></div>

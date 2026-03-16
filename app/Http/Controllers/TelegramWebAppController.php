@@ -81,7 +81,7 @@ class TelegramWebAppController extends Controller
         $marketPrices = MarketPrice::latestMonth()->orderByDesc('avg_price_m2')->take(3)->get();
 
         // First batch of properties for server-side render
-        $properties = Property::with(['category', 'ward'])
+        $properties = Property::with(['category', 'ward', 'propery_image'])
             ->where('status', 1)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -112,7 +112,7 @@ class TelegramWebAppController extends Controller
             'khachsan' => [2],            // Khách sạn
         ];
 
-        $query = Property::with(['category', 'ward'])
+        $query = Property::with(['category', 'ward', 'propery_image'])
             ->where('status', 1)
             ->orderBy('created_at', 'desc');
 
@@ -125,20 +125,29 @@ class TelegramWebAppController extends Controller
 
         $paginator = $query->paginate(10, ['*'], 'page', $page);
 
-        $items = $paginator->map(function ($p) {
+        $galleryBase = url('') . config('global.IMG_PATH') . config('global.PROPERTY_GALLERY_IMG_PATH');
+
+        $items = $paginator->map(function ($p) use ($galleryBase) {
+            $galleryImages = $p->propery_image
+                ->filter(fn($img) => $img->image)
+                ->map(fn($img) => $galleryBase . $p->id . '/' . $img->image)
+                ->values()
+                ->toArray();
+
             return [
-                'id'            => $p->id,
-                'title'         => $p->title_by_address,
-                'price'         => $p->formatted_prices,
-                'location'      => $p->address_location,
-                'area'          => $p->area,
-                'legal'         => $p->legal,
-                'number_room'   => $p->number_room,
-                'total_click'   => $p->total_click,
-                'title_image'   => $p->title_image ?: null,
-                'category_name' => $p->category?->category,
-                'type_label'    => $p->type,
-                'property_type' => $p->property_type,
+                'id'             => $p->id,
+                'title'          => $p->title_by_address,
+                'price'          => $p->formatted_prices,
+                'location'       => $p->address_location,
+                'area'           => $p->area,
+                'legal'          => $p->legal,
+                'number_room'    => $p->number_room,
+                'total_click'    => $p->total_click,
+                'title_image'    => $p->title_image ?: null,
+                'category_name'  => $p->category?->category,
+                'type_label'     => $p->type,
+                'property_type'  => $p->property_type,
+                'gallery_images' => $galleryImages,
             ];
         });
 
