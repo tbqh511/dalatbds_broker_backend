@@ -97,6 +97,149 @@ class TelegramWebAppController extends Controller
         return view('frontend_dashboard_temp');
     }
 
+    public function propertyDetailJson(Request $request, $id)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        $property = Property::with([
+            'category', 'ward', 'street', 'parameters', 'assignfacilities.outdoorfacilities', 'host',
+        ])->where('status', 1)->find($id);
+
+        if (!$property) {
+            return response()->json(['error' => 'Not found'], 404);
+        }
+
+        // Increment view count
+        $property->increment('total_click');
+
+        // All images: title + gallery
+        $galleryBase = url('') . config('global.IMG_PATH') . config('global.PROPERTY_GALLERY_IMG_PATH');
+        $galleryImages = $property->propery_image
+            ->filter(fn($img) => $img->image)
+            ->map(fn($img) => $galleryBase . $property->id . '/' . $img->image)
+            ->values()->toArray();
+        $allImages = $property->title_image
+            ? array_merge([$property->title_image], $galleryImages)
+            : $galleryImages;
+
+        // Parameters keyed by id
+        $areaParamId      = (int) config('global.area');
+        $legalParamId     = (int) config('global.legal');
+        $directionParamId = (int) config('global.direction');
+        $area = $legal = $direction = '';
+        $paramList = [];
+        foreach ($property->parameters as $param) {
+            $val = $param->pivot->value ?? '';
+            if ((int)$param->id === $areaParamId)      $area      = $val;
+            if ((int)$param->id === $legalParamId)     $legal     = $val;
+            if ((int)$param->id === $directionParamId) $direction = $val;
+            if ($val !== '' && $val !== null) {
+                $paramList[] = ['id' => $param->id, 'name' => $param->name, 'value' => $val];
+            }
+        }
+
+        // Facilities
+        $facilities = [];
+        foreach ($property->assignfacilities as $fac) {
+            $of = $fac->outdoorfacilities;
+            if ($of) {
+                $facilities[] = [
+                    'name'     => $of->name ?? '',
+                    'icon'     => $of->image ?? '',
+                    'distance' => $fac->distance ?? '',
+                ];
+            }
+        }
+
+        // Commission rate
+        $commissionRate = 2;
+        if ($property->price > 0 && $property->commission > 0) {
+            $commissionRate = round(($property->commission / $property->price) * 100, 1);
+        }
+
+        // Host info — only for broker+
+        $hostData = null;
+        $brokerRoles = ['broker', 'sale', 'sale_admin', 'bds_admin', 'admin'];
+        if ($customer && in_array($customer->role, $brokerRoles) && $property->host) {
+            $phone = $property->host->contact ?? '';
+            if (substr($phone, 0, 2) === '84') {
+                $phone = '0' . substr($phone, 2);
+            }
+            $hostData = [
+                'gender' => $property->host->gender ?? '1',
+                'name'   => $property->host->name ?? '',
+                'phone'  => $phone,
+            ];
+        }
+
+        // Broker (person who listed it)
+        $broker = null;
+        if ($property->added_by) {
+            $brokerUser = Customer::select('name', 'profile')->find($property->added_by);
+            if ($brokerUser) {
+                $parts = preg_split('/\s+/', trim($brokerUser->name ?? 'BK'));
+                $initials = mb_strtoupper(mb_substr($parts[0], 0, 1) . (count($parts) > 1 ? mb_substr(end($parts), 0, 1) : ''));
+                $broker = [
+                    'name'     => $brokerUser->name ?? 'Môi giới',
+                    'initials' => $initials ?: 'BK',
+                    'avatar'   => $brokerUser->profile ?? null,
+                    'role'     => 'eBroker · Đà Lạt BĐS',
+                ];
+            }
+        }
+
+        // Address
+        $streetName = optional($property->street)->street_name ?? '';
+        $wardName   = optional($property->ward)->name ?? '';
+
+        // Similar properties — same category, exclude current
+        $similar = Property::with(['category', 'ward'])
+            ->where('status', 1)
+            ->where('id', '!=', $property->id)
+            ->where('category_id', $property->category_id)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(fn ($p) => [
+                'id'    => $p->id,
+                'title' => $p->title_by_address,
+                'price' => $p->formatted_prices,
+                'ward'  => optional($p->ward)->name ?? '',
+                'image' => $p->title_image,
+                'type'  => $p->category?->category ?? 'BĐS',
+            ])->values()->toArray();
+
+        return response()->json([
+            'id'             => $property->id,
+            'title'          => $property->title_by_address,
+            'price'          => $property->formatted_prices,
+            'priceM2'        => $property->formatted_price_m2 ?? '',
+            'type'           => $property->category?->category ?? 'BĐS',
+            'transactionType'=> $property->property_type == 1 ? 'rent' : 'sale',
+            'area'           => $area ? $area . ' m²' : null,
+            'room'           => $property->number_room ? $property->number_room . ' PN' : null,
+            'legal'          => $legal,
+            'direction'      => $direction,
+            'addr'           => $streetName . ($wardName ? ', ' . $wardName : '') . ', Tp.Đà Lạt',
+            'street'         => $streetName,
+            'ward'           => $wardName,
+            'houseNumber'    => $property->street_number ?? '',
+            'rentduration'   => $property->rentduration,
+            'description'    => $property->description,
+            'latitude'       => $property->latitude,
+            'longitude'      => $property->longitude,
+            'views'          => $property->total_click,
+            'images'         => $allImages,
+            'commissionRate' => $commissionRate,
+            'commission'     => $property->commission,
+            'parameters'     => $paramList,
+            'facilities'     => $facilities,
+            'host'           => $hostData,
+            'broker'         => $broker,
+            'similar'        => $similar,
+        ]);
+    }
+
     public function homeFeed(Request $request)
     {
         $page = (int) $request->get('page', 1);

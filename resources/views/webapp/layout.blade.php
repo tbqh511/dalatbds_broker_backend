@@ -68,6 +68,7 @@
     customerName: @json($customer->name ?? 'Khách'),
     customerId: @json($customer->id ?? null),
     csrfToken: @json(csrf_token()),
+    mapsKey: @json(config('services.google_maps.place_api_key')),
     routes: {
       addListing: @json(route('webapp.add_listing')),
       addCustomer: @json(route('webapp.add_customer')),

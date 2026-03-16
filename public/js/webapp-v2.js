@@ -511,127 +511,289 @@ window.showMapCard = function(idx){
 
 // ============ DETAIL PAGE ============
 let galleryCurrentIdx = 0;
-let gallerTotal = 4;
+let gallerTotal = 1;
 let descExpanded = false;
 let bookmarked = false;
 let selectedDeal = null;
+let currentDetailPhone = null; // host phone for callOwner
 
-const PROP_DATA = {
-  default:{
-    title:'Bán Đất ở phân quyền, Đường Yersin, Phường Cam Ly, Đà Lạt',
-    price:'1,000 triệu',
-    type:'Đất ở',
-    area:'250 m²',
-    addr:'Đường Yersin, Phường Cam Ly, TP Đà Lạt',
-    room:'—',
-    slide:0
-  }
-};
-
-window.openDetail = function(data){
-  const d = data || PROP_DATA.default;
-  // populate basic fields
-  document.getElementById('detailTitle').textContent = d.title || PROP_DATA.default.title;
-  document.getElementById('detailPrice').textContent = d.price || PROP_DATA.default.price;
-  document.getElementById('detailType').textContent = d.type || 'Đất ở';
-  document.getElementById('detailArea').textContent = d.area || '250 m²';
-  document.getElementById('detailRoom').textContent = d.room || '—';
-  document.getElementById('detailAddr').textContent = d.addr || PROP_DATA.default.addr;
-  document.getElementById('detailHeaderTitle').textContent = d.title || PROP_DATA.default.title;
-  document.getElementById('bookingPropName').textContent = (d.title||PROP_DATA.default.title).substring(0,50);
-
-  // stat boxes
-  const dirEl = document.getElementById('detailDirection');
-  if(dirEl) dirEl.textContent = d.direction || '—';
-  const viewsEl = document.getElementById('detailViews');
-  if(viewsEl) viewsEl.textContent = d.views !== undefined ? d.views : '0';
-  const pm2El = document.getElementById('detailPriceM2');
-  if(pm2El) pm2El.textContent = d.priceM2 || '';
-
-  // spec grid
-  const specs = {
-    specType: d.specType || d.type || '—',
-    specPurpose: d.specPurpose || '—',
-    specLandArea: d.area || '—',
-    specFloorArea: d.specFloorArea || '—',
-    specFrontage: d.specFrontage || '—',
-    specDepth: d.specDepth || '—',
-    specDirection: d.direction || '—',
-    specRoadWidth: d.specRoadWidth || '—',
-    specFloors: d.specFloors || '—',
-    specYear: d.specYear || '—',
-    specPriceM2: d.specPriceM2 || '—',
-    specNegotiable: d.specNegotiable !== undefined ? (d.specNegotiable ? '✓ Có' : '✗ Không') : '✓ Có'
-  };
-  Object.entries(specs).forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.textContent=val; });
-
-  // description
-  const descEl = document.getElementById('descText');
-  if(descEl && d.desc) descEl.innerHTML = d.desc;
-
-  // owner card
-  const ownerInit = document.getElementById('ownerInitials');
-  if(ownerInit) ownerInit.textContent = d.ownerInitials || 'BK';
-  const ownerName = document.getElementById('ownerName');
-  if(ownerName) ownerName.textContent = d.ownerName || 'Môi giới';
-  const ownerRole = document.getElementById('ownerRole');
-  if(ownerRole) ownerRole.textContent = d.ownerRoleLabel || 'eBroker · Đà Lạt BĐS';
-
-  // gallery: populate images dynamically
-  const images = d.images || [];
-  gallerTotal = images.length > 0 ? images.length : 1;
-  for(let i=0; i<4; i++){
-    const slide = document.getElementById('gslide-'+i);
-    if(!slide) continue;
-    const img = slide.querySelector('img');
-    if(i < images.length){
-      if(img){ img.src = images[i]; img.style.display = 'block'; }
-      slide.style.display = '';
-    } else if(i === 0 && images.length === 0){
-      // no images: show first slide as placeholder
-      if(img){ img.src = ''; img.style.display = 'none'; }
-      slide.style.display = '';
-    } else {
-      slide.style.display = 'none';
+// ---- gallery helpers ----
+function buildGallery(images){
+  const slidesEl = document.getElementById('gallerySlides');
+  if(!slidesEl) return;
+  slidesEl.innerHTML = '';
+  const imgs = (images && images.length) ? images : [''];
+  gallerTotal = imgs.length;
+  imgs.forEach((src,i)=>{
+    const div = document.createElement('div');
+    div.className = 'gallery-slide';
+    div.id = 'gslide-'+i;
+    div.style.background = '#1e2a3a';
+    if(src){
+      const img = document.createElement('img');
+      img.src = src; img.alt = 'Ảnh BĐS '+(i+1);
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+      div.appendChild(img);
     }
-  }
-  // rebuild dots
+    slidesEl.appendChild(div);
+  });
   const dotsEl = document.getElementById('galleryDots');
   if(dotsEl){
-    dotsEl.innerHTML = '';
-    for(let i=0; i<gallerTotal; i++){
-      const dot = document.createElement('div');
-      dot.className = 'gdot' + (i===0 ? ' active' : '');
-      dotsEl.appendChild(dot);
+    dotsEl.innerHTML='';
+    imgs.forEach((_,i)=>{
+      const d=document.createElement('div');
+      d.className='gdot'+(i===0?' active':'');
+      dotsEl.appendChild(d);
+    });
+  }
+  const gt = document.getElementById('galleryTotal');
+  if(gt) gt.textContent = gallerTotal;
+  galleryCurrentIdx = 0;
+  updateGallery();
+}
+
+// ---- spec helpers ----
+function setDetailText(id, val){ const el=document.getElementById(id); if(el) el.textContent = val||''; }
+function showHideEl(id, show){ const el=document.getElementById(id); if(el) el.style.display = show ? '' : 'none'; }
+
+function populateBasic(d){
+  setDetailText('detailTitle', d.title||'Chi tiết BĐS');
+  setDetailText('detailPrice', d.price||'--');
+  setDetailText('detailPriceM2', d.priceM2||'');
+  setDetailText('detailType', d.type||'BĐS');
+  setDetailText('detailArea', d.area||'—');
+  setDetailText('detailRoom', d.room||'—');
+  setDetailText('detailAddr', d.addr||'Đà Lạt');
+  setDetailText('detailHeaderTitle', d.title||'Chi tiết BĐS');
+  setDetailText('bookingPropName', (d.title||'BĐS').substring(0,50));
+  setDetailText('detailDirection', d.direction||'—');
+  setDetailText('detailViews', d.views !== undefined ? d.views : '0');
+
+  // transaction badge
+  const tbadge = document.getElementById('detailTransactionBadge');
+  if(tbadge){
+    const isRent = d.transactionType === 'rent' || d.property_type == 1;
+    tbadge.textContent = isRent ? 'Cho thuê' : 'Đang bán';
+    tbadge.style.background = isRent ? 'rgba(234,179,8,0.15)' : 'rgba(34,197,94,0.15)';
+    tbadge.style.color = isRent ? '#b45309' : '#15803d';
+  }
+
+  // show/hide direction & room boxes
+  showHideEl('detailDirectionBox', !!(d.direction && d.direction !== '—'));
+  showHideEl('detailRoomBox', !!(d.room && d.room !== '—'));
+
+  // build gallery from basic images
+  buildGallery(d.images||[]);
+}
+
+function populateFull(d){
+  // basic fields again (fresher data)
+  populateBasic(d);
+
+  // ---- spec section ----
+  const specGrid = document.getElementById('specGrid');
+
+  // remove previously added dynamic items
+  specGrid.querySelectorAll('.spec-item-dyn').forEach(el=>el.remove());
+
+  // area
+  if(d.area){ setDetailText('specArea',d.area); showHideEl('specAreaItem',true); }
+  // legal
+  if(d.legal){ setDetailText('specLegal',d.legal); showHideEl('specLegalItem',true); }
+  // priceM2
+  if(d.priceM2){ setDetailText('specPriceM2',d.priceM2); showHideEl('specPriceM2Item',true); }
+  // commission
+  if(d.commissionRate){
+    const el = document.getElementById('specCommission');
+    if(el) el.textContent = d.commissionRate + '%' + (d.commission ? ' (' + formatVND(d.commission) + ')' : '');
+    showHideEl('specCommissionItem',true);
+  }
+
+  // dynamic parameters from DB
+  if(d.parameters && d.parameters.length){
+    const excludeNames = ['Diện tích','Pháp lý','Giá m2','Giá / m²'];
+    d.parameters.forEach(p=>{
+      if(!p.value || excludeNames.includes(p.name)) return;
+      const item = document.createElement('div');
+      item.className = 'spec-item spec-item-dyn';
+      item.innerHTML = `<span class="spec-label">${escHtml(p.name)}</span><span class="spec-value">${escHtml(p.value)}</span>`;
+      specGrid.appendChild(item);
+    });
+  }
+
+  // ---- description ----
+  if(d.description && d.description.trim()){
+    const dt = document.getElementById('descText');
+    if(dt) dt.innerHTML = escHtml(d.description).replace(/\n/g,'<br>');
+    showHideEl('detailDescSection', true);
+    const rmBtn = document.getElementById('readMoreBtn');
+    if(rmBtn) rmBtn.style.display = '';
+  } else {
+    showHideEl('detailDescSection', false);
+  }
+
+  // ---- facilities ----
+  const facGrid = document.getElementById('facilitiesGrid');
+  if(facGrid && d.facilities && d.facilities.length){
+    facGrid.innerHTML='';
+    d.facilities.forEach(f=>{
+      const chip = document.createElement('div');
+      chip.style.cssText='display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg-secondary);border-radius:20px;font-size:12px;font-weight:500;color:var(--text-secondary);border:1px solid var(--border);';
+      let icon = '';
+      if(f.icon){
+        if(f.icon.endsWith('.svg')||f.icon.endsWith('.png')||f.icon.includes('http')){
+          icon = `<img src="${f.icon}" style="width:14px;height:14px;object-fit:contain;" alt="">`;
+        } else {
+          icon = `<i class="fa-solid ${f.icon}" style="font-size:12px;"></i>`;
+        }
+      }
+      chip.innerHTML = icon + `<span>${escHtml(f.name)}</span>` + (f.distance?`<span style="color:var(--primary);font-weight:600;margin-left:2px;">${escHtml(f.distance)}</span>`:'');
+      facGrid.appendChild(chip);
+    });
+    showHideEl('detailFacilitiesSection', true);
+  } else {
+    showHideEl('detailFacilitiesSection', false);
+  }
+
+  // ---- legal section ----
+  if(d.legal){
+    setDetailText('detailLegalText', d.legal);
+    showHideEl('detailLegalItem', true);
+    showHideEl('detailLegalEmpty', false);
+  } else {
+    showHideEl('detailLegalItem', false);
+    showHideEl('detailLegalEmpty', true);
+  }
+
+  // ---- host contact (store phone for call button, no display) ----
+  currentDetailPhone = null;
+  if(d.host && d.host.phone){
+    currentDetailPhone = d.host.phone;
+  }
+
+  // ---- location map ----
+  if(d.latitude && d.longitude){
+    const ward   = d.ward  || 'Đà Lạt';
+    const street = d.street|| '';
+    const addr   = street ? street+', '+ward : ward;
+    setDetailText('mapAddrLabel', addr);
+
+    const mapsUrl = `https://maps.google.com/?q=${d.latitude},${d.longitude}`;
+    const link = document.getElementById('mapLink');
+    if(link) link.href = mapsUrl;
+
+    // Store URL for click overlay
+    const preview = document.getElementById('detailMapPreview');
+    if(preview) preview.dataset.mapsUrl = mapsUrl;
+
+    // Inject Google Maps iframe embed (no API key needed)
+    const iframeContainer = document.getElementById('mapIframeContainer');
+    const clickOverlay    = document.getElementById('mapClickOverlay');
+    const pinCenter       = document.getElementById('mapPinCenter');
+    if(iframeContainer){
+      const embedUrl = `https://maps.google.com/maps?q=${d.latitude},${d.longitude}&z=16&output=embed`;
+      iframeContainer.innerHTML = `<iframe src="${embedUrl}" width="100%" height="100%" style="border:0;" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+      iframeContainer.style.display = '';
+      if(clickOverlay) clickOverlay.style.display = '';
+      if(pinCenter)    pinCenter.style.display    = 'none';
+    }
+
+    showHideEl('detailLocationSection', true);
+  } else {
+    showHideEl('detailLocationSection', false);
+    // Reset map state for next open
+    const iframeContainer = document.getElementById('mapIframeContainer');
+    if(iframeContainer){ iframeContainer.innerHTML=''; iframeContainer.style.display='none'; }
+    const clickOverlay = document.getElementById('mapClickOverlay');
+    if(clickOverlay) clickOverlay.style.display='none';
+    const pinCenter = document.getElementById('mapPinCenter');
+    if(pinCenter) pinCenter.style.display='';
+  }
+
+  // ---- broker (poster) ----
+  if(d.broker){
+    setDetailText('ownerInitials', d.broker.initials||'BK');
+    setDetailText('ownerName',     d.broker.name||'Môi giới');
+    setDetailText('ownerRole',     d.broker.role||'eBroker · Đà Lạt BĐS');
+  }
+
+  // ---- similar properties ----
+  const simScroll = document.getElementById('similarScroll');
+  if(simScroll){
+    if(d.similar && d.similar.length){
+      simScroll.innerHTML = d.similar.map(s=>{
+        const imgHtml = s.image
+          ? `<div class="similar-img" style="overflow:hidden;padding:0;"><img src="${escHtml(s.image)}" style="width:100%;height:100%;object-fit:cover;display:block;" alt=""></div>`
+          : `<div class="similar-img" style="background:#1e2a3a;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`;
+        const meta = [s.type, s.ward].filter(Boolean).join(' · ');
+        const propJson = JSON.stringify(s).replace(/'/g,'\\u0027');
+        return `<div class="similar-card" data-prop='${propJson}' onclick="openDetail(JSON.parse(this.dataset.prop))">${imgHtml}<div class="similar-body"><div class="similar-price">${escHtml(s.price)}</div><div class="similar-area">${escHtml(meta)}</div></div></div>`;
+      }).join('');
+    } else {
+      simScroll.innerHTML = '<div style="padding:4px 0;font-size:12px;color:var(--text-tertiary);">Không có BĐS tương tự</div>';
     }
   }
-  document.getElementById('galleryTotal').textContent = gallerTotal;
+}
 
-  galleryCurrentIdx = d.slide || 0;
-  updateGallery();
+function formatVND(n){
+  if(!n) return '';
+  const ty=1e9,tr=1e6;
+  if(n>=ty) return (n/ty).toFixed(n%ty===0?0:1)+' tỷ';
+  if(n>=tr) return Math.round(n/tr)+' triệu';
+  return new Intl.NumberFormat('vi-VN').format(n);
+}
 
-  // reset desc
+function escHtml(s){
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+window.openDetail = function(data){
+  const d = data || {};
+
+  // 1. Show basic data immediately
+  populateBasic(d);
+
+  // 2. Reset UI state
   descExpanded = false;
   const dt = document.getElementById('descText');
-  dt.classList.add('clamped');
-  document.getElementById('readMoreBtn').textContent = 'Xem thêm ▾';
-
-  // reset scroll
-  const ds = document.getElementById('detailScroll');
-  ds.scrollTop = 0;
-
-  // reset header
+  if(dt){ dt.classList.add('clamped'); dt.innerHTML=''; }
+  const rmBtn = document.getElementById('readMoreBtn');
+  if(rmBtn){ rmBtn.textContent='Xem thêm ▾'; rmBtn.style.display='none'; }
+  document.getElementById('detailScroll').scrollTop = 0;
   document.getElementById('detailStickyHeader').classList.remove('scrolled');
+  // hide optional sections until data loaded
+  showHideEl('detailDescSection',false);
+  showHideEl('detailFacilitiesSection',false);
+  showHideEl('detailLocationSection',false);
+  // Reset map state
+  const _mic = document.getElementById('mapIframeContainer');
+  if(_mic){ _mic.innerHTML=''; _mic.style.display='none'; }
+  const _mco = document.getElementById('mapClickOverlay');
+  if(_mco) _mco.style.display='none';
+  const _mpc = document.getElementById('mapPinCenter');
+  if(_mpc) _mpc.style.display='';
+  showHideEl('specAreaItem',false);
+  showHideEl('specLegalItem',false);
+  showHideEl('specPriceM2Item',false);
+  showHideEl('specCommissionItem',false);
 
-  // update role-based elements
+  // 3. Slide in panel
   applyDetailRole();
-
-  // slide in
   document.getElementById('page-detail').classList.add('open');
-
-  // hide main header & bottom nav while in detail
   document.querySelector('.app-header').style.zIndex='0';
   document.querySelector('.bottom-nav').style.transform='translateY(100%)';
+
+  // 4. Fetch full data from server if id available
+  if(d.id){
+    const loader = document.getElementById('detailGalleryLoader');
+    if(loader) loader.style.display='flex';
+    fetch('/webapp/property/'+d.id+'/json')
+      .then(r=>r.ok?r.json():Promise.reject(r.status))
+      .then(full=>{ populateFull(full); applyDetailRole(); })
+      .catch(()=>{ /* keep basic data shown */ })
+      .finally(()=>{ if(loader) loader.style.display='none'; });
+  }
 };
 
 window.closeDetail = function(){
@@ -643,13 +805,23 @@ window.closeDetail = function(){
 };
 
 function applyDetailRole(){
-  // CTA bars
+  // Reset CTA bars so role filtering below can decide visibility
   const bars = ['crmActionBar','brokerActionBar'];
   bars.forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.style.display='';
   });
-  // re-apply role visibility (already handled globally by setRole)
+  // Re-apply role visibility to all role-based elements (including newly shown sections)
+  const allowed = roleHierarchy[currentRole] || roleHierarchy['guest'];
+  const allRoles = ['guest','broker','bds_admin','sale','sale_admin','admin'];
+  document.querySelectorAll(allRoles.map(r=>'.role-'+r).join(',')).forEach(el=>{
+    const hasAllowed = allowed.some(r=>el.classList.contains('role-'+r));
+    el.style.display = hasAllowed ? '' : 'none';
+  });
+  // Restore flex display for flex containers
+  document.querySelectorAll('.crm-action-bar,.owner-actions').forEach(el=>{
+    if(el.style.display !== 'none') el.style.display = 'flex';
+  });
 }
 
 // gallery swipe
@@ -710,8 +882,21 @@ window.toggleBookmark = function(btn){
 // share
 window.shareDetail = function(){ showToast('Link đã sao chép!'); };
 
+// open Google Maps for current property
+window.openGoogleMaps = function(){
+  const el = document.getElementById('detailMapPreview');
+  const url = el && el.dataset.mapsUrl;
+  if(url) window.open(url, '_blank');
+};
+
 // call owner
-window.callOwner = function(){ showToast('Đang gọi 0912.345.678...'); };
+window.callOwner = function(){
+  if(currentDetailPhone){
+    window.location.href = 'tel:'+currentDetailPhone;
+  } else {
+    showToast('Chưa có thông tin liên hệ chủ nhà');
+  }
+};
 
 // send modal
 window.openSendModal = function(){

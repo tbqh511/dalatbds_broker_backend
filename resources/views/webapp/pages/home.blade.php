@@ -154,6 +154,7 @@
                 ->map(fn($img) => $galleryBase . $p->id . '/' . $img->image)
                 ->values()->toArray();
             $propData = [
+              'id'        => $p->id,
               'title'     => $p->title_by_address,
               'price'     => $p->formatted_prices,
               'type'      => $p->category?->category ?? 'BĐS',
@@ -164,6 +165,7 @@
               'images'    => count($galleryImgs) ? $galleryImgs : ($p->title_image ? [$p->title_image] : []),
               'priceM2'   => $p->formatted_price_m2 ?? '',
               'direction' => $p->direction ?? '—',
+              'transactionType' => $p->property_type == 1 ? 'rent' : 'sale',
             ];
           @endphp
           <div class="prop-card"

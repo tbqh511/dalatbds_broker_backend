@@ -2740,13 +2740,17 @@ textarea.form-row-value{
 .gallery-price-badge{
   position:absolute;
   bottom:52px;left:14px;
+  background:rgba(255,255,255,0.92);
+  border-radius:10px;
+  padding:6px 12px;
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
 }
 .price-big{
-  font-size:22px;font-weight:800;color:#fff;
-  text-shadow:0 2px 8px rgba(0,0,0,0.4);
+  font-size:22px;font-weight:800;color:var(--primary);
   line-height:1;
 }
-.price-unit{font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;}
+.price-unit{font-size:12px;color:var(--primary-dark);margin-top:2px;opacity:0.8;}
 
 /* detail scroll */
 .detail-scroll{
