@@ -458,12 +458,17 @@
         <div id="floating-footer"
             class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center">
             <div class="w-full max-w-md flex justify-between gap-3">
+                <!-- Nút Quay lại -->
+                <button type="button" onclick="history.back()"
+                    class="flex-1 bg-gray-100 text-gray-600 px-4 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
+                    Quay lại
+                </button>
                 <!-- Nút Lưu -->
                 <button type="button" @click="submitForm" :disabled="loading || !isFormValid"
                     :class="(isFormValid && !loading)
                         ? 'bg-success text-white shadow-lg shadow-green-200 hover:bg-green-600 active:scale-[0.98] cursor-pointer'
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'"
-                    class="w-full px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 transform flex justify-center items-center">
+                    class="flex-1 px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 transform flex justify-center items-center">
                     <span x-show="!loading" class="flex items-center gap-2">
                         <i class="fas fa-floppy-disk" x-show="isFormValid"></i>
                         <i class="fas fa-lock" x-show="!isFormValid"></i>

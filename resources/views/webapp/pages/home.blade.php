@@ -162,7 +162,7 @@
               <div class="prop-img-gradient"></div>
               <div class="prop-img-tags">
                 @if($p->category)
-                  <span class="badge badge-blue">{{ $p->category->name }}</span>
+                  <span class="badge badge-blue">{{ $p->category->category }}</span>
                 @endif
               </div>
               <div class="prop-img-price">{{ $p->formatted_prices }}</div>
@@ -194,8 +194,10 @@
                 @if($p->area)
                   <div class="prop-meta-item">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                      <rect x="3" y="3" width="18" height="18" rx="1"/>
-                      <path d="M3 9h18M9 3v18"/>
+                      <polyline points="15 3 21 3 21 9"/>
+                      <polyline points="9 21 3 21 3 15"/>
+                      <line x1="21" y1="3" x2="14" y2="10"/>
+                      <line x1="3" y1="21" x2="10" y2="14"/>
                     </svg>
                     <span>{{ $p->area }} m²</span>
                   </div>
@@ -203,8 +205,10 @@
                 @if($p->legal)
                   <div class="prop-meta-item">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                      <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                     <span>{{ $p->legal }}</span>
                   </div>

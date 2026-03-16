@@ -100,15 +100,24 @@ class TelegramWebAppController extends Controller
     public function homeFeed(Request $request)
     {
         $page = (int) $request->get('page', 1);
-        $categoryId = $request->get('category_id');
+        $categorySlug = $request->get('category_id'); // slug string from frontend chip
         $type = $request->get('type'); // null=all, '0'=buy, '1'=rent
+
+        // Map frontend chip slugs to actual category IDs
+        $categorySlugMap = [
+            'dato'     => [1, 5, 8, 11], // Đất ở, Đất giấy tay, Đất ở phân quyền, Đất nông nghiệp
+            'nha'      => [3, 4, 6],      // Nhà phân quyền, Nhà giấy tay, Nhà
+            'bietthu'  => [9],            // Biệt thự
+            'chungcu'  => [7],            // Chung cư
+            'khachsan' => [2],            // Khách sạn
+        ];
 
         $query = Property::with(['category', 'ward'])
             ->where('status', 1)
             ->orderBy('created_at', 'desc');
 
-        if ($categoryId) {
-            $query->where('category_id', $categoryId);
+        if ($categorySlug && isset($categorySlugMap[$categorySlug])) {
+            $query->whereIn('category_id', $categorySlugMap[$categorySlug]);
         }
         if ($type !== null && $type !== '') {
             $query->where('property_type', (int) $type);
@@ -127,7 +136,7 @@ class TelegramWebAppController extends Controller
                 'number_room'   => $p->number_room,
                 'total_click'   => $p->total_click,
                 'title_image'   => $p->title_image ?: null,
-                'category_name' => $p->category?->name,
+                'category_name' => $p->category?->category,
                 'type_label'    => $p->type,
                 'property_type' => $p->property_type,
             ];
