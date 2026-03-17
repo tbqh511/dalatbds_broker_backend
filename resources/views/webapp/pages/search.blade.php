@@ -3,10 +3,14 @@
     <!-- Search bar sticky -->
     <div class="search-sticky">
       <div class="search-bar-row">
-        <div class="search-box-main" onclick="activateSearch()">
+        <div class="search-box-main" onclick="activateSearch()" style="flex:1;display:flex;align-items:center;position:relative;">
           <span class="srch-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-          <span class="srch-placeholder" id="searchPlaceholder">Tìm BĐS, đường, phường...</span>
-          <input type="text" id="searchInput" class="srch-input" placeholder="Tìm BĐS, đường, phường..." oninput="onSearchType(this.value)" onfocus="showSuggestions()" style="display:none">
+          <span class="srch-placeholder" id="searchPlaceholder" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:24px;">Tìm BĐS, đường, phường...</span>
+          <input type="text" id="searchInput" class="srch-input" placeholder="Tìm BĐS, đường, phường..." oninput="onSearchType(this.value)" onfocus="showSuggestions()" style="display:none;padding-right:32px;">
+          <!-- Nút X (Clear Input) -->
+          <button id="clearSearchBtn" onclick="resetSearch(event)" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-tertiary);padding:4px;cursor:pointer;border-radius:50%;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <button class="filter-pill" onclick="openFilterSheet()">
           <span style="display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span> Lọc <span class="filter-count-badge" id="filterCount" style="display:none">2</span>
@@ -57,27 +61,18 @@
       <!-- Popular areas -->
       <div style="padding:16px 16px 6px;">
         <div class="recent-label" style="margin-bottom:10px;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Khu vực hot</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div class="area-card" onclick="doSearch('P.Cam Ly')">
-            <div class="area-card-img" style="background:linear-gradient(135deg,#1e3a5f,#2d6a4f);display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.97-5 9-8.58 9-12a9 9 0 0 0-18 0c0 3.42 4.03 7 9 12z"/><circle cx="12" cy="10" r="3"/></svg></div>
-            <div class="area-card-name">P. Cam Ly</div>
-            <div class="area-card-count">34 tin • 28.5tr/m²</div>
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
+          @php
+             $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
+          @endphp
+          @foreach($hotWards as $w)
+          <div class="area-card" onclick="doSearch('{{ $w->full_name }}')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.05);height:80px;">
+            <div style="color:#3270FC;margin-bottom:6px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            </div>
+            <div style="color:#3270FC;font-size:12px;font-weight:500;text-align:center;line-height:1.2;">{{ $w->full_name }}</div>
           </div>
-          <div class="area-card" onclick="doSearch('P.Lâm Viên')">
-            <div class="area-card-img" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-            <div class="area-card-name">P. Lâm Viên</div>
-            <div class="area-card-count">21 tin • 42.1tr/m²</div>
-          </div>
-          <div class="area-card" onclick="doSearch('Đường 3/4')">
-            <div class="area-card-img" style="background:linear-gradient(135deg,#b45309,#d97706);display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
-            <div class="area-card-name">Đường 3/4</div>
-            <div class="area-card-count">18 tin • 35.7tr/m²</div>
-          </div>
-          <div class="area-card" onclick="doSearch('Hồ Xuân Hương')">
-            <div class="area-card-img" style="background:linear-gradient(135deg,#0284c7,#0ea5e9);display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M2 17c2-5 18-5 20 0M2 7c2 5 18 5 20 0"/></svg></div>
-            <div class="area-card-name">Hồ Xuân Hương</div>
-            <div class="area-card-count">12 tin • 55tr/m²</div>
-          </div>
+          @endforeach
         </div>
       </div>
     </div>
@@ -124,27 +119,31 @@
     <div id="stateResults" style="display:none;">
 
       <!-- Result header bar -->
-      <div class="result-header">
-        <div class="result-meta">
-          <span class="result-query" id="resultQuery">Đường Yersin, Cam Ly</span>
-          <span class="result-count" id="resultCount">128 kết quả</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="sort-btn" onclick="openSortSheet()">
-            <span>↕</span> Sắp xếp
+      <div class="result-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:8px;width:100%;">
+          <button onclick="resetSearch(event, true)" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;background:var(--bg-card);border-radius:50%;color:var(--text-primary);box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          
+          <div class="result-meta" style="flex:1;min-width:0;margin-bottom:0;">
+            <span class="result-query" id="resultQuery" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">Đường Yersin, Cam Ly</span>
+            <span class="result-count" id="resultCount">128 kết quả</span>
           </div>
-          <div class="view-toggle">
-            <button class="view-btn active" id="viewList" onclick="switchView('list')">☰</button>
-            <button class="view-btn" id="viewMap" onclick="switchView('map')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></button>
+
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <div class="sort-btn" onclick="openSortSheet()">
+              <span>↕</span> Sắp xếp
+            </div>
+            <div class="view-toggle">
+              <button class="view-btn active" id="viewList" onclick="switchView('list')">☰</button>
+              <button class="view-btn" id="viewMap" onclick="switchView('map')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></button>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Active filters row -->
       <div class="active-filters" id="activeFilters">
-        <div class="af-chip">Đất ở <span onclick="removeFilter(this)">×</span></div>
-        <div class="af-chip">1–3 tỷ <span onclick="removeFilter(this)">×</span></div>
-        <div class="af-chip">Sổ đỏ <span onclick="removeFilter(this)">×</span></div>
         <button class="af-clear" onclick="clearFilters()">Xóa bộ lọc</button>
       </div>
 

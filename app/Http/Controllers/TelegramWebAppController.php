@@ -411,6 +411,161 @@ class TelegramWebAppController extends Controller
         ]);
     }
 
+    public function searchResults(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        $page = (int) $request->get('page', 1);
+
+        $query = Property::with(['category', 'ward', 'host', 'propery_image'])
+            ->where('status', 1)
+            ->orderBy('created_at', 'desc');
+
+        if ($q !== '') {
+            $query->where(function ($qBuilder) use ($q) {
+                $qBuilder->where('title', 'LIKE', '%' . $q . '%')
+                         ->orWhere('address', 'LIKE', '%' . $q . '%')
+                         ->orWhereHas('street', function ($sq) use ($q) {
+                             $sq->where('street_name', 'LIKE', '%' . $q . '%');
+                         })
+                         ->orWhereHas('ward', function ($wq) use ($q) {
+                             $wq->where('full_name', 'LIKE', '%' . $q . '%');
+                         })
+                         ->orWhereHas('category', function ($cq) use ($q) {
+                             $cq->where('category', 'LIKE', '%' . $q . '%');
+                         });
+            });
+        }
+
+        // Apply additional filters from request
+        $type = $request->get('type');
+        if ($type !== null && $type !== '') {
+            if ($type === 'rent') $query->where('property_type', 1);
+            else if ($type === 'sale') $query->where('property_type', 0);
+            else $query->where('property_type', (int)$type);
+        }
+
+        $priceLabel = $request->get('price'); // Giao diện gửi "Dưới 1 tỷ", "1–3 tỷ", ...
+        if ($priceLabel) {
+            if ($priceLabel === 'Dưới 1 tỷ') {
+                $query->where('price', '<', 1000000000);
+            } elseif ($priceLabel === '1–3 tỷ') {
+                $query->whereBetween('price', [1000000000, 3000000000]);
+            } elseif ($priceLabel === '3–5 tỷ') {
+                $query->whereBetween('price', [3000000000, 5000000000]);
+            } elseif ($priceLabel === 'Trên 5 tỷ') {
+                $query->where('price', '>', 5000000000);
+            }
+        }
+        
+        $categoryName = $request->get('categoryName'); // Giao diện gửi "Đất ở", "Nhà phố"...
+        if ($categoryName) {
+            $query->whereHas('category', function ($cq) use ($categoryName) {
+                $cq->where('category', $categoryName);
+            });
+        }
+
+        $paginator = $query->paginate(10, ['*'], 'page', $page);
+
+        $galleryBase = url('') . config('global.IMG_PATH') . config('global.PROPERTY_GALLERY_IMG_PATH');
+
+        $items = $paginator->map(function ($p) use ($galleryBase) {
+            $galleryImages = $p->propery_image
+                ->filter(fn($img) => $img->image)
+                ->map(fn($img) => $galleryBase . $p->id . '/' . $img->image)
+                ->values()
+                ->toArray();
+
+            return [
+                'id'             => $p->id,
+                'title'          => $p->title_by_address,
+                'price'          => $p->formatted_prices,
+                'location'       => $p->address_location,
+                'area'           => $p->area,
+                'legal'          => $p->legal,
+                'number_room'    => $p->number_room,
+                'total_click'    => $p->total_click,
+                'title_image'    => $p->title_image ?: null,
+                'category_name'  => $p->category?->category,
+                'type_label'     => $p->type,
+                'property_type'  => $p->property_type,
+                'gallery_images' => $galleryImages,
+                'created_at_diff' => \Carbon\Carbon::parse($p->created_at)->diffForHumans(),
+                'added_by'       => $p->added_by,
+                'host_phone'     => optional($p->host)->contact,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'properties' => $items,
+            'total'      => $paginator->total(),
+            'has_more'   => $paginator->hasMorePages(),
+            'next_page'  => $paginator->currentPage() + 1,
+        ]);
+    }
+
+    public function searchSuggestions(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        $results = [];
+
+        // 1. Tìm đường (Street)
+        $streets = LocationsStreet::where('district_code', config('location.district_code'))
+            ->where('street_name', 'LIKE', '%' . $q . '%')
+            ->limit(3)
+            ->get();
+        foreach ($streets as $s) {
+            $results[] = [
+                'type' => 'street',
+                'title' => 'Đường ' . $s->street_name,
+                'sub' => 'Đà Lạt',
+                'query' => 'Đường ' . $s->street_name,
+                'icon' => 'street'
+            ];
+        }
+
+        // 2. Tìm phường (Ward)
+        $wards = LocationsWard::where('district_code', config('location.district_code'))
+            ->where('full_name', 'LIKE', '%' . $q . '%')
+            ->limit(2)
+            ->get();
+        foreach ($wards as $w) {
+            $results[] = [
+                'type' => 'ward',
+                'title' => $w->full_name,
+                'sub' => 'Khu vực',
+                'query' => $w->full_name,
+                'icon' => 'area'
+            ];
+        }
+
+        // 3. Tìm BĐS (Property title or address)
+        $props = Property::with('category')->where('status', 1)
+            ->where(function ($query) use ($q) {
+                $query->where('title', 'LIKE', '%' . $q . '%')
+                      ->orWhere('address', 'LIKE', '%' . $q . '%');
+            })
+            ->limit(4)
+            ->get();
+        
+        foreach ($props as $p) {
+            $results[] = [
+                'type' => 'property',
+                'title' => mb_substr($p->title_by_address, 0, 45) . '...',
+                'sub' => $p->formatted_prices . ' · ' . ($p->category ? $p->category->category : 'BĐS'),
+                'query' => $p->title_by_address,
+                'id' => $p->id,
+                'icon' => 'property'
+            ];
+        }
+
+        return response()->json(['success' => true, 'data' => $results]);
+    }
+
     public function profile(Request $request)
     {
         $customer = Auth::guard('webapp')->user();

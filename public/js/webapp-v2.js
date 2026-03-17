@@ -493,19 +493,120 @@ window.activateSearch = function(){
 
 window.onSearchType = function(val){
   clearTimeout(searchTypingTimer);
+  
+  const clearBtn = document.getElementById('clearSearchBtn');
+  if(clearBtn) {
+      clearBtn.style.display = val.length > 0 ? 'block' : 'none';
+  }
+
   if(val.length === 0){
     setState('discovery');
     return;
   }
-  setState('suggestions');
+  
+  if(document.getElementById('stateSuggestions').innerHTML.includes('suggest-item')) {
+    setState('suggestions');
+  } else {
+    document.getElementById('stateSuggestions').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-tertiary);font-size:13px;">Đang tìm kiếm...</div>';
+    setState('suggestions');
+  }
+
   searchTypingTimer = setTimeout(()=>{
-    // auto-show results after 800ms of no typing (simulate search)
-  }, 800);
+    fetchSuggestions(val);
+  }, 500);
 };
+
+window.resetSearch = function(e, fromResults = false) {
+    if(e) e.stopPropagation();
+    
+    const input = document.getElementById('searchInput');
+    const placeholder = document.getElementById('searchPlaceholder');
+    const box = document.querySelector('.search-box-main');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    
+    input.value = '';
+    placeholder.textContent = 'Tìm BĐS, đường, phường...';
+    
+    if(clearBtn) clearBtn.style.display = 'none';
+    
+    if(fromResults) {
+        // Nếu click từ nút Back, ẩn input và hiện placeholder như ban đầu
+        input.style.display = 'none';
+        placeholder.style.display = 'block';
+        box.classList.remove('focused');
+        clearFilters(true); // Xóa hết bộ lọc hiện tại
+    } else {
+        // Nếu click chữ X trong ô input, vẫn focus vào ô input
+        input.focus();
+    }
+    
+    setState('discovery');
+};
+
+window.fetchSuggestions = function(query) {
+  fetch('/webapp/search/suggestions?q=' + encodeURIComponent(query))
+    .then(r => r.json())
+    .then(res => {
+        if(res.success) {
+            renderSuggestions(res.data);
+            setState('suggestions');
+        }
+    });
+};
+
+function renderSuggestions(data) {
+    const container = document.getElementById('stateSuggestions');
+    if(!container) return;
+    
+    let html = '<div style="padding:8px 16px 0;">';
+    
+    if(data.length === 0) {
+        html += '<div style="padding:10px;text-align:center;color:var(--text-tertiary);font-size:13px;">Không tìm thấy kết quả phù hợp</div>';
+    } else {
+        data.forEach(item => {
+            let iconSvg = '';
+            let badgeClass = 'badge-blue';
+            let typeLabel = 'BĐS';
+            
+            if(item.type === 'street') {
+                iconSvg = '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>';
+                badgeClass = 'badge-blue';
+                typeLabel = 'Đường';
+            } else if(item.type === 'ward') {
+                iconSvg = '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>';
+                badgeClass = 'badge-teal';
+                typeLabel = 'Phường';
+            } else {
+                iconSvg = '<path d="M12 22c4.97-5 9-8.58 9-12a9 9 0 0 0-18 0c0 3.42 4.03 7 9 12z"/><circle cx="12" cy="10" r="3"/>';
+                badgeClass = 'badge-green';
+                typeLabel = 'BĐS';
+            }
+
+            html += `
+            <div class="suggest-item" onclick="doSearch('${item.query}')">
+              <span class="suggest-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconSvg}</svg></span>
+              <div class="suggest-body">
+                <div class="suggest-title">${item.title}</div>
+                <div class="suggest-sub">${item.sub}</div>
+              </div>
+              <span class="suggest-type badge ${badgeClass}">${typeLabel}</span>
+            </div>
+            `;
+        });
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
 
 window.showSuggestions = function(){
   const input = document.getElementById('searchInput');
-  if(input.value.length > 0) setState('suggestions');
+  if(input.value.length > 0) {
+      if(document.getElementById('stateSuggestions').innerHTML.includes('suggest-item')) {
+          setState('suggestions');
+      } else {
+          onSearchType(input.value);
+      }
+  }
 };
 
 function setState(state){
@@ -515,37 +616,181 @@ function setState(state){
   document.getElementById('stateResults').style.display = state==='results'?'block':'none';
 }
 
-window.doSearch = function(query, chipEl){
+window.doSearch = function(query, chipEl, append = false, page = 1){
   // Update search bar
   const placeholder = document.getElementById('searchPlaceholder');
   const input = document.getElementById('searchInput');
   const box = document.querySelector('.search-box-main');
   box.classList.add('focused');
-  placeholder.textContent = query;
+  
+  if(query !== undefined && query !== null) {
+      placeholder.textContent = query;
+      input.value = query;
+  } else {
+      query = input.value;
+  }
+  
   placeholder.style.display = 'block';
   input.style.display = 'none';
-  input.value = query;
 
   // Update result header
   document.getElementById('resultQuery').textContent = query;
-  const counts = {
-    'Tất cả':128,'Đất ở':45,'Nhà phố':32,'Biệt thự':18,
-    'Căn hộ':12,'Khách sạn':8,'Dưới 1 tỷ':24,'1–3 tỷ':38,
-    '3–5 tỷ':29,'Trên 5 tỷ':15,'Đường Yersin, Cam Ly':8,
-    'Biệt thự Lâm Viên':6,'Đất mặt tiền 3/4':11,'Nhà phố dưới 2 tỷ':28,
-    'P.Cam Ly':34,'P.Lâm Viên':21,'Đường 3/4':18,'Hồ Xuân Hương':12,
-  };
-  const n = counts[query] || Math.floor(Math.random()*80+20);
-  document.getElementById('resultCount').textContent = n + ' kết quả';
-
-  // Update filter count badge
+  
+  // Update filter count badge based on activeFilters div
+  const activeChips = document.getElementById('activeFilters').querySelectorAll('.af-chip');
   const fc = document.getElementById('filterCount');
-  fc.style.display = 'flex';
+  if(activeChips.length > 0) {
+      fc.textContent = activeChips.length;
+      fc.style.display = 'flex';
+  } else {
+      fc.style.display = 'none';
+  }
 
   setState('results');
-  // Reset to list view
-  switchView('list');
-  document.getElementById('scrollArea').scrollTop = 0;
+  
+  if(!append) {
+      switchView('list');
+      document.getElementById('scrollArea').scrollTop = 0;
+      // show loading in list
+      document.getElementById('listView').innerHTML = '<div style="padding:20px;text-align:center;"><div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div><div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">Đang tìm kiếm...</div></div>';
+  }
+  
+  // build filter params
+  let type = '';
+  let price = '';
+  let categoryName = '';
+  
+  activeChips.forEach(c => {
+      let txt = c.textContent.replace('×', '').trim();
+      if(txt.includes('tỷ')) price = txt;
+      else if(['Đất ở', 'Nhà phố', 'Biệt thự', 'Căn hộ', 'Khách sạn'].includes(txt)) categoryName = txt;
+  });
+  
+  // If chipEl was passed and it's a quick filter chip (like clicking "Đất ở" from discovery state)
+  if(chipEl && chipEl.classList.contains('chip')) {
+      let txt = chipEl.textContent.trim();
+      if(txt !== 'Tất cả') {
+          // Add to activeFilters if not already
+          addActiveFilter(txt);
+          
+          if(txt.includes('tỷ')) price = txt;
+          else if(['Đất ở', 'Nhà phố', 'Biệt thự', 'Căn hộ', 'Khách sạn'].includes(txt)) categoryName = txt;
+      } else {
+         clearFilters(true); // silent clear
+         categoryName = '';
+         price = '';
+      }
+      // Re-evaluate active chips because we just modified them
+      const newActiveChips = document.getElementById('activeFilters').querySelectorAll('.af-chip');
+      if(newActiveChips.length > 0) {
+          fc.textContent = newActiveChips.length;
+          fc.style.display = 'flex';
+      } else {
+          fc.style.display = 'none';
+      }
+  }
+
+  // fetch
+  let url = '/webapp/search/results?page=' + page;
+  if(query && query !== 'Tất cả') url += '&q=' + encodeURIComponent(query);
+  if(price) url += '&price=' + encodeURIComponent(price);
+  if(categoryName) url += '&categoryName=' + encodeURIComponent(categoryName);
+  
+  fetch(url)
+    .then(r => r.json())
+    .then(res => {
+        if(res.success) {
+            document.getElementById('resultCount').textContent = res.total + ' kết quả';
+            renderSearchResults(res, append, page, query, price, categoryName);
+        }
+    });
+};
+
+function renderSearchResults(res, append, currentPage, query, price, categoryName) {
+    const listView = document.getElementById('listView');
+    
+    if(res.properties.length === 0 && !append) {
+        listView.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-tertiary);"><div style="margin-bottom:10px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div>Không tìm thấy BĐS nào phù hợp.</div></div>';
+        return;
+    }
+    
+    let html = '';
+    res.properties.forEach(p => {
+        const propJson = JSON.stringify(p).replace(/'/g,'\\u0027');
+        
+        let tagsHtml = '';
+        if(p.type_label) tagsHtml += `<span class="badge badge-blue" style="font-size:9px;padding:2px 6px;">${p.type_label}</span>`;
+        if(p.legal) tagsHtml += `<span class="badge badge-green" style="font-size:9px;padding:2px 6px;">${p.legal}</span>`;
+
+        html += `
+        <div class="result-card" data-prop='${propJson}' onclick="openDetail(JSON.parse(this.dataset.prop))" style="cursor:pointer">
+          <div class="rc-img">
+            ${p.title_image ? `<img src="${p.title_image}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>'}
+          </div>
+          <div class="rc-body">
+            <div class="rc-tags">
+              ${tagsHtml}
+            </div>
+            <div class="rc-title">${p.title}</div>
+            <div class="rc-price">${p.price}</div>
+            <div class="rc-meta">
+              <span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>${p.area||'--'}</span>
+              <span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="role-broker role-sale role-bds_admin role-sale_admin role-admin">${p.location}</span><span class="role-guest">${p.location}</span></span>
+            </div>
+            <div class="rc-footer">
+              <span class="rc-time">${p.created_at_diff}</span>
+              <div style="display:flex;gap:6px;">
+                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);color:var(--primary);" onclick="event.stopPropagation();"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        `;
+    });
+    
+    // pagination button
+    if(res.has_more) {
+        html += `
+        <div style="padding:16px;text-align:center;" id="loadMoreContainer">
+          <button style="padding:11px 28px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);" onclick="loadMoreSearchResult(this, '${query}', '${price}', '${categoryName}', ${currentPage+1})">Xem thêm kết quả</button>
+        </div>
+        `;
+    }
+    
+    if(append) {
+        const btnContainer = document.getElementById('loadMoreContainer');
+        if(btnContainer) btnContainer.remove();
+        listView.insertAdjacentHTML('beforeend', html);
+    } else {
+        listView.innerHTML = html;
+    }
+    
+    applyDetailRole();
+}
+
+window.loadMoreSearchResult = function(btn, query, price, categoryName, nextPage) {
+    btn.textContent = 'Đang tải...';
+    btn.disabled = true;
+    doSearch(query, null, true, nextPage);
+};
+
+window.addActiveFilter = function(txt) {
+    const afContainer = document.getElementById('activeFilters');
+    let exists = false;
+    afContainer.querySelectorAll('.af-chip').forEach(c => {
+        if(c.textContent.replace('×', '').trim() === txt) exists = true;
+    });
+    if(!exists) {
+        const chip = document.createElement('div');
+        chip.className = 'af-chip';
+        chip.innerHTML = `${txt} <span onclick="removeFilter(this)">×</span>`;
+        const clearBtn = afContainer.querySelector('.af-clear');
+        if(clearBtn) {
+            afContainer.insertBefore(chip, clearBtn);
+        } else {
+            afContainer.appendChild(chip);
+        }
+    }
 };
 
 window.switchView = function(view){
@@ -561,25 +806,24 @@ window.switchMode = function(mode, btn){
 };
 
 window.openFilterSheet = function(){
-  // reuse existing sheet mechanism
   openSheet();
 };
 
 window.openSortSheet = function(){
-  // future: open sort options
 };
 
 window.removeFilter = function(span){
   span.closest('.af-chip').remove();
+  let searchInput = document.getElementById('searchInput');
+  doSearch(searchInput.value || '');
 };
 
-window.clearFilters = function(){
+window.clearFilters = function(silent = false){
   document.getElementById('activeFilters').querySelectorAll('.af-chip').forEach(c=>c.remove());
-};
-
-window.loadMore = function(btn){
-  btn.textContent = 'Đang tải...';
-  setTimeout(()=>{ btn.textContent = 'Đã tải hết kết quả'; btn.disabled=true; }, 1000);
+  if(silent !== true) {
+      let searchInput = document.getElementById('searchInput');
+      doSearch(searchInput.value || '');
+  }
 };
 
 window.showMapCard = function(idx){

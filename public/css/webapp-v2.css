@@ -8911,3 +8911,8 @@ textarea.form-row-value {
   border: none;
   cursor: pointer;
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

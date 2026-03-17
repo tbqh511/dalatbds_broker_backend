@@ -84,6 +84,8 @@ Route::post('/webapp/leads/{id}/assign', [CrmLeadController::class, 'doAssign'])
 Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp', [TelegramWebAppController::class , 'index'])->name('webapp');
     Route::get('/webapp/home-feed', [TelegramWebAppController::class , 'homeFeed'])->name('webapp.home_feed');
+    Route::get('/webapp/search/suggestions', [TelegramWebAppController::class, 'searchSuggestions'])->name('webapp.search.suggestions');
+    Route::get('/webapp/search/results', [TelegramWebAppController::class, 'searchResults'])->name('webapp.search.results');
     Route::post('/webapp/log-action', [TelegramWebAppController::class, 'logAction'])->name('webapp.log_action');
     Route::get('/webapp/action-logs', [TelegramWebAppController::class, 'actionLogs'])->name('webapp.action_logs');
     Route::get('/webapp/property/{id}/json', [TelegramWebAppController::class, 'propertyDetailJson'])->name('webapp.property.json');
