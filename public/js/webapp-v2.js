@@ -76,16 +76,28 @@ window.setRole = function(role, btn){
   const roleTextMap = {guest:'Guest',broker:'Broker',bds_admin:'BĐS Admin',sale:'Sale',sale_admin:'Sale Admin',admin:'Admin'};
   document.querySelectorAll('.detail-role-switcher .rbtn').forEach(b => {
     const match = roleTextMap[role] || '';
-    const isActive = b.textContent.trim().replace(/^[^\s]+\s*/,'') === match ||
-                     b.textContent.trim().includes(match);
+    const isActive = b.textContent.trim().replace(/^[^\s]+\s*/,'') === match;
     b.classList.toggle('active', isActive);
     b.style.background = isActive ? '#3270FC' : 'rgba(255,255,255,0.12)';
     b.style.color = isActive ? '#fff' : 'rgba(255,255,255,0.6)';
+  });
+
+  // Show/hide exact-role CTA bars (data-for-role attribute)
+  document.querySelectorAll('[data-for-role]').forEach(el => {
+    el.style.display = el.dataset.forRole === role ? '' : 'none';
   });
 };
 
 // init role from server config
 setRole(currentRole, document.querySelector('.rbtn.active'));
+
+// ============ PROPERTY DETAIL ACTIONS ============
+window.approveProperty = function(){
+  showToast('Chức năng duyệt BĐS đang phát triển');
+};
+window.openAssignSaleModal = function(){
+  showToast('Chức năng giao Sale đang phát triển');
+};
 
 // ============ ACTION LOGGING ============
 // Fire-and-forget — không block UI, silent fail
@@ -921,7 +933,7 @@ function updateGallery(){
 
 // scroll-based sticky header
 document.getElementById('detailScroll').addEventListener('scroll',function(){
-  const scrolled = this.scrollTop>180;
+  const scrolled = this.scrollTop>240;
   document.getElementById('detailStickyHeader').classList.toggle('scrolled',scrolled);
 },{passive:true});
 

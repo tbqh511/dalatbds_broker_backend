@@ -6997,6 +6997,11 @@ textarea.form-row-value {
   font-size: 14px;
   margin-top: 1px;
   flex-shrink: 0;
+  color: var(--primary);
+}
+
+.detail-section-title svg {
+  stroke: var(--primary);
 }
 
 .detail-stats-row {
@@ -7443,6 +7448,28 @@ textarea.form-row-value {
 
 .crm-primary-btn.purple {
   background: var(--purple);
+}
+
+.crm-primary-btn.amber {
+  background: var(--warning);
+}
+
+.crm-primary-btn.crm-outline-btn {
+  background: transparent;
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+}
+
+.crm-secondary-btn--amber {
+  color: var(--warning);
+  border-color: var(--warning-light);
+  background: var(--warning-light);
+}
+
+.crm-secondary-btn--primary {
+  color: var(--primary);
+  border-color: var(--primary-light);
+  background: var(--primary-light);
 }
 
 /* Guest CTA bar */

@@ -2,47 +2,47 @@
 
     <!-- sticky header -->
     <div class="detail-sticky-header" id="detailStickyHeader">
-      <button class="dh-btn" onclick="closeDetail()"><span>←</span></button>
+      <button class="dh-btn" onclick="closeDetail()"><span style="color:var(--primary);">←</span></button>
       <div class="dh-title" id="detailHeaderTitle">Chi tiết BĐS</div>
       <div class="dh-actions">
-        <button class="dh-btn" onclick="toggleBookmark(this)" id="bookmarkBtn"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span></button>
-        <button class="dh-btn" onclick="shareDetail()"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span></button>
+        <button class="dh-btn" onclick="toggleBookmark(this)" id="bookmarkBtn"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span></button>
+        <button class="dh-btn" onclick="shareDetail()"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span></button>
       </div>
     </div>
 
-    <!-- gallery -->
-    <div class="detail-gallery">
-      <!-- loading overlay for gallery -->
-      <div id="detailGalleryLoader" style="display:none;position:absolute;inset:0;background:rgba(15,28,50,0.7);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
-        <div style="width:32px;height:32px;border:3px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
-        <span style="color:rgba(255,255,255,0.8);font-size:12px;">Đang tải...</span>
-      </div>
-      <div class="gallery-slides" id="gallerySlides">
-        <!-- slides generated dynamically by JS -->
-        <div class="gallery-slide" id="gslide-0" style="background:#1e2a3a;"><img src="" alt="Ảnh BĐS" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
-      </div>
-      <div class="gallery-price-badge">
-        <div class="price-big" id="detailPrice">--</div>
-        <div class="price-unit" id="detailPriceM2"></div>
-      </div>
-      <div class="gallery-bottom">
-        <div class="gallery-counter"><span id="galleryIdx">1</span> / <span id="galleryTotal">1</span> ảnh</div>
-        <div class="gallery-dots" id="galleryDots"><div class="gdot active"></div></div>
-      </div>
-    </div>
-
-    <!-- ROLE SWITCHER (dev tool) — below gallery -->
-    <div class="detail-role-switcher" style="display:flex;gap:6px;padding:8px 12px;background:rgba(0,0,0,0.65);overflow-x:auto;scrollbar-width:none;flex-shrink:0;">
-      <button class="rbtn" onclick="setRole('guest',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👤 Guest</button>
-      <button class="rbtn" onclick="setRole('broker',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏠 Broker</button>
-      <button class="rbtn" onclick="setRole('bds_admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏘️ BĐS Admin</button>
-      <button class="rbtn active" onclick="setRole('sale',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:#3270FC;color:#fff;white-space:nowrap;">💼 Sale</button>
-      <button class="rbtn" onclick="setRole('sale_admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">📋 Sale Admin</button>
-      <button class="rbtn" onclick="setRole('admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👑 Admin</button>
-    </div>
-
-    <!-- scrollable content -->
+    <!-- scrollable content (includes gallery so it scrolls away naturally) -->
     <div class="detail-scroll" id="detailScroll">
+
+      <!-- gallery -->
+      <div class="detail-gallery">
+        <!-- loading overlay for gallery -->
+        <div id="detailGalleryLoader" style="display:none;position:absolute;inset:0;background:rgba(15,28,50,0.7);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+          <div style="width:32px;height:32px;border:3px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+          <span style="color:rgba(255,255,255,0.8);font-size:12px;">Đang tải...</span>
+        </div>
+        <div class="gallery-slides" id="gallerySlides">
+          <!-- slides generated dynamically by JS -->
+          <div class="gallery-slide" id="gslide-0" style="background:#1e2a3a;"><img src="" alt="Ảnh BĐS" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+        </div>
+        <div class="gallery-price-badge">
+          <div class="price-big" id="detailPrice">--</div>
+          <div class="price-unit" id="detailPriceM2"></div>
+        </div>
+        <div class="gallery-bottom">
+          <div class="gallery-counter"><span id="galleryIdx">1</span> / <span id="galleryTotal">1</span> ảnh</div>
+          <div class="gallery-dots" id="galleryDots"><div class="gdot active"></div></div>
+        </div>
+      </div>
+
+      <!-- ROLE SWITCHER (dev tool) — below gallery, scrolls with content -->
+      <div class="detail-role-switcher" style="display:flex;gap:6px;padding:8px 12px;background:rgba(0,0,0,0.65);overflow-x:auto;scrollbar-width:none;flex-shrink:0;">
+        <button class="rbtn" onclick="setRole('guest',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👤 Guest</button>
+        <button class="rbtn" onclick="setRole('broker',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏠 Broker</button>
+        <button class="rbtn" onclick="setRole('bds_admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏘️ BĐS Admin</button>
+        <button class="rbtn active" onclick="setRole('sale',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:#3270FC;color:#fff;white-space:nowrap;">💼 Sale</button>
+        <button class="rbtn" onclick="setRole('sale_admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">📋 Sale Admin</button>
+        <button class="rbtn" onclick="setRole('admin',this)" style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👑 Admin</button>
+      </div>
 
       <!-- INFO CARD -->
       <div class="detail-info-card">
@@ -225,31 +225,62 @@
       <div style="height:16px;"></div>
     </div><!-- end detail-scroll -->
 
-    <!-- CTA BOTTOM BAR — thay đổi theo role -->
-    <!-- Sale+ -->
-    <div class="crm-action-bar role-sale role-bds_admin role-sale_admin role-admin" id="crmActionBar">
+    <!-- CTA BOTTOM BAR — mỗi role một bar riêng, quản lý bởi setRole() -->
+
+    <!-- Guest: Quay lại + Đăng ký Broker + Gửi yêu cầu -->
+    <div class="crm-action-bar" data-for-role="guest" style="display:none;flex-direction:column;gap:8px;padding-top:8px;">
+      <div class="guest-cta-hint"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Đăng ký để xem địa chỉ & liên hệ trực tiếp</span></div>
+      <div style="display:flex;gap:8px;">
+        <button class="crm-secondary-btn crm-secondary-btn--primary" onclick="closeDetail()" title="Quay lại"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="crm-primary-btn"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký Broker</span></button>
+        <button class="crm-primary-btn crm-outline-btn" onclick="showToast('Yêu cầu đã gửi!')"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
+      </div>
+    </div>
+
+    <!-- Broker: Quay lại + Gửi yêu cầu -->
+    <div class="crm-action-bar" data-for-role="broker" style="display:none;">
       <div class="crm-action-secondary">
-        <button class="crm-secondary-btn" onclick="toggleBookmark(document.getElementById('bookmarkBtn'))" title="Lưu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
-        <button class="crm-secondary-btn" onclick="openSendModal()" title="Gửi cho khách"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        <button class="crm-secondary-btn crm-secondary-btn--primary" onclick="closeDetail()" title="Quay lại"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      </div>
+      <button class="crm-primary-btn" onclick="showToast('Yêu cầu đã gửi!')"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
+    </div>
+
+    <!-- BĐS Admin: Quay lại + Duyệt BĐS -->
+    <div class="crm-action-bar" data-for-role="bds_admin" style="display:none;">
+      <div class="crm-action-secondary">
+        <button class="crm-secondary-btn crm-secondary-btn--primary" onclick="closeDetail()" title="Quay lại"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      </div>
+      <button class="crm-primary-btn amber" onclick="approveProperty()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Duyệt BĐS</span></button>
+    </div>
+
+    <!-- Sale: Quay lại + Gửi cho khách (icon) + Đặt lịch xem + Gọi chủ nhà -->
+    <div class="crm-action-bar" data-for-role="sale" style="display:none;">
+      <div class="crm-action-secondary">
+        <button class="crm-secondary-btn crm-secondary-btn--primary" onclick="closeDetail()" title="Quay lại"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="crm-secondary-btn" onclick="openSendModal()" title="Gửi cho khách"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
       </div>
       <button class="crm-primary-btn green" onclick="openBookingForm()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Đặt lịch xem</span></button>
-      <button class="crm-primary-btn purple" onclick="openSendModal()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Gửi Deal</span></button>
+      <button class="crm-primary-btn" onclick="callOwner()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Gọi chủ nhà</span></button>
     </div>
-    <!-- Broker -->
-    <div class="crm-action-bar role-broker" id="brokerActionBar">
+
+    <!-- Sale Admin: Quay lại + Giao cho Sale + Gọi chủ nhà -->
+    <div class="crm-action-bar" data-for-role="sale_admin" style="display:none;">
       <div class="crm-action-secondary">
-        <button class="crm-secondary-btn" onclick="toggleBookmark(document.getElementById('bookmarkBtn'))"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
-        <button class="crm-secondary-btn" onclick="shareDetail()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        <button class="crm-secondary-btn crm-secondary-btn--primary" onclick="closeDetail()" title="Quay lại"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
       </div>
-      <button class="crm-primary-btn" id="hostCallCrmBtn" onclick="callOwner()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Liên hệ chủ nhà</span></button>
+      <button class="crm-primary-btn purple" onclick="openAssignSaleModal()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Giao cho Sale</span></button>
+      <button class="crm-primary-btn" onclick="callOwner()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Gọi chủ nhà</span></button>
     </div>
-    <!-- Guest CTA -->
-    <div class="guest-cta-bar role-guest">
-      <div class="guest-cta-hint"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Đăng ký để xem địa chỉ & liên hệ trực tiếp</span></div>
-      <div class="guest-cta-btns">
-        <button class="guest-cta-register">Đăng ký Broker</button>
-        <button class="guest-cta-contact" onclick="showToast('Yêu cầu đã gửi!')">Gửi yêu cầu</button>
+
+    <!-- Admin: Quay lại + Duyệt (icon) + Gửi cho khách (icon) + Đặt lịch xem + Gọi chủ nhà -->
+    <div class="crm-action-bar" data-for-role="admin" style="display:none;">
+      <div class="crm-action-secondary">
+        <button class="crm-secondary-btn crm-secondary-btn--primary" onclick="closeDetail()" title="Quay lại"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="crm-secondary-btn crm-secondary-btn--amber" onclick="approveProperty()" title="Duyệt BĐS"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="crm-secondary-btn" onclick="openSendModal()" title="Gửi cho khách"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
       </div>
+      <button class="crm-primary-btn green" onclick="openBookingForm()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Đặt lịch xem</span></button>
+      <button class="crm-primary-btn" onclick="callOwner()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Gọi chủ nhà</span></button>
     </div>
 
     <!-- BOOKING MINI FORM -->
