@@ -334,3 +334,14 @@
 
   <!-- TOAST -->
   <div class="toast" id="toast">✓ Đã lưu bookmark</div>
+
+  <!-- FULL SCREEN MAP MODAL -->
+  <div id="fullMapModal" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;">
+    <div style="height:56px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #e5e7eb;background:#fff;position:relative;z-index:10;">
+      <button onclick="closeFullMap()" style="padding:8px;margin-left:-8px;background:none;border:none;outline:none;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+      <div style="font-weight:600;font-size:16px;margin-left:8px;">Bản đồ vị trí</div>
+    </div>
+    <div id="fullMapCanvas" style="flex:1;width:100%;"></div>
+  </div>

@@ -296,6 +296,59 @@ class TelegramWebAppController extends Controller
         ]);
     }
 
+    public function nearbyProperties(Request $request)
+    {
+        $lat = clone $request->query('lat');
+        $lng = clone $request->query('lng');
+        $exclude_id = clone $request->query('exclude_id');
+
+        $lat = (float) $lat;
+        $lng = (float) $lng;
+
+        if (!$lat || !$lng) {
+            return response()->json(['success' => false, 'message' => 'Vui lòng cung cấp tọa độ hợp lệ']);
+        }
+
+        // Haversine formula to find nearby properties
+        $haversine = "(6371 * acos(cos(radians($lat)) 
+                        * cos(radians(latitude)) 
+                        * cos(radians(longitude) - radians($lng)) 
+                        + sin(radians($lat)) 
+                        * sin(radians(latitude))))";
+
+        $query = Property::select('id', 'title_by_address as title', 'category_id', 'latitude', 'longitude', 'title_image', 'price', 'type')
+            ->selectRaw("{$haversine} AS distance")
+            ->where('status', 1)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->where('latitude', '!=', '')
+            ->where('longitude', '!=', '');
+
+        if ($exclude_id) {
+            $query->where('id', '!=', $exclude_id);
+        }
+
+        $nearby = $query->having('distance', '<', 50) // within 50km
+            ->orderBy('distance', 'asc')
+            ->limit(5)
+            ->get();
+
+        $data = $nearby->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'title' => $p->title,
+                'price' => $p->formatted_prices, // Accessor from Property model
+                'image' => $p->title_image ? url('') . config('global.IMG_PATH') . config('global.PROPERTY_TITLE_IMG_PATH') . $p->title_image : null,
+                'type' => $p->category?->category ?? 'BĐS',
+                'lat' => (float) $p->latitude,
+                'lng' => (float) $p->longitude,
+                'distance' => round($p->distance, 2) . ' km'
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
     public function homeFeed(Request $request)
     {
         $page = (int) $request->get('page', 1);
