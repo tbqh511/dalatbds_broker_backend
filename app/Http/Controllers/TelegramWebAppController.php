@@ -291,6 +291,7 @@ class TelegramWebAppController extends Controller
                 'type_label'     => $p->type,
                 'property_type'  => $p->property_type,
                 'gallery_images' => $galleryImages,
+                'added_by'       => $p->added_by,
             ];
         });
 
@@ -1728,6 +1729,84 @@ class TelegramWebAppController extends Controller
         catch (\Exception $e) {
             Log::warning('Failed to send lead telegram notification: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * POST /webapp/log-action
+     * Fire-and-forget action logging từ frontend webapp.
+     */
+    public function logAction(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        $validated = $request->validate([
+            'subject_type'  => 'required|in:property,lead,deal',
+            'subject_id'    => 'required|integer|min:1',
+            'subject_title' => 'nullable|string|max:255',
+            'action'        => 'required|in:call,share,edit,view,create,delete',
+            'metadata'      => 'nullable|array',
+        ]);
+
+        \App\Models\WebappActionLog::create([
+            ...$validated,
+            'actor_id' => $customer?->id,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * GET /webapp/action-logs
+     * Trả về danh sách logs cho admin/sale_admin/bds_admin xem.
+     */
+    public function actionLogs(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer || !in_array($customer->getEffectiveRole(), ['admin', 'sale_admin', 'bds_admin'])) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        $query = \App\Models\WebappActionLog::with('actor')
+            ->orderBy('created_at', 'desc');
+
+        if ($request->subject_type) {
+            $query->where('subject_type', $request->subject_type);
+        }
+        if ($request->action) {
+            $query->where('action', $request->action);
+        }
+
+        $logs = $query->paginate(20);
+
+        // Counts by action, respecting subject_type filter only (not action filter)
+        $countsQuery = \App\Models\WebappActionLog::query();
+        if ($request->subject_type) {
+            $countsQuery->where('subject_type', $request->subject_type);
+        }
+        $countsByAction = $countsQuery->selectRaw('action, count(*) as cnt')
+            ->groupBy('action')
+            ->pluck('cnt', 'action');
+
+        return response()->json([
+            'data'      => $logs->map(fn($log) => [
+                'id'            => $log->id,
+                'subject_type'  => $log->subject_type,
+                'subject_label' => $log->getSubjectLabel(),
+                'subject_id'    => $log->subject_id,
+                'subject_title' => $log->subject_title,
+                'action'        => $log->action,
+                'action_label'  => $log->getActionLabel(),
+                'action_color'  => $log->getActionColor(),
+                'actor_name'    => $log->actor?->name ?? 'Hệ thống',
+                'actor_initials'=> $log->actor ? mb_strtoupper(mb_substr($log->actor->name ?? 'S', 0, 1)) : 'S',
+                'time_diff'     => $log->created_at->diffForHumans(),
+                'time_full'     => $log->created_at->format('H:i d/m/Y'),
+            ]),
+            'has_more'        => $logs->hasMorePages(),
+            'next_page'       => $logs->currentPage() + 1,
+            'total'           => $logs->total(),
+            'counts_by_action'=> $countsByAction,
+        ]);
     }
 
     private function escapeTelegramText(?string $text): string

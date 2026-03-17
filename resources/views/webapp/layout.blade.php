@@ -57,6 +57,7 @@
   @include('webapp.subpages.notifset')
   @include('webapp.subpages.support')
   @include('webapp.subpages.referral')
+  @include('webapp.subpages.activitylog')
 
   @include('webapp.partials.toast')
 

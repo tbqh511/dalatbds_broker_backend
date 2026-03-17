@@ -87,6 +87,71 @@ window.setRole = function(role, btn){
 // init role from server config
 setRole(currentRole, document.querySelector('.rbtn.active'));
 
+// ============ ACTION LOGGING ============
+// Fire-and-forget — không block UI, silent fail
+function logAction(subjectType, subjectId, action, subjectTitle, metadata) {
+  const token = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if (!token || !subjectId) return;
+  fetch('/webapp/log-action', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': token,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({
+      subject_type:  subjectType,
+      subject_id:    subjectId,
+      subject_title: subjectTitle || null,
+      action:        action,
+      metadata:      metadata || null,
+    }),
+  }).catch(function(){});
+}
+
+// ============ PROP-CARD ACTION HANDLERS ============
+// Nút Gọi trên prop-card: log → fetch phone → dial
+window.propCallAction = function(propData, e) {
+  e.stopPropagation();
+  logAction('property', propData.id, 'call', propData.title);
+  // Fetch phone từ detail API
+  fetch('/webapp/property/' + propData.id + '/json', {
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.host && d.host.phone) {
+      window.location.href = 'tel:' + d.host.phone;
+    } else {
+      showToast('Chưa có số điện thoại chủ nhà');
+    }
+  })
+  .catch(function(){ showToast('Không thể kết nối, thử lại sau'); });
+};
+
+// Nút Chia sẻ trên prop-card: log → copy/share
+window.propShareAction = function(propData, e) {
+  e.stopPropagation();
+  logAction('property', propData.id, 'share', propData.title);
+  const url = window.location.origin + '/property/' + propData.id;
+  const title = propData.title || 'BĐS Đà Lạt';
+  if (navigator.share) {
+    navigator.share({ title: title, url: url }).catch(function(){});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url);
+    showToast('Đã sao chép link BĐS!');
+  } else {
+    showToast('Đã sao chép link BĐS!');
+  }
+};
+
+// Nút Sửa trên prop-card: log → navigate to edit
+window.propEditAction = function(propData, e) {
+  e.stopPropagation();
+  logAction('property', propData.id, 'edit', propData.title);
+  window.location.href = '/webapp/edit-listing/' + propData.id;
+};
+
 // ============ CHIPS ============
 window.toggleChip = function(el){
   el.closest('.filter-bar').querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
@@ -515,7 +580,9 @@ let gallerTotal = 1;
 let descExpanded = false;
 let bookmarked = false;
 let selectedDeal = null;
-let currentDetailPhone = null; // host phone for callOwner
+let currentDetailPhone = null;  // host phone for callOwner
+let currentDetailPropId = null; // property id for logging
+let currentDetailTitle = null;  // property title for logging
 
 // ---- gallery helpers ----
 function buildGallery(images){
@@ -557,6 +624,10 @@ function setDetailText(id, val){ const el=document.getElementById(id); if(el) el
 function showHideEl(id, show){ const el=document.getElementById(id); if(el) el.style.display = show ? '' : 'none'; }
 
 function populateBasic(d){
+  // Store for logging
+  currentDetailPropId = d.id || null;
+  currentDetailTitle  = d.title || null;
+
   setDetailText('detailTitle', d.title||'Chi tiết BĐS');
   setDetailText('detailPrice', d.price||'--');
   setDetailText('detailPriceM2', d.priceM2||'');
@@ -879,8 +950,22 @@ window.toggleBookmark = function(btn){
   showToast(bookmarked?'Đã lưu quan tâm':'Đã bỏ lưu');
 };
 
-// share
-window.shareDetail = function(){ showToast('Link đã sao chép!'); };
+// share detail
+window.shareDetail = function(){
+  if(currentDetailPropId) {
+    logAction('property', currentDetailPropId, 'share', currentDetailTitle);
+  }
+  const url = window.location.origin + '/property/' + (currentDetailPropId || '');
+  const title = currentDetailTitle || 'BĐS Đà Lạt';
+  if(navigator.share){
+    navigator.share({ title: title, url: url }).catch(function(){});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(url);
+    showToast('Đã sao chép link!');
+  } else {
+    showToast('Đã sao chép link!');
+  }
+};
 
 // open Google Maps for current property
 window.openGoogleMaps = function(){
@@ -892,6 +977,9 @@ window.openGoogleMaps = function(){
 // call owner
 window.callOwner = function(){
   if(currentDetailPhone){
+    if(currentDetailPropId) {
+      logAction('property', currentDetailPropId, 'call', currentDetailTitle);
+    }
     window.location.href = 'tel:'+currentDetailPhone;
   } else {
     showToast('Chưa có thông tin liên hệ chủ nhà');
@@ -984,17 +1072,28 @@ window.switchRefTab = function(btn, tab){
 // ============ HOME FEED — LAZY LOADING ============
 
 function renderPropertyCard(p) {
+  const svgHome = `<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V13h6v9"/></svg>`;
+  const svgHeart = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+  const svgShare = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`;
+  const svgPin = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const svgArea = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
+  const svgLegal = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+  const svgBed = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 15h20"/><path d="M6 10V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4"/></svg>`;
+  const svgEye = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const svgEdit = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const svgPhone = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>`;
+
   const imgHtml = p.title_image
     ? `<img src="${p.title_image}" class="prop-img-inner" style="object-fit:cover;width:100%;height:100%;" alt="">`
-    : `<div class="img-prop1 prop-img-inner"><div class="img-center">🏠</div></div>`;
+    : `<div class="img-prop1 prop-img-inner"><div class="img-center">${svgHome}</div></div>`;
 
   const categoryBadge = p.category_name
     ? `<span class="badge badge-blue">${p.category_name}</span>` : '';
 
-  const areaMeta = p.area ? `<div class="prop-meta-item">📐 <span>${p.area} m²</span></div>` : '';
-  const legalMeta = p.legal ? `<div class="prop-meta-item">⚖️ <span>${p.legal}</span></div>` : '';
+  const areaMeta = p.area ? `<div class="prop-meta-item">${svgArea} <span>${p.area} m²</span></div>` : '';
+  const legalMeta = p.legal ? `<div class="prop-meta-item">${svgLegal} <span>${p.legal}</span></div>` : '';
   const roomMeta = p.number_room
-    ? `<div class="prop-meta-item role-broker role-bds_admin role-sale role-sale_admin role-admin">🛏 <span>${p.number_room} PN</span></div>` : '';
+    ? `<div class="prop-meta-item role-broker role-bds_admin role-sale role-sale_admin role-admin">${svgBed} <span>${p.number_room} PN</span></div>` : '';
 
   const propJson = JSON.stringify({
     title: p.title || '',
@@ -1009,6 +1108,13 @@ function renderPropertyCard(p) {
     direction: p.direction || '—',
   }).replace(/'/g, '\\u0027');
 
+  // Determine if current logged-in broker owns this listing
+  const isOwn = !!(window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.customerId && p.added_by && p.added_by == window.WEBAPP_CONFIG.customerId);
+  const editRoles = isOwn ? 'role-broker role-bds_admin role-admin' : 'role-bds_admin role-admin';
+  const callRoles = isOwn ? 'role-broker role-sale role-sale_admin role-admin' : 'role-sale role-sale_admin role-admin';
+
+  const svgShareBtn = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`;
+
   return `
     <div class="prop-card" data-prop='${propJson}' onclick="if(!event.target.closest('.prop-quick-btn,.prop-action-btn'))openDetail(JSON.parse(this.dataset.prop))">
       <div class="prop-img">
@@ -1017,20 +1123,20 @@ function renderPropertyCard(p) {
         <div class="prop-img-tags">${categoryBadge}</div>
         <div class="prop-img-price">${p.price || ''}</div>
         <div class="prop-actions">
-          <div class="prop-action-btn">❤️</div>
-          <div class="prop-action-btn">↗️</div>
+          <div class="prop-action-btn">${svgHeart}</div>
         </div>
       </div>
       <div class="prop-body">
         <div class="prop-title">${p.title || ''}</div>
-        <div class="prop-location">📍 ${p.location || ''}</div>
+        <div class="prop-location">${svgPin} ${p.location || ''}</div>
         <div class="prop-meta">${areaMeta}${legalMeta}${roomMeta}</div>
       </div>
       <div class="prop-footer">
-        <div class="prop-views">👁 ${p.total_click || 0} lượt xem</div>
+        <div class="prop-views" style="display:flex;align-items:center;gap:4px;">${svgEye} ${p.total_click || 0} lượt xem</div>
         <div class="prop-quick-actions">
-          <div class="prop-quick-btn role-broker role-bds_admin role-sale role-sale_admin role-admin">✏️</div>
-          <div class="prop-quick-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);border-color:transparent;">🤝</div>
+          <div class="prop-quick-btn ${editRoles}" title="Chỉnh sửa" onclick="propEditAction(JSON.parse(this.closest('.prop-card').dataset.prop),event)">${svgEdit}</div>
+          <div class="prop-quick-btn ${callRoles}" style="background:var(--primary-light);border-color:transparent;color:var(--primary);" title="Gọi" onclick="propCallAction(JSON.parse(this.closest('.prop-card').dataset.prop),event)">${svgPhone}</div>
+          <div class="prop-quick-btn" title="Chia sẻ" onclick="propShareAction(JSON.parse(this.closest('.prop-card').dataset.prop),event)">${svgShareBtn}</div>
         </div>
       </div>
     </div>`;
