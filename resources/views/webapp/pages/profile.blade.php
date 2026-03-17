@@ -207,6 +207,19 @@
       <div class="menu-item-right"><span class="badge badge-purple">5% MLM</span> ›</div>
     </div>
 
+    <!-- BĐS đã thích — tất cả roles -->
+    <div class="menu-section" style="margin-top:8px;"><div class="menu-section-title">BĐS yêu thích</div></div>
+    <div class="menu-item" onclick="openSubpage('likedbds')">
+      <div class="menu-item-icon" style="background:var(--primary-light);display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">BĐS đã thích</div>
+        <div class="menu-item-sub" id="likedBdsCount">Đang tải...</div>
+      </div>
+      <div class="menu-item-right">›</div>
+    </div>
+
     <!-- Common settings — tất cả roles -->
     <div class="menu-section" style="margin-top:8px;"><div class="menu-section-title">Tài khoản</div></div>
     <div class="menu-item" onclick="openSubpage('editprofile')">

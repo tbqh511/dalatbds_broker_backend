@@ -87,6 +87,8 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::post('/webapp/log-action', [TelegramWebAppController::class, 'logAction'])->name('webapp.log_action');
     Route::get('/webapp/action-logs', [TelegramWebAppController::class, 'actionLogs'])->name('webapp.action_logs');
     Route::get('/webapp/property/{id}/json', [TelegramWebAppController::class, 'propertyDetailJson'])->name('webapp.property.json');
+    Route::post('/webapp/favourite/toggle', [TelegramWebAppController::class, 'toggleFavourite'])->name('webapp.favourite.toggle');
+    Route::get('/webapp/favourites/json', [TelegramWebAppController::class, 'likedProperties'])->name('webapp.favourites.json');
     Route::get('/webapp/profile', [TelegramWebAppController::class , 'profile'])->name('webapp.profile');
     Route::post('/webapp/profile', [TelegramWebAppController::class , 'updateProfile'])->name('webapp.profile.update');
     Route::post('/webapp/profile/avatar', [TelegramWebAppController::class , 'updateAvatar'])->name('webapp.profile.avatar');

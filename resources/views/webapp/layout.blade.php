@@ -58,6 +58,7 @@
   @include('webapp.subpages.support')
   @include('webapp.subpages.referral')
   @include('webapp.subpages.activitylog')
+  @include('webapp.subpages.likedbds')
 
   @include('webapp.partials.toast')
 
@@ -70,12 +71,16 @@
     customerId: @json($customer->id ?? null),
     csrfToken: @json(csrf_token()),
     mapsKey: @json(config('services.google_maps.place_api_key')),
+    likedPropertyIds: @json($likedIds ?? []),
     routes: {
       addListing: @json(route('webapp.add_listing')),
       addCustomer: @json(route('webapp.add_customer')),
       leadsCreate: @json(route('webapp.leads.create')),
+      favouriteToggle: @json(route('webapp.favourite.toggle')),
+      favouritesJson: @json(route('webapp.favourites.json')),
     }
   };
+  window.likedIds = new Set((window.WEBAPP_CONFIG.likedPropertyIds || []).map(String));
 </script>
 <script src="{{ asset('js/webapp-v2.js') }}?v={{ filemtime(public_path('js/webapp-v2.js')) }}"></script>
 </body>

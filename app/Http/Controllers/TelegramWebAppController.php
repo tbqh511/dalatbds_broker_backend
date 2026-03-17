@@ -86,11 +86,67 @@ class TelegramWebAppController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices'));
+        $likedIds = $customer
+            ? Favourite::where('user_id', $customer->id)->pluck('property_id')->toArray()
+            : [];
+
+        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices', 'likedIds'));
     //return view('frontend_dashboard', compact('customer', 'stats', 'properties'));
     }
 
+    public function toggleFavourite(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
 
+        $propertyId = $request->input('property_id');
+        if (!$propertyId) {
+            return response()->json(['success' => false, 'message' => 'Missing property_id'], 422);
+        }
+
+        $existing = Favourite::where('user_id', $customer->id)
+            ->where('property_id', $propertyId)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            $liked = false;
+        } else {
+            Favourite::create(['user_id' => $customer->id, 'property_id' => $propertyId]);
+            $liked = true;
+        }
+
+        return response()->json(['success' => true, 'liked' => $liked]);
+    }
+
+    public function likedProperties(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer) {
+            return response()->json(['success' => false], 401);
+        }
+
+        $properties = Property::with(['category', 'ward'])
+            ->whereIn('id', Favourite::where('user_id', $customer->id)->pluck('property_id'))
+            ->where('status', 1)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id'            => $p->id,
+                    'title'         => $p->title_by_address,
+                    'price'         => $p->formatted_prices,
+                    'location'      => $p->address_location,
+                    'area'          => $p->area,
+                    'category_name' => $p->category?->category,
+                    'title_image'   => $p->title_image,
+                ];
+            });
+
+        return response()->json(['success' => true, 'data' => $properties]);
+    }
 
     public function tempui(Request $request)
     {

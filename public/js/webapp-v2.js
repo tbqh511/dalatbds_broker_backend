@@ -196,6 +196,7 @@ window.openSubpage = function(id){
   if(!sp) return;
   sp.classList.add('open');
   document.querySelector('.bottom-nav').style.transform='translateY(100%)';
+  if(id === 'likedbds') loadLikedBds();
 };
 window.closeSubpage = function(id){
   const sp = document.getElementById('subpage-'+id);
@@ -825,7 +826,10 @@ window.openDetail = function(data){
   // 1. Show basic data immediately
   populateBasic(d);
 
-  // 2. Reset UI state
+  // 2. Reset UI state — sync bookmark state
+  bookmarked = !!(d.id && window.likedIds && window.likedIds.has(String(d.id)));
+  const _hBtn = document.getElementById('bookmarkBtn');
+  if(_hBtn) _applyBookmarkState(_hBtn, bookmarked, true);
   descExpanded = false;
   const dt = document.getElementById('descText');
   if(dt){ dt.classList.add('clamped'); dt.innerHTML=''; }
@@ -943,12 +947,66 @@ window.toggleReadMore = function(){
   document.getElementById('readMoreBtn').textContent = descExpanded?'Thu gọn ▴':'Xem thêm ▾';
 };
 
-// bookmark
-window.toggleBookmark = function(btn){
-  bookmarked=!bookmarked;
-  btn.querySelector('span').textContent=bookmarked?'❤️':'🤍';
-  showToast(bookmarked?'Đã lưu quan tâm':'Đã bỏ lưu');
+// bookmark — works for both prop-card heart and detail page header button
+window.toggleBookmark = function(btn, propId){
+  const id = propId || currentDetailPropId;
+  if(!id) return;
+  const idStr = String(id);
+  const token = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  const url   = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes && window.WEBAPP_CONFIG.routes.favouriteToggle;
+  if(!token || !url) return;
+
+  const isLiked = window.likedIds && window.likedIds.has(idStr);
+  const newState = !isLiked;
+
+  // Optimistic UI update
+  _applyBookmarkState(btn, newState);
+  if(newState){ window.likedIds.add(idStr); } else { window.likedIds.delete(idStr); }
+  // Sync detail header button if open
+  if(String(currentDetailPropId) === idStr){
+    bookmarked = newState;
+    const hBtn = document.getElementById('bookmarkBtn');
+    if(hBtn) _applyBookmarkState(hBtn, newState, true);
+  }
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+    body: JSON.stringify({ property_id: id })
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    if(!data.success){ // rollback on failure
+      _applyBookmarkState(btn, isLiked);
+      if(newState){ window.likedIds.delete(idStr); } else { window.likedIds.add(idStr); }
+      if(String(currentDetailPropId) === idStr){
+        bookmarked = isLiked;
+        const hBtn = document.getElementById('bookmarkBtn');
+        if(hBtn) _applyBookmarkState(hBtn, isLiked, true);
+      }
+      showToast('Không thể thực hiện, thử lại sau');
+    } else {
+      showToast(data.liked ? 'Đã thêm vào BĐS đã thích' : 'Đã bỏ khỏi BĐS đã thích');
+      // Update liked count in profile menu
+      const countEl = document.getElementById('likedBdsCount');
+      if(countEl) countEl.textContent = window.likedIds.size + ' BĐS đã lưu';
+    }
+  })
+  .catch(function(){ showToast('Không thể kết nối, thử lại sau'); });
 };
+
+function _applyBookmarkState(btn, liked, isDetailHeader){
+  if(!btn) return;
+  const svg = btn.querySelector('svg');
+  if(!svg) return;
+  if(isDetailHeader){
+    svg.setAttribute('stroke', liked ? 'var(--primary)' : 'currentColor');
+    svg.setAttribute('fill', liked ? 'var(--primary)' : 'none');
+  } else {
+    svg.setAttribute('fill', liked ? 'var(--primary)' : 'none');
+    if(liked){ btn.classList.add('liked'); } else { btn.classList.remove('liked'); }
+  }
+}
 
 // share detail
 window.shareDetail = function(){
@@ -1073,13 +1131,15 @@ window.switchRefTab = function(btn, tab){
 
 function renderPropertyCard(p) {
   const svgHome = `<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V13h6v9"/></svg>`;
-  const svgHeart = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+  const isLikedCard = !!(p.id && window.likedIds && window.likedIds.has(String(p.id)));
+  const heartFill = isLikedCard ? 'var(--primary)' : 'none';
+  const svgHeart = `<svg width="14" height="14" viewBox="0 0 24 24" fill="${heartFill}" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
   const svgShare = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`;
   const svgPin = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
   const svgArea = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
   const svgLegal = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
   const svgBed = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 15h20"/><path d="M6 10V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4"/></svg>`;
-  const svgEye = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const svgEye = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;stroke:var(--primary);"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
   const svgEdit = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
   const svgPhone = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>`;
 
@@ -1096,6 +1156,7 @@ function renderPropertyCard(p) {
     ? `<div class="prop-meta-item role-broker role-bds_admin role-sale role-sale_admin role-admin">${svgBed} <span>${p.number_room} PN</span></div>` : '';
 
   const propJson = JSON.stringify({
+    id: p.id || null,
     title: p.title || '',
     price: p.price || '',
     type: p.category_name || 'BĐS',
@@ -1123,7 +1184,7 @@ function renderPropertyCard(p) {
         <div class="prop-img-tags">${categoryBadge}</div>
         <div class="prop-img-price">${p.price || ''}</div>
         <div class="prop-actions">
-          <div class="prop-action-btn">${svgHeart}</div>
+          <div class="prop-action-btn${isLikedCard ? ' liked' : ''}" onclick="toggleBookmark(this,${p.id||''});event.stopPropagation();">${svgHeart}</div>
         </div>
       </div>
       <div class="prop-body">
@@ -1134,9 +1195,9 @@ function renderPropertyCard(p) {
       <div class="prop-footer">
         <div class="prop-views" style="display:flex;align-items:center;gap:4px;">${svgEye} ${p.total_click || 0} lượt xem</div>
         <div class="prop-quick-actions">
-          <div class="prop-quick-btn ${editRoles}" title="Chỉnh sửa" onclick="propEditAction(JSON.parse(this.closest('.prop-card').dataset.prop),event)">${svgEdit}</div>
+          <div class="prop-quick-btn ${editRoles}" style="background:var(--primary-light);border-color:transparent;color:var(--primary);" title="Chỉnh sửa" onclick="propEditAction(JSON.parse(this.closest('.prop-card').dataset.prop),event)">${svgEdit}</div>
           <div class="prop-quick-btn ${callRoles}" style="background:var(--primary-light);border-color:transparent;color:var(--primary);" title="Gọi" onclick="propCallAction(JSON.parse(this.closest('.prop-card').dataset.prop),event)">${svgPhone}</div>
-          <div class="prop-quick-btn" title="Chia sẻ" onclick="propShareAction(JSON.parse(this.closest('.prop-card').dataset.prop),event)">${svgShareBtn}</div>
+          <div class="prop-quick-btn" style="background:var(--primary-light);border-color:transparent;color:var(--primary);" title="Chia sẻ" onclick="propShareAction(JSON.parse(this.closest('.prop-card').dataset.prop),event)">${svgShareBtn}</div>
         </div>
       </div>
     </div>`;
@@ -1203,6 +1264,84 @@ function loadHomeFeedPage() {
       sentinel.dataset.loading = 'false';
     });
 }
+
+// ============ LIKED BDS SUBPAGE ============
+let likedbdsLoaded = false;
+
+function loadLikedBds(force){
+  if(likedbdsLoaded && !force) return;
+  likedbdsLoaded = true;
+
+  const url = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes && window.WEBAPP_CONFIG.routes.favouritesJson;
+  if(!url) return;
+
+  document.getElementById('likedbdsLoading').style.display = '';
+  document.getElementById('likedbdsEmpty').style.display = 'none';
+  document.getElementById('likedbdsList').style.display = 'none';
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(r => r.json())
+    .then(function(res){
+      document.getElementById('likedbdsLoading').style.display = 'none';
+      if(!res.success || !res.data || !res.data.length){
+        document.getElementById('likedbdsEmpty').style.display = '';
+        return;
+      }
+      const svgPin  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+      const svgArea = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
+      const svgHeart= `<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+      const svgHome = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>`;
+
+      const html = res.data.map(function(p){
+        const imgHtml = p.title_image
+          ? `<div style="width:90px;height:70px;flex-shrink:0;border-radius:8px;overflow:hidden;"><img src="${escHtml(p.title_image)}" style="width:100%;height:100%;object-fit:cover;display:block;" alt=""></div>`
+          : `<div style="width:90px;height:70px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#1e2a3a;display:flex;align-items:center;justify-content:center;">${svgHome}</div>`;
+        const propData = JSON.stringify({id:p.id,title:p.title,price:p.price,addr:p.location,area:p.area?p.area+' m²':'—',type:p.category_name||'BĐS',room:'—'}).replace(/'/g,'\\u0027');
+        return `
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;"
+               onclick="openDetail(JSON.parse(this.dataset.prop))" data-prop='${propData}'>
+            ${imgHtml}
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.title)}</div>
+              <div style="font-size:12px;color:var(--primary);font-weight:700;margin-bottom:4px;">${escHtml(p.price)}</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-tertiary);">${svgPin} ${escHtml(p.location||'')}</div>
+              ${p.area ? `<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-tertiary);margin-top:2px;">${svgArea} ${p.area} m²</div>` : ''}
+            </div>
+            <div class="prop-action-btn liked" style="flex-shrink:0;" onclick="toggleBookmark(this,${p.id});event.stopPropagation();reloadLikedBdsAfterUnlike(${p.id});">${svgHeart}</div>
+          </div>`;
+      }).join('');
+
+      const listEl = document.getElementById('likedbdsList');
+      listEl.innerHTML = html;
+      listEl.style.display = '';
+
+      // Update count
+      const countEl = document.getElementById('likedBdsCount');
+      if(countEl) countEl.textContent = res.data.length + ' BĐS đã lưu';
+    })
+    .catch(function(){
+      document.getElementById('likedbdsLoading').style.display = 'none';
+      document.getElementById('likedbdsEmpty').style.display = '';
+    });
+}
+
+window.reloadLikedBdsAfterUnlike = function(propId){
+  // After un-liking from the list, remove that card
+  setTimeout(function(){
+    if(!window.likedIds || !window.likedIds.has(String(propId))){
+      likedbdsLoaded = false;
+      loadLikedBds(true);
+    }
+  }, 400);
+};
+
+// Initialize liked count
+(function(){
+  const countEl = document.getElementById('likedBdsCount');
+  if(countEl && window.likedIds){
+    countEl.textContent = window.likedIds.size + ' BĐS đã lưu';
+  }
+})();
 
 // Intersection Observer — trigger lazy load when sentinel is visible
 const homeFeedObserver = new IntersectionObserver(function(entries) {
