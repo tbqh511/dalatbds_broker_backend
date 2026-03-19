@@ -1,8 +1,33 @@
   <div class="page" id="page-search">
+  
+    <style>
+      .search-back-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: var(--primary);
+        color: #fff;
+        cursor: pointer;
+        margin-right: 8px;
+        border-radius: 20px;
+        flex-shrink: 0;
+        transition: opacity 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+      .search-back-btn:hover {
+        opacity: 0.9;
+      }
+    </style>
 
     <!-- Search bar sticky -->
     <div class="search-sticky">
       <div class="search-bar-row">
+        <button onclick="document.getElementById('stateDiscovery').style.display === 'none' ? resetSearch(event, true) : goTo('home')" class="search-back-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
         <div class="search-box-main" onclick="activateSearch()" style="flex:1;display:flex;align-items:center;position:relative;">
           <span class="srch-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
           <span class="srch-placeholder" id="searchPlaceholder" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:24px;">Tìm BĐS, đường, phường...</span>
@@ -27,22 +52,24 @@
     <!-- ---- STATE: DISCOVERY (mặc định khi chưa gõ) ---- -->
     <div id="stateDiscovery">
 
-      <!-- Quick type chips -->
+      <!-- Quick type chips — lấy từ DB -->
       <div class="filter-bar" style="padding-top:8px;">
-        <div class="chip active" onclick="doSearch('Tất cả',this)">Tất cả</div>
-        <div class="chip" onclick="doSearch('Đất ở',this)"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.97-5 9-8.58 9-12a9 9 0 0 0-18 0c0 3.42 4.03 7 9 12z"/><circle cx="12" cy="10" r="3"/></svg> Đất ở</span></div>
-        <div class="chip" onclick="doSearch('Nhà phố',this)"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Nhà phố</span></div>
-        <div class="chip" onclick="doSearch('Biệt thự',this)"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 7l9-4 9 4M4 7v14M20 7v14M9 21v-4a3 3 0 0 1 6 0v4"/></svg> Biệt thự</span></div>
-        <div class="chip" onclick="doSearch('Căn hộ',this)"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg> Căn hộ</span></div>
-        <div class="chip" onclick="doSearch('Khách sạn',this)"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V9l8-6 8 6v12"/></svg> Khách sạn</span></div>
+        <div class="chip active" onclick="doSearchCategory('',this)">Tất cả</div>
+        @foreach($categories as $cat)
+        <div class="chip" onclick="doSearchCategory('{{ $cat->category }}',this)">{{ $cat->category }}</div>
+        @endforeach
       </div>
 
       <!-- Price filter quick -->
       <div class="filter-bar" style="padding-top:0;">
-        <div class="chip" onclick="doSearch('Dưới 1 tỷ',this)">Dưới 1 tỷ</div>
-        <div class="chip" onclick="doSearch('1–3 tỷ',this)">1–3 tỷ</div>
-        <div class="chip" onclick="doSearch('3–5 tỷ',this)">3–5 tỷ</div>
-        <div class="chip" onclick="doSearch('Trên 5 tỷ',this)">Trên 5 tỷ</div>
+        <div class="chip active" onclick="doSearchPrice('',this)">Tất cả</div>
+        <div class="chip" onclick="doSearchPrice('Dưới 1 tỷ',this)">Dưới 1 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('1–2 tỷ',this)">1–2 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('2–3 tỷ',this)">2–3 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('3–5 tỷ',this)">3–5 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('5–7 tỷ',this)">5–7 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('7–10 tỷ',this)">7–10 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('Trên 10 tỷ',this)">Trên 10 tỷ</div>
       </div>
 
       <div style="padding:4px 16px 0;">
@@ -121,7 +148,7 @@
       <!-- Result header bar -->
       <div class="result-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-bottom:12px;">
         <div style="display:flex;align-items:center;gap:8px;width:100%;">
-          <button onclick="resetSearch(event, true)" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;background:var(--bg-card);border-radius:50%;color:var(--text-primary);box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;flex-shrink:0;">
+          <button onclick="resetSearch(event, true)" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;background:var(--bg-card);border-radius:50%;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;flex-shrink:0;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           
@@ -142,7 +169,25 @@
         </div>
       </div>
 
-      <!-- Active filters row -->
+      <!-- Quick filter chips on search results — TRƯỚC active-filters -->
+      <div id="resultsFilterCategory" class="filter-bar" style="padding:8px 16px 4px;">
+        <div class="chip active" onclick="doSearchCategory('',this)">Tất cả</div>
+        @foreach($categories as $cat)
+        <div class="chip" onclick="doSearchCategory('{{ $cat->category }}',this)">{{ $cat->category }}</div>
+        @endforeach
+      </div>
+
+      <div id="resultsFilterPrice" class="filter-bar" style="padding:4px 16px 4px;">
+        <div class="chip active" onclick="doSearchPrice('',this)">Tất cả</div>
+        <div class="chip" onclick="doSearchPrice('Dưới 1 tỷ',this)">Dưới 1 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('1–2 tỷ',this)">1–2 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('2–3 tỷ',this)">2–3 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('3–5 tỷ',this)">3–5 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('5–7 tỷ',this)">5–7 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('7–10 tỷ',this)">7–10 tỷ</div>
+      </div>
+
+      <!-- Active filters row — SAU quick chips -->
       <div class="active-filters" id="activeFilters">
         <button class="af-clear" onclick="clearFilters()">Xóa bộ lọc</button>
       </div>
@@ -407,16 +452,14 @@
         </div>
       </div>
 
-      <!-- Loại BĐS -->
+      <!-- Loại BĐS — lấy từ DB -->
       <div class="fs-section">
         <div class="fs-label">Loại BĐS</div>
         <div class="fs-chips">
           <div class="fs-chip active" data-filter="categoryName" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
-          <div class="fs-chip" data-filter="categoryName" data-value="Đất ở" onclick="selectFilterChip(this)">Đất ở</div>
-          <div class="fs-chip" data-filter="categoryName" data-value="Nhà phố" onclick="selectFilterChip(this)">Nhà phố</div>
-          <div class="fs-chip" data-filter="categoryName" data-value="Biệt thự" onclick="selectFilterChip(this)">Biệt thự</div>
-          <div class="fs-chip" data-filter="categoryName" data-value="Căn hộ" onclick="selectFilterChip(this)">Căn hộ</div>
-          <div class="fs-chip" data-filter="categoryName" data-value="Khách sạn" onclick="selectFilterChip(this)">Khách sạn</div>
+          @foreach($categories as $cat)
+          <div class="fs-chip" data-filter="categoryName" data-value="{{ $cat->category }}" onclick="selectFilterChip(this)">{{ $cat->category }}</div>
+          @endforeach
         </div>
       </div>
 
@@ -426,9 +469,11 @@
         <div class="fs-chips">
           <div class="fs-chip active" data-filter="price" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
           <div class="fs-chip" data-filter="price" data-value="Dưới 1 tỷ" onclick="selectFilterChip(this)">Dưới 1 tỷ</div>
-          <div class="fs-chip" data-filter="price" data-value="1–3 tỷ" onclick="selectFilterChip(this)">1–3 tỷ</div>
+          <div class="fs-chip" data-filter="price" data-value="1–2 tỷ" onclick="selectFilterChip(this)">1–2 tỷ</div>
+          <div class="fs-chip" data-filter="price" data-value="2–3 tỷ" onclick="selectFilterChip(this)">2–3 tỷ</div>
           <div class="fs-chip" data-filter="price" data-value="3–5 tỷ" onclick="selectFilterChip(this)">3–5 tỷ</div>
-          <div class="fs-chip" data-filter="price" data-value="5–10 tỷ" onclick="selectFilterChip(this)">5–10 tỷ</div>
+          <div class="fs-chip" data-filter="price" data-value="5–7 tỷ" onclick="selectFilterChip(this)">5–7 tỷ</div>
+          <div class="fs-chip" data-filter="price" data-value="7–10 tỷ" onclick="selectFilterChip(this)">7–10 tỷ</div>
           <div class="fs-chip" data-filter="price" data-value="Trên 10 tỷ" onclick="selectFilterChip(this)">Trên 10 tỷ</div>
         </div>
       </div>

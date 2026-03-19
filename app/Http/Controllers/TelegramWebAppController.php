@@ -90,7 +90,9 @@ class TelegramWebAppController extends Controller
             ? Favourite::where('user_id', $customer->id)->pluck('property_id')->toArray()
             : [];
 
-        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices', 'likedIds'));
+        $categories = Category::where('status', 1)->orderBy('order')->get(['id', 'category']);
+
+        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices', 'likedIds', 'categories'));
     //return view('frontend_dashboard', compact('customer', 'stats', 'properties'));
     }
 
@@ -150,7 +152,8 @@ class TelegramWebAppController extends Controller
 
     public function tempui(Request $request)
     {
-        return view('frontend_dashboard_temp');
+        $categories = Category::where('status', 1)->orderBy('order')->get(['id', 'category']);
+        return view('frontend_dashboard_temp', compact('categories'));
     }
 
     public function propertyDetailJson(Request $request, $id)
@@ -456,14 +459,16 @@ class TelegramWebAppController extends Controller
         if ($priceLabel) {
             if ($priceLabel === 'Dưới 1 tỷ') {
                 $query->where('price', '<', 1000000000);
-            } elseif ($priceLabel === '1–3 tỷ') {
-                $query->whereBetween('price', [1000000000, 3000000000]);
+            } elseif ($priceLabel === '1–2 tỷ') {
+                $query->whereBetween('price', [1000000000, 2000000000]);
+            } elseif ($priceLabel === '2–3 tỷ') {
+                $query->whereBetween('price', [2000000000, 3000000000]);
             } elseif ($priceLabel === '3–5 tỷ') {
                 $query->whereBetween('price', [3000000000, 5000000000]);
-            } elseif ($priceLabel === '5–10 tỷ') {
-                $query->whereBetween('price', [5000000000, 10000000000]);
-            } elseif ($priceLabel === 'Trên 5 tỷ') {
-                $query->where('price', '>', 5000000000);
+            } elseif ($priceLabel === '5–7 tỷ') {
+                $query->whereBetween('price', [5000000000, 7000000000]);
+            } elseif ($priceLabel === '7–10 tỷ') {
+                $query->whereBetween('price', [7000000000, 10000000000]);
             } elseif ($priceLabel === 'Trên 10 tỷ') {
                 $query->where('price', '>', 10000000000);
             }

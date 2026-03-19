@@ -510,9 +510,6 @@ window.onSearchType = function(val){
     searchTypingTimer = setTimeout(() => fetchLeads(val), 500);
     return;
   }
-
-
-
   if(document.getElementById('stateSuggestions').innerHTML.includes('suggest-item')) {
     setState('suggestions');
   } else {
@@ -631,6 +628,121 @@ function setState(state){
   document.getElementById('stateResults').style.display = state==='results'?'block':'none';
 }
 
+// Helper: Rebuild activeFilters from currentFilters
+function rebuildActiveFilters() {
+  const afContainer = document.getElementById('activeFilters');
+  afContainer.querySelectorAll('.af-chip').forEach(c => c.remove());
+
+  const labelMap = {
+    property_type: v => v === '0' ? 'Bán' : 'Cho thuê',
+    categoryName: v => v,
+    price: v => v,
+    area: v => v.includes('+') ? 'Trên 1000m²' : v.replace('-', '–') + 'm²',
+    direction: v => v,
+    legal: v => v
+  };
+
+  Object.entries(currentFilters).forEach(([key, val]) => {
+    if(val) {
+      const label = labelMap[key] ? labelMap[key](val) : val;
+      addActiveFilter(label);
+    }
+  });
+}
+
+// Helper: Update filter count badge
+function updateFilterCountBadge() {
+  let count = Object.values(currentFilters).filter(v => v).length;
+  const fc = document.getElementById('filterCount');
+  if(fc) {
+    if(count > 0) { fc.textContent = count; fc.style.display = 'flex'; }
+    else { fc.style.display = 'none'; }
+  }
+}
+
+// Helper: Sync quick-chip rows with filter sheet
+function syncQuickChipRows() {
+  // Category row
+  const catRow = document.getElementById('resultsFilterCategory');
+  if(catRow) {
+    catRow.querySelectorAll('.chip').forEach(c => {
+      const onclick = c.getAttribute('onclick') || '';
+      const match = onclick.match(/doSearchCategory\('([^']*)'/);
+      if(match) c.classList.toggle('active', match[1] === currentFilters.categoryName);
+    });
+    catRow.style.display = currentFilters.categoryName ? 'none' : '';
+  }
+
+  // Price row
+  const priceRow = document.getElementById('resultsFilterPrice');
+  if(priceRow) {
+    priceRow.querySelectorAll('.chip').forEach(c => {
+      const onclick = c.getAttribute('onclick') || '';
+      const match = onclick.match(/doSearchPrice\('([^']*)'/);
+      if(match) c.classList.toggle('active', match[1] === currentFilters.price);
+    });
+    priceRow.style.display = currentFilters.price ? 'none' : '';
+  }
+
+  updateFilterCountBadge();
+}
+
+window.doSearchCategory = function(categoryName, chipEl) {
+  // Mark chip active
+  if(chipEl) {
+      chipEl.closest('.filter-bar').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chipEl.classList.add('active');
+  }
+
+  // Sync with filter sheet
+  document.querySelectorAll('.fs-chip[data-filter="categoryName"]').forEach(c => {
+    c.classList.toggle('active', c.dataset.value === categoryName);
+  });
+
+  // Update currentFilters
+  currentFilters.categoryName = categoryName;
+
+  // Rebuild activeFilters
+  rebuildActiveFilters();
+
+  // Hide/show category row
+  const catRow = document.getElementById('resultsFilterCategory');
+  if(catRow) catRow.style.display = categoryName ? 'none' : '';
+
+  updateFilterCountBadge();
+
+  let q = document.getElementById('searchInput').value || '';
+  doSearch(q || null);
+};
+
+window.doSearchPrice = function(priceLabel, chipEl) {
+  // Mark chip active
+  if(chipEl) {
+      chipEl.closest('.filter-bar').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chipEl.classList.add('active');
+  }
+
+  // Sync with filter sheet
+  document.querySelectorAll('.fs-chip[data-filter="price"]').forEach(c => {
+    c.classList.toggle('active', c.dataset.value === priceLabel);
+  });
+
+  // Update currentFilters
+  currentFilters.price = priceLabel;
+
+  // Rebuild activeFilters
+  rebuildActiveFilters();
+
+  // Hide/show price row
+  const priceRow = document.getElementById('resultsFilterPrice');
+  if(priceRow) priceRow.style.display = priceLabel ? 'none' : '';
+
+  updateFilterCountBadge();
+
+  let q = document.getElementById('searchInput').value || '';
+  doSearch(q || null);
+};
+
 window.doSearch = function(query, chipEl, append = false, page = 1){
   // Ensure BDS mode is active — hide lead tab content and mark BDS tab as active
   if(currentSearchMode !== 'bds') {
@@ -687,20 +799,20 @@ window.doSearch = function(query, chipEl, append = false, page = 1){
   // build filter params from active chips
   let price = '';
   let categoryName = '';
-  
+
   activeChips.forEach(c => {
       let txt = c.textContent.replace('×', '').trim();
-      if(txt.includes('tỷ')) price = txt;
-      else if(['Đất ở', 'Nhà phố', 'Biệt thự', 'Căn hộ', 'Khách sạn'].includes(txt)) categoryName = txt;
+      if(c.dataset.filterType === 'price' || txt.includes('tỷ')) price = txt;
+      else if(c.dataset.filterType === 'category') categoryName = txt;
   });
-  
+
   // If chipEl was passed (quick filter chip)
   if(chipEl && chipEl.classList.contains('chip')) {
       let txt = chipEl.textContent.trim();
       if(txt !== 'Tất cả') {
           addActiveFilter(txt);
-          if(txt.includes('tỷ')) price = txt;
-          else if(['Đất ở', 'Nhà phố', 'Biệt thự', 'Căn hộ', 'Khách sạn'].includes(txt)) categoryName = txt;
+          if(chipEl.dataset.filterType === 'price' || txt.includes('tỷ')) price = txt;
+          else if(chipEl.dataset.filterType === 'category') categoryName = txt;
       } else {
          clearFilters(true);
          categoryName = '';
@@ -715,21 +827,22 @@ window.doSearch = function(query, chipEl, append = false, page = 1){
       }
   }
 
+  // Merge chip values with currentFilters (currentFilters takes precedence if set from filter sheet/quick chips)
+  const effectivePrice = price || currentFilters.price || '';
+  const effectiveCategory = categoryName || currentFilters.categoryName || '';
+
   // Build URL with all params
   let url = '/webapp/search/results?page=' + page;
   if(query && query !== 'Tất cả') url += '&q=' + encodeURIComponent(query);
-  if(price) url += '&price=' + encodeURIComponent(price);
-  if(categoryName) url += '&categoryName=' + encodeURIComponent(categoryName);
-  
+  if(effectivePrice) url += '&price=' + encodeURIComponent(effectivePrice);
+  if(effectiveCategory) url += '&categoryName=' + encodeURIComponent(effectiveCategory);
+
   // Advanced filter params (from filter sheet)
   if(currentSort && currentSort !== 'latest') url += '&sort=' + encodeURIComponent(currentSort);
   if(currentFilters.property_type) url += '&type=' + encodeURIComponent(currentFilters.property_type);
   if(currentFilters.area) url += '&area_range=' + encodeURIComponent(currentFilters.area);
   if(currentFilters.direction) url += '&direction=' + encodeURIComponent(currentFilters.direction);
   if(currentFilters.legal) url += '&legal=' + encodeURIComponent(currentFilters.legal);
-  // Override price/categoryName from filter sheet if set
-  if(currentFilters.price && !price) url += '&price=' + encodeURIComponent(currentFilters.price);
-  if(currentFilters.categoryName && !categoryName) url += '&categoryName=' + encodeURIComponent(currentFilters.categoryName);
   
   fetch(url)
     .then(r => r.json())
@@ -842,6 +955,7 @@ let currentSearchMode = 'bds';
 let currentLeadStatus = '';
 
 window.switchMode = function(mode, btn){
+  if(mode === 'area') mode = 'bds';
   btn.closest('.search-mode-tabs').querySelectorAll('.smt').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   currentSearchMode = mode;
@@ -905,28 +1019,59 @@ function renderLeads(res, append, currentPage, query) {
     }
     
     let html = '';
-    const statusColors = { 'new':'#3b82f6', 'contacted':'#f59e0b', 'qualified':'#10b981', 'won':'#059669', 'lost':'#ef4444' };
-    
+    const statusClasses = { 'new':'urgent', 'contacted':'contacted', 'qualified':'contacted', 'won':'converted', 'lost':'' };
+    const badgeColors = { 'new':'badge-red', 'contacted':'badge-blue', 'qualified':'badge-blue', 'won':'badge-green', 'lost':'badge-red' };
+
     res.leads.forEach(lead => {
         const rawStatus = lead.status || 'new';
-        const statusColor = statusColors[rawStatus] || '#6b7280';
-        
+        const sClass = statusClasses[rawStatus] || '';
+        const bClass = badgeColors[rawStatus] || 'badge-blue';
+        const initials = lead.customer_name ? lead.customer_name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : '??';
+        const avatarBg = rawStatus === 'new' ? '#ef4444' : (rawStatus === 'won' ? 'var(--success)' : 'var(--primary)');
+        const expandId = `lead-${lead.id}-expand`;
+
         html += `
-        <div class="crm-card" onclick="window.location.href='/webapp/leads/${lead.id}'" style="cursor:pointer;">
-            <div class="crm-card-header">
-                <div class="crm-card-name">${lead.customer_name}</div>
-                <span class="badge" style="background:${statusColor}15;color:${statusColor};font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;">${lead.status_label}</span>
+        <div class="lead-card ${sClass}">
+          <div class="lc-head">
+            <div class="lc-avatar" style="background:${avatarBg};">${initials}</div>
+            <div class="lc-info">
+              <div class="lc-name">${lead.customer_name}</div>
+              <div class="lc-meta">
+                <span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></span>${lead.customer_phone || '--'}</span>
+                ${rawStatus === 'new' ? '<span style="color:var(--danger);font-weight:600"><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Chưa liên hệ!</span>' : ''}
+              </div>
             </div>
-            <div class="crm-card-body">
-                ${lead.customer_phone ? '<div class="crm-row"><span class="crm-label">SĐT</span><span class="crm-value">' + lead.customer_phone + '</span></div>' : ''}
-                <div class="crm-row"><span class="crm-label">Nhu cầu</span><span class="crm-value">${lead.lead_type}</span></div>
-                ${lead.budget_min || lead.budget_max ? '<div class="crm-row"><span class="crm-label">Ngân sách</span><span class="crm-value">' + (lead.budget_min||'?') + ' - ' + (lead.budget_max||'?') + '</span></div>' : ''}
-                ${lead.note ? '<div class="crm-row"><span class="crm-label">Ghi chú</span><span class="crm-value" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">' + lead.note + '</span></div>' : ''}
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <span class="badge ${bClass}">${lead.status_label}</span>
+              <span class="lc-time">${lead.created_at_diff}</span>
             </div>
-            <div class="crm-card-footer">
-                <span class="crm-date">${lead.created_at_diff}</span>
-                ${lead.sale_name ? '<span style="font-size:10px;color:var(--primary);">👤 ' + lead.sale_name + '</span>' : ''}
+          </div>
+          <div class="lc-body">
+            <div class="lc-row"><span class="lc-label">Nhu cầu</span><span class="lc-value">${lead.lead_type || '—'}</span></div>
+            <div class="lc-row"><span class="lc-label">Ngân sách</span><span class="lc-value money">${(lead.budget_min||'?') + ' - ' + (lead.budget_max||'?')}</span></div>
+            <div class="lc-row" style="grid-column: span 2;"><span class="lc-label">Ghi chú</span><span class="lc-value" style="font-weight:400;color:var(--text-secondary);font-style:italic;">${lead.note || '—'}</span></div>
+          </div>
+          <div class="lc-footer">
+            <span class="lc-source"><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></span> ${lead.source || 'Website'}</span>
+            <div class="lc-actions">
+              <button class="lc-btn icon" onclick="showToast('Đang gọi ${lead.customer_phone}...')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></button>
+              ${rawStatus === 'new' ? `<button class="lc-btn primary" onclick="toggleLeadExpand('${expandId}')">Xử lý ▾</button>` : `<button class="lc-btn success" onclick="showToast('✓ Đang tạo Deal cho ${lead.customer_name}...')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> Tạo Deal</span></button>`}
             </div>
+          </div>
+          <div class="lc-expand" id="${expandId}">
+            <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Cập nhật trạng thái</div>
+            <div class="lc-action-row">
+              <div class="lc-action-btn" onclick="selectLeadAction(this);toggleLeadExpand('${expandId}');"><span class="lc-action-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></span>Đã gọi</div>
+              <div class="lc-action-btn" onclick="selectLeadAction(this);toggleLeadExpand('${expandId}');"><span class="lc-action-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Zalo</div>
+              <div class="lc-action-btn" onclick="selectLeadAction(this);toggleLeadExpand('${expandId}');"><span class="lc-action-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Hẹn gặp</div>
+              <div class="lc-action-btn" onclick="selectLeadAction(this);toggleLeadExpand('${expandId}');"><span class="lc-action-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>Tạo Deal</div>
+            </div>
+            <textarea class="lc-note-area" rows="2" placeholder="Ghi chú nhanh cho ${lead.customer_name}..."></textarea>
+            <div style="display:flex;gap:8px;">
+              <button class="lc-btn" onclick="toggleLeadExpand('${expandId}')" style="flex:1">Đóng</button>
+              <button class="lc-btn success" onclick="showToast('✓ Đã lưu cập nhật lead');toggleLeadExpand('${expandId}');" style="flex:2">✓ Lưu & Cập nhật</button>
+            </div>
+          </div>
         </div>
         `;
     });
@@ -989,7 +1134,7 @@ window.applyFilterSheet = function(){
           currentFilters[c.dataset.filter] = c.dataset.value;
       }
   });
-  
+
   // Update active filter chips in results
   clearFilters(true);
   Object.entries(currentFilters).forEach(([key, val]) => {
@@ -1005,15 +1150,12 @@ window.applyFilterSheet = function(){
           addActiveFilter(labels[key] || val);
       }
   });
-  
-  // Update filter count badge
-  let count = Object.values(currentFilters).filter(v => v).length;
-  const fc = document.getElementById('filterCount');
-  if(count > 0) { fc.textContent = count; fc.style.display = 'flex'; }
-  else { fc.style.display = 'none'; }
-  
+
+  // Sync quick-chip rows with filter sheet selections
+  syncQuickChipRows();
+
   closeFilterSheet();
-  
+
   // Re-search with filters
   let q = document.getElementById('searchInput').value || '';
   doSearch(q);
@@ -1071,22 +1213,39 @@ function saveRecentSearch(query) {
     renderRecentSearches();
 }
 
+let recentSearchesExpanded = false;
+
+function toggleRecentSearches() {
+    recentSearchesExpanded = !recentSearchesExpanded;
+    renderRecentSearches();
+}
+
 function renderRecentSearches() {
     const container = document.getElementById('recentSearchesList');
     const section = document.getElementById('recentSearchesSection');
     if(!container || !section) return;
-    
+
     const list = getRecentSearches();
     if(list.length === 0) {
         section.style.display = 'none';
         return;
     }
     section.style.display = 'block';
-    
+
+    // Show only 5 items by default, or all if expanded
+    const itemsToShow = recentSearchesExpanded ? list : list.slice(0, 5);
+
     let html = '';
-    list.forEach(q => {
+    itemsToShow.forEach(q => {
         html += '<div class="recent-item" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\')"><span class="ri"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span style="flex:1">' + q + '</span><span style="color:var(--text-tertiary);font-size:13px;">↗</span></div>';
     });
+
+    // Add "View more" button if there are more than 5 items
+    if(list.length > 5) {
+        const buttonText = recentSearchesExpanded ? 'Ẩn bớt' : 'Xem thêm';
+        html += '<div style="text-align:center;padding:8px 0;"><button onclick="toggleRecentSearches()" style="font-size:12px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:600;">+ ' + buttonText + '</button></div>';
+    }
+
     container.innerHTML = html;
 }
 
@@ -1112,6 +1271,21 @@ window.removeFilter = function(span){
 
 window.clearFilters = function(silent = false){
   document.getElementById('activeFilters').querySelectorAll('.af-chip').forEach(c=>c.remove());
+
+  // Reset quick-chip rows to "Tất cả" and show them
+  ['resultsFilterCategory', 'resultsFilterPrice'].forEach(id => {
+    const row = document.getElementById(id);
+    if(!row) return;
+    row.style.display = '';
+    row.querySelectorAll('.chip').forEach(c => {
+      c.classList.toggle('active', c.textContent.trim() === 'Tất cả');
+    });
+  });
+
+  // Reset currentFilters
+  currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+  updateFilterCountBadge();
+
   if(silent !== true) {
       let searchInput = document.getElementById('searchInput');
       doSearch(searchInput.value || '');
