@@ -702,7 +702,7 @@ window.doSearchCategory = function(categoryName, chipEl) {
   // Update currentFilters
   currentFilters.categoryName = categoryName;
 
-  // Rebuild activeFilters
+  // Rebuild activeFilters from currentFilters
   rebuildActiveFilters();
 
   // Hide/show category row
@@ -1272,23 +1272,24 @@ window.removeFilter = function(span){
 window.clearFilters = function(silent = false){
   document.getElementById('activeFilters').querySelectorAll('.af-chip').forEach(c=>c.remove());
 
-  // Reset quick-chip rows to "Tất cả" and show them
-  ['resultsFilterCategory', 'resultsFilterPrice'].forEach(id => {
-    const row = document.getElementById(id);
-    if(!row) return;
-    row.style.display = '';
-    row.querySelectorAll('.chip').forEach(c => {
-      c.classList.toggle('active', c.textContent.trim() === 'Tất cả');
-    });
-  });
-
-  // Reset currentFilters
-  currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
-  updateFilterCountBadge();
-
+  // Only reset UI and filters if not silent
   if(silent !== true) {
-      let searchInput = document.getElementById('searchInput');
-      doSearch(searchInput.value || '');
+    // Reset quick-chip rows to "Tất cả" and show them
+    ['resultsFilterCategory', 'resultsFilterPrice'].forEach(id => {
+      const row = document.getElementById(id);
+      if(!row) return;
+      row.style.display = '';
+      row.querySelectorAll('.chip').forEach(c => {
+        c.classList.toggle('active', c.textContent.trim() === 'Tất cả');
+      });
+    });
+
+    // Reset currentFilters
+    currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+    updateFilterCountBadge();
+
+    let searchInput = document.getElementById('searchInput');
+    doSearch(searchInput.value || '');
   }
 };
 
