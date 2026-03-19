@@ -511,10 +511,7 @@ window.onSearchType = function(val){
     return;
   }
 
-  if(currentSearchMode === 'area') {
-    // area tab doesn't have a type-ahead — just return
-    return;
-  }
+
 
   if(document.getElementById('stateSuggestions').innerHTML.includes('suggest-item')) {
     setState('suggestions');
@@ -635,13 +632,11 @@ function setState(state){
 }
 
 window.doSearch = function(query, chipEl, append = false, page = 1){
-  // Ensure BDS mode is active — hide lead/area tab content and mark BDS tab as active
+  // Ensure BDS mode is active — hide lead tab content and mark BDS tab as active
   if(currentSearchMode !== 'bds') {
     currentSearchMode = 'bds';
     const leadTab = document.getElementById('leadTabContent');
-    const areaTab = document.getElementById('areaTabContent');
     if(leadTab) leadTab.style.display = 'none';
-    if(areaTab) areaTab.style.display = 'none';
     document.querySelectorAll('#searchModeTabs .smt').forEach(b => b.classList.remove('active'));
     const bdsBtn = document.querySelector('#searchModeTabs .smt:first-child');
     if(bdsBtn) bdsBtn.classList.add('active');
@@ -868,20 +863,16 @@ window.switchMode = function(mode, btn){
   }
   
   const leadTab = document.getElementById('leadTabContent');
-  const areaTab = document.getElementById('areaTabContent');
   
   if(leadTab) leadTab.style.display = mode === 'lead' ? 'block' : 'none';
-  if(areaTab) areaTab.style.display = mode === 'area' ? 'block' : 'none';
   
   // Update search placeholder
   const placeholder = document.getElementById('searchPlaceholder');
   if(mode === 'bds') placeholder.textContent = 'Tìm BĐS, đường, phường...';
   else if(mode === 'lead') placeholder.textContent = 'Tìm khách hàng, lead...';
-  else if(mode === 'area') placeholder.textContent = 'Tìm khu vực...';
   
   // Fetch data for the tab
   if(mode === 'lead') fetchLeads();
-  if(mode === 'area') fetchAreas();
 };
 
 // ============ LEAD TAB (Task 7-9) ============
@@ -960,51 +951,7 @@ window.filterLeadByStatus = function(chip) {
     fetchLeads(document.getElementById('searchInput').value || '');
 };
 
-// ============ AREA TAB (Task 10-11) ============
-let areasLoaded = false;
 
-function fetchAreas() {
-    if(areasLoaded) return;
-    
-    fetch('/webapp/search/areas')
-        .then(r => r.json())
-        .then(res => {
-            if(res.success) {
-                renderAreas(res.areas);
-                areasLoaded = true;
-            }
-        });
-}
-
-function renderAreas(areas) {
-    const container = document.getElementById('areaResults');
-    
-    if(!areas || areas.length === 0) {
-        container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-tertiary);"><div>Không có dữ liệu khu vực.</div></div>';
-        return;
-    }
-    
-    let html = '<div style="padding:0 16px;">';
-    areas.forEach(area => {
-        html += `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-light);cursor:pointer;" onclick="doSearch('${area.name.replace(/'/g,"\\'")}')">
-            <div style="width:44px;height:44px;border-radius:var(--radius-md);background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            </div>
-            <div style="flex:1;min-width:0;">
-                <div style="font-size:14px;font-weight:600;color:var(--text-primary);">${area.name}</div>
-                <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;display:flex;gap:8px;">
-                    <span>${area.count_bds} BĐS</span>
-                    ${area.avg_price ? '<span>· TB: ' + area.avg_price + '</span>' : ''}
-                </div>
-            </div>
-            <div style="color:var(--text-tertiary);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="9 18 15 12 9 6"/></svg></div>
-        </div>
-        `;
-    });
-    html += '</div>';
-    container.innerHTML = html;
-}
 
 // ============ FILTER SHEET ============
 let currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };

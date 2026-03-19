@@ -21,7 +21,6 @@
       <div class="search-mode-tabs" id="searchModeTabs">
         <button class="smt active" onclick="switchMode('bds',this)"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> BĐS</span></button>
         <button class="smt role-sale role-bds_admin role-sale_admin role-admin" onclick="switchMode('lead',this)"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg> Khách/Lead</span></button>
-        <button class="smt" onclick="switchMode('area',this)"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Khu vực</span></button>
       </div>
     </div>
 
@@ -382,19 +381,6 @@
             <div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
             <div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">Đang tải danh sách lead...</div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ========== AREA TAB CONTENT ========== -->
-    <div id="areaTabContent" style="display:none;">
-      <div style="padding:12px 16px 6px;">
-        <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:10px;">📍 Khu vực tại Đà Lạt</div>
-      </div>
-      <div id="areaResults">
-        <div style="padding:20px;text-align:center;">
-          <div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
-          <div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">Đang tải khu vực...</div>
         </div>
       </div>
     </div>
