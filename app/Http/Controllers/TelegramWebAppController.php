@@ -417,18 +417,25 @@ class TelegramWebAppController extends Controller
         $page = (int) $request->get('page', 1);
 
         $query = Property::with(['category', 'ward', 'host', 'propery_image'])
-            ->where('status', 1)
-            ->orderBy('created_at', 'desc');
+            ->where('status', 1);
+
+        // Default sort
+        $sort = $request->get('sort', 'latest');
 
         if ($q !== '') {
             $query->where(function ($qBuilder) use ($q) {
+                // Bỏ chữ "Đường " hoặc "Đ. " hoặc "Phường " ở đầu để search linh hoạt hơn
+                $streetQ = trim(preg_replace('/^(Đường|đường|Đ\.|đ\.)\s+/iu', '', $q));
+                $wardQ = trim(preg_replace('/^(Phường|phường|P\.|p\.|Xã|xã|X\.|x\.)\s+/iu', '', $q));
+
                 $qBuilder->where('title', 'LIKE', '%' . $q . '%')
                          ->orWhere('address', 'LIKE', '%' . $q . '%')
-                         ->orWhereHas('street', function ($sq) use ($q) {
-                             $sq->where('street_name', 'LIKE', '%' . $q . '%');
+                         ->orWhereHas('street', function ($sq) use ($streetQ) {
+                             $sq->where('street_name', 'LIKE', '%' . $streetQ . '%');
                          })
-                         ->orWhereHas('ward', function ($wq) use ($q) {
-                             $wq->where('full_name', 'LIKE', '%' . $q . '%');
+                         ->orWhereHas('ward', function ($wq) use ($wardQ) {
+                             $wq->where('full_name', 'LIKE', '%' . $wardQ . '%')
+                                ->orWhere('name', 'LIKE', '%' . $wardQ . '%');
                          })
                          ->orWhereHas('category', function ($cq) use ($q) {
                              $cq->where('category', 'LIKE', '%' . $q . '%');
@@ -436,7 +443,7 @@ class TelegramWebAppController extends Controller
             });
         }
 
-        // Apply additional filters from request
+        // Filter: property_type (0=bán, 1=thuê)
         $type = $request->get('type');
         if ($type !== null && $type !== '') {
             if ($type === 'rent') $query->where('property_type', 1);
@@ -444,7 +451,8 @@ class TelegramWebAppController extends Controller
             else $query->where('property_type', (int)$type);
         }
 
-        $priceLabel = $request->get('price'); // Giao diện gửi "Dưới 1 tỷ", "1–3 tỷ", ...
+        // Filter: price range
+        $priceLabel = $request->get('price');
         if ($priceLabel) {
             if ($priceLabel === 'Dưới 1 tỷ') {
                 $query->where('price', '<', 1000000000);
@@ -452,16 +460,92 @@ class TelegramWebAppController extends Controller
                 $query->whereBetween('price', [1000000000, 3000000000]);
             } elseif ($priceLabel === '3–5 tỷ') {
                 $query->whereBetween('price', [3000000000, 5000000000]);
+            } elseif ($priceLabel === '5–10 tỷ') {
+                $query->whereBetween('price', [5000000000, 10000000000]);
             } elseif ($priceLabel === 'Trên 5 tỷ') {
                 $query->where('price', '>', 5000000000);
+            } elseif ($priceLabel === 'Trên 10 tỷ') {
+                $query->where('price', '>', 10000000000);
             }
         }
         
-        $categoryName = $request->get('categoryName'); // Giao diện gửi "Đất ở", "Nhà phố"...
+        // Filter: category name
+        $categoryName = $request->get('categoryName');
         if ($categoryName) {
             $query->whereHas('category', function ($cq) use ($categoryName) {
                 $cq->where('category', $categoryName);
             });
+        }
+
+        // Filter: area range (via assign_parameters)
+        $areaRange = $request->get('area_range');
+        if ($areaRange) {
+            $areaParamId = (int) config('global.area');
+            if ($areaRange === '1000+') {
+                $query->whereHas('parameters', function ($pq) use ($areaParamId) {
+                    $pq->where('parameters.id', $areaParamId)
+                       ->whereRaw('CAST(assign_parameters.value AS DECIMAL(10,2)) >= 1000');
+                });
+            } else {
+                $parts = explode('-', $areaRange);
+                if (count($parts) === 2) {
+                    $min = (float) $parts[0];
+                    $max = (float) $parts[1];
+                    $query->whereHas('parameters', function ($pq) use ($areaParamId, $min, $max) {
+                        $pq->where('parameters.id', $areaParamId)
+                           ->whereRaw('CAST(assign_parameters.value AS DECIMAL(10,2)) >= ?', [$min])
+                           ->whereRaw('CAST(assign_parameters.value AS DECIMAL(10,2)) <= ?', [$max]);
+                    });
+                }
+            }
+        }
+
+        // Filter: direction (via assign_parameters)
+        $direction = $request->get('direction');
+        if ($direction) {
+            $dirParamId = (int) config('global.direction');
+            $query->whereHas('parameters', function ($pq) use ($dirParamId, $direction) {
+                $pq->where('parameters.id', $dirParamId)
+                   ->where('assign_parameters.value', $direction);
+            });
+        }
+
+        // Filter: legal (via assign_parameters)
+        $legal = $request->get('legal');
+        if ($legal) {
+            $legalParamId = (int) config('global.legal');
+            $query->whereHas('parameters', function ($pq) use ($legalParamId, $legal) {
+                $pq->where('parameters.id', $legalParamId)
+                   ->where('assign_parameters.value', 'LIKE', '%' . $legal . '%');
+            });
+        }
+
+        // Sort
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'area_asc':
+            case 'area_desc':
+                $areaParamId = (int) config('global.area');
+                $query->select('propertys.*')
+                    ->leftJoin('assign_parameters', function ($join) use ($areaParamId) {
+                        $join->on('propertys.id', '=', 'assign_parameters.modal_id')
+                            ->where('assign_parameters.parameter_id', $areaParamId);
+                    })
+                    ->addSelect(DB::raw('CAST(assign_parameters.value AS DECIMAL(10,2)) as area_value'))
+                    ->orderBy('area_value', $sort === 'area_asc' ? 'asc' : 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
         }
 
         $paginator = $query->paginate(10, ['*'], 'page', $page);
@@ -513,9 +597,13 @@ class TelegramWebAppController extends Controller
 
         $results = [];
 
+        // Bỏ tiền tố để tìm kiếm chính xác hơn trong CSDL
+        $streetQ = trim(preg_replace('/^(Đường|đường|Đ\.|đ\.)\s+/iu', '', $q));
+        $wardQ = trim(preg_replace('/^(Phường|phường|P\.|p\.|Xã|xã|X\.|x\.)\s+/iu', '', $q));
+
         // 1. Tìm đường (Street)
         $streets = LocationsStreet::where('district_code', config('location.district_code'))
-            ->where('street_name', 'LIKE', '%' . $q . '%')
+            ->where('street_name', 'LIKE', '%' . $streetQ . '%')
             ->limit(3)
             ->get();
         foreach ($streets as $s) {
@@ -530,7 +618,10 @@ class TelegramWebAppController extends Controller
 
         // 2. Tìm phường (Ward)
         $wards = LocationsWard::where('district_code', config('location.district_code'))
-            ->where('full_name', 'LIKE', '%' . $q . '%')
+            ->where(function ($wBuilder) use ($wardQ) {
+                $wBuilder->where('full_name', 'LIKE', '%' . $wardQ . '%')
+                         ->orWhere('name', 'LIKE', '%' . $wardQ . '%');
+            })
             ->limit(2)
             ->get();
         foreach ($wards as $w) {
@@ -564,6 +655,95 @@ class TelegramWebAppController extends Controller
         }
 
         return response()->json(['success' => true, 'data' => $results]);
+    }
+
+    // Task 8: Search Leads API
+    public function searchLeads(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        $status = $request->get('status', '');
+        $page = (int) $request->get('page', 1);
+
+        $query = CrmLead::with(['customer', 'sale'])
+            ->orderBy('created_at', 'desc');
+
+        if ($q !== '') {
+            $query->where(function ($qb) use ($q) {
+                $qb->where('note', 'LIKE', '%' . $q . '%')
+                    ->orWhere('source_note', 'LIKE', '%' . $q . '%')
+                    ->orWhereHas('customer', function ($cq) use ($q) {
+                        $cq->where('name', 'LIKE', '%' . $q . '%')
+                            ->orWhere('phone', 'LIKE', '%' . $q . '%');
+                    });
+            });
+        }
+
+        if ($status !== '' && $status !== null) {
+            $query->whereRaw("LOWER(REPLACE(status, ' ', '-')) = ?", [strtolower($status)]);
+        }
+
+        $paginator = $query->paginate(15, ['*'], 'page', $page);
+
+        $items = $paginator->map(function ($lead) {
+            return [
+                'id'           => $lead->id,
+                'customer_name' => optional($lead->customer)->name ?? 'Chưa rõ',
+                'customer_phone' => optional($lead->customer)->phone ?? '',
+                'lead_type'    => $lead->getRawOriginal('lead_type') === 'buy' ? 'Mua' : 'Thuê',
+                'status'       => $lead->getRawOriginal('status'),
+                'status_label' => $lead->status,
+                'categories'   => $lead->categories,
+                'wards'        => $lead->wards,
+                'budget_min'   => $lead->demand_rate_min,
+                'budget_max'   => $lead->demand_rate_max,
+                'note'         => $lead->note,
+                'sale_name'    => optional($lead->sale)->name ?? '',
+                'created_at_diff' => \Carbon\Carbon::parse($lead->getRawOriginal('created_at'))->diffForHumans(),
+            ];
+        });
+
+        return response()->json([
+            'success'    => true,
+            'leads'      => $items,
+            'total'      => $paginator->total(),
+            'has_more'   => $paginator->hasMorePages(),
+            'next_page'  => $paginator->currentPage() + 1,
+        ]);
+    }
+
+    // Task 11: Search Areas API
+    public function searchAreas(Request $request)
+    {
+        $wards = LocationsWard::where('district_code', config('location.district_code'))->get();
+
+        $wardStats = Property::where('status', 1)
+            ->selectRaw('ward_code, count(*) as count_bds, AVG(price) as avg_price')
+            ->groupBy('ward_code')
+            ->get()
+            ->keyBy('ward_code');
+
+        $data = $wards->map(function ($w) use ($wardStats) {
+            $stats = $wardStats[$w->code] ?? null;
+            $avgPrice = null;
+            if ($stats && $stats->avg_price > 0) {
+                $avg = $stats->avg_price;
+                $ty = 1000000000;
+                $trieu = 1000000;
+                if ($avg >= $ty) {
+                    $avgPrice = number_format($avg / $ty, 1) . ' tỷ';
+                } elseif ($avg > 0) {
+                    $avgPrice = number_format($avg / $trieu, 0) . ' triệu';
+                }
+            }
+            return [
+                'code'      => $w->code,
+                'name'      => $w->full_name,
+                'count_bds' => $stats ? $stats->count_bds : 0,
+                'avg_price' => $avgPrice,
+            ];
+        })->sortByDesc('count_bds')->values();
+
+        return response()->json(['success' => true, 'areas' => $data]);
     }
 
     public function profile(Request $request)

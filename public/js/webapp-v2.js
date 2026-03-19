@@ -500,10 +500,22 @@ window.onSearchType = function(val){
   }
 
   if(val.length === 0){
-    setState('discovery');
+    if(currentSearchMode === 'bds') setState('discovery');
+    else if(currentSearchMode === 'lead') fetchLeads('');
     return;
   }
-  
+
+  if(currentSearchMode === 'lead') {
+    clearTimeout(searchTypingTimer);
+    searchTypingTimer = setTimeout(() => fetchLeads(val), 500);
+    return;
+  }
+
+  if(currentSearchMode === 'area') {
+    // area tab doesn't have a type-ahead — just return
+    return;
+  }
+
   if(document.getElementById('stateSuggestions').innerHTML.includes('suggest-item')) {
     setState('suggestions');
   } else {
@@ -582,8 +594,13 @@ function renderSuggestions(data) {
                 typeLabel = 'BĐS';
             }
 
+            // Property suggestions: open detail directly; others: doSearch
+            const clickAction = item.type === 'property' && item.id 
+                ? `openPropertyById(${item.id})` 
+                : `doSearch('${item.query.replace(/'/g,"\\'")}')`;
+
             html += `
-            <div class="suggest-item" onclick="doSearch('${item.query}')">
+            <div class="suggest-item" onclick="${clickAction}">
               <span class="suggest-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconSvg}</svg></span>
               <div class="suggest-body">
                 <div class="suggest-title">${item.title}</div>
@@ -599,6 +616,7 @@ function renderSuggestions(data) {
 }
 
 window.showSuggestions = function(){
+  if(currentSearchMode !== 'bds') return;
   const input = document.getElementById('searchInput');
   if(input.value.length > 0) {
       if(document.getElementById('stateSuggestions').innerHTML.includes('suggest-item')) {
@@ -617,6 +635,18 @@ function setState(state){
 }
 
 window.doSearch = function(query, chipEl, append = false, page = 1){
+  // Ensure BDS mode is active — hide lead/area tab content and mark BDS tab as active
+  if(currentSearchMode !== 'bds') {
+    currentSearchMode = 'bds';
+    const leadTab = document.getElementById('leadTabContent');
+    const areaTab = document.getElementById('areaTabContent');
+    if(leadTab) leadTab.style.display = 'none';
+    if(areaTab) areaTab.style.display = 'none';
+    document.querySelectorAll('#searchModeTabs .smt').forEach(b => b.classList.remove('active'));
+    const bdsBtn = document.querySelector('#searchModeTabs .smt:first-child');
+    if(bdsBtn) bdsBtn.classList.add('active');
+  }
+
   // Update search bar
   const placeholder = document.getElementById('searchPlaceholder');
   const input = document.getElementById('searchInput');
@@ -632,6 +662,11 @@ window.doSearch = function(query, chipEl, append = false, page = 1){
   
   placeholder.style.display = 'block';
   input.style.display = 'none';
+
+  // Save to recent searches
+  if(query && query.trim() && query !== 'Tất cả') {
+      saveRecentSearch(query.trim());
+  }
 
   // Update result header
   document.getElementById('resultQuery').textContent = query;
@@ -651,12 +686,10 @@ window.doSearch = function(query, chipEl, append = false, page = 1){
   if(!append) {
       switchView('list');
       document.getElementById('scrollArea').scrollTop = 0;
-      // show loading in list
       document.getElementById('listView').innerHTML = '<div style="padding:20px;text-align:center;"><div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div><div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">Đang tìm kiếm...</div></div>';
   }
   
-  // build filter params
-  let type = '';
+  // build filter params from active chips
   let price = '';
   let categoryName = '';
   
@@ -666,21 +699,18 @@ window.doSearch = function(query, chipEl, append = false, page = 1){
       else if(['Đất ở', 'Nhà phố', 'Biệt thự', 'Căn hộ', 'Khách sạn'].includes(txt)) categoryName = txt;
   });
   
-  // If chipEl was passed and it's a quick filter chip (like clicking "Đất ở" from discovery state)
+  // If chipEl was passed (quick filter chip)
   if(chipEl && chipEl.classList.contains('chip')) {
       let txt = chipEl.textContent.trim();
       if(txt !== 'Tất cả') {
-          // Add to activeFilters if not already
           addActiveFilter(txt);
-          
           if(txt.includes('tỷ')) price = txt;
           else if(['Đất ở', 'Nhà phố', 'Biệt thự', 'Căn hộ', 'Khách sạn'].includes(txt)) categoryName = txt;
       } else {
-         clearFilters(true); // silent clear
+         clearFilters(true);
          categoryName = '';
          price = '';
       }
-      // Re-evaluate active chips because we just modified them
       const newActiveChips = document.getElementById('activeFilters').querySelectorAll('.af-chip');
       if(newActiveChips.length > 0) {
           fc.textContent = newActiveChips.length;
@@ -690,11 +720,21 @@ window.doSearch = function(query, chipEl, append = false, page = 1){
       }
   }
 
-  // fetch
+  // Build URL with all params
   let url = '/webapp/search/results?page=' + page;
   if(query && query !== 'Tất cả') url += '&q=' + encodeURIComponent(query);
   if(price) url += '&price=' + encodeURIComponent(price);
   if(categoryName) url += '&categoryName=' + encodeURIComponent(categoryName);
+  
+  // Advanced filter params (from filter sheet)
+  if(currentSort && currentSort !== 'latest') url += '&sort=' + encodeURIComponent(currentSort);
+  if(currentFilters.property_type) url += '&type=' + encodeURIComponent(currentFilters.property_type);
+  if(currentFilters.area) url += '&area_range=' + encodeURIComponent(currentFilters.area);
+  if(currentFilters.direction) url += '&direction=' + encodeURIComponent(currentFilters.direction);
+  if(currentFilters.legal) url += '&legal=' + encodeURIComponent(currentFilters.legal);
+  // Override price/categoryName from filter sheet if set
+  if(currentFilters.price && !price) url += '&price=' + encodeURIComponent(currentFilters.price);
+  if(currentFilters.categoryName && !categoryName) url += '&categoryName=' + encodeURIComponent(currentFilters.categoryName);
   
   fetch(url)
     .then(r => r.json())
@@ -722,6 +762,8 @@ function renderSearchResults(res, append, currentPage, query, price, categoryNam
         if(p.type_label) tagsHtml += `<span class="badge badge-blue" style="font-size:9px;padding:2px 6px;">${p.type_label}</span>`;
         if(p.legal) tagsHtml += `<span class="badge badge-green" style="font-size:9px;padding:2px 6px;">${p.legal}</span>`;
 
+        const isLiked = !!(p.id && window.likedIds && window.likedIds.has(String(p.id)));
+        
         html += `
         <div class="result-card" data-prop='${propJson}' onclick="openDetail(JSON.parse(this.dataset.prop))" style="cursor:pointer">
           <div class="rc-img">
@@ -740,7 +782,8 @@ function renderSearchResults(res, append, currentPage, query, price, categoryNam
             <div class="rc-footer">
               <span class="rc-time">${p.created_at_diff}</span>
               <div style="display:flex;gap:6px;">
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);color:var(--primary);" onclick="event.stopPropagation();"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
+                <button class="rc-btn" style="background:${isLiked?'var(--danger-light)':'var(--bg-secondary)'};color:${isLiked?'var(--danger)':'var(--text-tertiary)'};" onclick="event.stopPropagation();toggleBookmark(this,${p.id})"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="${isLiked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.7"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span></button>
+                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);color:var(--primary);" onclick="event.stopPropagation();careForProperty(${p.id},'${(p.title||'').replace(/'/g,"\\'")}')"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -800,16 +843,318 @@ window.switchView = function(view){
   document.getElementById('viewMap').classList.toggle('active', view==='map');
 };
 
+let currentSearchMode = 'bds';
+let currentLeadStatus = '';
+
 window.switchMode = function(mode, btn){
   btn.closest('.search-mode-tabs').querySelectorAll('.smt').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  currentSearchMode = mode;
+  
+  // Toggle tab content visibility
+  const bdsElements = ['stateDiscovery','stateSuggestions','stateResults'];
+  bdsElements.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = (mode === 'bds' && id === 'stateDiscovery') ? 'block' : (mode === 'bds' ? el.style.display : 'none');
+  });
+  
+  // Reset BDS states when switching away
+  if(mode !== 'bds') {
+    document.getElementById('stateDiscovery').style.display = 'none';
+    document.getElementById('stateSuggestions').style.display = 'none';
+    document.getElementById('stateResults').style.display = 'none';
+  } else {
+    setState('discovery');
+  }
+  
+  const leadTab = document.getElementById('leadTabContent');
+  const areaTab = document.getElementById('areaTabContent');
+  
+  if(leadTab) leadTab.style.display = mode === 'lead' ? 'block' : 'none';
+  if(areaTab) areaTab.style.display = mode === 'area' ? 'block' : 'none';
+  
+  // Update search placeholder
+  const placeholder = document.getElementById('searchPlaceholder');
+  if(mode === 'bds') placeholder.textContent = 'Tìm BĐS, đường, phường...';
+  else if(mode === 'lead') placeholder.textContent = 'Tìm khách hàng, lead...';
+  else if(mode === 'area') placeholder.textContent = 'Tìm khu vực...';
+  
+  // Fetch data for the tab
+  if(mode === 'lead') fetchLeads();
+  if(mode === 'area') fetchAreas();
 };
+
+// ============ LEAD TAB (Task 7-9) ============
+function fetchLeads(q, page) {
+    q = q || '';
+    page = page || 1;
+    
+    let url = '/webapp/search/leads?page=' + page;
+    if(q) url += '&q=' + encodeURIComponent(q);
+    if(currentLeadStatus) url += '&status=' + encodeURIComponent(currentLeadStatus);
+    
+    const container = document.getElementById('leadResults');
+    if(page === 1) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;"><div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div></div>';
+    }
+    
+    fetch(url)
+        .then(r => r.json())
+        .then(res => {
+            if(res.success) renderLeads(res, page > 1, page, q);
+        });
+}
+
+function renderLeads(res, append, currentPage, query) {
+    const container = document.getElementById('leadResults');
+    
+    if(res.leads.length === 0 && !append) {
+        container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-tertiary);"><div style="font-size:32px;margin-bottom:10px;">👤</div><div>Không tìm thấy lead nào.</div></div>';
+        return;
+    }
+    
+    let html = '';
+    const statusColors = { 'new':'#3b82f6', 'contacted':'#f59e0b', 'qualified':'#10b981', 'won':'#059669', 'lost':'#ef4444' };
+    
+    res.leads.forEach(lead => {
+        const rawStatus = lead.status || 'new';
+        const statusColor = statusColors[rawStatus] || '#6b7280';
+        
+        html += `
+        <div class="crm-card" onclick="window.location.href='/webapp/leads/${lead.id}'" style="cursor:pointer;">
+            <div class="crm-card-header">
+                <div class="crm-card-name">${lead.customer_name}</div>
+                <span class="badge" style="background:${statusColor}15;color:${statusColor};font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;">${lead.status_label}</span>
+            </div>
+            <div class="crm-card-body">
+                ${lead.customer_phone ? '<div class="crm-row"><span class="crm-label">SĐT</span><span class="crm-value">' + lead.customer_phone + '</span></div>' : ''}
+                <div class="crm-row"><span class="crm-label">Nhu cầu</span><span class="crm-value">${lead.lead_type}</span></div>
+                ${lead.budget_min || lead.budget_max ? '<div class="crm-row"><span class="crm-label">Ngân sách</span><span class="crm-value">' + (lead.budget_min||'?') + ' - ' + (lead.budget_max||'?') + '</span></div>' : ''}
+                ${lead.note ? '<div class="crm-row"><span class="crm-label">Ghi chú</span><span class="crm-value" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">' + lead.note + '</span></div>' : ''}
+            </div>
+            <div class="crm-card-footer">
+                <span class="crm-date">${lead.created_at_diff}</span>
+                ${lead.sale_name ? '<span style="font-size:10px;color:var(--primary);">👤 ' + lead.sale_name + '</span>' : ''}
+            </div>
+        </div>
+        `;
+    });
+    
+    if(res.has_more) {
+        html += `<div style="padding:16px;text-align:center;" id="leadLoadMore"><button style="padding:11px 28px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);" onclick="this.textContent='Đang tải...';fetchLeads('${query||''}',${currentPage+1})">Xem thêm</button></div>`;
+    }
+    
+    if(append) {
+        const btn = document.getElementById('leadLoadMore');
+        if(btn) btn.remove();
+        container.insertAdjacentHTML('beforeend', html);
+    } else {
+        container.innerHTML = html;
+    }
+}
+
+window.filterLeadByStatus = function(chip) {
+    chip.parentElement.querySelectorAll('.fs-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentLeadStatus = chip.dataset.leadStatus || '';
+    fetchLeads(document.getElementById('searchInput').value || '');
+};
+
+// ============ AREA TAB (Task 10-11) ============
+let areasLoaded = false;
+
+function fetchAreas() {
+    if(areasLoaded) return;
+    
+    fetch('/webapp/search/areas')
+        .then(r => r.json())
+        .then(res => {
+            if(res.success) {
+                renderAreas(res.areas);
+                areasLoaded = true;
+            }
+        });
+}
+
+function renderAreas(areas) {
+    const container = document.getElementById('areaResults');
+    
+    if(!areas || areas.length === 0) {
+        container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-tertiary);"><div>Không có dữ liệu khu vực.</div></div>';
+        return;
+    }
+    
+    let html = '<div style="padding:0 16px;">';
+    areas.forEach(area => {
+        html += `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-light);cursor:pointer;" onclick="doSearch('${area.name.replace(/'/g,"\\'")}')">
+            <div style="width:44px;height:44px;border-radius:var(--radius-md);background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:var(--text-primary);">${area.name}</div>
+                <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;display:flex;gap:8px;">
+                    <span>${area.count_bds} BĐS</span>
+                    ${area.avg_price ? '<span>· TB: ' + area.avg_price + '</span>' : ''}
+                </div>
+            </div>
+            <div style="color:var(--text-tertiary);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// ============ FILTER SHEET ============
+let currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
 
 window.openFilterSheet = function(){
-  openSheet();
+  document.getElementById('filterOverlay').classList.add('open');
+  document.getElementById('filterSheet').classList.add('open');
 };
 
+window.closeFilterSheet = function(){
+  document.getElementById('filterOverlay').classList.remove('open');
+  document.getElementById('filterSheet').classList.remove('open');
+};
+
+window.selectFilterChip = function(chip){
+  const filterGroup = chip.dataset.filter;
+  const siblings = chip.parentElement.querySelectorAll('.fs-chip[data-filter="'+filterGroup+'"]');
+  siblings.forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+};
+
+window.resetFilterSheet = function(){
+  document.querySelectorAll('.fs-chip').forEach(c => {
+      c.classList.remove('active');
+      if(c.dataset.value === '') c.classList.add('active');
+  });
+  currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+};
+
+window.applyFilterSheet = function(){
+  // Collect selected values
+  currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+  document.querySelectorAll('.fs-chip.active').forEach(c => {
+      if(c.dataset.value) {
+          currentFilters[c.dataset.filter] = c.dataset.value;
+      }
+  });
+  
+  // Update active filter chips in results
+  clearFilters(true);
+  Object.entries(currentFilters).forEach(([key, val]) => {
+      if(val) {
+          const labels = {
+              property_type: val === '0' ? 'Bán' : 'Cho thuê',
+              categoryName: val,
+              price: val,
+              area: val.includes('+') ? 'Trên 1000m²' : val.replace('-','–') + 'm²',
+              direction: val,
+              legal: val
+          };
+          addActiveFilter(labels[key] || val);
+      }
+  });
+  
+  // Update filter count badge
+  let count = Object.values(currentFilters).filter(v => v).length;
+  const fc = document.getElementById('filterCount');
+  if(count > 0) { fc.textContent = count; fc.style.display = 'flex'; }
+  else { fc.style.display = 'none'; }
+  
+  closeFilterSheet();
+  
+  // Re-search with filters
+  let q = document.getElementById('searchInput').value || '';
+  doSearch(q);
+};
+
+// ============ SORT SHEET ============
+let currentSort = 'latest';
+
 window.openSortSheet = function(){
+  document.getElementById('sortOverlay').classList.add('open');
+  document.getElementById('sortSheet').classList.add('open');
+};
+
+window.closeSortSheet = function(){
+  document.getElementById('sortOverlay').classList.remove('open');
+  document.getElementById('sortSheet').classList.remove('open');
+};
+
+window.selectSort = function(opt){
+  document.querySelectorAll('.ss-option').forEach(o => {
+      o.classList.remove('active');
+      o.querySelector('.ss-check').textContent = '';
+  });
+  opt.classList.add('active');
+  opt.querySelector('.ss-check').textContent = '✓';
+  currentSort = opt.dataset.sort;
+  
+  // Update sort button text
+  const sortLabels = { latest:'Mới nhất', oldest:'Cũ nhất', price_asc:'Giá ↑', price_desc:'Giá ↓', area_asc:'DT ↑', area_desc:'DT ↓' };
+  const sortBtnEl = document.querySelector('.sort-btn');
+  if(sortBtnEl) sortBtnEl.innerHTML = '<span>↕</span> ' + (sortLabels[currentSort] || 'Sắp xếp');
+  
+  closeSortSheet();
+  
+  // Re-search with new sort
+  let q = document.getElementById('searchInput').value || '';
+  doSearch(q);
+};
+
+// ============ RECENT SEARCHES (localStorage) ============
+const RECENT_KEY = 'dalatbds_recent_searches';
+const MAX_RECENT = 10;
+
+function getRecentSearches() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; }
+    catch(e) { return []; }
+}
+
+function saveRecentSearch(query) {
+    let list = getRecentSearches();
+    list = list.filter(q => q !== query);
+    list.unshift(query);
+    if(list.length > MAX_RECENT) list = list.slice(0, MAX_RECENT);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+    renderRecentSearches();
+}
+
+function renderRecentSearches() {
+    const container = document.getElementById('recentSearchesList');
+    const section = document.getElementById('recentSearchesSection');
+    if(!container || !section) return;
+    
+    const list = getRecentSearches();
+    if(list.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = 'block';
+    
+    let html = '';
+    list.forEach(q => {
+        html += '<div class="recent-item" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\')"><span class="ri"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span style="flex:1">' + q + '</span><span style="color:var(--text-tertiary);font-size:13px;">↗</span></div>';
+    });
+    container.innerHTML = html;
+}
+
+window.clearRecentSearches = function() {
+    localStorage.removeItem(RECENT_KEY);
+    renderRecentSearches();
+};
+
+// Init recent searches on page load
+renderRecentSearches();
+
+// ============ CARE FOR PROPERTY (Chăm sóc) ============
+window.careForProperty = function(propId, title) {
+  const note = encodeURIComponent('Quan tâm BĐS #' + propId + ': ' + title);
+  window.location.href = '/webapp/add-customer?note=' + note + '&property_id=' + propId;
 };
 
 window.removeFilter = function(span){
@@ -1079,6 +1424,21 @@ function escHtml(s){
   if(!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// Open property detail directly by ID (used from suggestion click)
+window.openPropertyById = function(propId) {
+  fetch('/webapp/property/' + propId + '/json')
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.id) {
+        openDetail(data);
+      }
+    })
+    .catch(() => {
+      // Fallback: just search
+      doSearch('BĐS #' + propId);
+    });
+};
 
 window.openDetail = function(data){
   const d = data || {};

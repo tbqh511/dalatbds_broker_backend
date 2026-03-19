@@ -47,15 +47,14 @@
       </div>
 
       <div style="padding:4px 16px 0;">
-        <!-- Recent searches -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <span class="recent-label" style="margin:0;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Tìm kiếm gần đây</span>
-          <button style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;">Xóa tất cả</button>
+        <!-- Recent searches (dynamic from localStorage) -->
+        <div id="recentSearchesSection">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span class="recent-label" style="margin:0;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Tìm kiếm gần đây</span>
+            <button onclick="clearRecentSearches()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;">Xóa tất cả</button>
+          </div>
+          <div id="recentSearchesList"></div>
         </div>
-        <div class="recent-item" onclick="doSearch('Đường Yersin, Cam Ly')"><span class="ri"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span style="flex:1">Đường Yersin, Cam Ly</span><span style="color:var(--text-tertiary);font-size:13px;">↗</span></div>
-        <div class="recent-item" onclick="doSearch('Biệt thự Lâm Viên')"><span class="ri"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span style="flex:1">Biệt thự Lâm Viên</span><span style="color:var(--text-tertiary);font-size:13px;">↗</span></div>
-        <div class="recent-item" onclick="doSearch('Đất mặt tiền 3/4')"><span class="ri"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span style="flex:1">Đất mặt tiền 3/4</span><span style="color:var(--text-tertiary);font-size:13px;">↗</span></div>
-        <div class="recent-item" onclick="doSearch('Nhà phố dưới 2 tỷ')"><span class="ri"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span style="flex:1">Nhà phố dưới 2 tỷ</span><span style="color:var(--text-tertiary);font-size:13px;">↗</span></div>
       </div>
 
       <!-- Popular areas -->
@@ -64,13 +63,15 @@
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
           @php
              $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
+             $wardCounts = \App\Models\Property::where('status', 1)->selectRaw('ward_code, count(*) as cnt')->groupBy('ward_code')->pluck('cnt','ward_code');
           @endphp
           @foreach($hotWards as $w)
           <div class="area-card" onclick="doSearch('{{ $w->full_name }}')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.05);height:80px;">
-            <div style="color:#3270FC;margin-bottom:6px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <div style="color:#3270FC;margin-bottom:4px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
             </div>
-            <div style="color:#3270FC;font-size:12px;font-weight:500;text-align:center;line-height:1.2;">{{ $w->full_name }}</div>
+            <div style="color:#3270FC;font-size:11px;font-weight:500;text-align:center;line-height:1.2;">{{ $w->full_name }}</div>
+            <div style="color:var(--text-tertiary);font-size:9px;margin-top:2px;">{{ $wardCounts[$w->code] ?? 0 }} BĐS</div>
           </div>
           @endforeach
         </div>
@@ -361,5 +362,149 @@
 
     </div><!-- end stateResults -->
 
+    <!-- ========== LEAD TAB CONTENT ========== -->
+    <div id="leadTabContent" style="display:none;">
+      <div class="role-sale role-bds_admin role-sale_admin role-admin">
+        <!-- Lead search bar placeholder info -->
+        <div style="padding:12px 16px 6px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <div class="fs-chip active" data-lead-status="" onclick="filterLeadByStatus(this)">Tất cả</div>
+            <div class="fs-chip" data-lead-status="new" onclick="filterLeadByStatus(this)">Mới</div>
+            <div class="fs-chip" data-lead-status="contacted" onclick="filterLeadByStatus(this)">Đã liên hệ</div>
+            <div class="fs-chip" data-lead-status="qualified" onclick="filterLeadByStatus(this)">Tiềm năng</div>
+            <div class="fs-chip" data-lead-status="won" onclick="filterLeadByStatus(this)">Thành công</div>
+            <div class="fs-chip" data-lead-status="lost" onclick="filterLeadByStatus(this)">Mất</div>
+          </div>
+        </div>
+        <!-- Lead results -->
+        <div id="leadResults">
+          <div style="padding:20px;text-align:center;">
+            <div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
+            <div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">Đang tải danh sách lead...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== AREA TAB CONTENT ========== -->
+    <div id="areaTabContent" style="display:none;">
+      <div style="padding:12px 16px 6px;">
+        <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:10px;">📍 Khu vực tại Đà Lạt</div>
+      </div>
+      <div id="areaResults">
+        <div style="padding:20px;text-align:center;">
+          <div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
+          <div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">Đang tải khu vực...</div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- end page-search -->
+
+  <!-- ========== FILTER SHEET ========== -->
+  <div class="filter-overlay" id="filterOverlay" onclick="closeFilterSheet()"></div>
+  <div class="filter-sheet" id="filterSheet">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px 12px;">
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);">Bộ lọc nâng cao</div>
+      <button onclick="resetFilterSheet()" style="font-size:12px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:600;">Đặt lại</button>
+    </div>
+
+    <div class="filter-sheet-body">
+      <!-- Loại giao dịch -->
+      <div class="fs-section">
+        <div class="fs-label">Loại giao dịch</div>
+        <div class="fs-chips">
+          <div class="fs-chip active" data-filter="property_type" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
+          <div class="fs-chip" data-filter="property_type" data-value="0" onclick="selectFilterChip(this)">Bán</div>
+          <div class="fs-chip" data-filter="property_type" data-value="1" onclick="selectFilterChip(this)">Cho thuê</div>
+        </div>
+      </div>
+
+      <!-- Loại BĐS -->
+      <div class="fs-section">
+        <div class="fs-label">Loại BĐS</div>
+        <div class="fs-chips">
+          <div class="fs-chip active" data-filter="categoryName" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
+          <div class="fs-chip" data-filter="categoryName" data-value="Đất ở" onclick="selectFilterChip(this)">Đất ở</div>
+          <div class="fs-chip" data-filter="categoryName" data-value="Nhà phố" onclick="selectFilterChip(this)">Nhà phố</div>
+          <div class="fs-chip" data-filter="categoryName" data-value="Biệt thự" onclick="selectFilterChip(this)">Biệt thự</div>
+          <div class="fs-chip" data-filter="categoryName" data-value="Căn hộ" onclick="selectFilterChip(this)">Căn hộ</div>
+          <div class="fs-chip" data-filter="categoryName" data-value="Khách sạn" onclick="selectFilterChip(this)">Khách sạn</div>
+        </div>
+      </div>
+
+      <!-- Khoảng giá -->
+      <div class="fs-section">
+        <div class="fs-label">Khoảng giá</div>
+        <div class="fs-chips">
+          <div class="fs-chip active" data-filter="price" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
+          <div class="fs-chip" data-filter="price" data-value="Dưới 1 tỷ" onclick="selectFilterChip(this)">Dưới 1 tỷ</div>
+          <div class="fs-chip" data-filter="price" data-value="1–3 tỷ" onclick="selectFilterChip(this)">1–3 tỷ</div>
+          <div class="fs-chip" data-filter="price" data-value="3–5 tỷ" onclick="selectFilterChip(this)">3–5 tỷ</div>
+          <div class="fs-chip" data-filter="price" data-value="5–10 tỷ" onclick="selectFilterChip(this)">5–10 tỷ</div>
+          <div class="fs-chip" data-filter="price" data-value="Trên 10 tỷ" onclick="selectFilterChip(this)">Trên 10 tỷ</div>
+        </div>
+      </div>
+
+      <!-- Diện tích -->
+      <div class="fs-section">
+        <div class="fs-label">Diện tích</div>
+        <div class="fs-chips">
+          <div class="fs-chip active" data-filter="area" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
+          <div class="fs-chip" data-filter="area" data-value="0-100" onclick="selectFilterChip(this)">Dưới 100m²</div>
+          <div class="fs-chip" data-filter="area" data-value="100-200" onclick="selectFilterChip(this)">100–200m²</div>
+          <div class="fs-chip" data-filter="area" data-value="200-500" onclick="selectFilterChip(this)">200–500m²</div>
+          <div class="fs-chip" data-filter="area" data-value="500-1000" onclick="selectFilterChip(this)">500–1000m²</div>
+          <div class="fs-chip" data-filter="area" data-value="1000+" onclick="selectFilterChip(this)">Trên 1000m²</div>
+        </div>
+      </div>
+
+      <!-- Hướng -->
+      <div class="fs-section">
+        <div class="fs-label">Hướng</div>
+        <div class="fs-chips">
+          <div class="fs-chip active" data-filter="direction" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
+          <div class="fs-chip" data-filter="direction" data-value="Đông" onclick="selectFilterChip(this)">Đông</div>
+          <div class="fs-chip" data-filter="direction" data-value="Tây" onclick="selectFilterChip(this)">Tây</div>
+          <div class="fs-chip" data-filter="direction" data-value="Nam" onclick="selectFilterChip(this)">Nam</div>
+          <div class="fs-chip" data-filter="direction" data-value="Bắc" onclick="selectFilterChip(this)">Bắc</div>
+          <div class="fs-chip" data-filter="direction" data-value="Đông Nam" onclick="selectFilterChip(this)">ĐN</div>
+          <div class="fs-chip" data-filter="direction" data-value="Đông Bắc" onclick="selectFilterChip(this)">ĐB</div>
+          <div class="fs-chip" data-filter="direction" data-value="Tây Nam" onclick="selectFilterChip(this)">TN</div>
+          <div class="fs-chip" data-filter="direction" data-value="Tây Bắc" onclick="selectFilterChip(this)">TB</div>
+        </div>
+      </div>
+
+      <!-- Pháp lý -->
+      <div class="fs-section">
+        <div class="fs-label">Pháp lý</div>
+        <div class="fs-chips">
+          <div class="fs-chip active" data-filter="legal" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
+          <div class="fs-chip" data-filter="legal" data-value="Sổ đỏ" onclick="selectFilterChip(this)">Sổ đỏ</div>
+          <div class="fs-chip" data-filter="legal" data-value="Sổ hồng" onclick="selectFilterChip(this)">Sổ hồng</div>
+          <div class="fs-chip" data-filter="legal" data-value="Giấy tay" onclick="selectFilterChip(this)">Giấy tay</div>
+          <div class="fs-chip" data-filter="legal" data-value="Hợp đồng" onclick="selectFilterChip(this)">Hợp đồng</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fs-footer">
+      <button class="fs-btn-reset" onclick="resetFilterSheet()">Đặt lại</button>
+      <button class="fs-btn-apply" onclick="applyFilterSheet()">Xem kết quả</button>
+    </div>
+  </div>
+
+  <!-- ========== SORT SHEET ========== -->
+  <div class="sort-overlay" id="sortOverlay" onclick="closeSortSheet()"></div>
+  <div class="sort-sheet" id="sortSheet">
+    <div class="sheet-handle"></div>
+    <div style="font-size:16px;font-weight:700;padding:0 20px 16px;color:var(--text-primary);border-bottom:1px solid var(--border-light);">Sắp xếp theo</div>
+    <div class="ss-option active" data-sort="latest" onclick="selectSort(this)"><span>Mới nhất</span><span class="ss-check">✓</span></div>
+    <div class="ss-option" data-sort="oldest" onclick="selectSort(this)"><span>Cũ nhất</span><span class="ss-check"></span></div>
+    <div class="ss-option" data-sort="price_asc" onclick="selectSort(this)"><span>Giá thấp → cao</span><span class="ss-check"></span></div>
+    <div class="ss-option" data-sort="price_desc" onclick="selectSort(this)"><span>Giá cao → thấp</span><span class="ss-check"></span></div>
+    <div class="ss-option" data-sort="area_asc" onclick="selectSort(this)"><span>Diện tích nhỏ → lớn</span><span class="ss-check"></span></div>
+    <div class="ss-option" data-sort="area_desc" onclick="selectSort(this)"><span>Diện tích lớn → nhỏ</span><span class="ss-check"></span></div>
+  </div>
 
