@@ -72,6 +72,17 @@
         <div class="chip" onclick="doSearchPrice('Trên 10 tỷ',this)">Trên 10 tỷ</div>
       </div>
 
+      <!-- Location filter quick -->
+      <div class="filter-bar" style="padding-top:0;">
+        <div class="chip active" onclick="doSearchLocation('',this)">Tất cả</div>
+        @php
+          $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
+        @endphp
+        @foreach($hotWards as $w)
+        <div class="chip" onclick="doSearchLocation('{{ $w->full_name }}',this)">{{ $w->full_name }}</div>
+        @endforeach
+      </div>
+
       <div style="padding:4px 16px 0;">
         <!-- Recent searches (dynamic from localStorage) -->
         <div id="recentSearchesSection">
@@ -80,26 +91,6 @@
             <button onclick="clearRecentSearches()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;">Xóa tất cả</button>
           </div>
           <div id="recentSearchesList"></div>
-        </div>
-      </div>
-
-      <!-- Popular areas -->
-      <div style="padding:16px 16px 6px;">
-        <div class="recent-label" style="margin-bottom:10px;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Khu vực hot</div>
-        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
-          @php
-             $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
-             $wardCounts = \App\Models\Property::where('status', 1)->selectRaw('ward_code, count(*) as cnt')->groupBy('ward_code')->pluck('cnt','ward_code');
-          @endphp
-          @foreach($hotWards as $w)
-          <div class="area-card" onclick="doSearch('{{ $w->full_name }}')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.05);height:80px;">
-            <div style="color:#3270FC;margin-bottom:4px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-            </div>
-            <div style="color:#3270FC;font-size:11px;font-weight:500;text-align:center;line-height:1.2;">{{ $w->full_name }}</div>
-            <div style="color:var(--text-tertiary);font-size:9px;margin-top:2px;">{{ $wardCounts[$w->code] ?? 0 }} BĐS</div>
-          </div>
-          @endforeach
         </div>
       </div>
     </div>
@@ -187,6 +178,16 @@
         <div class="chip" onclick="doSearchPrice('7–10 tỷ',this)">7–10 tỷ</div>
       </div>
 
+      <div id="resultsFilterLocation" class="filter-bar" style="padding:4px 16px 4px;">
+        <div class="chip active" onclick="doSearchLocation('',this)">Tất cả</div>
+        @php
+          $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
+        @endphp
+        @foreach($hotWards as $w)
+        <div class="chip" onclick="doSearchLocation('{{ $w->full_name }}',this)">{{ $w->full_name }}</div>
+        @endforeach
+      </div>
+
       <!-- Active filters row — SAU quick chips -->
       <div class="active-filters" id="activeFilters">
         <button class="af-clear" onclick="clearFilters()">Xóa bộ lọc</button>
@@ -211,9 +212,15 @@
             </div>
             <div class="rc-footer">
               <span class="rc-time">2 ngày trước</span>
-              <div style="display:flex;gap:6px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="rc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);color:var(--primary);"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
+                <!-- Guest: Đăng ký + Gửi yêu cầu -->
+                <button class="rc-btn role-guest" style="background:var(--primary);color:#fff;flex:1;min-width:80px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
+                <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
+                <!-- Broker: Gửi yêu cầu -->
+                <button class="rc-btn role-broker" style="background:var(--primary);color:#fff;flex:1;min-width:100px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
+                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
+                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary);color:#fff;flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -235,9 +242,15 @@
             </div>
             <div class="rc-footer">
               <span class="rc-time">5 ngày trước</span>
-              <div style="display:flex;gap:6px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="rc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);color:var(--primary);"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
+                <!-- Guest: Đăng ký + Gửi yêu cầu -->
+                <button class="rc-btn role-guest" style="background:var(--primary);color:#fff;flex:1;min-width:80px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
+                <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
+                <!-- Broker: Gửi yêu cầu -->
+                <button class="rc-btn role-broker" style="background:var(--primary);color:#fff;flex:1;min-width:100px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
+                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
+                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary);color:#fff;flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -273,8 +286,14 @@
                 <div style="font-size:10px;color:var(--text-tertiary);">Đăng bởi</div>
                 <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Nguyễn Broker <span style="display:inline-flex;align-items:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>4.8</div>
               </div>
-              <div style="display:flex;gap:8px;">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="rc-btn" style="padding:0 14px;border-radius:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                <!-- Guest: Đăng ký + Gửi yêu cầu -->
+                <button class="rc-btn role-guest" style="flex:1;min-width:80px;border-radius:8px;background:var(--primary);color:#fff;border:none;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
+                <button class="rc-btn role-guest" style="flex:1;min-width:90px;border-radius:8px;background:var(--primary-light);color:var(--primary);border:none;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
+                <!-- Broker: Gửi yêu cầu -->
+                <button class="rc-btn role-broker" style="flex:1;min-width:100px;border-radius:8px;background:var(--primary);color:#fff;border:none;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
+                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
                 <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="padding:0 14px;border-radius:8px;background:var(--primary);color:#fff;border:none;"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
@@ -296,9 +315,15 @@
             </div>
             <div class="rc-footer">
               <span class="rc-time">1 tuần trước</span>
-              <div style="display:flex;gap:6px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="rc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);color:var(--primary);"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
+                <!-- Guest: Đăng ký + Gửi yêu cầu -->
+                <button class="rc-btn role-guest" style="background:var(--primary);color:#fff;flex:1;min-width:80px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
+                <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
+                <!-- Broker: Gửi yêu cầu -->
+                <button class="rc-btn role-broker" style="background:var(--primary);color:#fff;flex:1;min-width:100px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
+                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
+                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary);color:#fff;flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -320,9 +345,15 @@
             </div>
             <div class="rc-footer">
               <span class="rc-time">3 ngày trước</span>
-              <div style="display:flex;gap:6px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="rc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);color:var(--primary);"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
+                <!-- Guest: Đăng ký + Gửi yêu cầu -->
+                <button class="rc-btn role-guest" style="background:var(--primary);color:#fff;flex:1;min-width:80px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
+                <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
+                <!-- Broker: Gửi yêu cầu -->
+                <button class="rc-btn role-broker" style="background:var(--primary);color:#fff;flex:1;min-width:100px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
+                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
+                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary);color:#fff;flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -396,10 +427,15 @@
               <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;display:flex;align-items:center;gap:5px;"><span style="display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>120m²</span> · <span style="display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>4PN</span> · Sổ hồng</div>
             </div>
           </div>
-          <div style="display:flex;gap:8px;margin-top:12px;">
-            <button style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);">Xem chi tiết</button>
-            <button style="flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-sale role-bds_admin role-sale_admin role-admin"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm sóc</span></button>
-            <button style="flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-guest role-broker"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Liên hệ</span></button>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+            <button style="flex:1;min-width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);">Xem chi tiết</button>
+            <!-- Guest: Đăng ký + Gửi yêu cầu -->
+            <button style="flex:1;min-width:80px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-guest"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
+            <button style="flex:1;min-width:80px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-guest"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
+            <!-- Broker: Gửi yêu cầu -->
+            <button style="flex:1;min-width:100px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-broker"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
+            <!-- Sale/Sale Admin/Admin: Chăm sóc -->
+            <button style="flex:1;min-width:90px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-sale role-bds_admin role-sale_admin role-admin"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm sóc</span></button>
           </div>
         </div>
       </div><!-- end mapView -->
@@ -475,6 +511,20 @@
           <div class="fs-chip" data-filter="price" data-value="5–7 tỷ" onclick="selectFilterChip(this)">5–7 tỷ</div>
           <div class="fs-chip" data-filter="price" data-value="7–10 tỷ" onclick="selectFilterChip(this)">7–10 tỷ</div>
           <div class="fs-chip" data-filter="price" data-value="Trên 10 tỷ" onclick="selectFilterChip(this)">Trên 10 tỷ</div>
+        </div>
+      </div>
+
+      <!-- Khu vực -->
+      <div class="fs-section">
+        <div class="fs-label">Khu vực</div>
+        <div class="fs-chips">
+          <div class="fs-chip active" data-filter="location" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
+          @php
+            $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
+          @endphp
+          @foreach($hotWards as $w)
+          <div class="fs-chip" data-filter="location" data-value="{{ $w->full_name }}" onclick="selectFilterChip(this)">{{ $w->full_name }}</div>
+          @endforeach
         </div>
       </div>
 
