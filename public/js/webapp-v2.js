@@ -211,7 +211,43 @@ window.openSubpage = function(id){
   if(!sp) return;
   sp.classList.add('open');
   document.querySelector('.bottom-nav').style.transform='translateY(100%)';
-  if(id === 'likedbds') loadLikedBds();
+  if(id === 'users') { usersCurrentTab = 'pending'; document.getElementById('usersSearchInput').value = ''; loadUsers(true); }
+  if(id === 'likedbds') loadLikedBds(true);
+  if(id === 'mybds') loadMyBds(true);
+  if(id === 'mycustomers') loadMyCustomers(true);
+  if(id === 'leads') {
+    leadsCurrentStatus = '';
+    leadsCurrentSearch = '';
+    document.querySelectorAll('#subpage-leads .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+    var tabAllEl = document.getElementById('leadsTabAll');
+    if (tabAllEl) tabAllEl.classList.add('active');
+    var searchEl = document.getElementById('leadsSearchInput');
+    if (searchEl) searchEl.value = '';
+    loadLeads(true);
+  }
+  if(id === 'deals') {
+    dealsCurrentStatus = '';
+    dealsCurrentSearch = '';
+    document.querySelectorAll('#subpage-deals .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+    var dealsTabAllEl = document.getElementById('dealsTabAll');
+    if (dealsTabAllEl) dealsTabAllEl.classList.add('active');
+    var dealsSearchEl = document.getElementById('dealsSearchInput');
+    if (dealsSearchEl) dealsSearchEl.value = '';
+    loadDeals(true);
+  }
+  if(id === 'bookings') {
+    if(typeof window.loadBookings === 'function') window.loadBookings();
+  }
+  if(id === 'commissions') {
+    commCurrentStatus = '';
+    document.querySelectorAll('#subpage-commissions .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+    var commTabAllEl = document.getElementById('commTabAll');
+    if (commTabAllEl) commTabAllEl.classList.add('active');
+    loadCommissions(true);
+  }
+  if(id === 'referral') {
+    loadReferralData();
+  }
 };
 window.closeSubpage = function(id){
   const sp = document.getElementById('subpage-'+id);
@@ -2101,25 +2137,205 @@ document.getElementById('sendModalOverlay')?.addEventListener('click',function(e
 });
 
 // ============ REFERRAL FUNCTIONS ============
+var _refData = null;
+var _refTreeAll = [];
+var _refTreeShown = 5;
+
+function loadReferralData() {
+  _refData = null;
+  _refTreeAll = [];
+  _refTreeShown = 5;
+
+  // Reset stats to loading state
+  ['refStatTotal','refStatActive','refStatEarned'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.textContent = '—';
+  });
+  var monthEl = document.getElementById('refMonthLabel');
+  if(monthEl) monthEl.textContent = '...';
+
+  // Show loading in containers
+  var treeLoading = document.getElementById('refTreeLoading');
+  var histLoading = document.getElementById('refHistoryLoading');
+  if(treeLoading) { treeLoading.style.display = ''; }
+  if(histLoading) { histLoading.style.display = ''; }
+  var showMore = document.getElementById('refTreeShowMore');
+  if(showMore) showMore.style.display = 'none';
+
+  // Show code skeleton
+  var codeSkeleton = document.getElementById('refCodeSkeleton');
+  if(codeSkeleton) codeSkeleton.style.display = 'inline-block';
+  var codeDisplay = document.getElementById('refCodeDisplay');
+
+  fetch('/webapp/referral/data')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      _refData = data;
+      _refTreeAll = _refData.tree || [];
+
+      // Update code
+      if(codeDisplay) {
+        if(codeSkeleton) codeSkeleton.style.display = 'none';
+        codeDisplay.textContent = _refData.referral_code || '';
+      }
+
+      // Update stats
+      var s = _refData.stats || {};
+      var totalEl = document.getElementById('refStatTotal');
+      var activeEl = document.getElementById('refStatActive');
+      var earnedEl = document.getElementById('refStatEarned');
+      if(totalEl) totalEl.textContent = s.total_referrals ?? 0;
+      if(activeEl) activeEl.textContent = s.active_referrals ?? 0;
+      if(earnedEl) earnedEl.textContent = (s.month_earned_trieu > 0 ? s.month_earned_trieu + ' tr' : '0');
+      if(monthEl) monthEl.textContent = s.month_label || '';
+
+      // Update tree title
+      var treeTitle = document.getElementById('refTreeTitle');
+      if(treeTitle) treeTitle.textContent = 'Cấp 1 — Bạn giới thiệu trực tiếp (' + _refTreeAll.length + ' người)';
+
+      // Render tree
+      renderReferralTree();
+
+      // Render history
+      renderReferralHistory(_refData.history || []);
+    })
+    .catch(function(err) {
+      console.error('Referral data error:', err);
+      if(treeLoading) { treeLoading.style.display=''; treeLoading.innerHTML = '<span style="color:var(--danger);">Không tải được dữ liệu</span>'; }
+      if(histLoading) { histLoading.style.display=''; histLoading.innerHTML = '<span style="color:var(--danger);">Không tải được dữ liệu</span>'; }
+    });
+}
+
+function renderReferralTree() {
+  var container = document.getElementById('refTreeContainer');
+  var loading   = document.getElementById('refTreeLoading');
+  var showMore  = document.getElementById('refTreeShowMore');
+  if(!container) return;
+  if(loading) loading.style.display = 'none';
+
+  var items = _refTreeAll.slice(0, _refTreeShown);
+
+  if(items.length === 0) {
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:13px;">Chưa có người nào được giới thiệu.<br><span style="font-size:12px;">Chia sẻ mã để bắt đầu xây dựng hệ thống!</span></div>';
+    if(showMore) showMore.style.display = 'none';
+    return;
+  }
+
+  var html = items.map(function(m) {
+    var roleColor = m.role_label === 'Sale' || m.role_label === 'Sale Admin' ? 'var(--purple)' : 'var(--success)';
+    var roleBg    = m.role_label === 'Sale' || m.role_label === 'Sale Admin' ? 'var(--purple-light)' : 'var(--success-light)';
+    var earnText  = m.month_earned_trieu > 0 ? '+' + m.month_earned_trieu + ' tr' : '0';
+    var earnColor = m.month_earned_trieu > 0 ? 'var(--success)' : 'var(--text-tertiary)';
+    var earnLabel = m.month_earned_trieu > 0 ? '5% tháng này' : 'Chưa phát sinh';
+    var opacity   = m.is_active ? '1' : '0.55';
+    var inactiveBadge = m.is_active ? '' : ' · Chưa HĐ';
+    return '<div class="ref-member" style="opacity:'+opacity+';">'
+      + '<div class="ref-member-avatar" style="background:linear-gradient(135deg,'+m.avatar_color+','+m.avatar_color+'cc);">'+m.avatar_letter+'</div>'
+      + '<div class="ref-member-body">'
+      + '<div class="ref-member-name">'+_escHtml(m.name)+' <span class="ref-level-tag" style="background:'+roleBg+';color:'+roleColor+';">'+_escHtml(m.role_label)+inactiveBadge+'</span></div>'
+      + '<div class="ref-member-meta">Tham gia: '+m.joined_at+' · '+_escHtml(m.ward_name)+'</div>'
+      + '</div>'
+      + '<div class="ref-member-right">'
+      + '<div class="ref-member-earn" style="color:'+earnColor+';">'+earnText+'</div>'
+      + '<div class="ref-member-earn-label">'+earnLabel+'</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Insert before the show-more button area
+  var existingItems = container.querySelectorAll('.ref-member');
+  existingItems.forEach(function(el){ el.remove(); });
+  container.insertAdjacentHTML('beforeend', html);
+
+  // Show more button
+  var remaining = _refTreeAll.length - _refTreeShown;
+  if(remaining > 0) {
+    showMore.textContent = 'Xem thêm ' + remaining + ' thành viên khác ▾';
+    showMore.style.display = '';
+  } else {
+    if(showMore) showMore.style.display = 'none';
+  }
+}
+
+window.showMoreReferrals = function() {
+  _refTreeShown += 5;
+  renderReferralTree();
+};
+
+function renderReferralHistory(history) {
+  var container = document.getElementById('refHistoryContainer');
+  var loading   = document.getElementById('refHistoryLoading');
+  if(!container) return;
+  if(loading) loading.style.display = 'none';
+
+  if(!history || history.length === 0) {
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:13px;">Chưa có hoa hồng giới thiệu nào được ghi nhận.</div>';
+    return;
+  }
+
+  var svgMoney = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+  var svgClock = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
+  var html = history.map(function(h) {
+    var isPending   = h.status === 'pending';
+    var isUpcoming  = h.status === 'upcoming';
+    var isCancelled = h.status === 'cancelled';
+
+    var avatarBg    = isPending || isUpcoming ? 'linear-gradient(135deg,#d97706,#f59e0b)' : 'linear-gradient(135deg,#059669,#10b981)';
+    var avatarIcon  = isPending || isUpcoming ? svgClock : svgMoney;
+    var earnText    = isPending || isUpcoming ? '~' + h.referral_amount_trieu + ' tr' : '+' + h.referral_amount_trieu + ' tr';
+    var earnColor   = isPending ? 'var(--warning)' : (isCancelled ? 'var(--text-tertiary)' : 'var(--success)');
+    var earnLabel   = isPending ? 'Đang chờ duyệt' : (isUpcoming ? 'Dự kiến' : (isCancelled ? 'Đã hủy' : '5% × ' + h.base_commission_trieu + ' tr HH'));
+    var statusMeta  = isPending ? ' · <span style="color:var(--warning);font-weight:600;">Đang chờ duyệt</span>' : (isUpcoming ? ' · <span style="color:var(--text-tertiary);">Sắp phát sinh</span>' : '');
+
+    return '<div class="ref-member">'
+      + '<div class="ref-member-avatar" style="background:'+avatarBg+';">'+avatarIcon+'</div>'
+      + '<div class="ref-member-body">'
+      + '<div class="ref-member-name">'+_escHtml(h.referee_name)+' — Deal #'+h.deal_id+'</div>'
+      + '<div class="ref-member-meta">'+h.date+' · '+_escHtml(h.property_label)+statusMeta+'</div>'
+      + '</div>'
+      + '<div class="ref-member-right">'
+      + '<div class="ref-member-earn" style="color:'+earnColor+';">'+earnText+'</div>'
+      + '<div class="ref-member-earn-label">'+earnLabel+'</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+function _escHtml(str) {
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 window.copyRefCode = function(){
-  const code = document.getElementById('refCodeDisplay').textContent;
+  var codeEl = document.getElementById('refCodeDisplay');
+  var code = _refData ? _refData.referral_code : (codeEl ? codeEl.textContent.trim() : '');
+  if(!code) { showToast('Chưa tải được mã giới thiệu'); return; }
   if(navigator.clipboard){
     navigator.clipboard.writeText(code);
   }
-  showToast('📋 Đã sao chép mã: '+code);
+  showToast('Đã sao chép mã: ' + code);
 };
 
 window.shareRefLink = function(platform){
-  const code = document.getElementById('refCodeDisplay').textContent;
-  const link = 'https://dalatbds.vn/ref/'+code;
-  const msg = 'Tham gia Đà Lạt BĐS với mã giới thiệu '+code+'. Đăng ký tại: '+link;
-  if(platform==='telegram'){
-    showToast('✈️ Đang mở Telegram để chia sẻ...');
-  } else if(platform==='zalo'){
-    showToast('💬 Đang mở Zalo để chia sẻ...');
+  var code    = _refData ? _refData.referral_code : '';
+  var link    = _refData ? _refData.share_url : ('/ref/' + code);
+  var tgUrl   = _refData ? _refData.telegram_share_url : '';
+  if(!code) { showToast('Chưa tải được mã giới thiệu'); return; }
+
+  if(platform === 'telegram') {
+    if(tgUrl) window.open(tgUrl, '_blank');
+    showToast('Đang mở Telegram để chia sẻ...');
+  } else if(platform === 'zalo') {
+    var zaloUrl = 'https://zalo.me/s/share?url=' + encodeURIComponent(link)
+      + '&text=' + encodeURIComponent('Tham gia Đà Lạt BĐS với mã giới thiệu ' + code + '. Đăng ký ngay!');
+    window.open(zaloUrl, '_blank');
+    showToast('Đang mở Zalo để chia sẻ...');
   } else {
     if(navigator.clipboard) navigator.clipboard.writeText(link);
-    showToast('🔗 Đã sao chép link: '+link);
+    showToast('Đã sao chép link: ' + link);
   }
 };
 
@@ -2338,6 +2554,542 @@ window.reloadLikedBdsAfterUnlike = function(propId){
   }, 400);
 };
 
+// ============ MY BDS SUBPAGE ============
+let mybdsLoaded        = false;
+let mybdsCurrentStatus = 'all';
+let mybdsCurrentSearch = '';
+let mybdsCurrentSort   = 'latest';
+let mybdsSearchTimer   = null;
+let mybdsAllData       = [];
+
+function loadMyBds(force) {
+  if (mybdsLoaded && !force) return;
+  mybdsLoaded = true;
+
+  const loadingEl = document.getElementById('mybdsLoading');
+  const emptyEl   = document.getElementById('mybdsEmpty');
+  const listEl    = document.getElementById('mybdsList');
+  if (!loadingEl || !emptyEl || !listEl) return;
+
+  loadingEl.style.display = '';
+  emptyEl.style.display   = 'none';
+  listEl.style.display    = 'none';
+
+  const cfg = window.WEBAPP_CONFIG || {};
+  const url = cfg.routes && cfg.routes.myPropertiesJson;
+  if (!url) return;
+
+  const params = new URLSearchParams({
+    status: mybdsCurrentStatus === 'all' ? 'all' : mybdsCurrentStatus,
+    search: mybdsCurrentSearch,
+    sort:   mybdsCurrentSort,
+  });
+
+  fetch(url + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(r => r.json())
+    .then(function(res) {
+      loadingEl.style.display = 'none';
+      if (!res.success) { emptyEl.style.display = ''; return; }
+
+      // Update summary strip
+      const counts = res.counts || {};
+      setElText('mybdsCountActive',  counts.active  ?? 0);
+      setElText('mybdsCountPending', counts.pending ?? 0);
+      setElText('mybdsCountHidden',  counts.hidden  ?? 0);
+      setElText('mybdsTotalViews',   (counts.total_views || 0).toLocaleString('vi-VN'));
+
+      // Update tab labels
+      setElText('mybdsTabAll',     'Tất cả (' + (counts.all ?? 0) + ')');
+      setElText('mybdsTabActive',  'Hiển thị (' + (counts.active ?? 0) + ')');
+      setElText('mybdsTabPending', 'Chờ duyệt (' + (counts.pending ?? 0) + ')');
+      setElText('mybdsTabHidden',  'Đã ẩn (' + (counts.hidden ?? 0) + ')');
+
+      const props = res.properties || [];
+      mybdsAllData = props;
+      // Cache properties by ID for safe onclick lookup
+      window._mybdsPropCache = {};
+      props.forEach(function(p) { window._mybdsPropCache[p.id] = p; });
+
+      if (!props.length) { emptyEl.style.display = ''; return; }
+
+      const maxViews = Math.max(1, ...props.map(p => p.total_click));
+      const maxFav   = Math.max(1, ...props.map(p => p.favourite_count));
+
+      listEl.innerHTML = props.map(p => mybdsBuildCard(p, maxViews, maxFav)).join('');
+      listEl.style.display = '';
+    })
+    .catch(function() {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (emptyEl)   emptyEl.style.display = '';
+    });
+}
+
+function setElText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function mybdsBuildCard(p, maxViews, maxFav) {
+  const statusInfo = p.status === 1
+    ? { cls: 'status-active',   label: '● Đang hiển thị' }
+    : p.status === 0
+      ? { cls: 'status-pending', label: '⏳ Chờ duyệt' }
+      : { cls: 'status-hidden',  label: '⊘ Đã ẩn' };
+
+  const imgStyle = p.title_image
+    ? `background:url('${escHtml(p.title_image)}') center/cover no-repeat;`
+    : 'background:linear-gradient(135deg,#1e3a5f,#0d1f3c);display:flex;align-items:center;justify-content:center;';
+
+  const imgPlaceholder = p.title_image
+    ? ''
+    : `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>`;
+
+  // Stat chips (views & likes) — only for active
+  const statChips = p.status === 1
+    ? `<div class="mybds-img-stats">
+        <div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${p.total_click}</span></div>
+        <div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${p.favourite_count}</span></div>
+      </div>`
+    : '';
+
+  // Metadata items
+  const metaItems = [
+    p.area     ? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>${escHtml(p.area)} m²</div>` : '',
+    p.rooms    ? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>${escHtml(p.rooms)} PN</div>` : '',
+    p.legal    ? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>${escHtml(p.legal)}</div>` : '',
+    p.direction? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>${escHtml(p.direction)}</div>` : '',
+    `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>${p.property_type === 0 ? 'Mua' : 'Thuê'}</div>`,
+  ].filter(Boolean).join('');
+
+  // Performance bars (active only)
+  const viewPct = Math.round((p.total_click / maxViews) * 100);
+  const favPct  = Math.round((p.favourite_count / maxFav) * 100);
+  const perfBars = p.status === 1
+    ? `<div class="perf-row">
+        <span class="perf-label">Lượt xem</span>
+        <div class="perf-bar-bg"><div class="perf-bar-fill" style="width:${viewPct}%;"></div></div>
+        <span class="perf-val">${p.total_click}</span>
+      </div>
+      <div class="perf-row">
+        <span class="perf-label">Quan tâm</span>
+        <div class="perf-bar-bg"><div class="perf-bar-fill" style="width:${favPct}%;background:var(--danger);"></div></div>
+        <span class="perf-val">${p.favourite_count}</span>
+      </div>`
+    : '';
+
+  // Pending notice banner
+  const pendingBanner = p.status === 0
+    ? `<div style="padding:10px 13px;background:var(--warning-light);border-top:1px solid #fde68a;display:flex;gap:8px;align-items:center;">
+        <span style="font-size:14px;">⏳</span>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--warning);">Đang chờ Admin duyệt</div>
+          <div style="font-size:10px;color:#b45309;">Gửi ${escHtml(p.created_at)} · Thường duyệt trong 24h</div>
+        </div>
+        <button style="margin-left:auto;padding:4px 10px;background:var(--warning);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;" onclick="mybdsWithdraw(${p.id})">Rút tin</button>
+      </div>`
+    : '';
+
+  // Action buttons per status
+  const svgEye      = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const svgEdit     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const svgHide     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+  const svgTrash    = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+
+  const editUrl = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes && window.WEBAPP_CONFIG.routes.editListingBase)
+    ? window.WEBAPP_CONFIG.routes.editListingBase + p.id
+    : '/webapp/edit-listing/' + p.id;
+
+  let quickBtns = '';
+  if (p.status === 1) {
+    // Active: view, edit, hide, delete
+    quickBtns = `
+      <div class="mybds-qbtn" onclick="mybdsViewProp(${p.id})" title="Xem">${svgEye}</div>
+      <div class="mybds-qbtn" onclick="window.location.href='${escHtml(editUrl)}'" title="Chỉnh sửa">${svgEdit}</div>
+      <div class="mybds-qbtn" onclick="mybdsToggleStatus(${p.id}, 1)" title="Ẩn tin">${svgHide}</div>
+      <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
+  } else if (p.status === 0) {
+    // Pending: edit, delete
+    quickBtns = `
+      <div class="mybds-qbtn" onclick="window.location.href='${escHtml(editUrl)}'" title="Chỉnh sửa">${svgEdit}</div>
+      <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
+  } else {
+    // Hidden: show again, delete
+    quickBtns = `
+      <button style="padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;" onclick="mybdsToggleStatus(${p.id}, 2)">Hiển thị lại</button>
+      <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
+  }
+
+  // Footer analytics
+  const footerLabel = p.status === 1
+    ? `Đăng ${escHtml(p.created_at)}`
+    : p.status === 0
+      ? `Gửi ${escHtml(p.created_at)}`
+      : `Ẩn từ ${escHtml(p.created_at)}`;
+
+  const cardOpacity = p.status === 2 ? 'opacity:0.75;' : '';
+
+  return `<div class="mybds-card" style="${cardOpacity}">
+    <div class="mybds-img" style="${imgStyle}">
+      ${imgPlaceholder}
+      <div class="mybds-img-overlay"></div>
+      <div class="mybds-img-status">
+        <span class="status-pill ${statusInfo.cls}">${statusInfo.label}</span>
+      </div>
+      <div class="mybds-img-price">${escHtml(p.price)}</div>
+      ${statChips}
+    </div>
+    <div class="mybds-body">
+      <div class="mybds-title" ${p.status === 1 ? `onclick="mybdsViewProp(${p.id})" style="cursor:pointer;"` : ''}>${escHtml(p.title)}</div>
+      <div class="mybds-addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escHtml(p.address_location || '')}</div>
+      <div class="mybds-meta">${metaItems}</div>
+    </div>
+    ${perfBars}
+    ${pendingBanner}
+    <div class="mybds-footer">
+      <div class="mybds-analytics">
+        <div class="mybds-analytic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${footerLabel}</div>
+      </div>
+      <div class="mybds-quick">${quickBtns}</div>
+    </div>
+  </div>`;
+}
+
+window.mybdsViewProp = function(id) {
+  const p = window._mybdsPropCache && window._mybdsPropCache[id];
+  if (!p) return;
+  openDetail({
+    id:     p.id,
+    title:  p.title,
+    price:  p.price,
+    priceM2: p.price_m2 || '',
+    area:   p.area ? p.area + ' m²' : '—',
+    room:   p.rooms ? p.rooms + ' PN' : '—',
+    type:   p.category_name || '',
+    addr:   p.address_location || '',
+    images: p.title_image ? [p.title_image] : [],
+  });
+};
+
+window.mybdsToggleStatus = function(id, currentStatus) {
+  const cfg  = window.WEBAPP_CONFIG || {};
+  const base = (cfg.routes && cfg.routes.myListingToggleBase) || '/webapp/listings/';
+  const csrf = cfg.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  fetch(base + id + '/toggle', {
+    method:  'PATCH',
+    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(function(res) {
+      if (res.success) {
+        const msg = res.status === 1 ? 'Đã hiển thị tin' : 'Đã ẩn tin';
+        showToast(msg);
+        mybdsLoaded = false;
+        loadMyBds(true);
+      } else {
+        showToast(res.message || 'Lỗi cập nhật trạng thái');
+      }
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+};
+
+window.mybdsDelete = function(id) {
+  if (!confirm('Bạn có chắc muốn xóa tin đăng này không?')) return;
+  const cfg  = window.WEBAPP_CONFIG || {};
+  const base = (cfg.routes && cfg.routes.myListingDeleteBase) || '/webapp/listings/';
+  const csrf = cfg.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  fetch(base + id, {
+    method:  'DELETE',
+    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(function(res) {
+      if (res.success) {
+        showToast('Đã xóa tin đăng');
+        mybdsLoaded = false;
+        loadMyBds(true);
+      } else {
+        showToast(res.message || 'Lỗi xóa tin');
+      }
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+};
+
+window.mybdsWithdraw = function(id) {
+  if (!confirm('Rút tin này khỏi hàng chờ duyệt?')) return;
+  const cfg  = window.WEBAPP_CONFIG || {};
+  const base = (cfg.routes && cfg.routes.myListingDeleteBase) || '/webapp/listings/';
+  const csrf = cfg.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || '';
+  fetch(base + id, {
+    method:  'DELETE',
+    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(function(res) {
+      if (res.success) {
+        showToast('Đã rút tin');
+        mybdsLoaded = false;
+        loadMyBds(true);
+      } else {
+        showToast(res.message || 'Lỗi rút tin');
+      }
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+};
+
+window.mybdsTabSwitch = function(btn, status) {
+  document.querySelectorAll('#subpage-mybds .sp-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  mybdsCurrentStatus = status;
+  mybdsLoaded = false;
+  loadMyBds(true);
+};
+
+window.mybdsOnSearchInput = function(val) {
+  clearTimeout(mybdsSearchTimer);
+  mybdsSearchTimer = setTimeout(function() {
+    mybdsCurrentSearch = val.trim();
+    mybdsLoaded = false;
+    loadMyBds(true);
+  }, 400);
+};
+
+window.mybdsToggleFilterSheet = function() {
+  const sheet = document.getElementById('mybdsFilterSheet');
+  if (!sheet) return;
+  sheet.style.display = sheet.style.display === 'none' ? '' : 'none';
+  // Highlight active sort option
+  const sortMap = { latest: 'mybdsSortLatest', oldest: 'mybdsSortOldest', views: 'mybdsSortViews', price_asc: 'mybdsSortPriceAsc', price_desc: 'mybdsSortPriceDesc' };
+  Object.entries(sortMap).forEach(([key, elId]) => {
+    const el = document.getElementById(elId);
+    if (el) {
+      const isActive = key === mybdsCurrentSort;
+      el.style.color = isActive ? 'var(--primary)' : 'var(--text-secondary)';
+      el.style.fontWeight = isActive ? '700' : '400';
+      el.textContent = (isActive ? '✓ ' : '  ') + el.textContent.replace(/^[✓ ]+/, '');
+    }
+  });
+};
+
+window.mybdsCloseFilterSheet = function() {
+  const sheet = document.getElementById('mybdsFilterSheet');
+  if (sheet) sheet.style.display = 'none';
+};
+
+window.mybdsSortSelect = function(sort) {
+  mybdsCurrentSort = sort;
+  mybdsCloseFilterSheet();
+  mybdsLoaded = false;
+  loadMyBds(true);
+};
+
+// ============ MY CUSTOMERS SUBPAGE ============
+let mycustLoaded        = false;
+let mycustCurrentStatus = 'all';
+let mycustCurrentSearch = '';
+let mycustSearchTimer   = null;
+
+function loadMyCustomers(force) {
+  if (mycustLoaded && !force) return;
+  mycustLoaded = true;
+
+  const loadingEl = document.getElementById('mycustLoading');
+  const emptyEl   = document.getElementById('mycustEmpty');
+  const listEl    = document.getElementById('mycustList');
+  if (!loadingEl || !emptyEl || !listEl) return;
+
+  loadingEl.style.display = '';
+  emptyEl.style.display   = 'none';
+  listEl.style.display    = 'none';
+
+  const cfg = window.WEBAPP_CONFIG || {};
+  const url = cfg.routes && cfg.routes.myCustomersJson;
+  if (!url) return;
+
+  const params = new URLSearchParams({
+    status: mycustCurrentStatus,
+    search: mycustCurrentSearch,
+  });
+
+  fetch(url + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      loadingEl.style.display = 'none';
+      if (!res.success) { emptyEl.style.display = ''; return; }
+
+      const counts = res.counts || {};
+      setElText('mycustCountNew',    counts.new    ?? 0);
+      setElText('mycustCountCare',   counts.care   ?? 0);
+      setElText('mycustCountDeal',   counts.deal   ?? 0);
+      setElText('mycustCountClosed', counts.closed ?? 0);
+
+      setElText('mycustTabAll',       'Tất cả ('     + (counts.all     ?? 0) + ')');
+      setElText('mycustTabNew',       'Lead mới ('   + (counts.new     ?? 0) + ')');
+      setElText('mycustTabContacted', 'Đã liên hệ (' + (counts.care    ?? 0) + ')');
+      setElText('mycustTabConverted', 'Đang Deal ('  + (counts.deal    ?? 0) + ')');
+      setElText('mycustTabLost',      'Đã chốt ('    + (counts.closed  ?? 0) + ')');
+
+      const leads = res.leads || [];
+      if (!leads.length) { emptyEl.style.display = ''; return; }
+
+      listEl.innerHTML = leads.map(function(l) { return mycustBuildCard(l); }).join('');
+      listEl.style.display = '';
+    })
+    .catch(function() {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (emptyEl)   emptyEl.style.display   = '';
+    });
+}
+
+function mycustBuildCard(lead) {
+  // Avatar initials: first + last word
+  var nameParts = (lead.customer_name || '?').trim().split(/\s+/);
+  var initials  = nameParts.length >= 2
+    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+    : ((lead.customer_name || '?')[0] || '?').toUpperCase();
+
+  // Status badge
+  var statusMap = {
+    'new':         { cls: 'badge-red',    label: 'Lead mới' },
+    'contacted':   { cls: 'badge-blue',   label: 'Đã liên hệ' },
+    'converted':   { cls: 'badge-purple', label: 'Đang Deal' },
+    'lost':        { cls: 'badge-gray',   label: 'Đã đóng' },
+    'bad-contact': { cls: 'badge-amber',  label: 'Liên hệ lỗi' },
+  };
+  var si = statusMap[lead.status] || statusMap['new'];
+
+  var leadTypeLabel = lead.lead_type === 'buy' ? 'Cần mua' : 'Cần thuê';
+
+  // Lead flow stepper
+  var stepByStatus = { 'new': 1, 'contacted': 2, 'converted': 4, 'lost': 5, 'bad-contact': 2 };
+  var activeStep   = stepByStatus[lead.status] || 1;
+  var isLost       = lead.status === 'lost' || lead.status === 'bad-contact';
+
+  function lfDot(n) {
+    if (!isLost && n < activeStep) return '<div class="lf-dot done">✓</div>';
+    if (n === activeStep)          return '<div class="lf-dot active">' + n + '</div>';
+    return '<div class="lf-dot">' + n + '</div>';
+  }
+  function lfLbl(n, txt) {
+    if (!isLost && n < activeStep) return '<div class="lf-label done">' + txt + '</div>';
+    if (n === activeStep)          return '<div class="lf-label active">' + txt + '</div>';
+    return '<div class="lf-label">' + txt + '</div>';
+  }
+  function lfLine(afterN) {
+    return (!isLost && afterN < activeStep)
+      ? '<div class="lf-line done"></div>'
+      : '<div class="lf-line"></div>';
+  }
+
+  var leadFlow = '<div class="lead-flow">'
+    + '<div class="lf-step">' + lfDot(1) + lfLbl(1, 'Lead mới') + '</div>' + lfLine(1)
+    + '<div class="lf-step">' + lfDot(2) + lfLbl(2, 'Đã liên hệ') + '</div>' + lfLine(2)
+    + '<div class="lf-step">' + lfDot(3) + lfLbl(3, 'Tạo Deal') + '</div>' + lfLine(3)
+    + '<div class="lf-step">' + lfDot(4) + lfLbl(4, 'Chăm sóc') + '</div>' + lfLine(4)
+    + '<div class="lf-step">' + lfDot(5) + lfLbl(5, 'Chốt') + '</div>'
+    + '</div>';
+
+  // Phone
+  var phoneRaw = (lead.customer_phone || '').replace(/\D/g, '');
+  var phoneHref = phoneRaw
+    ? 'href="tel:' + escHtml(lead.customer_phone) + '"'
+    : 'onclick="showToast(\'Không có số điện thoại\')"';
+
+  // Body rows
+  var bodyHtml = '<div class="cust-row"><span class="cust-row-label">Nhu cầu</span><span class="cust-row-val">' + leadTypeLabel + '</span></div>';
+  if (lead.categories && lead.categories.length) {
+    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Loại BĐS</span><span class="cust-row-val">' + escHtml(lead.categories.join(', ')) + '</span></div>';
+  }
+  if (lead.budget) {
+    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Ngân sách</span><span class="cust-row-val" style="color:var(--success);font-weight:600;">' + escHtml(lead.budget) + '</span></div>';
+  }
+  if (lead.wards && lead.wards.length) {
+    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Khu vực</span><span class="cust-row-val">' + escHtml(lead.wards.join(', ')) + '</span></div>';
+  }
+
+  // Tags
+  var tagsHtml = '';
+  (lead.categories || []).slice(0, 3).forEach(function(c) {
+    tagsHtml += '<span class="cust-tag">' + escHtml(c) + '</span>';
+  });
+  (lead.wards || []).slice(0, 2).forEach(function(w) {
+    tagsHtml += '<span class="cust-tag" style="background:var(--bg-secondary);">' + escHtml(w) + '</span>';
+  });
+
+  // Detail panel content
+  var detailPanelId = 'mycust-detail-' + lead.id;
+  var detailContent = '';
+  if (lead.status === 'new') {
+    detailContent = '<div class="cdp-note">Lead chưa được liên hệ. Liên hệ sớm để không bỏ lỡ cơ hội.</div>';
+  } else {
+    if (lead.activities && lead.activities.length) {
+      detailContent += '<div class="cdp-section-title">Lịch sử hoạt động</div><div class="cdp-timeline">';
+      lead.activities.slice(0, 3).forEach(function(a) {
+        var dotColor = a.type === 'call' ? 'var(--primary)' : a.type === 'note' ? 'var(--success)' : 'var(--text-tertiary)';
+        detailContent += '<div class="cdp-tl-item">'
+          + '<div class="cdp-tl-dot" style="background:' + dotColor + ';"></div>'
+          + '<div class="cdp-tl-text">' + escHtml(a.type_label) + ': ' + escHtml(a.content || '') + '</div>'
+          + '<div class="cdp-tl-time">' + escHtml(a.created_at) + '</div>'
+          + '</div>';
+      });
+      detailContent += '</div>';
+    } else {
+      detailContent += '<div style="font-size:12px;color:var(--text-tertiary);padding:8px 0;">Chưa có hoạt động nào.</div>';
+    }
+    if (lead.note) {
+      detailContent += '<div class="cdp-section-title" style="margin-top:12px;">Ghi chú</div>'
+        + '<div style="font-size:12px;color:var(--text-secondary);padding:6px 0;">' + escHtml(lead.note) + '</div>';
+    }
+  }
+
+  var svgCalendar = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  var svgPhone    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+
+  return '<div class="cust-card">'
+    + '<div class="cust-header">'
+    +   '<div class="cust-avatar" style="background:var(--primary);">' + escHtml(initials) + '</div>'
+    +   '<div class="cust-info">'
+    +     '<div class="cust-name">' + escHtml(lead.customer_name) + '</div>'
+    +     '<div class="cust-meta">'
+    +       '<span>' + escHtml(lead.customer_phone) + '</span>'
+    +       '<span style="color:var(--text-tertiary);">· ' + escHtml(lead.created_diff) + '</span>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="cust-status-badge"><span class="badge ' + si.cls + '">' + si.label + '</span></div>'
+    + '</div>'
+    + '<div class="cust-body">' + bodyHtml
+    +   (tagsHtml ? '<div class="cust-tags">' + tagsHtml + '</div>' : '')
+    + '</div>'
+    + leadFlow
+    + '<div class="cust-footer">'
+    +   '<div class="cust-date">' + svgCalendar + ' Nhận ' + escHtml(lead.created_at) + '</div>'
+    +   '<div class="cust-actions">'
+    +     '<a class="cust-btn" title="Gọi" ' + phoneHref + '>' + svgPhone + '</a>'
+    +     '<div class="cust-btn primary" onclick="toggleCustDetail(\'' + detailPanelId + '\')">▼ Chi tiết</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="cust-detail-panel" id="' + detailPanelId + '">' + detailContent + '</div>'
+    + '</div>';
+}
+
+window.mycustTabSwitch = function(btn, status) {
+  document.querySelectorAll('#subpage-mycustomers .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  mycustCurrentStatus = status;
+  mycustLoaded = false;
+  loadMyCustomers(true);
+};
+
+window.mycustOnSearchInput = function(val) {
+  clearTimeout(mycustSearchTimer);
+  mycustSearchTimer = setTimeout(function() {
+    mycustCurrentSearch = val.trim();
+    mycustLoaded = false;
+    loadMyCustomers(true);
+  }, 400);
+};
+
 // Initialize liked count
 (function(){
   const countEl = document.getElementById('likedBdsCount');
@@ -2345,6 +3097,600 @@ window.reloadLikedBdsAfterUnlike = function(propId){
     countEl.textContent = window.likedIds.size + ' BĐS đã lưu';
   }
 })();
+
+// ============ MY LEADS SUBPAGE ============
+let leadsLoaded        = false;
+let leadsCurrentStatus = '';
+let leadsCurrentSearch = '';
+let leadsSearchTimer   = null;
+let leadsCurrentPage   = 1;
+let leadsHasMore       = false;
+
+function loadLeads(force) {
+  if (leadsLoaded && !force) return;
+  leadsLoaded   = true;
+  leadsCurrentPage = 1;
+
+  const loadingEl = document.getElementById('leadsLoading');
+  const emptyEl   = document.getElementById('leadsEmpty');
+  const listEl    = document.getElementById('leadsList');
+  const moreEl    = document.getElementById('leadsLoadMore');
+  if (!loadingEl || !emptyEl || !listEl) return;
+
+  loadingEl.style.display = '';
+  emptyEl.style.display   = 'none';
+  listEl.style.display    = 'none';
+  if (moreEl) moreEl.style.display = 'none';
+
+  const cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.myLeadsJson) return;
+
+  const url = cfg.myLeadsJson
+    + '?search=' + encodeURIComponent(leadsCurrentSearch)
+    + '&status=' + encodeURIComponent(leadsCurrentStatus)
+    + '&page=1';
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      loadingEl.style.display = 'none';
+      if (!res.success) { emptyEl.style.display = ''; return; }
+
+      // Update KPI
+      if (res.kpi) {
+        var kn = document.getElementById('leadsKpiNew');
+        var kc = document.getElementById('leadsKpiContacted');
+        var kv = document.getElementById('leadsKpiConverted');
+        var kl = document.getElementById('leadsKpiLost');
+        if (kn) kn.textContent = res.kpi.new;
+        if (kc) kc.textContent = res.kpi.contacted;
+        if (kv) kv.textContent = res.kpi.converted;
+        if (kl) kl.textContent = res.kpi.lost;
+      }
+
+      // Update tab labels
+      var tabAll = document.getElementById('leadsTabAll');
+      if (tabAll && res.total !== undefined) {
+        var total = res.kpi ? (res.kpi.new + res.kpi.contacted + res.kpi.converted + res.kpi.lost) : res.total;
+        tabAll.textContent = 'Tất cả (' + total + ')';
+      }
+
+      if (!res.leads || res.leads.length === 0) {
+        emptyEl.style.display = '';
+        return;
+      }
+
+      listEl.innerHTML = renderLeadCards(res.leads);
+      listEl.style.display = '';
+      leadsHasMore   = res.has_more;
+      leadsCurrentPage = 1;
+      if (moreEl) moreEl.style.display = res.has_more ? '' : 'none';
+    })
+    .catch(function() {
+      loadingEl.style.display = 'none';
+      emptyEl.style.display   = '';
+    });
+}
+
+window.leadsLoadMore = function() {
+  if (!leadsHasMore) return;
+  const cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.myLeadsJson) return;
+
+  const nextPage = leadsCurrentPage + 1;
+  const url = cfg.myLeadsJson
+    + '?search=' + encodeURIComponent(leadsCurrentSearch)
+    + '&status=' + encodeURIComponent(leadsCurrentStatus)
+    + '&page=' + nextPage;
+
+  var moreEl = document.getElementById('leadsLoadMore');
+  if (moreEl) moreEl.querySelector('button').textContent = 'Đang tải...';
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (!res.success || !res.leads || res.leads.length === 0) {
+        if (moreEl) moreEl.style.display = 'none';
+        return;
+      }
+      var listEl = document.getElementById('leadsList');
+      if (listEl) listEl.innerHTML += renderLeadCards(res.leads);
+      leadsHasMore   = res.has_more;
+      leadsCurrentPage = nextPage;
+      if (moreEl) {
+        if (res.has_more) {
+          moreEl.querySelector('button').textContent = 'Xem thêm';
+          moreEl.style.display = '';
+        } else {
+          moreEl.style.display = 'none';
+        }
+      }
+    })
+    .catch(function() {
+      if (moreEl) moreEl.style.display = 'none';
+    });
+};
+
+function renderLeadCards(leads) {
+  var svgPhone = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>';
+  var svgSource = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>';
+  var svgZalo = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+  var svgMeeting = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  var svgDeal = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>';
+  var svgCancel = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+  var svgPhoneLg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>';
+
+  var statusColors = { new: '#ef4444', contacted: 'var(--primary)', converted: 'var(--success)', lost: 'var(--text-tertiary)' };
+  var statusLabels = { new: 'Mới', contacted: 'Đã liên hệ', converted: 'Đã chuyển', lost: 'Huỷ' };
+  var badgeClasses = { new: 'badge-red', contacted: 'badge-blue', converted: 'badge-green', lost: '' };
+  var cardClasses  = { new: 'urgent', contacted: 'contacted', converted: 'converted', lost: '' };
+
+  return leads.map(function(lead) {
+    var status     = lead.status || 'new';
+    var name       = lead.customer_name || 'Khách vãng lai';
+    var phone      = lead.customer_phone || '';
+    var initials   = name.split(' ').slice(-2).map(function(w) { return w[0] || ''; }).join('').toUpperCase().slice(0, 2);
+    var avatarColor = statusColors[status] || '#9ca3af';
+    var badgeCls   = badgeClasses[status] || '';
+    var cardCls    = cardClasses[status] || '';
+    var statusLbl  = statusLabels[status] || status;
+    var id         = lead.id;
+
+    var bodyRows = '';
+    if (lead.categories) bodyRows += '<div class="lc-row"><span class="lc-label">Loại BĐS</span><span class="lc-value">' + escHtml(lead.categories) + '</span></div>';
+    if (lead.lead_type || lead.purpose) {
+      var need = [lead.lead_type, lead.purpose].filter(Boolean).join(' · ');
+      bodyRows += '<div class="lc-row"><span class="lc-label">Nhu cầu</span><span class="lc-value">' + escHtml(need) + '</span></div>';
+    }
+    if (lead.budget) bodyRows += '<div class="lc-row"><span class="lc-label">Ngân sách</span><span class="lc-value money">' + escHtml(lead.budget) + '</span></div>';
+    if (lead.wards) bodyRows += '<div class="lc-row"><span class="lc-label">Khu vực</span><span class="lc-value">' + escHtml(lead.wards) + '</span></div>';
+
+    var tags = [];
+    if (lead.categories) lead.categories.split(',').forEach(function(c) { var t = c.trim(); if(t) tags.push(t); });
+    if (lead.budget) tags.push(lead.budget);
+    if (lead.wards) lead.wards.split(',').forEach(function(w) { var t = w.trim(); if(t) tags.push(t); });
+    if (lead.source_note) tags.push(lead.source_note);
+    var tagsHtml = tags.slice(0,5).map(function(t) { return '<span class="lc-tag">' + escHtml(t) + '</span>'; }).join('');
+
+    var sourceText = (lead.source_note || '') + (lead.source_note && lead.created_at ? ' · ' : '') + (lead.created_at || '');
+
+    // Expand section action buttons (shown for new/contacted leads; converted only shows note)
+    var expandBtns = '';
+    if (status !== 'converted' && status !== 'lost') {
+      expandBtns = '<div class="lc-action-row">'
+        + '<div class="lc-action-btn" data-action="call" data-new-status="contacted" onclick="leadsSelectAction(this,' + id + ')"><span class="lc-action-icon">' + svgPhoneLg + '</span>Đã gọi</div>'
+        + '<div class="lc-action-btn" data-action="zalo" data-new-status="contacted" onclick="leadsSelectAction(this,' + id + ')"><span class="lc-action-icon">' + svgZalo + '</span>Zalo</div>'
+        + '<div class="lc-action-btn" data-action="meeting" data-new-status="contacted" onclick="leadsSelectAction(this,' + id + ')"><span class="lc-action-icon">' + svgMeeting + '</span>Hẹn gặp</div>'
+        + '<div class="lc-action-btn" data-action="deal" onclick="leadsSelectAction(this,' + id + ')"><span class="lc-action-icon">' + svgDeal + '</span>Tạo Deal</div>'
+        + '<div class="lc-action-btn" data-action="cancel" data-new-status="lost" onclick="leadsSelectAction(this,' + id + ')"><span class="lc-action-icon">' + svgCancel + '</span>Huỷ</div>'
+        + '</div>';
+    }
+
+    // Footer primary CTA
+    var ctaBtn = '';
+    if (status === 'contacted') {
+      ctaBtn = '<button class="lc-btn success" onclick="leadsOpenExpand(' + id + ')">'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgDeal + ' Tạo Deal</span></button>';
+    } else if (status !== 'converted' && status !== 'lost') {
+      ctaBtn = '<button class="lc-btn primary" onclick="leadsOpenExpand(' + id + ')">Xử lý ▾</button>';
+    }
+
+    return '<div class="lead-card ' + cardCls + '" id="lc-card-' + id + '">'
+      + '<div class="lc-head">'
+      + '<div class="lc-avatar" style="background:' + avatarColor + ';">' + escHtml(initials) + '</div>'
+      + '<div class="lc-info">'
+      + '<div class="lc-name">' + escHtml(name) + '</div>'
+      + '<div class="lc-meta">'
+      + (phone ? '<span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;">' + svgPhone + '</span>' + escHtml(phone) + '</span>' : '')
+      + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
+      + '<span class="badge ' + badgeCls + '">' + statusLbl + '</span>'
+      + '<span class="lc-time">' + escHtml(lead.created_diff || lead.created_at || '') + '</span>'
+      + '</div>'
+      + '</div>'
+      + (bodyRows ? '<div class="lc-body">' + bodyRows + '</div>' : '')
+      + (tagsHtml ? '<div class="lc-tags">' + tagsHtml + '</div>' : '')
+      + '<div class="lc-footer">'
+      + (sourceText ? '<span class="lc-source"><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;">' + svgSource + '</span> ' + escHtml(sourceText) + '</span>' : '<span></span>')
+      + '<div class="lc-actions">'
+      + (phone ? '<a class="lc-btn icon" href="tel:' + encodeURIComponent(phone) + '" title="Gọi">' + svgPhoneLg + '</a>' : '')
+      + ctaBtn
+      + '</div>'
+      + '</div>'
+      + '<div class="lc-expand" id="lc-expand-' + id + '">'
+      + '<div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Cập nhật trạng thái</div>'
+      + expandBtns
+      + '<textarea class="lc-note-area" id="lc-note-' + id + '" rows="2" placeholder="Ghi chú nhanh (VD: Khách nói chờ tháng sau...)"></textarea>'
+      + '<div style="display:flex;gap:8px;">'
+      + '<button class="lc-btn" onclick="leadsCloseExpand(' + id + ')" style="flex:1">Đóng</button>'
+      + '<button class="lc-btn success" onclick="leadsSave(' + id + ')" style="flex:2">✓ Lưu & Cập nhật</button>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+window.leadsOpenExpand = function(id) {
+  var el = document.getElementById('lc-expand-' + id);
+  if (el) el.classList.add('open');
+};
+
+window.leadsCloseExpand = function(id) {
+  var el = document.getElementById('lc-expand-' + id);
+  if (el) el.classList.remove('open');
+};
+
+window.leadsSelectAction = function(btn, leadId) {
+  var expand = document.getElementById('lc-expand-' + leadId);
+  if (!expand) return;
+  expand.querySelectorAll('.lc-action-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+};
+
+window.leadsSave = function(leadId) {
+  var expand = document.getElementById('lc-expand-' + leadId);
+  if (!expand) return;
+  var activeBtn = expand.querySelector('.lc-action-btn.active');
+  if (!activeBtn) { showToast('Vui lòng chọn hành động trước'); return; }
+
+  var action    = activeBtn.dataset.action;
+  var noteEl    = document.getElementById('lc-note-' + leadId);
+  var note      = noteEl ? noteEl.value.trim() : '';
+  var csrf      = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  var cfg       = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+
+  if (action === 'deal') {
+    // POST /webapp/leads/{id}/deal
+    var dealUrl = (cfg && cfg.leadsCreateDealBase ? cfg.leadsCreateDealBase : '/webapp/leads/') + leadId + '/deal';
+    fetch(dealUrl, {
+      method: 'POST',
+      headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: note }),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        if (res.success) {
+          showToast('✓ Đã tạo Deal thành công');
+          leadsLoaded = false;
+          loadLeads(true);
+        } else {
+          showToast(res.message || 'Lỗi tạo deal');
+        }
+      })
+      .catch(function() { showToast('Lỗi kết nối'); });
+    return;
+  }
+
+  var newStatus = activeBtn.dataset.newStatus || 'contacted';
+  var actionTypeMap = { call: 'call', zalo: 'note', meeting: 'note', cancel: 'status_change' };
+  var notePrefixMap = { call: '', zalo: 'Đã nhắn Zalo. ', meeting: 'Đã hẹn gặp. ', cancel: '' };
+  var actionType = actionTypeMap[action] || 'note';
+  var fullNote   = (notePrefixMap[action] || '') + note;
+
+  var statusUrl = (cfg && cfg.leadsUpdateStatusBase ? cfg.leadsUpdateStatusBase : '/webapp/leads/') + leadId + '/status';
+  fetch(statusUrl, {
+    method: 'PATCH',
+    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: newStatus, action_type: actionType, note: fullNote }),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.success) {
+        showToast('✓ Đã lưu cập nhật');
+        leadsLoaded = false;
+        loadLeads(true);
+      } else {
+        showToast(res.message || 'Lỗi cập nhật');
+      }
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+};
+
+window.leadsTabSwitch = function(btn, status) {
+  if (!btn) return;
+  document.querySelectorAll('#subpage-leads .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  leadsCurrentStatus = status;
+  leadsLoaded = false;
+  loadLeads(true);
+};
+
+window.leadsOnSearchInput = function(val) {
+  clearTimeout(leadsSearchTimer);
+  leadsSearchTimer = setTimeout(function() {
+    leadsCurrentSearch = val.trim();
+    leadsLoaded = false;
+    loadLeads(true);
+  }, 400);
+};
+
+// ============ DEALS ============
+let dealsLoaded        = false;
+let dealsCurrentStatus = '';
+let dealsCurrentSearch = '';
+let dealsSearchTimer   = null;
+let dealsCurrentPage   = 1;
+let dealsHasMore       = false;
+
+function loadDeals(force) {
+  if (dealsLoaded && !force) return;
+  dealsLoaded      = true;
+  dealsCurrentPage = 1;
+
+  var loadingEl = document.getElementById('dealsLoading');
+  var emptyEl   = document.getElementById('dealsEmpty');
+  var listEl    = document.getElementById('dealsList');
+  var moreEl    = document.getElementById('dealsLoadMore');
+  if (!loadingEl || !emptyEl || !listEl) return;
+
+  loadingEl.style.display = '';
+  emptyEl.style.display   = 'none';
+  listEl.style.display    = 'none';
+  if (moreEl) moreEl.style.display = 'none';
+
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.myDealsJson) return;
+
+  var url = cfg.myDealsJson
+    + '?search=' + encodeURIComponent(dealsCurrentSearch)
+    + '&status=' + encodeURIComponent(dealsCurrentStatus)
+    + '&page=1';
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      loadingEl.style.display = 'none';
+      if (!res.success) { emptyEl.style.display = ''; return; }
+
+      // Update KPI
+      if (res.kpi) {
+        var ka = document.getElementById('dealsKpiActive');
+        var kn = document.getElementById('dealsKpiNegotiating');
+        var kc = document.getElementById('dealsKpiClosed');
+        var kh = document.getElementById('dealsKpiCommission');
+        if (ka) ka.textContent = res.kpi.active;
+        if (kn) kn.textContent = res.kpi.negotiating;
+        if (kc) kc.textContent = res.kpi.closed;
+        if (kh) kh.textContent = res.kpi.commission_expected || '0';
+      }
+
+      // Update tab "Active" count
+      var tabOpen = document.getElementById('dealsTabOpen');
+      if (tabOpen && res.kpi) {
+        tabOpen.textContent = 'Active (' + res.kpi.active + ')';
+      }
+
+      if (!res.deals || res.deals.length === 0) {
+        emptyEl.style.display = '';
+        return;
+      }
+
+      listEl.innerHTML = renderDealCards(res.deals);
+      listEl.style.display = '';
+      dealsHasMore     = res.has_more;
+      dealsCurrentPage = 1;
+      if (moreEl) moreEl.style.display = res.has_more ? '' : 'none';
+    })
+    .catch(function() {
+      loadingEl.style.display = 'none';
+      emptyEl.style.display   = '';
+    });
+}
+
+window.dealsLoadMore = function() {
+  if (!dealsHasMore) return;
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.myDealsJson) return;
+
+  var nextPage = dealsCurrentPage + 1;
+  var url = cfg.myDealsJson
+    + '?search=' + encodeURIComponent(dealsCurrentSearch)
+    + '&status=' + encodeURIComponent(dealsCurrentStatus)
+    + '&page=' + nextPage;
+
+  var moreEl = document.getElementById('dealsLoadMore');
+  if (moreEl) moreEl.querySelector('button').textContent = 'Đang tải...';
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (!res.success || !res.deals || res.deals.length === 0) {
+        if (moreEl) moreEl.style.display = 'none';
+        return;
+      }
+      var listEl = document.getElementById('dealsList');
+      if (listEl) listEl.innerHTML += renderDealCards(res.deals);
+      dealsHasMore     = res.has_more;
+      dealsCurrentPage = nextPage;
+      if (moreEl) {
+        if (res.has_more) {
+          moreEl.querySelector('button').textContent = 'Xem thêm';
+          moreEl.style.display = '';
+        } else {
+          moreEl.style.display = 'none';
+        }
+      }
+    })
+    .catch(function() {
+      if (moreEl) moreEl.style.display = 'none';
+    });
+};
+
+window.dealsTabSwitch = function(btn, status) {
+  if (!btn) return;
+  document.querySelectorAll('#subpage-deals .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  dealsCurrentStatus = status;
+  dealsLoaded = false;
+  loadDeals(true);
+};
+
+window.dealsOnSearchInput = function(val) {
+  clearTimeout(dealsSearchTimer);
+  dealsSearchTimer = setTimeout(function() {
+    dealsCurrentSearch = val.trim();
+    dealsLoaded = false;
+    loadDeals(true);
+  }, 400);
+};
+
+function renderDealCards(deals) {
+  return deals.map(renderDealCard).join('');
+}
+
+function renderDealCard(deal) {
+  // Badge by status
+  var statusBadge = '';
+  if (deal.status === 'open') {
+    if (deal.products_count === 0) {
+      statusBadge = '<span class="badge badge-blue">Mới tạo</span>';
+    } else {
+      statusBadge = '<span class="badge badge-purple"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Đang chăm</span></span>';
+    }
+  } else if (deal.status === 'negotiating') {
+    statusBadge = '<span class="badge badge-amber"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Thương lượng</span></span>';
+  } else if (deal.status === 'waiting_finance') {
+    statusBadge = '<span class="badge badge-amber">Chờ tài chính</span>';
+  } else if (deal.status === 'closed') {
+    statusBadge = '<span class="badge badge-green" style="background:#d1fae5;color:#065f46;">✓ Đã chốt</span>';
+  }
+
+  // Sub-info line
+  var subParts = [];
+  if (deal.lead_type) subParts.push((deal.lead_type === 'Mua' ? 'Tìm Mua' : 'Tìm Thuê'));
+  if (deal.categories) subParts.push(deal.categories);
+  if (deal.budget) subParts.push(deal.budget);
+  if (deal.wards) subParts.push(deal.wards);
+  var subInfo = subParts.join(' · ') || 'Deal #' + deal.id;
+
+  // Progress stages
+  var stageLabels = ['Lead', 'Deal', 'Chăm sóc', 'Xem nhà', 'Thương lượng', 'Chốt'];
+  var stagesHtml = '';
+  for (var i = 0; i < 6; i++) {
+    var isDone   = deal.stages_done[i];
+    var isActive = !isDone && (i === 0 || deal.stages_done[i - 1]);
+    var dotClass = isDone ? 'done' : (isActive ? 'active' : '');
+    var lblClass = isDone ? 'done' : (isActive ? 'active' : '');
+    var dotContent = isDone ? '✓' : (i + 1);
+
+    if (i === 4 && !isDone && isActive) {
+      dotContent = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
+    }
+
+    stagesHtml += '<div class="dc-stage"><div class="dc-stage-dot ' + dotClass + '">' + dotContent + '</div><div class="dc-stage-label ' + lblClass + '">' + stageLabels[i] + '</div></div>';
+
+    if (i < 5) {
+      var lineClass = isDone ? 'done' : ((deal.stages_done[i] && !deal.stages_done[i + 1]) ? 'active' : '');
+      stagesHtml += '<div class="dc-stage-line ' + lineClass + '"></div>';
+    }
+  }
+
+  // Negotiation banner
+  var negotiationBanner = '';
+  if (deal.status === 'negotiating' && deal.negotiation_info) {
+    negotiationBanner = '<div style="padding:8px 13px;background:var(--warning-light);border-top:1px solid #fde68a;">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--warning);margin-bottom:3px;display:flex;align-items:center;gap:4px;">'
+      + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Đang thương lượng</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary);">' + escHtml(deal.negotiation_info) + '</div>'
+      + '</div>';
+  }
+
+  // Products list
+  var productsHtml = '';
+  if (deal.products && deal.products.length > 0) {
+    var productItems = deal.products.map(function(p) {
+      var statusCls = 'dbs-' + p.status_key;
+      var statusIcon = '';
+      if (p.status_key === 'liked') {
+        statusIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ';
+      } else if (p.status_key === 'negotiating') {
+        statusIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> ';
+      } else if (p.status_key === 'sent') {
+        statusIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> ';
+      }
+      var bedroomsText = p.bedrooms ? ' · ' + p.bedrooms + ' PN' : '';
+      return '<div class="dc-bds-item">'
+        + '<div class="dc-bds-thumb gs1" style="display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg></div>'
+        + '<div class="dc-bds-info">'
+        + '<div class="dc-bds-title">' + escHtml(p.title) + '</div>'
+        + '<div class="dc-bds-price">' + escHtml(p.price) + '</div>'
+        + '<div class="dc-bds-area">' + escHtml(p.area) + bedroomsText + '</div>'
+        + '</div>'
+        + '<span class="dc-bds-status ' + statusCls + '"><span style="display:inline-flex;align-items:center;gap:3px;">' + statusIcon + escHtml(p.status_label) + '</span></span>'
+        + '</div>';
+    }).join('');
+
+    productsHtml = '<div class="dc-bds-list">'
+      + '<div style="padding:6px 13px;font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;">BĐS đã gửi (' + deal.products_count + ')</div>'
+      + negotiationBanner
+      + productItems
+      + '<div class="dc-add-bds" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">'
+      + '<div class="dc-add-icon">＋</div>'
+      + '<div class="dc-add-text">Gửi thêm BĐS phù hợp cho khách</div>'
+      + '</div>'
+      + '</div>';
+  } else {
+    productsHtml = '<div class="dc-add-bds" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">'
+      + '<div class="dc-add-icon">＋</div>'
+      + '<div class="dc-add-text">Bắt đầu gửi BĐS phù hợp cho khách</div>'
+      + '</div>';
+  }
+
+  // Footer date text
+  var footerDate = deal.latest_booking_display
+    ? deal.latest_booking_display
+    : 'Tạo ' + deal.created_at + ' · ' + (deal.products_count === 0 ? 'Chưa có BĐS' : deal.products_count + ' BĐS');
+
+  // Footer buttons
+  var chatBtn = '<button class="dc-footer-btn" onclick="dealsChatCustomer(\'' + escAttr(deal.customer_telegram_id) + '\',\'' + escAttr(deal.customer_phone) + '\')">'
+    + '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chat</span></button>';
+
+  var actionBtn = '';
+  if (deal.status === 'closed') {
+    actionBtn = '<span class="badge badge-green" style="background:#d1fae5;color:#065f46;padding:6px 12px;">✓ Đã chốt</span>';
+  } else if (deal.status === 'negotiating') {
+    actionBtn = '<button class="dc-footer-btn success" onclick="showToast(\'Chức năng chốt deal đang phát triển\')">✓ Chốt!</button>';
+  } else if (deal.products_count === 0) {
+    actionBtn = '<button class="dc-footer-btn primary" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">'
+      + '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi BĐS</span></button>';
+  } else {
+    actionBtn = '<button class="dc-footer-btn primary" onclick="showToast(\'Chức năng cập nhật đang phát triển\')">Cập nhật</button>';
+  }
+
+  return '<div class="deal-card">'
+    + '<div class="dc-head">'
+    + '<div class="dc-avatar" style="background:' + escAttr(deal.avatar_color) + '">' + escHtml(deal.avatar_initials) + '</div>'
+    + '<div class="dc-info">'
+    + '<div class="dc-name">' + escHtml(deal.customer_name) + ' — Deal #' + deal.id + '</div>'
+    + '<div class="dc-sub">' + escHtml(subInfo) + '</div>'
+    + '</div>'
+    + statusBadge
+    + '</div>'
+    + '<div class="dc-progress"><div class="dc-stages">' + stagesHtml + '</div></div>'
+    + productsHtml
+    + '<div class="dc-footer">'
+    + '<span class="dc-footer-date"><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>' + escHtml(footerDate) + '</span>'
+    + chatBtn
+    + actionBtn
+    + '</div>'
+    + '</div>';
+}
+
+window.dealsChatCustomer = function(telegramId, phone) {
+  if (telegramId) {
+    window.open('https://t.me/' + telegramId, '_blank');
+  } else if (phone) {
+    window.open('tel:' + phone);
+  } else {
+    showToast('Không có thông tin liên hệ');
+  }
+};
+
+function escAttr(str) {
+  if (!str) return '';
+  return String(str).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
 
 // Intersection Observer — trigger lazy load when sentinel is visible
 const homeFeedObserver = new IntersectionObserver(function(entries) {
@@ -2357,5 +3703,458 @@ const homeFeedObserver = new IntersectionObserver(function(entries) {
 
 const feedSentinel = document.getElementById('feed-sentinel');
 if (feedSentinel) homeFeedObserver.observe(feedSentinel);
+
+// ============ HOA HỒNG (COMMISSIONS) ============
+var commCurrentStatus = '';
+var commLoaded = false;
+
+function loadCommissions(reset) {
+  if (!reset && commLoaded) return;
+  commLoaded = true;
+
+  var loadingEl = document.getElementById('commLoading');
+  var emptyEl   = document.getElementById('commEmpty');
+  var listEl    = document.getElementById('commList');
+  if (!loadingEl || !emptyEl || !listEl) return;
+
+  loadingEl.style.display = '';
+  emptyEl.style.display   = 'none';
+  listEl.style.display    = 'none';
+
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.myCommissionsJson) { loadingEl.style.display = 'none'; emptyEl.style.display = ''; return; }
+
+  var url = cfg.myCommissionsJson + '?status=' + encodeURIComponent(commCurrentStatus);
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      loadingEl.style.display = 'none';
+      if (!res.success) { emptyEl.style.display = ''; return; }
+
+      // Update hero summary
+      if (res.summary) {
+        var el;
+        el = document.getElementById('commHeroTotal');    if (el) el.textContent = res.summary.total_fmt || '0';
+        el = document.getElementById('commHeroReceived'); if (el) el.textContent = (res.summary.received_trieu || 0) + ' tr';
+        el = document.getElementById('commHeroPending');  if (el) el.textContent = (res.summary.pending_trieu  || 0) + ' tr';
+        el = document.getElementById('commHeroUpcoming'); if (el) el.textContent = (res.summary.upcoming_trieu || 0) + ' tr';
+      }
+
+      // Update chart
+      if (res.chart && res.chart.length) {
+        var chartEl  = document.getElementById('commChart');
+        var labelsEl = document.getElementById('commChartLabels');
+        if (chartEl) {
+          chartEl.innerHTML = res.chart.map(function(bar) {
+            var cls = bar.is_current ? 'mc-bar active' : 'mc-bar';
+            return '<div class="' + cls + '" style="height:' + bar.height_pct + '%"><div class="mc-bar-tip">' + bar.trieu + '</div></div>';
+          }).join('');
+        }
+        if (labelsEl) {
+          labelsEl.innerHTML = res.chart.map(function(bar, i) {
+            var style = bar.is_current
+              ? 'font-size:9px;font-weight:700;color:var(--primary)'
+              : 'font-size:9px;color:var(--text-tertiary)';
+            return '<span style="' + style + '">' + escHtml(bar.label) + '</span>';
+          }).join('');
+        }
+      }
+
+      if (!res.commissions || res.commissions.length === 0) {
+        emptyEl.style.display = '';
+        return;
+      }
+
+      listEl.innerHTML = renderCommissionCards(res.commissions);
+      listEl.style.display = '';
+    })
+    .catch(function() {
+      var loadingEl2 = document.getElementById('commLoading');
+      var emptyEl2   = document.getElementById('commEmpty');
+      if (loadingEl2) loadingEl2.style.display = 'none';
+      if (emptyEl2)   emptyEl2.style.display   = '';
+    });
+}
+
+window.commTabSwitch = function(btn, status) {
+  if (!btn) return;
+  document.querySelectorAll('#subpage-commissions .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  commCurrentStatus = status;
+  commLoaded = false;
+  loadCommissions(true);
+};
+
+function renderCommissionCards(list) {
+  return list.map(renderCommissionCard).join('');
+}
+
+function renderCommissionCard(comm) {
+  var isCompleted = comm.status === 'completed';
+  var cardStyle   = isCompleted ? 'border-color:var(--primary);border-left:3px solid var(--primary)' : '';
+  var valStyle    = isCompleted ? 'color:var(--primary)' : 'color:var(--primary)';
+  var valText     = comm.sale_commission_trieu + ' tr' + (isCompleted ? ' ✓' : '');
+
+  // Stepper
+  var stepLabels = ['Chốt giá', 'Đặt cọc', 'Công chứng', 'Hoàn tất'];
+  if (comm.status === 'pending_deposit') stepLabels[1] = 'Chờ cọc';
+
+  var doneCount  = 0;
+  var activeStep = -1;
+  if (comm.status === 'pending_deposit')   { doneCount = 1; activeStep = 1; }
+  else if (comm.status === 'deposited')    { doneCount = 2; activeStep = 2; }
+  else if (comm.status === 'notarizing')   { doneCount = 2; activeStep = 2; }
+  else if (comm.status === 'completed')    { doneCount = 4; }
+
+  var stepperHtml = '';
+  for (var i = 0; i < 4; i++) {
+    var isDone   = i < doneCount;
+    var isActive = i === activeStep;
+    var isFinal  = isDone && i === 3;
+    var dotCls   = isFinal ? 'final' : (isDone ? 'done' : (isActive ? 'active' : ''));
+    var lblCls   = isDone ? 'done' : (isActive ? 'active' : '');
+    var dotContent;
+    if (isDone) {
+      dotContent = '✓';
+    } else if (isActive && activeStep === 1) {
+      dotContent = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+    } else if (isActive && activeStep === 2) {
+      dotContent = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    } else {
+      dotContent = (i + 1).toString();
+    }
+    stepperHtml += '<div class="cs-step"><div class="cs-dot ' + dotCls + '">' + dotContent + '</div><div class="cs-label ' + lblCls + '">' + escHtml(stepLabels[i]) + '</div></div>';
+    if (i < 3) {
+      stepperHtml += '<div class="cs-line' + (isDone ? ' done' : '') + '"></div>';
+    }
+  }
+
+  // Breakdown section
+  var breakdownHtml = '<div class="comm-breakdown">';
+  if (isCompleted) {
+    breakdownHtml += '<div class="comm-breakdown-item"><div class="comm-breakdown-label">Đã nhận</div><div class="comm-breakdown-val" style="color:var(--primary)">' + comm.sale_commission_trieu + ' triệu ✓</div></div>';
+    breakdownHtml += '<div class="comm-breakdown-item"><div class="comm-breakdown-label">Ngày nhận</div><div class="comm-breakdown-val">' + escHtml(comm.updated_at) + '</div></div>';
+  } else if (comm.status === 'notarizing' || comm.status === 'deposited') {
+    breakdownHtml += '<div class="comm-breakdown-item"><div class="comm-breakdown-label">HH của tôi (Sale)</div><div class="comm-breakdown-val" style="color:var(--primary)">' + comm.sale_commission_trieu + ' triệu</div></div>';
+    breakdownHtml += '<div class="comm-breakdown-item"><div class="comm-breakdown-label">HH App</div><div class="comm-breakdown-val">' + escHtml(comm.app_commission_fmt) + '</div></div>';
+    breakdownHtml += '<div class="comm-breakdown-item"><div class="comm-breakdown-label">Trạng thái</div><div class="comm-breakdown-val" style="color:var(--warning)">' + escHtml(comm.status_label) + '</div></div>';
+    breakdownHtml += '<div class="comm-breakdown-item"><div class="comm-breakdown-label">Dự kiến nhận</div><div class="comm-breakdown-val">—</div></div>';
+  } else {
+    breakdownHtml += '<div class="comm-breakdown-item"><div class="comm-breakdown-label">HH của tôi</div><div class="comm-breakdown-val" style="color:var(--warning)">' + comm.sale_commission_trieu + ' triệu (chờ)</div></div>';
+    breakdownHtml += '<div class="comm-breakdown-item"><div class="comm-breakdown-label">Cọc dự kiến</div><div class="comm-breakdown-val">—</div></div>';
+  }
+  breakdownHtml += '</div>';
+
+  // Footer date
+  var footerDate = '';
+  if (isCompleted) {
+    footerDate = '<span class="comm-footer-date" style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Hoàn tất ' + escHtml(comm.updated_at) + '</span>';
+  } else {
+    footerDate = '<span class="comm-footer-date">Chốt ' + escHtml(comm.created_at) + '</span>';
+  }
+
+  // Action button
+  var actionBtn = '';
+  if (isCompleted) {
+    actionBtn = '<button class="comm-action-btn" onclick="showToast(\'Đang xuất PDF...\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Xuất PDF</span></button>';
+  } else if (comm.status === 'notarizing' || comm.status === 'deposited') {
+    actionBtn = '<button class="comm-action-btn primary" onclick="showToast(\'Xem chi tiết hợp đồng\')">Xem hợp đồng</button>';
+  } else if (comm.status === 'pending_deposit') {
+    var phone = comm.customer_phone || '';
+    if (phone) {
+      actionBtn = '<button class="comm-action-btn" onclick="window.location.href=\'tel:' + escHtml(phone) + '\'"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Nhắc cọc</span></button>';
+    } else {
+      actionBtn = '<button class="comm-action-btn" onclick="showToast(\'Liên hệ khách nhắc đặt cọc\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Nhắc cọc</span></button>';
+    }
+  }
+
+  // Property icon background
+  var iconBg = isCompleted ? 'var(--primary-light)' : (comm.status === 'notarizing' ? 'var(--warning-light)' : 'var(--primary-light)');
+
+  return '<div class="comm-card" style="' + cardStyle + '">'
+    + '<div class="comm-card-head">'
+    + '<div class="comm-card-icon" style="background:' + iconBg + ';display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>'
+    + '<div class="comm-card-info">'
+    + '<div class="comm-card-name">' + escHtml(comm.property_name) + '</div>'
+    + '<div class="comm-card-sub">' + escHtml(comm.customer_name) + ' · Giá chốt: ' + escHtml(comm.deal_amount_fmt) + '</div>'
+    + '</div>'
+    + '<div class="comm-card-amount">'
+    + '<div class="comm-card-val" style="' + valStyle + '">' + escHtml(valText) + '</div>'
+    + '<div class="comm-card-pct">' + (comm.comm_pct > 0 ? comm.comm_pct + '% hoa hồng' : 'Hoa hồng') + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="comm-stepper">' + stepperHtml + '</div>'
+    + breakdownHtml
+    + '<div class="comm-card-footer">'
+    + footerDate
+    + '<div class="comm-footer-actions">' + actionBtn + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+// ========== ADMIN: QUẢN LÝ NGƯỜI DÙNG ==========
+
+var usersCurrentTab = 'pending';
+var usersCurrentSearch = '';
+var usersSearchTimer = null;
+
+window.usersSearchDebounce = function() {
+  clearTimeout(usersSearchTimer);
+  usersSearchTimer = setTimeout(function() {
+    usersCurrentSearch = document.getElementById('usersSearchInput').value.trim();
+    loadUsers(true);
+  }, 400);
+};
+
+window.switchUsersTab = function(tab, btn) {
+  usersCurrentTab = tab;
+  document.querySelectorAll('#usersTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  loadUsers(true);
+};
+
+window.loadUsers = function(reset) {
+  var url = window.WEBAPP_CONFIG.routes.adminUsersJson
+    + '?tab=' + encodeURIComponent(usersCurrentTab)
+    + '&search=' + encodeURIComponent(usersCurrentSearch);
+
+  var container = document.getElementById('usersListContainer');
+  if (reset) {
+    container.innerHTML = '<div id="usersSkeletonLoader" style="padding:16px;">'
+      + '<div style="height:90px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;animation:pulse 1.5s infinite;"></div>'
+      + '<div style="height:90px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;animation:pulse 1.5s infinite;"></div>'
+      + '<div style="height:90px;background:var(--bg-secondary);border-radius:12px;animation:pulse 1.5s infinite;"></div>'
+      + '</div>';
+  }
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      // Update hero stats
+      var s = data.stats || {};
+      var activeEl = document.getElementById('usersActiveCount');
+      if (activeEl) activeEl.textContent = s.active || 0;
+      var pendingEl = document.getElementById('usersPendingCount');
+      if (pendingEl) pendingEl.textContent = s.pending || 0;
+      var brokerEl = document.getElementById('usersBrokerCount');
+      if (brokerEl) brokerEl.textContent = s.broker || 0;
+      var saleEl = document.getElementById('usersSaleCount');
+      if (saleEl) saleEl.textContent = s.sale || 0;
+      var lockedEl = document.getElementById('usersLockedCount');
+      if (lockedEl) lockedEl.textContent = s.locked || 0;
+
+      // Update tab counts
+      document.querySelectorAll('.users-tab-count-pending').forEach(function(el) { el.textContent = s.pending || 0; });
+      document.querySelectorAll('.users-tab-count-broker').forEach(function(el) { el.textContent = s.broker || 0; });
+      document.querySelectorAll('.users-tab-count-sale').forEach(function(el) { el.textContent = s.sale || 0; });
+      document.querySelectorAll('.users-tab-count-locked').forEach(function(el) { el.textContent = s.locked || 0; });
+
+      // Render user cards
+      var users = data.users || [];
+      if (users.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:48px 16px;color:var(--text-tertiary);">'
+          + '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+          + '<div style="font-size:14px;">Không có người dùng nào</div></div>';
+        return;
+      }
+
+      var html = '';
+      var tab = usersCurrentTab;
+
+      if (tab === 'pending') {
+        html += '<div class="user-divider"><span>Chờ phê duyệt tài khoản eBroker</span><span class="badge badge-red">' + users.length + ' tài khoản</span></div>';
+      } else if (tab === 'broker') {
+        html += '<div class="user-divider"><span>eBroker đang active</span><span class="badge badge-green">' + users.length + ' users</span></div>';
+      } else if (tab === 'sale') {
+        html += '<div class="user-divider"><span>Nhân viên Sale</span><span class="badge badge-green">' + users.length + ' users</span></div>';
+      } else if (tab === 'locked') {
+        html += '<div class="user-divider"><span>Tài khoản bị khoá</span><span class="badge badge-red">' + users.length + ' users</span></div>';
+      }
+
+      users.forEach(function(u) {
+        html += renderUserCard(u, tab);
+      });
+
+      container.innerHTML = html;
+    })
+    .catch(function(err) {
+      container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--danger);">Lỗi tải dữ liệu. <button onclick="loadUsers(true)" style="color:var(--primary);text-decoration:underline;background:none;border:none;cursor:pointer;">Thử lại</button></div>';
+    });
+};
+
+function renderUserCard(u, tab) {
+  var roleBadge = getRoleBadge(u.role);
+  var initials = u.initials || u.name.slice(0, 2).toUpperCase();
+  var avatar = '<div class="uc-avatar" style="background:' + u.avatar_color + ';">' + initials + '</div>';
+
+  if (tab === 'pending') {
+    return '<div class="user-card" id="uc-' + u.id + '">'
+      + '<div class="uc-head">'
+      + avatar
+      + '<div class="uc-info">'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta">'
+      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
+      + (u.email ? '<span>✉ ' + escHtml(u.email) + '</span>' : '')
+      + '<span style="color:var(--warning);font-weight:600;">' + escHtml(u.created_at_human) + '</span>'
+      + '</div></div>'
+      + '<span class="badge badge-amber">⏳ Chờ duyệt</span>'
+      + '</div>'
+      + '<div class="uc-body">'
+      + '<div class="uc-row"><span class="uc-label">Xin đăng ký</span><span class="uc-value">eBroker</span></div>'
+      + '<div class="uc-row"><span class="uc-label">BĐS đã đăng</span><span class="uc-value">' + u.property_count + ' tin</span></div>'
+      + '</div>'
+      + '<div class="uc-actions">'
+      + '<button class="uc-btn reject" onclick="rejectUser(' + u.id + ',\'' + escHtml(u.name) + '\')">✕ Từ chối</button>'
+      + '<button class="uc-btn warn" onclick="approveTempUser(' + u.id + ',\'' + escHtml(u.name) + '\')">⏳ Duyệt tạm</button>'
+      + '<button class="uc-btn" style="background:var(--primary);color:#fff;" onclick="approveUser(' + u.id + ',\'' + escHtml(u.name) + '\')">✓ Duyệt</button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  if (tab === 'broker') {
+    return '<div class="user-card" id="uc-' + u.id + '">'
+      + '<div class="uc-head">'
+      + avatar
+      + '<div class="uc-info">'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta">'
+      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
+      + '</div></div>'
+      + roleBadge
+      + '</div>'
+      + '<div class="uc-stats">'
+      + '<div class="uc-stat"><div class="uc-stat-val">' + u.property_count + '</div><div class="uc-stat-lbl">BĐS đăng</div></div>'
+      + '</div>'
+      + '<div class="uc-actions">'
+      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Khoá</span></button>'
+      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Đổi role</span></button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  if (tab === 'sale') {
+    return '<div class="user-card" id="uc-' + u.id + '">'
+      + '<div class="uc-head">'
+      + avatar
+      + '<div class="uc-info">'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta">'
+      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
+      + '</div></div>'
+      + roleBadge
+      + '</div>'
+      + '<div class="uc-actions">'
+      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Khoá</span></button>'
+      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Đổi role</span></button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  if (tab === 'locked') {
+    return '<div class="user-card" id="uc-' + u.id + '" style="opacity:.8;border-color:var(--danger);">'
+      + '<div class="uc-head">'
+      + '<div class="uc-avatar" style="background:#6b7280;">' + initials + '</div>'
+      + '<div class="uc-info">'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta">'
+      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
+      + '<span style="color:var(--danger);font-weight:600;display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Bị khoá</span>'
+      + '</div></div>'
+      + '<span class="badge badge-red"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Khoá</span>'
+      + '</div>'
+      + '<div class="uc-actions">'
+      + '<button class="uc-btn approve" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Mở khoá</span></button>'
+      + '<button class="uc-btn danger" onclick="deleteUserConfirm(' + u.id + ',\'' + escHtml(u.name) + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Xoá</span></button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  return '';
+}
+
+function getRoleBadge(role) {
+  var badges = {
+    'broker':     '<span class="badge badge-green">🏠 eBroker</span>',
+    'bds_admin':  '<span class="badge" style="background:#ccfbf1;color:#0f766e;">🏘️ BĐS Admin</span>',
+    'sale':       '<span class="badge" style="background:#ede9fe;color:#7c3aed;">💼 Sale</span>',
+    'sale_admin': '<span class="badge badge-amber">📋 Sale Admin</span>',
+    'admin':      '<span class="badge badge-red">👑 Admin</span>',
+    'guest':      '<span class="badge" style="background:var(--bg-secondary);color:var(--text-secondary);">👤 Guest</span>',
+  };
+  return badges[role] || '<span class="badge" style="background:var(--bg-secondary);color:var(--text-secondary);">' + role + '</span>';
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+window.approveUser = function(id, name) {
+  if (!confirm('Duyệt tài khoản "' + name + '" làm eBroker?')) return;
+  userAction('/approve', id, null, 'Đã duyệt ' + name + ' làm eBroker!');
+};
+
+window.rejectUser = function(id, name) {
+  if (!confirm('Từ chối và khoá tài khoản "' + name + '"?')) return;
+  userAction('/reject', id, null, 'Đã từ chối tài khoản ' + name);
+};
+
+window.approveTempUser = function(id, name) {
+  if (!confirm('Duyệt tạm thời tài khoản "' + name + '"?')) return;
+  userAction('/approve-temp', id, null, 'Đã duyệt tạm thời ' + name);
+};
+
+window.openRoleSheet = function(id, currentRole) {
+  document.getElementById('userRoleSheetId').value = id;
+  var sheet = document.getElementById('userRoleSheet');
+  sheet.style.display = 'flex';
+  // Highlight current role
+  sheet.querySelectorAll('.rs-reason').forEach(function(el) { el.style.background = ''; });
+};
+
+window.changeUserRole = function(role) {
+  var id = document.getElementById('userRoleSheetId').value;
+  document.getElementById('userRoleSheet').style.display = 'none';
+  userAction('/role', id, { role: role }, 'Đã đổi role thành công!', 'PATCH');
+};
+
+window.toggleUserLock = function(id, name, isActive) {
+  var action = isActive ? 'khoá' : 'mở khoá';
+  if (!confirm('Xác nhận ' + action + ' tài khoản "' + name + '"?')) return;
+  userAction('/toggle-active', id, null, isActive ? 'Đã khoá ' + name : 'Đã mở khoá ' + name, 'PATCH');
+};
+
+window.deleteUserConfirm = function(id, name) {
+  if (!confirm('XOÁ VĨNH VIỄN tài khoản "' + name + '"? Hành động này không thể hoàn tác!')) return;
+  userAction('', id, null, 'Đã xoá tài khoản ' + name, 'DELETE');
+};
+
+function userAction(suffix, id, body, successMsg, method) {
+  method = method || 'POST';
+  var url = window.WEBAPP_CONFIG.routes.adminUsersBase + id + suffix;
+  var opts = {
+    method: method,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRF-TOKEN': window.WEBAPP_CONFIG.csrfToken,
+      'Content-Type': 'application/json',
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+
+  fetch(url, opts)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        showToast(successMsg || 'Thành công');
+        loadUsers(true);
+      } else {
+        showToast(data.message || 'Có lỗi xảy ra');
+      }
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+}
 
 }); // end DOMContentLoaded

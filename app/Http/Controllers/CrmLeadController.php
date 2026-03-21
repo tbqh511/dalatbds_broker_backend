@@ -163,8 +163,10 @@ class CrmLeadController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $newStatus = $request->input('status');
-        $oldStatus = $lead->getRawOriginal('status');
+        $newStatus  = $request->input('status');
+        $actionType = $request->input('action_type', 'status_change');
+        $note       = trim($request->input('note', ''));
+        $oldStatus  = $lead->getRawOriginal('status');
         $lead->status = $newStatus;
         $lead->save();
 
@@ -174,6 +176,15 @@ class CrmLeadController extends Controller
             'type'     => 'status_change',
             'content'  => "Đổi trạng thái: {$oldStatus} → {$newStatus}",
         ]);
+
+        if ($note !== '') {
+            CrmLeadActivity::create([
+                'lead_id'  => $lead->id,
+                'actor_id' => $customer->id,
+                'type'     => $actionType,
+                'content'  => $note,
+            ]);
+        }
 
         return response()->json(['success' => true]);
     }

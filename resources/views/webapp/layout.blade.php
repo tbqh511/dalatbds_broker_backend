@@ -79,6 +79,18 @@
       leadsCreate: @json(route('webapp.leads.create')),
       favouriteToggle: @json(route('webapp.favourite.toggle')),
       favouritesJson: @json(route('webapp.favourites.json')),
+      myPropertiesJson: @json(route('webapp.api.my_properties')),
+      myCustomersJson: @json(route('webapp.api.my_customers')),
+      myLeadsJson: @json(route('webapp.api.leads')),
+      myDealsJson: @json(route('webapp.api.deals')),
+      myCommissionsJson: @json(route('webapp.api.commissions')),
+      leadsUpdateStatusBase: '/webapp/leads/',
+      leadsCreateDealBase: '/webapp/leads/',
+      myListingToggleBase: '/webapp/listings/',
+      myListingDeleteBase: '/webapp/listings/',
+      editListingBase: '/webapp/edit-listing/',
+      adminUsersJson: @json(route('webapp.admin.users')),
+      adminUsersBase: '/webapp/api/admin/users/',
     }
   };
   window.likedIds = new Set((window.WEBAPP_CONFIG.likedPropertyIds || []).map(String));

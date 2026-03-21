@@ -4,14 +4,14 @@
       <div class="booking-today role-sale role-bds_admin role-sale_admin role-admin" style="margin-top:14px;cursor:pointer;"
            onclick="openSubpage('bookings')"
            title="Xem tất cả lịch hẹn">
-        <div class="booking-today-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Lịch hẹn hôm nay</span></div>
+        <div class="booking-today-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Kế hoạch gặp gỡ hôm nay</span></div>
         <div class="booking-item">
           <div class="booking-time">09:00</div>
           <div class="booking-info">
             <div class="booking-name">Anh Minh Tuấn</div>
             <div class="booking-addr">Đường 3/4, P.Lâm Viên</div>
           </div>
-          <span class="booking-status">Sắp tới</span>
+          <span class="booking-status">Chuẩn bị gặp</span>
         </div>
         <div class="booking-item">
           <div class="booking-time">14:30</div>
@@ -19,7 +19,7 @@
             <div class="booking-name">Chị Thu Hà</div>
             <div class="booking-addr">Đường Yersin, P.Cam Ly</div>
           </div>
-          <span class="booking-status" style="background:#d1fae5;color:#065f46;">Đã xem</span>
+          <span class="booking-status" style="background:#d1fae5;color:#065f46;">Đã tư vấn xong</span>
         </div>
       </div>
 
@@ -36,9 +36,9 @@
                 <path d="M9 22V13h6v9"/>
               </svg>
             </div>
-            <div class="stat-label">BĐS hiển thị</div>
+            <div class="stat-label">BĐS đang lên sóng</div>
             <div class="stat-value">{{ $stats['properties_count'] ?? 0 }}</div>
-            <div class="stat-delta">tin đang đăng</div>
+            <div class="stat-delta">sản phẩm đang chào bán</div>
           </div>
 
           <!-- Khách: broker, bds_admin, admin -->
@@ -52,9 +52,9 @@
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             </div>
-            <div class="stat-label">Khách</div>
+            <div class="stat-label">Tệp khách hàng</div>
             <div class="stat-value">{{ $stats['customers_count'] ?? 0 }}</div>
-            <div class="stat-delta">khách hàng</div>
+            <div class="stat-delta">khách đang kết nối</div>
           </div>
 
           <!-- Lead đang xử lý: sale, sale_admin -->
@@ -67,9 +67,9 @@
                 <circle cx="12" cy="12" r="2"/>
               </svg>
             </div>
-            <div class="stat-label">Lead đang xử lý</div>
+            <div class="stat-label">Cơ hội đang mở</div>
             <div class="stat-value">{{ $stats['leads_count'] ?? 0 }}</div>
-            <div class="stat-delta">—</div>
+            <div class="stat-delta">khách đang tư vấn</div>
           </div>
 
           <!-- Deal đang chăm: sale, sale_admin -->
@@ -83,9 +83,9 @@
                 <line x1="10" y1="14" x2="14" y2="14"/>
               </svg>
             </div>
-            <div class="stat-label">Deal đang chăm</div>
+            <div class="stat-label">Giao dịch đang theo</div>
             <div class="stat-value">{{ $stats['deals_count'] ?? 0 }}</div>
-            <div class="stat-delta">—</div>
+            <div class="stat-delta">{{ ($stats['deals_count'] ?? 0) == 0 ? 'Kết nối thêm nhé!' : 'khách đang thương lượng' }}</div>
           </div>
 
           <!-- Đánh giá: tất cả trừ guest -->
@@ -96,9 +96,9 @@
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
             </div>
-            <div class="stat-label">Đánh giá</div>
+            <div class="stat-label">Điểm uy tín</div>
             <div class="stat-value">{{ $stats['reviews_count'] ?? 0 }}</div>
-            <div class="stat-delta">+{{ $stats['reviews_count_week'] ?? 0 }} tuần này</div>
+            <div class="stat-delta">+{{ $stats['reviews_count_week'] ?? 0 }} phản hồi tuần này</div>
           </div>
 
           <!-- Quan Tâm: tất cả trừ guest -->
@@ -109,7 +109,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
             </div>
-            <div class="stat-label">Quan Tâm</div>
+            <div class="stat-label">Lượt khách lưu tin</div>
             <div class="stat-value">{{ $stats['favourites_count'] ?? 0 }}</div>
             <div class="stat-delta">+{{ $stats['favourites_count_week'] ?? 0 }} tuần này</div>
           </div>
@@ -124,17 +124,17 @@
         <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
           <span style="font-size:20px;display:inline-flex;align-items:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:600;color:#92400e;">{{ $stats['pending_count'] }} BĐS chờ duyệt</div>
-            <div style="font-size:11px;color:#b45309;">Cần xem xét và phê duyệt</div>
+            <div style="font-size:13px;font-weight:600;color:#92400e;">{{ $stats['pending_count'] }} BĐS đang chờ lên sóng</div>
+            <div style="font-size:11px;color:#b45309;">Đang chờ bạn xem xét để ra mắt khách hàng</div>
           </div>
           <button onclick="event.stopPropagation();openSubpage('approvebds')"
-                  style="padding:6px 12px;background:#d97706;color:#fff;border-radius:8px;font-size:12px;font-weight:600;border:none;">Duyệt</button>
+                  style="padding:6px 12px;background:#d97706;color:#fff;border-radius:8px;font-size:12px;font-weight:600;border:none;">Duyệt ngay</button>
         </div>
       </div>
       @endif
 
       <!-- Market prices -->
-      <div class="page-section-title">Thị trường Đà Lạt</div>
+      <div class="page-section-title">Nhịp đập thị trường Đà Lạt</div>
       <div class="market-strip">
         @if($marketPrices->isNotEmpty())
           <div class="market-title" style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> GIÁ TRUNG BÌNH / M² — THÁNG {{ $marketPrices->first()->month }}/{{ $marketPrices->first()->year }}</div>

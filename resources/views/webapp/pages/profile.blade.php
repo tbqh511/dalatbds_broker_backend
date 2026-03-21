@@ -75,10 +75,10 @@
         <div class="menu-item-right"><span class="badge badge-blue">2 tới</span> ›</div>
       </div>
       <div class="menu-item" onclick="openSubpage('commissions')">
-        <div class="menu-item-icon" style="background:var(--success-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="menu-item-icon" style="background:var(--primary-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
         <div class="menu-item-body">
           <div class="menu-item-title">Hoa hồng của tôi</div>
-          <div class="menu-item-sub">450 triệu dự kiến · 3 deal</div>
+          <div class="menu-item-sub">{{ $stats['commission_total_fmt'] }} dự kiến · {{ $stats['commission_deals'] }} deal</div>
         </div>
         <div class="menu-item-right">›</div>
       </div>
@@ -86,15 +86,15 @@
       <div style="margin:0 16px 12px;">
         <div class="commission-total">
           <div class="commission-label">TỔNG HOA HỒNG DỰ KIẾN</div>
-          <div class="commission-amount">450 triệu</div>
+          <div class="commission-amount">{{ $stats['commission_total_fmt'] }}</div>
           <div class="commission-breakdown">
             <div class="commission-sub">
               <div class="commission-sub-label">Đã nhận</div>
-              <div class="commission-sub-val">120 tr</div>
+              <div class="commission-sub-val">{{ $stats['commission_received_trieu'] }} tr</div>
             </div>
             <div class="commission-sub">
               <div class="commission-sub-label">Đang chờ</div>
-              <div class="commission-sub-val">330 tr</div>
+              <div class="commission-sub-val">{{ $stats['commission_pending_trieu'] }} tr</div>
             </div>
           </div>
         </div>

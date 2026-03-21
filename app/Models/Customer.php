@@ -30,6 +30,8 @@ class Customer extends Authenticatable implements JWTSubject
         'logintype',
         'isActive',
         'role',
+        'referral_code',
+        'referred_by',
     ];
 
     protected $hidden = [
@@ -61,6 +63,36 @@ class Customer extends Authenticatable implements JWTSubject
             'customer_id' => $this->id
         ];
     }
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($customer) {
+            if (empty($customer->referral_code)) {
+                $customer->referral_code = static::generateReferralCode();
+            }
+        });
+    }
+
+    public static function generateReferralCode(): string
+    {
+        do {
+            $code = 'DLBDS-' . strtoupper(substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(6))), 0, 6));
+        } while (static::where('referral_code', $code)->exists());
+
+        return $code;
+    }
+
+    public function referrer()
+    {
+        return $this->belongsTo(Customer::class, 'referred_by');
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(Customer::class, 'referred_by');
+    }
+
     public function user_purchased_package()
     {
         return  $this->morphMany(UserPurchasedPackage::class, 'modal');

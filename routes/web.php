@@ -94,6 +94,12 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/properties/nearby', [TelegramWebAppController::class, 'nearbyProperties'])->name('webapp.properties.nearby');
     Route::post('/webapp/favourite/toggle', [TelegramWebAppController::class, 'toggleFavourite'])->name('webapp.favourite.toggle');
     Route::get('/webapp/favourites/json', [TelegramWebAppController::class, 'likedProperties'])->name('webapp.favourites.json');
+    Route::get('/webapp/api/my-properties', [TelegramWebAppController::class, 'myPropertiesApi'])->name('webapp.api.my_properties');
+    Route::get('/webapp/api/my-customers', [TelegramWebAppController::class, 'myCustomersApi'])->name('webapp.api.my_customers');
+    Route::get('/webapp/api/leads', [TelegramWebAppController::class, 'myLeadsApi'])->name('webapp.api.leads');
+    Route::get('/webapp/api/deals', [TelegramWebAppController::class, 'myDealsApi'])->name('webapp.api.deals');
+    Route::get('/webapp/api/commissions', [TelegramWebAppController::class, 'myCommissionsApi'])->name('webapp.api.commissions');
+    Route::get('/webapp/referral/data', [TelegramWebAppController::class, 'referralApi'])->name('webapp.referral.data');
     Route::get('/webapp/profile', [TelegramWebAppController::class , 'profile'])->name('webapp.profile');
     Route::post('/webapp/profile', [TelegramWebAppController::class , 'updateProfile'])->name('webapp.profile.update');
     Route::post('/webapp/profile/avatar', [TelegramWebAppController::class , 'updateAvatar'])->name('webapp.profile.avatar');
@@ -101,7 +107,22 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/listings', [TelegramWebAppController::class , 'listings'])->name('webapp.listings');
     Route::get('/webapp/agents', [TelegramWebAppController::class , 'agents'])->name('webapp.agents');
     Route::get('/webapp/bookings', [TelegramWebAppController::class , 'bookings'])->name('webapp.bookings');
+    Route::get('/webapp/api/bookings', [TelegramWebAppController::class, 'apiGetBookings'])->name('webapp.api.bookings');
+    Route::patch('/webapp/api/bookings/{id}/result', [TelegramWebAppController::class, 'apiUpdateBookingResult'])->name('webapp.api.bookings.result');
+    Route::patch('/webapp/api/bookings/{id}/reschedule', [TelegramWebAppController::class, 'apiRescheduleBooking'])->name('webapp.api.bookings.reschedule');
+    Route::patch('/webapp/api/bookings/{id}/cancel', [TelegramWebAppController::class, 'apiCancelBooking'])->name('webapp.api.bookings.cancel');
     Route::get('/webapp/reviews', [TelegramWebAppController::class , 'reviews'])->name('webapp.reviews');
+
+    // Admin user management routes
+    Route::middleware(['webapp.role:admin'])->group(function () {
+        Route::get('/webapp/api/admin/users', [TelegramWebAppController::class, 'adminUsersApi'])->name('webapp.admin.users');
+        Route::post('/webapp/api/admin/users/{id}/approve', [TelegramWebAppController::class, 'adminApproveUser'])->name('webapp.admin.approve');
+        Route::post('/webapp/api/admin/users/{id}/reject', [TelegramWebAppController::class, 'adminRejectUser'])->name('webapp.admin.reject');
+        Route::post('/webapp/api/admin/users/{id}/approve-temp', [TelegramWebAppController::class, 'adminApproveTempUser'])->name('webapp.admin.approve-temp');
+        Route::patch('/webapp/api/admin/users/{id}/role', [TelegramWebAppController::class, 'adminChangeUserRole'])->name('webapp.admin.change-role');
+        Route::patch('/webapp/api/admin/users/{id}/toggle-active', [TelegramWebAppController::class, 'adminToggleUserActive'])->name('webapp.admin.toggle');
+        Route::delete('/webapp/api/admin/users/{id}', [TelegramWebAppController::class, 'adminDeleteUser'])->name('webapp.admin.delete');
+    });
     // Routes yêu cầu phải có số điện thoại
     Route::middleware(['webapp.require_phone'])->group(function () {
         // Đăng tin BĐS
@@ -145,6 +166,9 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     // Feed
     Route::get('/webapp/feed', [TelegramWebAppController::class , 'feed'])->name('webapp.feed');
 });
+
+// Public referral landing page
+Route::get('/ref/{code}', [TelegramWebAppController::class, 'referralLanding'])->name('referral.landing');
 
 //property controller
 Route::get('/property/{id}', [FrontEndPropertiesController::class , 'getPropertyById'])->name('property.showid');

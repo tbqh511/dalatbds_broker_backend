@@ -230,8 +230,6 @@
                 <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
                 <!-- Broker: Gửi yêu cầu -->
                 <button class="rc-btn role-broker" style="background:var(--primary);color:#fff;flex:1;min-width:100px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
-                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary);color:#fff;flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -260,8 +258,6 @@
                 <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
                 <!-- Broker: Gửi yêu cầu -->
                 <button class="rc-btn role-broker" style="background:var(--primary);color:#fff;flex:1;min-width:100px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
-                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary);color:#fff;flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -304,8 +300,6 @@
                 <button class="rc-btn role-guest" style="flex:1;min-width:90px;border-radius:8px;background:var(--primary-light);color:var(--primary);border:none;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
                 <!-- Broker: Gửi yêu cầu -->
                 <button class="rc-btn role-broker" style="flex:1;min-width:100px;border-radius:8px;background:var(--primary);color:#fff;border:none;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
-                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="padding:0 14px;border-radius:8px;background:var(--primary);color:#fff;border:none;"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -333,8 +327,6 @@
                 <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
                 <!-- Broker: Gửi yêu cầu -->
                 <button class="rc-btn role-broker" style="background:var(--primary);color:#fff;flex:1;min-width:100px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
-                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary);color:#fff;flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -363,8 +355,6 @@
                 <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
                 <!-- Broker: Gửi yêu cầu -->
                 <button class="rc-btn role-broker" style="background:var(--primary);color:#fff;flex:1;min-width:100px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
-                <!-- Sale/Sale Admin/Admin: Chăm sóc -->
-                <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary);color:#fff;flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
           </div>
@@ -445,8 +435,6 @@
             <button style="flex:1;min-width:80px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-guest"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
             <!-- Broker: Gửi yêu cầu -->
             <button style="flex:1;min-width:100px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-broker"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
-            <!-- Sale/Sale Admin/Admin: Chăm sóc -->
-            <button style="flex:1;min-width:90px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-sale role-bds_admin role-sale_admin role-admin"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm sóc</span></button>
           </div>
         </div>
       </div><!-- end mapView -->

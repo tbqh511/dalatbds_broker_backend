@@ -1464,7 +1464,7 @@ img {
 /* ============ COMMISSION CARD ============ */
 .commission-total {
   margin: 0 16px;
-  background: linear-gradient(135deg, var(--success) 0%, #10b981 60%, #34d399 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #4a85ff 60%, #7aaeff 100%);
   border-radius: var(--radius-lg);
   padding: 16px;
   color: #fff;
@@ -2402,11 +2402,11 @@ img {
   flex: 1;
   padding: 10px 8px;
   border-radius: var(--radius-md);
-  border: 1.5px solid var(--border);
-  background: var(--bg-card);
+  border: 1.5px solid var(--primary-light);
+  background: var(--primary-light);
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--primary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3115,7 +3115,7 @@ img {
 
 /* ---- COMMISSION CARD ---- */
 .comm-hero {
-  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #4a85ff 50%, #7aaeff 100%);
   padding: 18px 16px 20px;
   position: relative;
   overflow: hidden;
@@ -3241,7 +3241,7 @@ img {
 .comm-card-val {
   font-size: 16px;
   font-weight: 800;
-  color: var(--success);
+  color: var(--primary);
 }
 
 .comm-card-pct {
@@ -3288,8 +3288,8 @@ img {
 }
 
 .cs-dot.done {
-  background: var(--success);
-  border-color: var(--success);
+  background: var(--primary);
+  border-color: var(--primary);
   color: #fff;
 }
 
@@ -3301,8 +3301,8 @@ img {
 }
 
 .cs-dot.final {
-  background: var(--success);
-  border-color: var(--success);
+  background: var(--primary);
+  border-color: var(--primary);
   color: #fff;
 }
 
@@ -3319,7 +3319,7 @@ img {
 }
 
 .cs-label.done {
-  color: var(--success);
+  color: var(--primary);
 }
 
 .cs-line {
@@ -3331,7 +3331,7 @@ img {
 }
 
 .cs-line.done {
-  background: var(--success);
+  background: var(--primary);
 }
 
 /* commission breakdown */
@@ -6761,6 +6761,7 @@ textarea.form-row-value {
   transform: translateX(0);
   visibility: visible;
   transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0s;
+  z-index: 600;
 }
 
 
@@ -8660,16 +8661,30 @@ textarea.form-row-value {
   justify-content: center;
   font-size: 14px;
   cursor: pointer;
+  text-decoration: none;
+  color: var(--text-primary);
 }
 
 .cust-btn.primary {
   background: var(--primary);
   border-color: transparent;
+  width: auto;
+  padding: 0 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .cust-btn.success {
   background: var(--success);
   border-color: transparent;
+  width: auto;
+  padding: 0 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* lead status flow */

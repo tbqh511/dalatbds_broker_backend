@@ -30,6 +30,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Models\CrmLeadActivity;
+use App\Models\CrmDealProductBooking;
+use App\Enums\BookingStatus;
+use App\Models\CrmDealCommission;
+use App\Enums\CommissionStatus;
 use App\Services\Telegram\TelegramMessageTemplates;
 
 class TelegramWebAppController extends Controller
@@ -51,11 +56,15 @@ class TelegramWebAppController extends Controller
             'leads_count' => 0,
             'deals_count' => 0,
             'pending_count' => 0,
+            'commission_total_fmt' => '0 đ',
+            'commission_received_trieu' => 0,
+            'commission_pending_trieu' => 0,
+            'commission_deals' => 0,
         ];
 
         if ($customer) {
-            // Count active properties
-            $stats['properties_count'] = Property::where('added_by', $customer->id)->count();
+            // Count active (status=1) properties only
+            $stats['properties_count'] = Property::where('added_by', $customer->id)->where('status', 1)->count();
 
             // Count total views of user's properties
             $stats['views_count'] = Property::where('added_by', $customer->id)->sum('total_click');
@@ -97,6 +106,19 @@ class TelegramWebAppController extends Controller
 
             // Pending properties awaiting approval (for bds_admin/admin)
             $stats['pending_count'] = Property::where('status', 0)->count();
+
+            // Commission summary for profile quick view (sale/sale_admin/admin)
+            $commBase = CrmDealCommission::whereHas('deal.lead', function ($q) use ($customer) {
+                $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
+            })->where('status', '!=', CommissionStatus::CANCELLED->value);
+            $commReceived = (float)(clone $commBase)->where('status', CommissionStatus::COMPLETED->value)->sum('sale_commission');
+            $commPending  = (float)(clone $commBase)->whereIn('status', [CommissionStatus::DEPOSITED->value, CommissionStatus::NOTARIZING->value])->sum('sale_commission');
+            $commUpcoming = (float)(clone $commBase)->where('status', CommissionStatus::PENDING_DEPOSIT->value)->sum('sale_commission');
+            $commTotal    = $commReceived + $commPending + $commUpcoming;
+            $stats['commission_total_fmt']      = format_vnd($commTotal);
+            $stats['commission_received_trieu'] = (int)round($commReceived / 1_000_000);
+            $stats['commission_pending_trieu']  = (int)round(($commPending + $commUpcoming) / 1_000_000);
+            $stats['commission_deals']          = (clone $commBase)->count();
         }
 
         // Market prices for the home page strip
@@ -170,6 +192,537 @@ class TelegramWebAppController extends Controller
             });
 
         return response()->json(['success' => true, 'data' => $properties]);
+    }
+
+    public function myPropertiesApi(Request $request)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $statusFilter = $request->input('status', 'all');
+            $search       = $request->input('search', '');
+            $sort         = $request->input('sort', 'latest');
+
+            // Counts (always from all properties, ignoring current filter)
+            $activeCount  = Property::where('added_by', $customer->id)->where('status', 1)->count();
+            $pendingCount = Property::where('added_by', $customer->id)->where('status', 0)->count();
+            $hiddenCount  = Property::where('added_by', $customer->id)->where('status', 2)->count();
+            $totalViews   = Property::where('added_by', $customer->id)->sum('total_click');
+
+            // Main query
+            $query = Property::where('propertys.added_by', $customer->id)
+                ->with(['category', 'ward', 'street', 'parameters'])
+                ->withCount(['favourite as favourite_count']);
+
+            // Status filter
+            if (in_array($statusFilter, ['0', '1', '2'])) {
+                $query->where('propertys.status', (int) $statusFilter);
+            }
+
+            // Search filter
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('propertys.title', 'like', '%' . $search . '%')
+                      ->orWhere('propertys.address', 'like', '%' . $search . '%');
+                });
+            }
+
+            // Sort
+            switch ($sort) {
+                case 'oldest':
+                    $query->orderBy('propertys.created_at', 'asc');
+                    break;
+                case 'views':
+                    $query->orderBy('propertys.total_click', 'desc');
+                    break;
+                case 'price_asc':
+                    $query->orderBy('propertys.price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('propertys.price', 'desc');
+                    break;
+                default:
+                    $query->orderBy('propertys.created_at', 'desc');
+            }
+
+            $properties = $query->get()->map(function ($p) {
+                return [
+                    'id'               => $p->id,
+                    'title'            => $p->title ?: $p->title_by_address,
+                    'price'            => $p->formatted_prices,
+                    'price_m2'         => $p->formatted_price_m2,
+                    'status'           => (int) $p->status,
+                    'category_name'    => $p->category?->category ?? '',
+                    'property_type'    => (int) $p->property_type,
+                    'area'             => $p->area,
+                    'rooms'            => $p->number_room,
+                    'legal'            => $p->legal,
+                    'direction'        => $p->direction,
+                    'address_location' => $p->address_location,
+                    'total_click'      => (int) $p->total_click,
+                    'favourite_count'  => (int) $p->favourite_count,
+                    'created_at'       => $p->created_at ? $p->created_at->format('d/m/Y') : '',
+                    'title_image'      => $p->title_image,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'counts'  => [
+                    'all'         => $activeCount + $pendingCount + $hiddenCount,
+                    'active'      => $activeCount,
+                    'pending'     => $pendingCount,
+                    'hidden'      => $hiddenCount,
+                    'total_views' => (int) $totalViews,
+                ],
+                'properties' => $properties,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    public function myCustomersApi(Request $request)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $search       = $request->input('search', '');
+            $statusFilter = $request->input('status', 'all');
+
+            $baseQuery = CrmLead::where('user_id', $customer->id)->whereNotNull('customer_id');
+
+            // Counts (from full dataset, not filtered)
+            $countNew       = (clone $baseQuery)->where('status', 'new')->count();
+            $countContacted = (clone $baseQuery)->where('status', 'contacted')->count();
+            $countConverted = (clone $baseQuery)->where('status', 'converted')->count();
+            $countLost      = (clone $baseQuery)->whereIn('status', ['lost', 'bad-contact'])->count();
+
+            // Main query with eager loading
+            $query = (clone $baseQuery)->with([
+                'customer',
+                'deal',
+                'activities' => function ($q) {
+                    $q->orderBy('created_at', 'desc')->limit(5);
+                },
+            ]);
+
+            // Status filter
+            if ($statusFilter === 'new') {
+                $query->where('status', 'new');
+            } elseif ($statusFilter === 'contacted') {
+                $query->where('status', 'contacted');
+            } elseif ($statusFilter === 'converted') {
+                $query->where('status', 'converted');
+            } elseif ($statusFilter === 'lost') {
+                $query->whereIn('status', ['lost', 'bad-contact']);
+            }
+
+            // Search by customer name or phone
+            if (!empty($search)) {
+                $query->whereHas('customer', function ($q) use ($search) {
+                    $q->where('full_name', 'like', '%' . $search . '%')
+                      ->orWhere('contact', 'like', '%' . $search . '%');
+                });
+            }
+
+            $leads = $query->orderBy('created_at', 'desc')->get();
+
+            // Batch-resolve category and ward names to avoid N+1
+            $allCatIds    = $leads->flatMap(fn($l) => $l->categories ?? [])->unique()->values();
+            $allWardCodes = $leads->flatMap(fn($l) => $l->wards ?? [])->unique()->values();
+            $catMap  = Category::whereIn('id', $allCatIds)->pluck('category', 'id');
+            $wardMap = LocationsWard::whereIn('code', $allWardCodes)->pluck('full_name', 'code');
+
+            $leadsData = $leads->map(function ($lead) use ($catMap, $wardMap) {
+                $rawStatus  = $lead->getRawOriginal('status');
+                $rawType    = $lead->getRawOriginal('lead_type');
+
+                $categoryNames = collect($lead->categories ?? [])
+                    ->map(fn($id) => $catMap[$id] ?? null)->filter()->values()->toArray();
+
+                $wardNames = collect($lead->wards ?? [])
+                    ->map(fn($c) => $wardMap[$c] ?? null)->filter()->values()->toArray();
+
+                $budgetMin = (float) ($lead->demand_rate_min ?? 0);
+                $budgetMax = (float) ($lead->demand_rate_max ?? 0);
+                $budget = '';
+                if ($budgetMin > 0 || $budgetMax > 0) {
+                    $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
+                            . ' – '
+                            . ($budgetMax > 0 ? format_vnd($budgetMax) : '?');
+                }
+
+                $activities = $lead->activities->map(function ($a) {
+                    return [
+                        'type'       => $a->type,
+                        'type_label' => $a->getTypeLabel(),
+                        'content'    => $a->content ?? '',
+                        'created_at' => Carbon::parse($a->getRawOriginal('created_at'))->format('d/m'),
+                    ];
+                })->values()->toArray();
+
+                $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
+
+                return [
+                    'id'             => $lead->id,
+                    'status'         => $rawStatus,
+                    'lead_type'      => $rawType,
+                    'customer_name'  => optional($lead->customer)->full_name ?? 'Chưa rõ',
+                    'customer_phone' => optional($lead->customer)->contact ?? '',
+                    'categories'     => $categoryNames,
+                    'wards'          => $wardNames,
+                    'budget'         => $budget,
+                    'note'           => $lead->note ?? '',
+                    'has_deal'       => $lead->deal !== null,
+                    'activities'     => $activities,
+                    'created_at'     => $createdAt->format('d/m/Y'),
+                    'created_diff'   => $createdAt->diffForHumans(),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'counts'  => [
+                    'new'    => $countNew,
+                    'care'   => $countContacted,
+                    'deal'   => $countConverted,
+                    'closed' => $countLost,
+                    'all'    => $countNew + $countContacted + $countConverted + $countLost,
+                ],
+                'leads' => $leadsData,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    public function myLeadsApi(Request $request)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $search = trim($request->input('search', ''));
+            $status = trim((string) $request->input('status', ''));
+            $page   = (int) $request->input('page', 1);
+
+            // Base query: leads where this user is the broker (user_id) or assigned sale (sale_id)
+            $baseQuery = CrmLead::with(['customer'])
+                ->where(function ($q) use ($customer) {
+                    $q->where('sale_id', $customer->id)
+                      ->orWhere('user_id', $customer->id);
+                });
+
+            // KPI counts — computed before search/status filters
+            $kpi = [
+                'new'       => (clone $baseQuery)->whereRaw("LOWER(status) = 'new'")->count(),
+                'contacted' => (clone $baseQuery)->whereRaw("LOWER(status) = 'contacted'")->count(),
+                'converted' => (clone $baseQuery)->whereRaw("LOWER(status) = 'converted'")->count(),
+                'lost'      => (clone $baseQuery)->whereRaw("LOWER(status) = 'lost'")->count(),
+            ];
+
+            // Apply search filter
+            if ($search !== '') {
+                $baseQuery->where(function ($q) use ($search) {
+                    $q->whereHas('customer', function ($cq) use ($search) {
+                        $cq->where('full_name', 'LIKE', '%' . $search . '%')
+                           ->orWhere('contact', 'LIKE', '%' . $search . '%');
+                    })->orWhere('note', 'LIKE', '%' . $search . '%');
+                });
+            }
+
+            // Apply status filter
+            if ($status !== '') {
+                $baseQuery->whereRaw("LOWER(status) = ?", [strtolower($status)]);
+            }
+
+            $paginator = $baseQuery->orderBy('created_at', 'desc')
+                ->paginate(15, ['*'], 'page', $page);
+
+            // Batch-resolve category and ward names
+            $allCatIds    = $paginator->getCollection()->flatMap(fn($l) => $l->categories ?? [])->unique()->values();
+            $allWardCodes = $paginator->getCollection()->flatMap(fn($l) => $l->wards ?? [])->unique()->values();
+            $catMap  = \App\Models\Category::whereIn('id', $allCatIds)->pluck('category', 'id');
+            $wardMap = \App\Models\LocationsWard::whereIn('code', $allWardCodes)->pluck('full_name', 'code');
+
+            $leads = $paginator->getCollection()->map(function ($lead) use ($catMap, $wardMap) {
+                $rawStatus = $lead->getRawOriginal('status');
+                $rawType   = $lead->getRawOriginal('lead_type');
+
+                $categoryNames = collect($lead->categories ?? [])
+                    ->map(fn($id) => $catMap[$id] ?? null)->filter()->implode(', ');
+
+                $wardNames = collect($lead->wards ?? [])
+                    ->map(fn($c) => $wardMap[$c] ?? null)->filter()->implode(', ');
+
+                $budgetMin = (float) ($lead->demand_rate_min ?? 0);
+                $budgetMax = (float) ($lead->demand_rate_max ?? 0);
+                $budget = '';
+                if ($budgetMin > 0 || $budgetMax > 0) {
+                    $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
+                            . ' – '
+                            . ($budgetMax > 0 ? format_vnd($budgetMax) : '?');
+                }
+
+                $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
+
+                return [
+                    'id'             => $lead->id,
+                    'status'         => $rawStatus,
+                    'lead_type'      => $rawType === 'buy' ? 'Mua' : 'Thuê',
+                    'purpose'        => $lead->purpose ?? '',
+                    'customer_name'  => optional($lead->customer)->full_name ?? 'Khách vãng lai',
+                    'customer_phone' => optional($lead->customer)->contact ?? '',
+                    'categories'     => $categoryNames,
+                    'wards'          => $wardNames,
+                    'budget'         => $budget,
+                    'note'           => $lead->note ?? '',
+                    'source_note'    => $lead->source_note ?? '',
+                    'has_deal'       => false, // avoid eager loading for performance
+                    'created_at'     => $createdAt->format('d/m/Y'),
+                    'created_diff'   => $createdAt->diffForHumans(),
+                ];
+            });
+
+            return response()->json([
+                'success'   => true,
+                'kpi'       => $kpi,
+                'leads'     => $leads,
+                'total'     => $paginator->total(),
+                'has_more'  => $paginator->hasMorePages(),
+                'next_page' => $paginator->currentPage() + 1,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    public function myDealsApi(Request $request)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $search = trim($request->input('search', ''));
+            $status = trim((string) $request->input('status', ''));
+            $page   = (int) $request->input('page', 1);
+
+            // Base query: deals where lead belongs to this customer (as broker or sale)
+            $baseQuery = CrmDeal::whereHas('lead', function ($q) use ($customer) {
+                $q->where('sale_id', $customer->id)
+                  ->orWhere('user_id', $customer->id);
+            });
+
+            // KPI counts — before search/status filters
+            $kpi = [
+                'active'          => (clone $baseQuery)->whereRaw("LOWER(status) = 'open'")->count(),
+                'negotiating'     => (clone $baseQuery)->whereRaw("LOWER(status) = 'negotiating'")->count(),
+                'waiting_finance' => (clone $baseQuery)->whereRaw("LOWER(status) = 'waiting_finance'")->count(),
+                'closed'          => (clone $baseQuery)->whereRaw("LOWER(status) = 'closed'")->count(),
+            ];
+
+            // Expected commission: sum from open/negotiating/waiting_finance deals
+            $commissionTotal = CrmDeal::whereHas('lead', function ($q) use ($customer) {
+                    $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
+                })
+                ->whereIn('status', ['open', 'negotiating', 'waiting_finance'])
+                ->join('crm_deals_commissions', 'crm_deals.id', '=', 'crm_deals_commissions.deal_id')
+                ->sum('crm_deals_commissions.sale_commission');
+            $kpi['commission_expected'] = format_vnd((float) $commissionTotal);
+
+            // Apply search filter
+            if ($search !== '') {
+                $baseQuery->whereHas('customer', function ($q) use ($search) {
+                    $q->where('full_name', 'LIKE', '%' . $search . '%')
+                      ->orWhere('contact', 'LIKE', '%' . $search . '%');
+                });
+            }
+
+            // Apply status filter
+            if ($status !== '') {
+                $baseQuery->whereRaw("LOWER(status) = ?", [strtolower($status)]);
+            }
+
+            // Eager-load relationships
+            $baseQuery->with([
+                'customer',
+                'lead',
+                'products.property',
+                'products.bookings',
+                'commissions',
+            ]);
+
+            $paginator = $baseQuery->orderBy('created_at', 'desc')
+                ->paginate(15, ['*'], 'page', $page);
+
+            // Batch-resolve category and ward names from leads
+            $allCatIds    = $paginator->getCollection()->flatMap(fn($d) => $d->lead?->categories ?? [])->unique()->values();
+            $allWardCodes = $paginator->getCollection()->flatMap(fn($d) => $d->lead?->wards ?? [])->unique()->values();
+            $catMap  = \App\Models\Category::whereIn('id', $allCatIds)->pluck('category', 'id');
+            $wardMap = \App\Models\LocationsWard::whereIn('code', $allWardCodes)->pluck('full_name', 'code');
+
+            $avatarColors = ['#6366f1', '#0ea5e9', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+            $productStatusMap = [
+                'sent_info'         => ['key' => 'sent',        'label' => 'Đã gửi'],
+                'sent_location'     => ['key' => 'sent',        'label' => 'Đã gửi'],
+                'sent_legal'        => ['key' => 'sent',        'label' => 'Đã gửi'],
+                'customer_feedback' => ['key' => 'sent',        'label' => 'Đã gửi'],
+                'booking_created'   => ['key' => 'sent',        'label' => 'Đã gửi'],
+                'viewed_success'    => ['key' => 'liked',       'label' => 'Ưng ý'],
+                'viewed_failed'     => ['key' => 'disliked',    'label' => 'Không ưng'],
+                'negotiating'       => ['key' => 'negotiating', 'label' => 'Đàm phán'],
+                'waiting_finance'   => ['key' => 'waiting',     'label' => 'Chờ TC'],
+            ];
+
+            $viewedStatuses = ['booking_created', 'viewed_success', 'viewed_failed', 'negotiating', 'waiting_finance'];
+
+            $deals = $paginator->getCollection()->map(function ($deal) use ($catMap, $wardMap, $avatarColors, $productStatusMap, $viewedStatuses) {
+                $rawStatus = $deal->getRawOriginal('status');
+                $lead      = $deal->lead;
+                $cust      = $deal->customer;
+
+                // Avatar initials + color
+                $name    = optional($cust)->full_name ?? 'Khách';
+                $words   = preg_split('/\s+/', trim($name));
+                $initials = count($words) >= 2
+                    ? mb_strtoupper(mb_substr($words[0], 0, 1) . mb_substr($words[count($words) - 1], 0, 1))
+                    : mb_strtoupper(mb_substr($name, 0, 2));
+                $color = $avatarColors[$deal->id % count($avatarColors)];
+
+                // Lead info
+                $rawType       = $lead ? $lead->getRawOriginal('lead_type') : '';
+                $categoryNames = collect($lead?->categories ?? [])
+                    ->map(fn($id) => $catMap[$id] ?? null)->filter()->implode(', ');
+                $wardNames = collect($lead?->wards ?? [])
+                    ->map(fn($c) => $wardMap[$c] ?? null)->filter()->implode(', ');
+                $budgetMin = (float) ($lead?->demand_rate_min ?? 0);
+                $budgetMax = (float) ($lead?->demand_rate_max ?? 0);
+                $budget = '';
+                if ($budgetMin > 0 || $budgetMax > 0) {
+                    $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
+                            . ' – '
+                            . ($budgetMax > 0 ? format_vnd($budgetMax) : '?');
+                }
+
+                // Stage calculation
+                $products      = $deal->products;
+                $hasProducts   = $products->isNotEmpty();
+                $hasViewed     = $products->some(fn($p) => in_array($p->getRawOriginal('status'), $viewedStatuses));
+                $isNegotiating = $rawStatus === 'negotiating'
+                    || $products->some(fn($p) => $p->getRawOriginal('status') === 'negotiating');
+                $isClosed      = $rawStatus === 'closed';
+
+                $stagesDone = [
+                    true,           // Lead
+                    true,           // Deal
+                    $hasProducts,   // Chăm sóc
+                    $hasViewed,     // Xem nhà
+                    $isNegotiating, // Thương lượng
+                    $isClosed,      // Chốt
+                ];
+                $currentStage = 1;
+                foreach ($stagesDone as $i => $done) {
+                    if ($done) $currentStage = $i + 1;
+                }
+
+                // Products list
+                $mappedProducts = $products->map(function ($p) use ($productStatusMap) {
+                    $rawPStatus  = $p->getRawOriginal('status');
+                    $statusInfo  = $productStatusMap[$rawPStatus] ?? ['key' => 'sent', 'label' => 'Đã gửi'];
+                    $prop        = $p->property;
+
+                    $latestBooking = $p->bookings->sortByDesc(function ($b) {
+                        return $b->booking_date->format('Y-m-d') . ($b->booking_time ?? '00:00');
+                    })->first();
+
+                    $bookingDisplay = null;
+                    if ($latestBooking) {
+                        $bookingDisplay = [
+                            'date'   => Carbon::parse($latestBooking->booking_date)->format('d/m'),
+                            'time'   => $latestBooking->booking_time ? substr($latestBooking->booking_time, 0, 5) : '',
+                            'status' => $latestBooking->getRawOriginal('status') ?? '',
+                        ];
+                    }
+
+                    return [
+                        'id'             => $p->id,
+                        'property_id'    => $p->property_id,
+                        'title'          => optional($prop)->title
+                            ?: (optional($prop)->title_by_address ?? ('BĐS #' . $p->property_id)),
+                        'price'          => optional($prop)->formatted_prices ?? '',
+                        'area'           => optional($prop)->area ? optional($prop)->area . ' m²' : '',
+                        'bedrooms'       => optional($prop)->number_room,
+                        'status_key'     => $statusInfo['key'],
+                        'status_label'   => $statusInfo['label'],
+                        'latest_booking' => $bookingDisplay,
+                        'note'           => $p->note ?? '',
+                    ];
+                })->values();
+
+                // Latest booking across all products for footer
+                $allBookings         = $products->flatMap(fn($p) => $p->bookings);
+                $latestBookingFooter = $allBookings->sortByDesc(function ($b) {
+                    return $b->booking_date->format('Y-m-d') . ($b->booking_time ?? '00:00');
+                })->first();
+                $latestBookingDisplay = null;
+                if ($latestBookingFooter) {
+                    $latestBookingDisplay = 'Lịch xem: '
+                        . Carbon::parse($latestBookingFooter->booking_date)->format('d/m')
+                        . ($latestBookingFooter->booking_time ? ' ' . substr($latestBookingFooter->booking_time, 0, 5) : '');
+                }
+
+                $createdAt = Carbon::parse($deal->getRawOriginal('created_at'));
+
+                return [
+                    'id'                     => $deal->id,
+                    'status'                 => $rawStatus,
+                    'customer_name'          => $name,
+                    'customer_phone'         => optional($cust)->contact ?? '',
+                    'customer_telegram_id'   => optional($cust)->telegram_id ?? '',
+                    'avatar_initials'        => $initials,
+                    'avatar_color'           => $color,
+                    'lead_type'              => $rawType === 'buy' ? 'Mua' : ($rawType === 'rent' ? 'Thuê' : ''),
+                    'categories'             => $categoryNames,
+                    'wards'                  => $wardNames,
+                    'budget'                 => $budget,
+                    'current_stage'          => $currentStage,
+                    'stages_done'            => $stagesDone,
+                    'created_at'             => $createdAt->format('d/m/Y'),
+                    'created_diff'           => $createdAt->diffForHumans(),
+                    'products_count'         => $products->count(),
+                    'products'               => $mappedProducts,
+                    'negotiation_info'       => $rawStatus === 'negotiating' ? ($deal->notes ?? null) : null,
+                    'latest_booking_display' => $latestBookingDisplay,
+                ];
+            });
+
+            return response()->json([
+                'success'   => true,
+                'kpi'       => $kpi,
+                'deals'     => $deals,
+                'total'     => $paginator->total(),
+                'has_more'  => $paginator->hasMorePages(),
+                'next_page' => $paginator->currentPage() + 1,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
     }
 
     public function tempui(Request $request)
@@ -1036,6 +1589,129 @@ class TelegramWebAppController extends Controller
     public function bookings(Request $request)
     {
         return view('frontend_dashboard_bookings');
+    }
+
+    public function apiGetBookings(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        $bookings = CrmDealProductBooking::whereHas('crmDealProduct.deal.lead', function ($q) use ($customer) {
+            $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
+        })
+            ->with(['crmDealProduct.property', 'crmDealProduct.deal.customer'])
+            ->orderBy('booking_date', 'asc')
+            ->orderBy('booking_time', 'asc')
+            ->get()
+            ->map(function ($booking) {
+                $dealProduct = $booking->crmDealProduct;
+                $property = $dealProduct->property ?? null;
+                $crmCustomer = $dealProduct->deal->customer ?? null;
+
+                return [
+                    'id' => $booking->id,
+                    'booking_date' => $booking->booking_date ? $booking->booking_date->format('Y-m-d') : null,
+                    'booking_time' => $booking->booking_time ? substr($booking->booking_time, 0, 5) : null,
+                    'status' => $booking->status->value,
+                    'customer_feedback' => $booking->customer_feedback,
+                    'internal_note' => $booking->internal_note,
+                    'property_title' => $property ? $property->title : 'Bất động sản',
+                    'customer_name' => $crmCustomer ? $crmCustomer->full_name : 'Khách hàng',
+                    'customer_phone' => $crmCustomer ? $crmCustomer->contact : null,
+                    'deal_product_id' => $dealProduct->id,
+                ];
+            });
+
+        $today = now()->toDateString();
+        $weekEnd = now()->endOfWeek()->toDateString();
+        $monthStr = now()->format('Y-m');
+
+        $activeStatuses = [BookingStatus::SCHEDULED->value, BookingStatus::RESCHEDULED->value];
+
+        $stats = [
+            'today' => $bookings->filter(fn($b) => $b['booking_date'] === $today && in_array($b['status'], $activeStatuses))->count(),
+            'this_week' => $bookings->filter(fn($b) => $b['booking_date'] >= $today && $b['booking_date'] <= $weekEnd && in_array($b['status'], $activeStatuses))->count(),
+            'needs_update' => $bookings->filter(fn($b) => $b['booking_date'] < $today && in_array($b['status'], $activeStatuses))->count(),
+            'this_month' => $bookings->filter(fn($b) => str_starts_with($b['booking_date'] ?? '', $monthStr))->count(),
+        ];
+
+        return response()->json(['success' => true, 'bookings' => $bookings, 'stats' => $stats]);
+    }
+
+    public function apiUpdateBookingResult(Request $request, $id)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:completed_success,completed_negotiating,completed_failed,cancelled',
+            'customer_feedback' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $booking = CrmDealProductBooking::whereHas('crmDealProduct.deal.lead', function ($q) use ($customer) {
+            $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
+        })->find($id);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy lịch hẹn'], 404);
+        }
+
+        $booking->status = BookingStatus::from($request->status);
+        if ($request->filled('customer_feedback')) {
+            $booking->customer_feedback = $request->customer_feedback;
+        }
+        $booking->save();
+
+        return response()->json(['success' => true, 'message' => 'Đã cập nhật kết quả']);
+    }
+
+    public function apiRescheduleBooking(Request $request, $id)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        $validator = Validator::make($request->all(), [
+            'booking_date' => 'required|date|after_or_equal:today',
+            'booking_time' => 'required|date_format:H:i',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $booking = CrmDealProductBooking::whereHas('crmDealProduct.deal.lead', function ($q) use ($customer) {
+            $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
+        })->find($id);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy lịch hẹn'], 404);
+        }
+
+        $booking->booking_date = $request->booking_date;
+        $booking->booking_time = $request->booking_time;
+        $booking->status = BookingStatus::RESCHEDULED;
+        $booking->save();
+
+        return response()->json(['success' => true, 'message' => 'Đã dời lịch thành công']);
+    }
+
+    public function apiCancelBooking(Request $request, $id)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        $booking = CrmDealProductBooking::whereHas('crmDealProduct.deal.lead', function ($q) use ($customer) {
+            $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
+        })->find($id);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy lịch hẹn'], 404);
+        }
+
+        $booking->status = BookingStatus::CANCELLED;
+        $booking->save();
+
+        return response()->json(['success' => true, 'message' => 'Đã huỷ lịch hẹn']);
     }
 
     public function reviews(Request $request)
@@ -2289,6 +2965,126 @@ class TelegramWebAppController extends Controller
         ]);
     }
 
+    public function myCommissionsApi(Request $request)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $statusFilter = trim($request->input('status', ''));
+
+            // Base query: commissions linked to deals where the lead belongs to this customer
+            $baseQuery = CrmDealCommission::with(['deal.customer', 'property'])
+                ->whereHas('deal.lead', function ($q) use ($customer) {
+                    $q->where('sale_id', $customer->id)
+                      ->orWhere('user_id', $customer->id);
+                })
+                ->where('status', '!=', CommissionStatus::CANCELLED->value);
+
+            // Summary totals (computed before status filter)
+            $received = (float)(clone $baseQuery)->where('status', CommissionStatus::COMPLETED->value)->sum('sale_commission');
+            $pending  = (float)(clone $baseQuery)->whereIn('status', [CommissionStatus::DEPOSITED->value, CommissionStatus::NOTARIZING->value])->sum('sale_commission');
+            $upcoming = (float)(clone $baseQuery)->where('status', CommissionStatus::PENDING_DEPOSIT->value)->sum('sale_commission');
+            $total    = $received + $pending + $upcoming;
+
+            // Monthly chart: last 6 months
+            $chart    = [];
+            $maxTrieu = 1;
+            for ($i = 5; $i >= 0; $i--) {
+                $month    = Carbon::now()->subMonths($i);
+                $monthSum = (float)CrmDealCommission::whereHas('deal.lead', function ($q) use ($customer) {
+                        $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
+                    })
+                    ->where('status', '!=', CommissionStatus::CANCELLED->value)
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->sum('sale_commission');
+                $trieu = (int)round($monthSum / 1_000_000);
+                if ($trieu > $maxTrieu) {
+                    $maxTrieu = $trieu;
+                }
+                $chart[] = [
+                    'label'      => 'T' . $month->month,
+                    'trieu'      => $trieu,
+                    'is_current' => $i === 0,
+                ];
+            }
+            foreach ($chart as &$bar) {
+                $bar['height_pct'] = max(5, (int)round($bar['trieu'] / $maxTrieu * 90));
+            }
+            unset($bar);
+
+            // Apply status filter
+            if ($statusFilter) {
+                $baseQuery->where('status', $statusFilter);
+            }
+
+            $commissions = $baseQuery->orderBy('updated_at', 'desc')->get();
+
+            $data = $commissions->map(function ($comm) {
+                $deal     = $comm->deal;
+                $cust     = $deal ? $deal->customer : null;
+                $property = $comm->property;
+
+                $saleRaw = (float)$comm->getRawOriginal('sale_commission');
+                $appRaw  = (float)$comm->getRawOriginal('app_commission');
+                $dealRaw = $deal ? (float)$deal->getRawOriginal('amount') : 0;
+
+                // Commission percentage from property
+                $commPct = 0;
+                if ($property) {
+                    $propPrice = (float)$property->getRawOriginal('price');
+                    $propComm  = (float)$property->getRawOriginal('commission');
+                    if ($propPrice > 0 && $propComm > 0) {
+                        $commPct = round($propComm / $propPrice * 100, 1);
+                    }
+                }
+
+                $statusVal = $comm->status instanceof CommissionStatus
+                    ? $comm->status->value
+                    : (string)$comm->status;
+                $statusLabel = $comm->status instanceof CommissionStatus
+                    ? $comm->status->label()
+                    : $statusVal;
+
+                return [
+                    'id'                   => $comm->id,
+                    'deal_id'              => $comm->deal_id,
+                    'status'               => $statusVal,
+                    'status_label'         => $statusLabel,
+                    'property_name'        => $property ? $property->title : 'BĐS không xác định',
+                    'customer_name'        => $cust ? $cust->full_name : 'Khách vãng lai',
+                    'customer_phone'       => $cust ? ($cust->contact ?? '') : '',
+                    'deal_amount_fmt'      => format_vnd($dealRaw),
+                    'sale_commission_fmt'  => format_vnd($saleRaw),
+                    'sale_commission_trieu'=> (int)round($saleRaw / 1_000_000),
+                    'app_commission_fmt'   => format_vnd($appRaw),
+                    'comm_pct'             => $commPct,
+                    'notes'                => $comm->notes ?? '',
+                    'created_at'           => $comm->created_at->format('d/m/Y'),
+                    'updated_at'           => $comm->updated_at->format('d/m/Y'),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'summary' => [
+                    'total_fmt'       => format_vnd($total),
+                    'received_trieu'  => (int)round($received / 1_000_000),
+                    'pending_trieu'   => (int)round($pending / 1_000_000),
+                    'upcoming_trieu'  => (int)round($upcoming / 1_000_000),
+                ],
+                'chart'       => $chart,
+                'commissions' => $data,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('myCommissionsApi: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
     private function escapeTelegramText(?string $text): string
     {
         if (!$text) {
@@ -2296,5 +3092,325 @@ class TelegramWebAppController extends Controller
         }
 
         return str_replace(['*', '_', '`', '['], ['\*', '\_', '\`', '\['], $text);
+    }
+
+    // ========== ADMIN USER MANAGEMENT ==========
+
+    private function adminUserInitials(string $name): string
+    {
+        $parts = preg_split('/\s+/', trim($name));
+        if (count($parts) >= 2) {
+            return mb_strtoupper(mb_substr($parts[0], 0, 1) . mb_substr(end($parts), 0, 1));
+        }
+        return mb_strtoupper(mb_substr($name, 0, 2));
+    }
+
+    private function adminUserAvatarColor(int $id): string
+    {
+        $colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899'];
+        return $colors[$id % count($colors)];
+    }
+
+    public function adminUsersApi(Request $request)
+    {
+        $tab    = $request->input('tab', 'pending');
+        $search = trim($request->input('search', ''));
+
+        $approvedRoles = ['broker', 'bds_admin', 'sale', 'sale_admin', 'admin'];
+
+        // Build query per tab
+        $query = Customer::query();
+        if ($tab === 'pending') {
+            $query->where('isActive', 1)->whereNotIn('role', $approvedRoles);
+        } elseif ($tab === 'broker') {
+            $query->where('isActive', 1)->whereIn('role', ['broker', 'bds_admin']);
+        } elseif ($tab === 'sale') {
+            $query->where('isActive', 1)->whereIn('role', ['sale', 'sale_admin']);
+        } elseif ($tab === 'locked') {
+            $query->where('isActive', 0);
+        }
+
+        if ($search !== '') {
+            // Chuẩn hoá SĐT: "0947..." → tìm cả "84947..." và ngược lại
+            $mobileVariant = null;
+            if (preg_match('/^0(\d+)$/', $search, $m)) {
+                $mobileVariant = '84' . $m[1];
+            } elseif (preg_match('/^84(\d+)$/', $search, $m)) {
+                $mobileVariant = '0' . $m[1];
+            }
+
+            $query->where(function ($q) use ($search, $mobileVariant) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('mobile', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%");
+                if ($mobileVariant) {
+                    $q->orWhere('mobile', 'like', "%$mobileVariant%");
+                }
+            });
+        }
+
+        $users = $query->orderByDesc('created_at')->get();
+
+        $mappedUsers = $users->map(function (Customer $c) {
+            $propCount = Property::where('added_by', $c->id)->count();
+            return [
+                'id'               => $c->id,
+                'name'             => $c->name,
+                'mobile'           => $c->mobile ?? '',
+                'email'            => $c->email ?? '',
+                'role'             => $c->role ?? 'customer',
+                'isActive'         => (int) $c->isActive,
+                'initials'         => $this->adminUserInitials($c->name),
+                'avatar_color'     => $this->adminUserAvatarColor($c->id),
+                'created_at_human' => $c->created_at ? $c->created_at->diffForHumans() : '',
+                'property_count'   => $propCount,
+            ];
+        });
+
+        // Stats counts
+        $stats = [
+            'active'  => Customer::where('isActive', 1)->count(),
+            'pending' => Customer::where('isActive', 1)->whereNotIn('role', $approvedRoles)->count(),
+            'broker'  => Customer::where('isActive', 1)->whereIn('role', ['broker', 'bds_admin'])->count(),
+            'sale'    => Customer::where('isActive', 1)->whereIn('role', ['sale', 'sale_admin'])->count(),
+            'locked'  => Customer::where('isActive', 0)->count(),
+        ];
+
+        return response()->json(['stats' => $stats, 'users' => $mappedUsers]);
+    }
+
+    public function adminApproveUser(int $id)
+    {
+        $target = Customer::findOrFail($id);
+        $target->update(['role' => 'broker', 'isActive' => 1]);
+        return response()->json(['success' => true]);
+    }
+
+    public function adminRejectUser(int $id)
+    {
+        $target = Customer::findOrFail($id);
+        $target->update(['isActive' => 0]);
+        return response()->json(['success' => true]);
+    }
+
+    public function adminApproveTempUser(int $id)
+    {
+        $target = Customer::findOrFail($id);
+        $target->update(['role' => 'broker', 'isActive' => 1]);
+        return response()->json(['success' => true]);
+    }
+
+    public function adminChangeUserRole(Request $request, int $id)
+    {
+        $me = Auth::guard('webapp')->user();
+        if ($me->id === $id) {
+            return response()->json(['success' => false, 'message' => 'Không thể đổi role của chính mình.'], 422);
+        }
+
+        $role = $request->input('role');
+        if (!in_array($role, Customer::VALID_ROLES)) {
+            return response()->json(['success' => false, 'message' => 'Role không hợp lệ.'], 422);
+        }
+
+        Customer::where('id', $id)->update(['role' => $role]);
+        return response()->json(['success' => true]);
+    }
+
+    public function adminToggleUserActive(int $id)
+    {
+        $me = Auth::guard('webapp')->user();
+        if ($me->id === $id) {
+            return response()->json(['success' => false, 'message' => 'Không thể khoá chính mình.'], 422);
+        }
+
+        $target = Customer::findOrFail($id);
+        $newStatus = $target->isActive ? 0 : 1;
+        $target->update(['isActive' => $newStatus]);
+        return response()->json(['success' => true, 'isActive' => $newStatus]);
+    }
+
+    public function adminDeleteUser(int $id)
+    {
+        $me = Auth::guard('webapp')->user();
+        if ($me->id === $id) {
+            return response()->json(['success' => false, 'message' => 'Không thể xoá chính mình.'], 422);
+        }
+
+        $target = Customer::findOrFail($id);
+        if ($target->role === 'admin') {
+            return response()->json(['success' => false, 'message' => 'Không thể xoá tài khoản admin.'], 422);
+        }
+
+        $target->delete();
+        return response()->json(['success' => true]);
+    }
+
+    // ─── Referral API ────────────────────────────────────────────────────────
+
+    public function referralApi(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        // Lazy-generate referral code if missing
+        if (empty($customer->referral_code)) {
+            $customer->referral_code = Customer::generateReferralCode();
+            $customer->save();
+        }
+
+        $shareUrl = url('/ref/' . $customer->referral_code);
+        $telegramShareUrl = 'https://t.me/share/url?url=' . urlencode($shareUrl)
+            . '&text=' . urlencode('Tham gia Đà Lạt BĐS với mã giới thiệu ' . $customer->referral_code . '. Đăng ký ngay!');
+
+        $now       = Carbon::now();
+        $monthStart = $now->copy()->startOfMonth();
+        $monthEnd   = $now->copy()->endOfMonth();
+
+        // Direct referrals
+        $referrals = Customer::where('referred_by', $customer->id)->get();
+        $referralIds = $referrals->pluck('id')->toArray();
+
+        // Active: referrals who have commission deals this month
+        $activeIds = [];
+        if (!empty($referralIds)) {
+            $activeIds = CrmDealCommission::whereHas('deal.lead', function ($q) use ($referralIds) {
+                $q->whereIn('user_id', $referralIds)->orWhereIn('sale_id', $referralIds);
+            })
+                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->where('status', '!=', CommissionStatus::CANCELLED->value)
+                ->join('crm_deals', 'crm_deals_commissions.deal_id', '=', 'crm_deals.id')
+                ->join('crm_leads', 'crm_deals.lead_id', '=', 'crm_leads.id')
+                ->selectRaw('COALESCE(crm_leads.user_id, crm_leads.sale_id) as cid')
+                ->pluck('cid')
+                ->unique()
+                ->toArray();
+        }
+
+        // Month earned: 5% of referrals' sale_commission in current month (completed)
+        $monthEarned = 0;
+        if (!empty($referralIds)) {
+            $monthEarned = (float) CrmDealCommission::whereHas('deal.lead', function ($q) use ($referralIds) {
+                $q->whereIn('user_id', $referralIds)->orWhereIn('sale_id', $referralIds);
+            })
+                ->whereBetween('updated_at', [$monthStart, $monthEnd])
+                ->where('status', CommissionStatus::COMPLETED->value)
+                ->sum('sale_commission');
+            $monthEarned = round($monthEarned * 0.05 / 1_000_000, 1);
+        }
+
+        // Build referral tree
+        $avatarColors = ['#059669', '#7c3aed', '#2563eb', '#d97706', '#0d9488', '#dc2626', '#0891b2'];
+        $tree = $referrals->map(function ($ref, $idx) use ($activeIds, $monthStart, $monthEnd, $avatarColors) {
+            $refId = $ref->id;
+            $monthEarnedRef = (float) CrmDealCommission::whereHas('deal.lead', function ($q) use ($refId) {
+                $q->where('user_id', $refId)->orWhere('sale_id', $refId);
+            })
+                ->whereBetween('updated_at', [$monthStart, $monthEnd])
+                ->where('status', CommissionStatus::COMPLETED->value)
+                ->sum('sale_commission');
+
+            $roleLabel = match ($ref->role ?? 'broker') {
+                'sale'       => 'Sale',
+                'sale_admin' => 'Sale Admin',
+                'bds_admin'  => 'BĐS Admin',
+                'admin'      => 'Admin',
+                default      => 'eBroker',
+            };
+
+            $ward = null;
+            try {
+                $ward = $ref->property()->distinct()->first()?->ward_code
+                    ? LocationsWard::where('code', $ref->property()->distinct()->first()->ward_code)->first()?->name
+                    : null;
+            } catch (\Exception $e) {}
+
+            return [
+                'name'              => $ref->name ?? 'Thành viên',
+                'role_label'        => $roleLabel,
+                'joined_at'         => $ref->created_at ? $ref->created_at->format('d/m/Y') : '',
+                'ward_name'         => $ward ?? 'Chưa có khu vực',
+                'is_active'         => in_array($refId, $activeIds),
+                'month_earned_trieu'=> round($monthEarnedRef * 0.05 / 1_000_000, 1),
+                'avatar_letter'     => strtoupper(substr($ref->name ?? 'U', 0, 1)),
+                'avatar_color'      => $avatarColors[$idx % count($avatarColors)],
+            ];
+        })->values()->toArray();
+
+        // Build history: all commission records of referrals
+        $history = [];
+        if (!empty($referralIds)) {
+            $commissions = CrmDealCommission::with(['deal.lead', 'deal.customer', 'property'])
+                ->whereHas('deal.lead', function ($q) use ($referralIds) {
+                    $q->whereIn('user_id', $referralIds)->orWhereIn('sale_id', $referralIds);
+                })
+                ->where('status', '!=', CommissionStatus::CANCELLED->value)
+                ->orderBy('updated_at', 'desc')
+                ->limit(50)
+                ->get();
+
+            foreach ($commissions as $comm) {
+                $deal = $comm->deal;
+                $lead = $deal?->lead;
+                if (!$lead) continue;
+
+                $refCustomerId = $lead->user_id ?? $lead->sale_id;
+                $refCustomer   = $referrals->firstWhere('id', $refCustomerId);
+                $baseAmount    = (float) $comm->getRawOriginal('sale_commission');
+                $refAmount     = round($baseAmount * 0.05 / 1_000_000, 2);
+
+                $statusLabel = match ($comm->status->value ?? $comm->status) {
+                    CommissionStatus::COMPLETED->value      => 'completed',
+                    CommissionStatus::DEPOSITED->value,
+                    CommissionStatus::NOTARIZING->value     => 'pending',
+                    CommissionStatus::CANCELLED->value      => 'cancelled',
+                    default                                  => 'upcoming',
+                };
+
+                $propertyLabel = $comm->property?->title ?? ('Deal #' . ($deal->id ?? '?'));
+                if ($comm->property && $comm->property->ward_code) {
+                    $wardName = LocationsWard::where('code', $comm->property->ward_code)->first()?->name;
+                    if ($wardName) $propertyLabel .= ' · ' . $wardName;
+                }
+
+                $history[] = [
+                    'referee_name'           => $refCustomer?->name ?? 'Thành viên',
+                    'deal_id'                => $deal->id ?? null,
+                    'property_label'         => $propertyLabel,
+                    'date'                   => $comm->updated_at?->format('d/m/Y') ?? '',
+                    'base_commission_trieu'  => round($baseAmount / 1_000_000, 1),
+                    'referral_amount_trieu'  => $refAmount,
+                    'status'                 => $statusLabel,
+                ];
+            }
+        }
+
+        return response()->json([
+            'referral_code'      => $customer->referral_code,
+            'share_url'          => $shareUrl,
+            'telegram_share_url' => $telegramShareUrl,
+            'stats'              => [
+                'total_referrals'  => count($referralIds),
+                'active_referrals' => count($activeIds),
+                'month_earned_trieu' => $monthEarned,
+                'month_label'      => 'Tháng ' . $now->month . '/' . $now->year,
+            ],
+            'tree'    => $tree,
+            'history' => $history,
+        ]);
+    }
+
+    public function referralLanding(string $code)
+    {
+        $referrer = Customer::where('referral_code', $code)->first();
+        if (!$referrer) {
+            abort(404);
+        }
+
+        // Store in session for attribution when new user registers
+        session(['referral_code' => $code]);
+
+        return view('webapp.referral-landing', compact('referrer', 'code'));
     }
 }
