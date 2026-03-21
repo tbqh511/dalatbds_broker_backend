@@ -59,6 +59,7 @@
   @include('webapp.subpages.referral')
   @include('webapp.subpages.activitylog')
   @include('webapp.subpages.likedbds')
+  @include('webapp.subpages.reviews')
 
   @include('webapp.partials.toast')
 

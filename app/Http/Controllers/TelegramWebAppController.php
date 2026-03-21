@@ -20,6 +20,7 @@ use App\Models\PropertyImages;
 use App\Models\PropertyLegalImage;
 use App\Models\AssignedOutdoorFacilities;
 use App\Models\CrmCustomer;
+use App\Models\CrmDeal;
 use App\Models\CrmLead;
 use App\Models\Customer;
 use App\Models\MarketPrice;
@@ -46,6 +47,10 @@ class TelegramWebAppController extends Controller
             'views_count_week' => 0,
             'reviews_count_week' => 0,
             'favourites_count_week' => 0,
+            'customers_count' => 0,
+            'leads_count' => 0,
+            'deals_count' => 0,
+            'pending_count' => 0,
         ];
 
         if ($customer) {
@@ -75,6 +80,23 @@ class TelegramWebAppController extends Controller
             $stats['favourites_count_week'] = Favourite::whereIn('property_id', function ($query) use ($customer) {
                 $query->select('id')->from('propertys')->where('added_by', $customer->id);
             })->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count();
+
+            // Distinct customers from broker's leads (for broker/bds_admin/admin)
+            $stats['customers_count'] = CrmLead::where('user_id', $customer->id)
+                ->whereNotNull('customer_id')
+                ->distinct('customer_id')
+                ->count('customer_id');
+
+            // Leads assigned to this sale user (for sale/sale_admin)
+            $stats['leads_count'] = CrmLead::where('sale_id', $customer->id)->count();
+
+            // Deals linked to leads assigned to this sale user (for sale/sale_admin)
+            $stats['deals_count'] = CrmDeal::whereHas('lead', function ($q) use ($customer) {
+                $q->where('sale_id', $customer->id);
+            })->count();
+
+            // Pending properties awaiting approval (for bds_admin/admin)
+            $stats['pending_count'] = Property::where('status', 0)->count();
         }
 
         // Market prices for the home page strip
@@ -522,6 +544,15 @@ class TelegramWebAppController extends Controller
             $query->whereHas('parameters', function ($pq) use ($legalParamId, $legal) {
                 $pq->where('parameters.id', $legalParamId)
                    ->where('assign_parameters.value', 'LIKE', '%' . $legal . '%');
+            });
+        }
+
+        // Filter: location (ward name from chip)
+        $location = $request->get('location');
+        if ($location) {
+            $trimmedLocation = trim($location);
+            $query->whereHas('ward', function ($wq) use ($trimmedLocation) {
+                $wq->whereRaw('TRIM(full_name) = ?', [$trimmedLocation]);
             });
         }
 

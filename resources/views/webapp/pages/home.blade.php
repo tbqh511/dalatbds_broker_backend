@@ -1,7 +1,9 @@
     <div class="page active" id="page-home">
 
       <!-- Booking hôm nay — chỉ Sale+ -->
-      <div class="booking-today role-sale role-bds_admin role-sale_admin role-admin" style="margin-top:14px;">
+      <div class="booking-today role-sale role-bds_admin role-sale_admin role-admin" style="margin-top:14px;cursor:pointer;"
+           onclick="openSubpage('bookings')"
+           title="Xem tất cả lịch hẹn">
         <div class="booking-today-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Lịch hẹn hôm nay</span></div>
         <div class="booking-item">
           <div class="booking-time">09:00</div>
@@ -21,32 +23,43 @@
         </div>
       </div>
 
-      <!-- Stats — Broker+ -->
-      <div class="role-broker role-bds_admin role-sale role-bds_admin role-sale_admin role-admin" style="margin-top:14px;">
+      <!-- Stats — Quick buttons (role-based, clickable) -->
+      <div class="role-broker role-bds_admin role-sale role-sale_admin role-admin" style="margin-top:14px;">
         <div class="stats-grid">
-          <div class="stat-card" style="--icon-bg:#e8effe;--icon-color:#3270FC">
+
+          <!-- BĐS hiển thị: broker, bds_admin, admin -->
+          <div class="stat-card role-broker role-bds_admin role-admin" style="--icon-bg:#e8effe;--icon-color:#3270FC;cursor:pointer;"
+               onclick="openSubpage('mybds')">
             <div class="stat-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/>
                 <path d="M9 22V13h6v9"/>
               </svg>
             </div>
-            <div class="stat-label">Tin đang hiển thị</div>
+            <div class="stat-label">BĐS hiển thị</div>
             <div class="stat-value">{{ $stats['properties_count'] ?? 0 }}</div>
-            <div class="stat-delta">+0 tuần này</div>
+            <div class="stat-delta">tin đang đăng</div>
           </div>
-          <div class="stat-card" style="--icon-bg:#fef3c7;--icon-color:#d97706">
+
+          <!-- Khách: broker, bds_admin, admin -->
+          <div class="stat-card role-broker role-bds_admin role-admin" style="--icon-bg:#fef3c7;--icon-color:#d97706;cursor:pointer;"
+               onclick="openSubpage('mycustomers')">
             <div class="stat-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             </div>
-            <div class="stat-label">Lượt xem</div>
-            <div class="stat-value">{{ number_format($stats['views_count'] ?? 0) }}</div>
-            <div class="stat-delta">+0 tuần này</div>
+            <div class="stat-label">Khách</div>
+            <div class="stat-value">{{ $stats['customers_count'] ?? 0 }}</div>
+            <div class="stat-delta">khách hàng</div>
           </div>
-          <div class="stat-card role-sale role-bds_admin role-sale_admin role-admin" style="--icon-bg:#d1fae5;--icon-color:#059669">
+
+          <!-- Lead đang xử lý: sale, sale_admin -->
+          <div class="stat-card role-sale role-sale_admin" style="--icon-bg:#d1fae5;--icon-color:#059669;cursor:pointer;"
+               onclick="openSubpage('leads')">
             <div class="stat-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
@@ -55,10 +68,13 @@
               </svg>
             </div>
             <div class="stat-label">Lead đang xử lý</div>
-            <div class="stat-value">0</div>
+            <div class="stat-value">{{ $stats['leads_count'] ?? 0 }}</div>
             <div class="stat-delta">—</div>
           </div>
-          <div class="stat-card role-sale role-bds_admin role-sale_admin role-admin" style="--icon-bg:#ede9fe;--icon-color:#7c3aed">
+
+          <!-- Deal đang chăm: sale, sale_admin -->
+          <div class="stat-card role-sale role-sale_admin" style="--icon-bg:#ede9fe;--icon-color:#7c3aed;cursor:pointer;"
+               onclick="openSubpage('deals')">
             <div class="stat-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="7" width="20" height="14" rx="2"/>
@@ -68,43 +84,54 @@
               </svg>
             </div>
             <div class="stat-label">Deal đang chăm</div>
-            <div class="stat-value">0</div>
+            <div class="stat-value">{{ $stats['deals_count'] ?? 0 }}</div>
             <div class="stat-delta">—</div>
           </div>
-          <div class="stat-card role-broker" style="--icon-bg:#fce7f3;--icon-color:#db2777">
+
+          <!-- Đánh giá: tất cả trừ guest -->
+          <div class="stat-card role-broker role-bds_admin role-sale role-sale_admin role-admin" style="--icon-bg:#fce7f3;--icon-color:#db2777;cursor:pointer;"
+               onclick="openSubpage('reviews')">
             <div class="stat-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
             </div>
             <div class="stat-label">Đánh giá</div>
             <div class="stat-value">{{ $stats['reviews_count'] ?? 0 }}</div>
             <div class="stat-delta">+{{ $stats['reviews_count_week'] ?? 0 }} tuần này</div>
           </div>
-          <div class="stat-card role-broker" style="--icon-bg:#ccfbf1;--icon-color:#0d9488">
+
+          <!-- Quan Tâm: tất cả trừ guest -->
+          <div class="stat-card role-broker role-bds_admin role-sale role-sale_admin role-admin" style="--icon-bg:#ccfbf1;--icon-color:#0d9488;cursor:pointer;"
+               onclick="openSubpage('likedbds')">
             <div class="stat-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
             </div>
-            <div class="stat-label">Lượt quan tâm</div>
+            <div class="stat-label">Quan Tâm</div>
             <div class="stat-value">{{ $stats['favourites_count'] ?? 0 }}</div>
             <div class="stat-delta">+{{ $stats['favourites_count_week'] ?? 0 }} tuần này</div>
           </div>
+
         </div>
       </div>
 
       <!-- Admin: Queue duyệt -->
-      <div class="role-admin role-bds_admin" style="margin:14px 16px 0;">
+      @if(($stats['pending_count'] ?? 0) > 0)
+      <div class="role-admin role-bds_admin" style="margin:14px 16px 0;cursor:pointer;"
+           onclick="openSubpage('approvebds')">
         <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
           <span style="font-size:20px;display:inline-flex;align-items:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:600;color:#92400e;">8 BĐS chờ duyệt</div>
+            <div style="font-size:13px;font-weight:600;color:#92400e;">{{ $stats['pending_count'] }} BĐS chờ duyệt</div>
             <div style="font-size:11px;color:#b45309;">Cần xem xét và phê duyệt</div>
           </div>
-          <button style="padding:6px 12px;background:#d97706;color:#fff;border-radius:8px;font-size:12px;font-weight:600;">Duyệt</button>
+          <button onclick="event.stopPropagation();openSubpage('approvebds')"
+                  style="padding:6px 12px;background:#d97706;color:#fff;border-radius:8px;font-size:12px;font-weight:600;border:none;">Duyệt</button>
         </div>
       </div>
+      @endif
 
       <!-- Market prices -->
       <div class="page-section-title">Thị trường Đà Lạt</div>

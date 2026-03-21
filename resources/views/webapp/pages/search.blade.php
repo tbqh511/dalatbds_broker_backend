@@ -20,6 +20,18 @@
       .search-back-btn:hover {
         opacity: 0.9;
       }
+      .rc-btn {
+        background: transparent !important;
+      }
+      .rc-btn svg {
+        stroke: var(--primary);
+        fill: none;
+        transition: stroke 0.2s, fill 0.2s;
+      }
+      .rc-btn.liked svg {
+        stroke: var(--primary);
+        fill: var(--primary);
+      }
     </style>
 
     <!-- Search bar sticky -->
@@ -76,10 +88,12 @@
       <div class="filter-bar" style="padding-top:0;">
         <div class="chip active" onclick="doSearchLocation('',this)">Tất cả</div>
         @php
-          $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
+          $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))
+            ->orderByRaw("FIELD(code, '24796', '24790', '24778', '24769', '24811')")
+            ->get();
         @endphp
         @foreach($hotWards as $w)
-        <div class="chip" onclick="doSearchLocation('{{ $w->full_name }}',this)">{{ $w->full_name }}</div>
+        <div class="chip" onclick="doSearchLocation('{{ trim($w->full_name) }}',this)">{{ trim($w->full_name) }}</div>
         @endforeach
       </div>
 
@@ -180,17 +194,14 @@
 
       <div id="resultsFilterLocation" class="filter-bar" style="padding:4px 16px 4px;">
         <div class="chip active" onclick="doSearchLocation('',this)">Tất cả</div>
-        @php
-          $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
-        @endphp
         @foreach($hotWards as $w)
-        <div class="chip" onclick="doSearchLocation('{{ $w->full_name }}',this)">{{ $w->full_name }}</div>
+        <div class="chip" onclick="doSearchLocation('{{ trim($w->full_name) }}',this)">{{ trim($w->full_name) }}</div>
         @endforeach
       </div>
 
       <!-- Active filters row — SAU quick chips -->
       <div class="active-filters" id="activeFilters">
-        <button class="af-clear" onclick="clearFilters()">Xóa bộ lọc</button>
+        <button class="af-clear" onclick="clearFilters()" style="display:none">Xóa bộ lọc</button>
       </div>
 
       <!-- LIST VIEW -->
@@ -213,7 +224,7 @@
             <div class="rc-footer">
               <span class="rc-time">2 ngày trước</span>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="rc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+                <button class="rc-btn" style="color: var(--primary);" onclick="toggleBookmark(this, Math.random()); event.stopPropagation();"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
                 <!-- Guest: Đăng ký + Gửi yêu cầu -->
                 <button class="rc-btn role-guest" style="background:var(--primary);color:#fff;flex:1;min-width:80px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
                 <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
@@ -243,7 +254,7 @@
             <div class="rc-footer">
               <span class="rc-time">5 ngày trước</span>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="rc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+                <button class="rc-btn" style="color: var(--primary);" onclick="toggleBookmark(this, Math.random()); event.stopPropagation();"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
                 <!-- Guest: Đăng ký + Gửi yêu cầu -->
                 <button class="rc-btn role-guest" style="background:var(--primary);color:#fff;flex:1;min-width:80px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
                 <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
@@ -270,7 +281,7 @@
               <div style="font-size:18px;font-weight:700;">8,500 triệu</div>
               <div style="font-size:11px;opacity:0.85;">Thương lượng được</div>
             </div>
-            <button style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+            <button style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;color:var(--primary);" onclick="toggleBookmark(this, Math.random()); event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
           </div>
           <div class="rcb-body">
             <div class="rcb-title">Biệt thự view đồi chè Cầu Đất, toàn cảnh thung lũng</div>
@@ -316,7 +327,7 @@
             <div class="rc-footer">
               <span class="rc-time">1 tuần trước</span>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="rc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+                <button class="rc-btn" style="color: var(--primary);" onclick="toggleBookmark(this, Math.random()); event.stopPropagation();"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
                 <!-- Guest: Đăng ký + Gửi yêu cầu -->
                 <button class="rc-btn role-guest" style="background:var(--primary);color:#fff;flex:1;min-width:80px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
                 <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
@@ -346,7 +357,7 @@
             <div class="rc-footer">
               <span class="rc-time">3 ngày trước</span>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="rc-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+                <button class="rc-btn" style="color: var(--primary);" onclick="toggleBookmark(this, Math.random()); event.stopPropagation();"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
                 <!-- Guest: Đăng ký + Gửi yêu cầu -->
                 <button class="rc-btn role-guest" style="background:var(--primary);color:#fff;flex:1;min-width:80px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
                 <button class="rc-btn role-guest" style="background:var(--primary-light);color:var(--primary);flex:1;min-width:90px;"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>

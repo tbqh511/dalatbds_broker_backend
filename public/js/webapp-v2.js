@@ -63,6 +63,9 @@ window.setRole = function(role, btn){
   document.querySelectorAll('.commission-total').forEach(el=>{
     if(el.style.display !== 'none') el.style.display = 'block';
   });
+  document.querySelectorAll('button.role-guest,button.role-broker,button.role-bds_admin,button.role-sale,button.role-sale_admin,button.role-admin').forEach(el=>{
+    if(el.style.display !== 'none') el.style.display = 'inline-block';
+  });
   document.querySelectorAll('.similar-scroll,.filter-bar,.sp-tabs,.notif-tabs,.crm-actions,.owner-actions,.mybds-quick,.cust-actions,.cust-tags,.detail-badges,.lead-flow').forEach(el=>{
     if(el.style.display !== 'none') el.style.display = 'flex';
   });
@@ -637,6 +640,7 @@ function rebuildActiveFilters() {
     property_type: v => v === '0' ? 'Bán' : 'Cho thuê',
     categoryName: v => v,
     price: v => v,
+    location: v => v,
     area: v => v.includes('+') ? 'Trên 1000m²' : v.replace('-', '–') + 'm²',
     direction: v => v,
     legal: v => v
@@ -743,6 +747,34 @@ window.doSearchPrice = function(priceLabel, chipEl) {
   doSearch(q || null);
 };
 
+window.doSearchLocation = function(locationName, chipEl) {
+  // Mark chip active
+  if(chipEl) {
+      chipEl.closest('.filter-bar').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chipEl.classList.add('active');
+  }
+
+  // Sync with filter sheet
+  document.querySelectorAll('.fs-chip[data-filter="location"]').forEach(c => {
+    c.classList.toggle('active', c.dataset.value === locationName);
+  });
+
+  // Update currentFilters
+  currentFilters.location = locationName;
+
+  // Rebuild activeFilters
+  rebuildActiveFilters();
+
+  // Hide/show location row
+  const locationRow = document.getElementById('resultsFilterLocation');
+  if(locationRow) locationRow.style.display = locationName ? 'none' : '';
+
+  updateFilterCountBadge();
+
+  let q = document.getElementById('searchInput').value || '';
+  doSearch(q || null);
+};
+
 window.doSearch = function(query, chipEl, append = false, page = 1){
   // Ensure BDS mode is active — hide lead tab content and mark BDS tab as active
   if(currentSearchMode !== 'bds') {
@@ -840,6 +872,7 @@ window.doSearch = function(query, chipEl, append = false, page = 1){
   // Advanced filter params (from filter sheet)
   if(currentSort && currentSort !== 'latest') url += '&sort=' + encodeURIComponent(currentSort);
   if(currentFilters.property_type) url += '&type=' + encodeURIComponent(currentFilters.property_type);
+  if(currentFilters.location) url += '&location=' + encodeURIComponent(currentFilters.location);
   if(currentFilters.area) url += '&area_range=' + encodeURIComponent(currentFilters.area);
   if(currentFilters.direction) url += '&direction=' + encodeURIComponent(currentFilters.direction);
   if(currentFilters.legal) url += '&legal=' + encodeURIComponent(currentFilters.legal);
@@ -890,7 +923,7 @@ function renderSearchResults(res, append, currentPage, query, price, categoryNam
             <div class="rc-footer">
               <span class="rc-time">${p.created_at_diff}</span>
               <div style="display:flex;gap:6px;">
-                <button class="rc-btn" style="background:${isLiked?'var(--danger-light)':'var(--bg-secondary)'};color:${isLiked?'var(--danger)':'var(--text-tertiary)'};" onclick="event.stopPropagation();toggleBookmark(this,${p.id})"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="${isLiked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.7"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span></button>
+                <button class="rc-btn${isLiked?' liked':''}" style="background:transparent;color:var(--primary);" onclick="event.stopPropagation();toggleBookmark(this,${p.id})"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="${isLiked?'var(--primary)':'none'}" stroke="var(--primary)" stroke-width="1.7"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span></button>
                 <button class="rc-btn role-sale role-bds_admin role-sale_admin role-admin" style="background:var(--primary-light);color:var(--primary);" onclick="event.stopPropagation();careForProperty(${p.id},'${(p.title||'').replace(/'/g,"\\'")}')"><span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span></button>
               </div>
             </div>
@@ -938,6 +971,7 @@ window.addActiveFilter = function(txt) {
         const clearBtn = afContainer.querySelector('.af-clear');
         if(clearBtn) {
             afContainer.insertBefore(chip, clearBtn);
+            clearBtn.style.display = '';
         } else {
             afContainer.appendChild(chip);
         }
@@ -1264,18 +1298,74 @@ window.careForProperty = function(propId, title) {
 };
 
 window.removeFilter = function(span){
-  span.closest('.af-chip').remove();
+  const chip = span.closest('.af-chip');
+  const label = chip.textContent.replace('×', '').trim();
+
+  // Map label back to filter key and reset it
+  const labelMap = {
+    property_type: v => v === '0' ? 'Bán' : 'Cho thuê',
+    categoryName: v => v,
+    price: v => v,
+    location: v => v,
+    area: v => v.includes('+') ? 'Trên 1000m²' : v.replace('-', '–') + 'm²',
+    direction: v => v,
+    legal: v => v
+  };
+
+  // Find which filter key this label belongs to
+  Object.entries(currentFilters).forEach(([key, val]) => {
+    if(val) {
+      const displayLabel = labelMap[key] ? labelMap[key](val) : val;
+      if(displayLabel === label) {
+        // Reset this filter
+        currentFilters[key] = '';
+
+        // Show filter buttons again
+        const filterRowId = {
+          categoryName: 'resultsFilterCategory',
+          price: 'resultsFilterPrice',
+          location: 'resultsFilterLocation'
+        }[key];
+
+        if(filterRowId) {
+          const row = document.getElementById(filterRowId);
+          if(row) {
+            row.style.display = '';
+            row.querySelectorAll('.chip').forEach(c => {
+              c.classList.toggle('active', c.textContent.trim() === 'Tất cả');
+            });
+          }
+        }
+
+        // Sync filter sheet
+        document.querySelectorAll(`.fs-chip[data-filter="${key}"]`).forEach(c => {
+          c.classList.toggle('active', c.dataset.value === '');
+        });
+      }
+    }
+  });
+
+  // Remove chip and rebuild
+  chip.remove();
+  const afContainer2 = document.getElementById('activeFilters');
+  const clearBtn2 = afContainer2.querySelector('.af-clear');
+  if(clearBtn2 && afContainer2.querySelectorAll('.af-chip').length === 0) clearBtn2.style.display = 'none';
+  updateFilterCountBadge();
+
   let searchInput = document.getElementById('searchInput');
   doSearch(searchInput.value || '');
 };
 
 window.clearFilters = function(silent = false){
-  document.getElementById('activeFilters').querySelectorAll('.af-chip').forEach(c=>c.remove());
+  const afEl = document.getElementById('activeFilters');
+  afEl.querySelectorAll('.af-chip').forEach(c=>c.remove());
+  const clearBtnEl = afEl.querySelector('.af-clear');
+  if(clearBtnEl) clearBtnEl.style.display = 'none';
 
   // Only reset UI and filters if not silent
   if(silent !== true) {
     // Reset quick-chip rows to "Tất cả" and show them
-    ['resultsFilterCategory', 'resultsFilterPrice'].forEach(id => {
+    ['resultsFilterCategory', 'resultsFilterPrice', 'resultsFilterLocation'].forEach(id => {
       const row = document.getElementById(id);
       if(!row) return;
       row.style.display = '';
@@ -1285,7 +1375,7 @@ window.clearFilters = function(silent = false){
     });
 
     // Reset currentFilters
-    currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+    currentFilters = { property_type:'', categoryName:'', price:'', location:'', area:'', direction:'', legal:'' };
     updateFilterCountBadge();
 
     let searchInput = document.getElementById('searchInput');
@@ -1741,11 +1831,14 @@ function _applyBookmarkState(btn, liked, isDetailHeader){
   if(!btn) return;
   const svg = btn.querySelector('svg');
   if(!svg) return;
+  // Get computed primary color
+  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
   if(isDetailHeader){
-    svg.setAttribute('stroke', liked ? 'var(--primary)' : 'currentColor');
-    svg.setAttribute('fill', liked ? 'var(--primary)' : 'none');
+    svg.setAttribute('stroke', liked ? primaryColor : 'currentColor');
+    svg.setAttribute('fill', liked ? primaryColor : 'none');
   } else {
-    svg.setAttribute('fill', liked ? 'var(--primary)' : 'none');
+    svg.setAttribute('stroke', primaryColor);
+    svg.setAttribute('fill', liked ? primaryColor : 'none');
     if(liked){ btn.classList.add('liked'); } else { btn.classList.remove('liked'); }
   }
 }
