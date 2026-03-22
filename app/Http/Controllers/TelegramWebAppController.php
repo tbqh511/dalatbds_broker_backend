@@ -3369,6 +3369,180 @@ class TelegramWebAppController extends Controller
         return response()->json(['success' => true]);
     }
 
+    // ─── Property Approval API ───────────────────────────────────────────────
+
+    public function adminPropertiesApi(Request $request): JsonResponse
+    {
+        $tab = $request->input('tab', 'pending');
+
+        // Stats (always across all properties)
+        $pendingCount      = Property::where('status', 0)->count();
+        $approvedTodayCount = Property::where('status', 1)->whereDate('updated_at', today())->count();
+        $totalApproved     = Property::where('status', 1)->count();
+
+        $avgSeconds = Property::where('status', 1)
+            ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, created_at, updated_at)) as avg_sec')
+            ->value('avg_sec');
+        $avgHours = $avgSeconds ? round($avgSeconds / 3600, 1) : null;
+
+        $stats = [
+            'pending'        => $pendingCount,
+            'approved_today' => $approvedTodayCount,
+            'total_approved' => $totalApproved,
+            'avg_hours'      => $avgHours,
+        ];
+
+        // Build query per tab
+        $query = Property::with(['category', 'ward', 'street', 'agent']);
+
+        if ($tab === 'approved_today') {
+            $query->where('status', 1)->whereDate('updated_at', today())->orderByDesc('updated_at');
+        } elseif ($tab === 'rejected') {
+            $query->where('status', 2)->orderByDesc('updated_at');
+        } else {
+            // pending (default)
+            $query->where('status', 0)->orderBy('created_at', 'asc');
+        }
+
+        $properties = $query->get();
+
+        $mapped = $properties->map(function (Property $p) {
+            $ward   = optional($p->ward)->name ?? '';
+            $street = optional($p->street)->street_name ?? '';
+
+            $legalImages   = $p->legalimages ?? [];
+            $galleryImages = $p->gallery ?? [];
+
+            $checks = [
+                'has_legal_docs'    => count($legalImages) > 0,
+                'has_enough_photos' => count($galleryImages) >= 3,
+                'location_valid'    => !empty($ward) && !empty($street),
+                'price_reasonable'  => !empty($p->price),
+            ];
+
+            $broker = $p->agent;
+            $brokerName = $broker?->name ?? 'Môi giới';
+            $words = preg_split('/\s+/', trim($brokerName));
+            $initials = mb_strtoupper(
+                mb_substr($words[0], 0, 1)
+                . (count($words) > 1 ? mb_substr(end($words), 0, 1) : '')
+            );
+
+            $createdAt = Carbon::parse($p->getRawOriginal('created_at'));
+
+            return [
+                'id'               => $p->id,
+                'title'            => $p->title ?? '',
+                'price'            => $p->price ?? '',
+                'area'             => $p->area ? $p->area . ' m²' : null,
+                'category_name'    => $p->category?->category ?? 'BĐS',
+                'property_type'    => $p->property_type,
+                'ward'             => $ward,
+                'street'           => $street,
+                'title_image'      => $p->title_image ?: null,
+                'created_at_diff'  => $createdAt->diffForHumans(),
+                'created_at_fmt'   => $createdAt->format('d/m/Y H:i'),
+                'status'           => (int) $p->status,
+                'direction'        => $p->direction,
+                'number_room'      => $p->number_room,
+                'legal'            => $p->legal,
+                'broker_name'      => $brokerName,
+                'broker_initials'  => $initials ?: 'BK',
+                'broker_id'        => $broker?->id,
+                'checks'           => $checks,
+                'all_checks_pass'  => !in_array(false, $checks, true),
+                'rejection_reason' => $p->rejection_reason,
+                'rejection_note'   => $p->rejection_note,
+            ];
+        });
+
+        return response()->json([
+            'success'    => true,
+            'stats'      => $stats,
+            'properties' => $mapped,
+            'tab'        => $tab,
+        ]);
+    }
+
+    public function adminApproveProperty(int $id): JsonResponse
+    {
+        try {
+            $property = Property::with('agent')->findOrFail($id);
+
+            if ($property->status !== 0) {
+                return response()->json(['success' => false, 'message' => 'BĐS này không ở trạng thái chờ duyệt.'], 422);
+            }
+
+            $property->update([
+                'status'           => 1,
+                'rejection_reason' => null,
+                'rejection_note'   => null,
+            ]);
+
+            $broker = $property->agent;
+            if ($broker && $broker->telegram_id) {
+                $title   = $property->title ?? 'BĐS';
+                $message = "✅ *TIN BĐS ĐÃ ĐƯỢC DUYỆT*\n"
+                    . "────────────────\n"
+                    . "🏠 {$title}\n"
+                    . "🎉 Tin của bạn đã được đăng lên hệ thống!";
+                app(NotificationService::class)->sendToCustomer($broker, $message);
+            }
+
+            return response()->json([
+                'success'       => true,
+                'pending_count' => Property::where('status', 0)->count(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('adminApproveProperty error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    public function adminRejectProperty(Request $request, int $id): JsonResponse
+    {
+        try {
+            $property = Property::with('agent')->findOrFail($id);
+
+            if (!in_array($property->status, [0, 2])) {
+                return response()->json(['success' => false, 'message' => 'Không thể từ chối BĐS đã duyệt.'], 422);
+            }
+
+            $reason = trim($request->input('reason', ''));
+            if (empty($reason)) {
+                return response()->json(['success' => false, 'message' => 'Vui lòng chọn lý do từ chối.'], 422);
+            }
+
+            $note = trim($request->input('note', ''));
+
+            $property->update([
+                'status'           => 2,
+                'rejection_reason' => $reason,
+                'rejection_note'   => $note ?: null,
+            ]);
+
+            $broker = $property->agent;
+            if ($broker && $broker->telegram_id) {
+                $title    = $property->title ?? 'BĐS';
+                $noteText = $note ? "\n📝 Ghi chú: {$note}" : '';
+                $message  = "❌ *TIN BĐS CHƯA ĐƯỢC DUYỆT*\n"
+                    . "────────────────\n"
+                    . "🏠 {$title}\n"
+                    . "⚠️ Lý do: {$reason}{$noteText}\n"
+                    . "💡 Vui lòng bổ sung và gửi lại.";
+                app(NotificationService::class)->sendToCustomer($broker, $message);
+            }
+
+            return response()->json([
+                'success'       => true,
+                'pending_count' => Property::where('status', 0)->count(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('adminRejectProperty error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
     // ─── Referral API ────────────────────────────────────────────────────────
 
     public function referralApi(Request $request)

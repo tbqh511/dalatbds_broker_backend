@@ -118,6 +118,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
 
     // Admin user management routes
     Route::middleware(['webapp.role:admin'])->group(function () {
+        Route::get('/webapp/api/admin/reports', [SaleAdminController::class, 'getAdminReportsData'])->name('webapp.admin.reports');
         Route::get('/webapp/api/admin/users', [TelegramWebAppController::class, 'adminUsersApi'])->name('webapp.admin.users');
         Route::post('/webapp/api/admin/users/{id}/approve', [TelegramWebAppController::class, 'adminApproveUser'])->name('webapp.admin.approve');
         Route::post('/webapp/api/admin/users/{id}/reject', [TelegramWebAppController::class, 'adminRejectUser'])->name('webapp.admin.reject');
@@ -125,6 +126,12 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
         Route::patch('/webapp/api/admin/users/{id}/role', [TelegramWebAppController::class, 'adminChangeUserRole'])->name('webapp.admin.change-role');
         Route::patch('/webapp/api/admin/users/{id}/toggle-active', [TelegramWebAppController::class, 'adminToggleUserActive'])->name('webapp.admin.toggle');
         Route::delete('/webapp/api/admin/users/{id}', [TelegramWebAppController::class, 'adminDeleteUser'])->name('webapp.admin.delete');
+    });
+    // Property approval routes (bds_admin + admin)
+    Route::middleware(['webapp.role:bds_admin,admin'])->group(function () {
+        Route::get('/webapp/api/admin/properties', [TelegramWebAppController::class, 'adminPropertiesApi'])->name('webapp.admin.properties');
+        Route::post('/webapp/api/admin/properties/{id}/approve', [TelegramWebAppController::class, 'adminApproveProperty'])->name('webapp.admin.properties.approve');
+        Route::post('/webapp/api/admin/properties/{id}/reject', [TelegramWebAppController::class, 'adminRejectProperty'])->name('webapp.admin.properties.reject');
     });
     // Routes yêu cầu phải có số điện thoại
     Route::middleware(['webapp.require_phone'])->group(function () {
@@ -157,8 +164,12 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
 
         // Sale Admin routes (sale_admin only)
         Route::middleware(['webapp.role:sale_admin'])->group(function () {
+            Route::post('/webapp/leads/bulk-assign', [CrmLeadController::class, 'bulkAssign'])->name('webapp.leads.bulk-assign');
             Route::post('/webapp/leads/{id}/assign-sale', [CrmLeadController::class, 'assignSale'])->name('webapp.leads.assign-sale');
             Route::get('/webapp/sale-admin', [SaleAdminController::class, 'index'])->name('webapp.sale-admin');
+            Route::get('/webapp/sale-admin/assign-data', [SaleAdminController::class, 'getAssignData'])->name('webapp.sale-admin.assign-data');
+            Route::get('/webapp/api/kpi-team', [SaleAdminController::class, 'getKpiTeamData'])->name('webapp.api.kpi-team');
+            Route::post('/webapp/api/kpi-team/send-support', [SaleAdminController::class, 'sendSupportReminder'])->name('webapp.api.kpi-team.support');
         });
 
         // Add Customer (Custom UI)

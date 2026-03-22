@@ -132,21 +132,13 @@
   <!-- BĐS Admin section -->
   <div class="role-bds_admin">
     <div class="menu-section"><div class="menu-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Quản lý khu vực BĐS</span></div></div>
-    <div class="menu-item" onclick="openSubpage('mybds')">
-      <div class="menu-item-icon" style="background:var(--teal-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div class="menu-item" style="border-left:3px solid var(--danger);" onclick="openSubpage('approvebds')">
+      <div class="menu-item-icon" style="background:var(--danger-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
       <div class="menu-item-body">
-        <div class="menu-item-title">BĐS khu vực</div>
-        <div class="menu-item-sub">Quản lý BĐS trong khu vực</div>
+        <div class="menu-item-title">Duyệt BĐS</div>
+        <div class="menu-item-sub">{{ $stats['pending_count'] ?? 0 }} tin chờ xem xét</div>
       </div>
-      <div class="menu-item-right">›</div>
-    </div>
-    <div class="menu-item" onclick="openSubpage('approvebds')">
-      <div class="menu-item-icon" style="background:var(--warning-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="menu-item-body">
-        <div class="menu-item-title">Duyệt BĐS khu vực</div>
-        <div class="menu-item-sub">BĐS chờ duyệt trong khu vực</div>
-      </div>
-      <div class="menu-item-right">›</div>
+      <div class="menu-item-right">@if(($stats['pending_count'] ?? 0) > 0)<span class="badge badge-red">{{ $stats['pending_count'] }}</span> @endif ›</div>
     </div>
   </div>
 
@@ -174,14 +166,6 @@
   <!-- Admin section -->
   <div class="role-admin">
     <div class="menu-section"><div class="menu-section-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Quản trị hệ thống</span></div></div>
-    <div class="menu-item" style="border-left:3px solid var(--danger);" onclick="openSubpage('approvebds')">
-      <div class="menu-item-icon" style="background:var(--danger-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-      <div class="menu-item-body">
-        <div class="menu-item-title">Duyệt BĐS</div>
-        <div class="menu-item-sub">{{ $stats['pending_count'] ?? 0 }} tin chờ xem xét</div>
-      </div>
-      <div class="menu-item-right">@if(($stats['pending_count'] ?? 0) > 0)<span class="badge badge-red">{{ $stats['pending_count'] }}</span> @endif ›</div>
-    </div>
     <div class="menu-item" onclick="openSubpage('users')">
       <div class="menu-item-icon" style="background:var(--primary-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
       <div class="menu-item-body">
@@ -221,7 +205,7 @@
   <div class="menu-item" onclick="openSubpage('referral')" style="border-left:3px solid var(--purple);">
     <div class="menu-item-icon" style="background:var(--purple-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>
     <div class="menu-item-body">
-      <div class="menu-item-title">Mã giới thiệu</div>
+      <div class="menu-item-title">Mạng lưới thổ địa</div>
       <div class="menu-item-sub">Chia sẻ link · Nhận 5% thu nhập</div>
     </div>
     <div class="menu-item-right"><span class="badge badge-purple">5% MLM</span> ›</div>

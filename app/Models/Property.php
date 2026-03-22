@@ -38,7 +38,9 @@ class Property extends Model
         'total_click',
         'rentduration',
         'latitude',
-        'longitude'
+        'longitude',
+        'rejection_reason',
+        'rejection_note',
 
     ];
     protected $hidden = [

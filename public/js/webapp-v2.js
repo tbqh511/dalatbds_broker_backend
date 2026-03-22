@@ -251,6 +251,19 @@ window.openSubpage = function(id){
   if(id === 'notifset') {
     initNotifSettings();
   }
+  if(id === 'assignlead') {
+    loadAssignLeadData();
+  }
+  if(id === 'kpiteam') {
+    loadKpiTeamData();
+  }
+  if(id === 'approvebds') {
+    abdsCurrentTab = 'pending';
+    document.querySelectorAll('#abdsTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+    var abdsDefaultTab = document.querySelector('#abdsTabBar [data-tab="pending"]');
+    if(abdsDefaultTab) abdsDefaultTab.classList.add('active');
+    loadApprovalBds(true);
+  }
 };
 window.closeSubpage = function(id){
   const sp = document.getElementById('subpage-'+id);
@@ -506,34 +519,254 @@ window.toggleFaq = function(questionEl){
 };
 
 // ============ ADMIN — DUYỆT BĐS ============
-let currentRejectId = null;
+var currentRejectId = null;
+var abdsCurrentTab = 'pending';
 
-window.openRejectSheet = function(bdsId){
-  currentRejectId = bdsId;
-  document.querySelectorAll('.rs-reason').forEach(r=>r.classList.remove('selected'));
+window.switchAbdsTab = function(tab, btn) {
+  abdsCurrentTab = tab;
+  document.querySelectorAll('#abdsTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  loadApprovalBds(true);
+};
+
+window.loadApprovalBds = function(reset) {
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if(!cfg || !cfg.adminPropertiesJson) return;
+  var url = cfg.adminPropertiesJson + '?tab=' + encodeURIComponent(abdsCurrentTab);
+  var container = document.getElementById('abdsListContainer');
+  if(!container) return;
+
+  if(reset) {
+    container.innerHTML =
+      '<div style="padding:16px;">'
+      + '<div style="height:120px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;opacity:.6;"></div>'
+      + '<div style="height:120px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;opacity:.4;"></div>'
+      + '</div>';
+  }
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if(!data.success) {
+        container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--danger);">Lỗi tải dữ liệu.</div>';
+        return;
+      }
+      var s = data.stats || {};
+      // Update hero stats
+      var heroMain = document.getElementById('abdsHeroMain');
+      if(heroMain) heroMain.textContent = (s.pending || 0) + ' BĐS chờ xem xét';
+      var elPending = document.getElementById('abdsPendingCount');
+      if(elPending) elPending.textContent = s.pending || 0;
+      var elToday = document.getElementById('abdsApprovedToday');
+      if(elToday) elToday.textContent = s.approved_today || 0;
+      var elTotal = document.getElementById('abdsTotalApproved');
+      if(elTotal) elTotal.textContent = s.total_approved || 0;
+      var elAvg = document.getElementById('abdsAvgTime');
+      if(elAvg) elAvg.textContent = s.avg_hours ? s.avg_hours + 'h' : '—';
+      document.querySelectorAll('.abds-tab-count-pending').forEach(function(el) {
+        el.textContent = s.pending || 0;
+      });
+
+      var props = data.properties || [];
+      if(props.length === 0) {
+        container.innerHTML =
+          '<div style="text-align:center;padding:48px 16px;color:var(--text-tertiary);">'
+          + '<div style="font-size:14px;">Không có BĐS nào</div></div>';
+        return;
+      }
+      var html = '';
+      props.forEach(function(p) { html += _renderAbdsCard(p); });
+      container.innerHTML = html;
+    })
+    .catch(function() {
+      container.innerHTML =
+        '<div style="text-align:center;padding:32px;color:var(--danger);">Lỗi kết nối. '
+        + '<button onclick="loadApprovalBds(true)" style="color:var(--primary);text-decoration:underline;background:none;border:none;cursor:pointer;">Thử lại</button></div>';
+    });
+};
+
+function _renderAbdsCard(p) {
+  var checks = p.checks || {};
+  var legalItems = [
+    { key: 'has_legal_docs',    yes: 'Sổ đỏ / GCNQSD — Đã upload',  no: 'Sổ đỏ / GCNQSD — Chưa upload' },
+    { key: 'has_enough_photos', yes: 'Ảnh thực tế đầy đủ (≥3 ảnh)', no: 'Ảnh chưa đủ — Cần thêm' },
+    { key: 'location_valid',    yes: 'Vị trí / địa chỉ đầy đủ',     no: 'Vị trí / địa chỉ thiếu thông tin' },
+    { key: 'price_reasonable',  yes: 'Giá đã nhập',                  no: 'Chưa nhập giá' },
+  ];
+  var legalHtml = '';
+  legalItems.forEach(function(item) {
+    var pass = !!checks[item.key];
+    var dotCls = pass ? 'yes' : 'no';
+    var dotIcon = pass ? '✓' : '✕';
+    var txt = pass ? item.yes : item.no;
+    var style = pass ? '' : ' style="color:var(--danger);"';
+    legalHtml += '<div class="abds-legal-item"><div class="abds-legal-dot ' + dotCls + '">' + dotIcon + '</div>'
+      + '<span class="abds-legal-text"' + style + '>' + escHtml(txt) + '</span></div>';
+  });
+
+  var warningBanner = '';
+  if(!p.all_checks_pass && p.status === 0) {
+    warningBanner = '<div style="padding:8px 13px;background:var(--danger-light);border-top:1px solid #fca5a5;display:flex;gap:8px;align-items:center;">'
+      + '<div><div style="font-size:11px;font-weight:700;color:var(--danger);">Không đủ điều kiện duyệt</div>'
+      + '<div style="font-size:10px;color:#b91c1c;">Cần bổ sung thông tin trước khi duyệt</div></div></div>';
+  }
+
+  var rejectedBanner = '';
+  if(p.status === 2 && p.rejection_reason) {
+    rejectedBanner = '<div style="padding:8px 13px;background:#fef2f2;border-top:1px solid #fecaca;">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--danger);">Lý do từ chối: ' + escHtml(p.rejection_reason) + '</div>'
+      + (p.rejection_note ? '<div style="font-size:10px;color:#b91c1c;">' + escHtml(p.rejection_note) + '</div>' : '')
+      + '</div>';
+  }
+
+  var actionBtns = '';
+  if(p.status === 0) {
+    actionBtns =
+      '<button class="abds-btn view" onclick="showToast(\'Xem chi tiết BĐS #' + p.id + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Xem</span></button>'
+      + '<button class="abds-btn reject" onclick="openRejectSheet(' + p.id + ')">✕ Từ chối</button>'
+      + '<button class="abds-btn approve" onclick="approveAbds(' + p.id + ',\'' + escHtml(p.title).replace(/'/g, "\\'") + '\')">✓ Duyệt</button>';
+  } else {
+    actionBtns =
+      '<button class="abds-btn view" onclick="showToast(\'Xem chi tiết BĐS #' + p.id + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Xem</span></button>';
+  }
+
+  var addr = '';
+  if(p.street) addr += p.street;
+  if(p.ward) addr += (addr ? ', ' : '') + p.ward;
+  if(addr) addr += ', TP.Đà Lạt';
+
+  var specs = '';
+  if(p.area) specs += '<div class="abds-spec"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>' + escHtml(p.area) + '</div>';
+  if(p.number_room) specs += '<div class="abds-spec"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>' + escHtml(String(p.number_room)) + ' PN</div>';
+  if(p.direction) specs += '<div class="abds-spec"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>' + escHtml(p.direction) + '</div>';
+
+  return '<div class="abds-card" id="abds-' + p.id + '">'
+    + '<div class="abds-body">'
+    + '<div class="abds-title">' + escHtml(p.title || '') + '</div>'
+    + (addr ? '<div class="abds-addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escHtml(addr) + '</div>' : '')
+    + (specs ? '<div class="abds-specs">' + specs + '</div>' : '')
+    + (p.price ? '<div style="font-size:13px;font-weight:700;color:var(--primary);padding:4px 0 2px;">' + escHtml(String(p.price)) + '</div>' : '')
+    + '</div>'
+    + '<div class="abds-broker">'
+    + '<div class="abds-broker-avatar">' + escHtml(p.broker_initials || 'BK') + '</div>'
+    + '<span class="abds-broker-name">' + escHtml(p.broker_name || '') + ' · eBroker</span>'
+    + '<span class="abds-broker-time">' + escHtml(p.created_at_fmt || '') + '</span>'
+    + '</div>'
+    + '<div class="abds-legal"><div class="abds-legal-title">Kiểm tra pháp lý</div>' + legalHtml + '</div>'
+    + warningBanner
+    + rejectedBanner
+    + '<div class="abds-actions">' + actionBtns + '</div>'
+    + '</div>';
+}
+
+window.openRejectSheet = function(propertyId) {
+  currentRejectId = propertyId;
+  document.querySelectorAll('.rs-reason').forEach(function(r) { r.classList.remove('selected'); });
+  var noteEl = document.getElementById('rsNoteText');
+  if(noteEl) noteEl.value = '';
   document.getElementById('rejectSheet').classList.add('open');
 };
-window.selectRejectReason = function(el){
-  document.querySelectorAll('.rs-reason').forEach(r=>r.classList.remove('selected'));
+
+window.selectRejectReason = function(el) {
+  document.querySelectorAll('.rs-reason').forEach(function(r) { r.classList.remove('selected'); });
   el.classList.add('selected');
 };
-window.submitReject = function(){
-  const selected = document.querySelector('.rs-reason.selected');
-  if(!selected){ showToast('Vui lòng chọn lý do từ chối'); return; }
-  document.getElementById('rejectSheet').classList.remove('open');
-  if(currentRejectId){
-    const card = document.getElementById(currentRejectId);
-    if(card) card.style.display='none';
-  }
-  showToast('✕ Đã gửi yêu cầu bổ sung → Broker');
+
+window.submitReject = function() {
+  var selected = document.querySelector('.rs-reason.selected');
+  if(!selected) { showToast('Vui lòng chọn lý do từ chối'); return; }
+
+  var reason = selected.getAttribute('data-reason') || '';
+  var note = (document.getElementById('rsNoteText') ? document.getElementById('rsNoteText').value : '').trim();
+  if(!currentRejectId) return;
+
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var url = cfg && cfg.adminPropertiesBase ? cfg.adminPropertiesBase + currentRejectId + '/reject' : null;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if(!url || !csrf) { showToast('Lỗi cấu hình'); return; }
+
+  var submitBtn = document.querySelector('#rejectSheet .rs-submit');
+  if(submitBtn) submitBtn.disabled = true;
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({ reason: reason, note: note }),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById('rejectSheet').classList.remove('open');
+      if(submitBtn) submitBtn.disabled = false;
+      if(data.success) {
+        var card = document.getElementById('abds-' + currentRejectId);
+        if(card) {
+          card.style.transition = 'opacity .3s';
+          card.style.opacity = '0';
+          setTimeout(function() { if(card.parentNode) card.parentNode.removeChild(card); }, 300);
+        }
+        _abdsUpdatePendingCount(data.pending_count);
+        showToast('✕ Đã từ chối — Broker đã được thông báo');
+      } else {
+        showToast(data.message || 'Có lỗi xảy ra');
+      }
+    })
+    .catch(function() {
+      if(submitBtn) submitBtn.disabled = false;
+      showToast('Lỗi kết nối');
+    });
 };
-window.approveAbds = function(id, name){
-  const card = document.getElementById(id);
-  if(card) card.style.display='none';
-  showToast('✓ Đã duyệt: ' + name);
+
+window.approveAbds = function(propertyId, name) {
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var url = cfg && cfg.adminPropertiesBase ? cfg.adminPropertiesBase + propertyId + '/approve' : null;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if(!url || !csrf) { showToast('Lỗi cấu hình'); return; }
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({}),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if(data.success) {
+        var card = document.getElementById('abds-' + propertyId);
+        if(card) {
+          card.style.transition = 'opacity .3s';
+          card.style.opacity = '0';
+          setTimeout(function() { if(card.parentNode) card.parentNode.removeChild(card); }, 300);
+        }
+        _abdsUpdatePendingCount(data.pending_count);
+        // Increment today count locally
+        var todayEl = document.getElementById('abdsApprovedToday');
+        if(todayEl) todayEl.textContent = (parseInt(todayEl.textContent, 10) || 0) + 1;
+        showToast('✓ Đã duyệt: ' + (name || 'BĐS') + ' — Broker đã được thông báo');
+      } else {
+        showToast(data.message || 'Có lỗi xảy ra');
+      }
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
 };
-document.getElementById('rejectSheet')?.addEventListener('click', function(e){
-  if(e.target===this) this.classList.remove('open');
+
+function _abdsUpdatePendingCount(count) {
+  if(count === undefined) return;
+  var el = document.getElementById('abdsPendingCount');
+  if(el) el.textContent = count;
+  document.querySelectorAll('.abds-tab-count-pending').forEach(function(e) { e.textContent = count; });
+  var heroMain = document.getElementById('abdsHeroMain');
+  if(heroMain) heroMain.textContent = count + ' BĐS chờ xem xét';
+}
+
+document.getElementById('rejectSheet')?.addEventListener('click', function(e) {
+  if(e.target === this) this.classList.remove('open');
 });
 
 // ============ ADMIN — DUYỆT HOA HỒNG ============
@@ -624,26 +857,320 @@ window.selectSalePick = function(item, saleId){
 };
 
 window.confirmAssign = function(){
-  const picker = document.getElementById('salePicker');
-  picker.classList.remove('open');
-  // remove assigned cards from list
-  currentPickLeads.forEach(id=>{
-    const card = document.getElementById(id);
-    if(card) card.style.display = 'none';
-    selectedLeads.delete(id);
+  if (!selectedSale) { showToast('Vui lòng chọn Sale'); return; }
+  if (!currentPickLeads || currentPickLeads.length === 0) { showToast('Không có lead nào được chọn'); return; }
+
+  // Extract integer lead IDs from DOM ids (format: 'ull-{id}')
+  var leadIds = currentPickLeads.map(function(domId){
+    return parseInt(String(domId).replace(/^ull-/, ''), 10);
+  }).filter(function(id){ return !isNaN(id) && id > 0; });
+
+  if (leadIds.length === 0) { showToast('Không tìm thấy lead ID hợp lệ'); return; }
+
+  var cfg  = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if (!cfg || !cfg.bulkAssign) { showToast('Lỗi: Thiếu cấu hình endpoint'); return; }
+
+  var assignBtn = document.getElementById('spAssignBtn');
+  if (assignBtn) { assignBtn.disabled = true; assignBtn.textContent = 'Đang assign...'; }
+
+  fetch(cfg.bulkAssign, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({ lead_ids: leadIds, sale_id: selectedSale }),
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    var picker = document.getElementById('salePicker');
+    if (picker) picker.classList.remove('open');
+
+    if (res.success) {
+      var assignedCount = res.assigned_count || 0;
+      var skippedCount  = (res.skipped_ids || []).length;
+
+      // Remove assigned cards from DOM
+      (res.assigned_ids || []).forEach(function(id){
+        var domId = 'ull-' + id;
+        var card  = document.getElementById(domId);
+        if (card) card.style.display = 'none';
+        selectedLeads.delete(domId);
+      });
+      // Clear skipped from selection too
+      (res.skipped_ids || []).forEach(function(id){
+        selectedLeads.delete('ull-' + id);
+      });
+
+      updateAssignCta();
+
+      // Update unassigned count
+      var remain = document.querySelectorAll('#unassignedLeadsList .ul-card:not([style*="display: none"])').length;
+      var countEl = document.getElementById('unassignedCount');
+      if (countEl) countEl.textContent = remain + ' lead';
+      var tabEl = document.getElementById('tabUnassigned');
+      if (tabEl) tabEl.textContent = 'Chờ assign (' + remain + ')';
+
+      // Decrement budget counts in cache
+      if (_assignLeadData) {
+        (res.assigned_ids || []).forEach(function(id){
+          var lead = (_assignLeadData.leads || []).find(function(l){ return l.id === id; });
+          if (lead) {
+            var tier = lead.budget_tier;
+            _assignLeadData.budget_counts[tier] = Math.max(0, (_assignLeadData.budget_counts[tier] || 0) - 1);
+          }
+        });
+        var bc = _assignLeadData.budget_counts;
+        var hEl = document.getElementById('budgetHigh');
+        var mEl = document.getElementById('budgetMedium');
+        var lEl = document.getElementById('budgetLow');
+        if (hEl) hEl.textContent = bc.high   || 0;
+        if (mEl) mEl.textContent = bc.medium  || 0;
+        if (lEl) lEl.textContent = bc.low     || 0;
+      }
+
+      // Refresh history tab
+      loadAssignHistoryOnly();
+
+      var saleName = res.sale_name || 'Sale';
+      var msg = '✓ Đã assign ' + assignedCount + ' lead cho ' + saleName;
+      if (skippedCount > 0) msg += ' (' + skippedCount + ' đã được assign trước)';
+      showToast(msg);
+    } else {
+      showToast(res.message || 'Lỗi assign lead');
+    }
+  })
+  .catch(function(){
+    var picker = document.getElementById('salePicker');
+    if (picker) picker.classList.remove('open');
+    showToast('Lỗi kết nối, vui lòng thử lại');
+  })
+  .finally(function(){
+    if (assignBtn) {
+      assignBtn.disabled = true;
+      assignBtn.textContent = '✓ Xác nhận Assign';
+    }
   });
-  updateAssignCta();
-  // update count badge
-  const remain = document.querySelectorAll('.ul-card:not([style*="display: none"])').length;
-  document.getElementById('unassignedCount').textContent = remain + ' lead';
-  const saleNames = {HT:'Huy Thái',MK:'Minh Khoa',AL:'Anh Linh',TN:'Thu Nga',DH:'Đức Huy'};
-  showToast('✓ Đã assign ' + currentPickLeads.length + ' lead cho ' + (saleNames[selectedSale]||selectedSale));
 };
 
 // Close sale picker on backdrop
 document.getElementById('salePicker')?.addEventListener('click', function(e){
   if(e.target === this) this.classList.remove('open');
 });
+
+// ---- Assign Lead: tab switch ----
+window.assignLeadTabSwitch = function(btn){
+  btn.closest('.sp-tabs').querySelectorAll('.sp-tab').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+  var tab = btn.dataset.tab;
+  var unassignedPanel = document.getElementById('assignLeadTabUnassigned');
+  var historyPanel    = document.getElementById('assignLeadTabHistory');
+  if (unassignedPanel) unassignedPanel.style.display = tab === 'unassigned' ? '' : 'none';
+  if (historyPanel)    historyPanel.style.display    = tab === 'history'    ? '' : 'none';
+};
+
+// ---- Assign Lead: data loading ----
+var _assignLeadData = null;
+
+function loadAssignLeadData(){
+  _assignLeadData = null;
+  selectedLeads.clear();
+  updateAssignCta();
+
+  var loadingEl = document.getElementById('assignLeadLoading');
+  var emptyEl   = document.getElementById('assignLeadEmpty');
+  var listEl    = document.getElementById('unassignedLeadsList');
+  if (loadingEl) { loadingEl.style.display = ''; }
+  if (emptyEl)   { emptyEl.style.display = 'none'; }
+  if (listEl)    { listEl.style.display = 'none'; listEl.innerHTML = ''; }
+
+  // Ensure unassigned tab is active
+  var tabUnassigned = document.getElementById('tabUnassigned');
+  var tabHistory    = document.querySelector('[data-tab="history"]');
+  var panelUnassigned = document.getElementById('assignLeadTabUnassigned');
+  var panelHistory    = document.getElementById('assignLeadTabHistory');
+  if (tabUnassigned)  tabUnassigned.classList.add('active');
+  if (tabHistory)     tabHistory.classList.remove('active');
+  if (panelUnassigned) panelUnassigned.style.display = '';
+  if (panelHistory)    panelHistory.style.display = 'none';
+
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.assignData) { showToast('Lỗi: Không tìm thấy endpoint assign data'); return; }
+
+  fetch(cfg.assignData, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (!data.success) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (emptyEl)   emptyEl.style.display = '';
+      return;
+    }
+    _assignLeadData = data;
+
+    var bc = data.budget_counts || {};
+    var hEl = document.getElementById('budgetHigh');
+    var mEl = document.getElementById('budgetMedium');
+    var lEl = document.getElementById('budgetLow');
+    if (hEl) hEl.textContent = bc.high   || 0;
+    if (mEl) mEl.textContent = bc.medium  || 0;
+    if (lEl) lEl.textContent = bc.low     || 0;
+
+    var total   = (data.leads || []).length;
+    var countEl = document.getElementById('unassignedCount');
+    if (countEl) countEl.textContent = total + ' lead';
+    var tabEl = document.getElementById('tabUnassigned');
+    if (tabEl) tabEl.textContent = 'Chờ assign (' + total + ')';
+
+    if (loadingEl) loadingEl.style.display = 'none';
+
+    if (!data.leads || data.leads.length === 0) {
+      if (emptyEl) emptyEl.style.display = '';
+    } else {
+      if (listEl) { listEl.innerHTML = renderUnassignedLeadCards(data.leads); listEl.style.display = ''; }
+    }
+
+    renderSalePickerList(data.sales || []);
+    renderAssignHistory(data.history || []);
+  })
+  .catch(function(){
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (emptyEl)   emptyEl.style.display = '';
+    showToast('Lỗi tải dữ liệu assign lead');
+  });
+}
+
+function loadAssignHistoryOnly(){
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.assignData) return;
+  fetch(cfg.assignData, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.success) {
+      renderAssignHistory(data.history || []);
+      if (_assignLeadData) _assignLeadData.history = data.history;
+    }
+  })
+  .catch(function(){});
+}
+
+function renderUnassignedLeadCards(leads){
+  var svgPhone  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.93a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>';
+  var svgFlame  = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-7 6-7 12a7 7 0 0 0 14 0c0-6-7-12-7-12z"/></svg>';
+  var svgAssign = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+
+  var priorityConfig = {
+    hot:    { badge: 'badge-red',   label: 'Hot',        color: 'var(--danger)',        tagStyle: 'background:#fee2e2;color:#dc2626;' },
+    medium: { badge: 'badge-amber', label: 'Trung bình', color: 'var(--warning)',       tagStyle: 'background:#fef3c7;color:#d97706;' },
+    normal: { badge: 'badge-blue',  label: 'Bình thường',color: 'var(--primary)',       tagStyle: 'background:#dbeafe;color:#1d4ed8;' },
+    low:    { badge: 'badge-gray',  label: 'Thấp',       color: 'var(--text-tertiary)', tagStyle: 'background:var(--bg-secondary);color:var(--text-secondary);' },
+  };
+  var avatarColors = ['#ef4444', 'var(--teal)', 'var(--purple)', '#f59e0b', 'var(--primary)', '#059669'];
+
+  return leads.map(function(lead, index){
+    var domId    = 'ull-' + lead.id;
+    var pCfg     = priorityConfig[lead.priority] || priorityConfig.normal;
+    var avatarBg = avatarColors[index % avatarColors.length];
+
+    var catStr  = (lead.categories || []).join(', ');
+    var wardStr = (lead.wards || []).join(', ');
+    var needStr = [lead.lead_type, lead.purpose].filter(Boolean).join(' ');
+
+    var rows = '';
+    if (catStr)  rows += '<div class="ul-row"><span class="ul-label">Loại BĐS</span><span class="ul-value">' + escHtml(catStr) + '</span></div>';
+    if (needStr) rows += '<div class="ul-row"><span class="ul-label">Nhu cầu</span><span class="ul-value">' + escHtml(needStr) + '</span></div>';
+    if (lead.budget_min || lead.budget_max)
+                 rows += '<div class="ul-row"><span class="ul-label">Ngân sách</span><span class="ul-value money">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span></div>';
+    if (wardStr) rows += '<div class="ul-row"><span class="ul-label">Khu vực</span><span class="ul-value">' + escHtml(wardStr) + '</span></div>';
+
+    var tags = [];
+    (lead.categories || []).forEach(function(c){ if(c) tags.push(c); });
+    if (lead.budget_min && lead.budget_max) tags.push(lead.budget_min + '–' + lead.budget_max);
+    (lead.wards || []).forEach(function(w){ if(w) tags.push(w); });
+    var tagsHtml = tags.slice(0, 4).map(function(t){ return '<span class="ul-tag">' + escHtml(t) + '</span>'; }).join('');
+    if (lead.priority === 'hot') {
+      tagsHtml += '<span class="ul-tag" style="' + pCfg.tagStyle + 'display:inline-flex;align-items:center;gap:3px;">' + svgFlame + ' Ưu tiên cao</span>';
+    }
+
+    var timeStyle    = 'color:' + pCfg.color + ';font-weight:600;display:inline-flex;align-items:center;gap:3px;';
+    var suggestionTxt = lead.suggestion ? 'Gợi ý: ' + lead.suggestion + ' (phù hợp khu vực)' : 'Chưa có gợi ý';
+
+    return '<div class="ul-card" id="' + domId + '" onclick="toggleUlSelect(\'' + domId + '\')">'
+      + '<div class="ul-head">'
+        + '<div class="ul-checkbox" id="' + domId + '-cb">○</div>'
+        + '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">' + escHtml(lead.initials) + '</div>'
+        + '<div class="ul-info">'
+          + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
+          + '<div class="ul-meta">'
+            + (lead.phone ? '<span>' + svgPhone + escHtml(lead.phone) + '</span>' : '')
+            + '<span style="' + timeStyle + '">' + svgFlame + escHtml(lead.time_ago) + '</span>'
+          + '</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">'
+          + '<span class="badge ' + pCfg.badge + '">' + pCfg.label + '</span>'
+          + '<span style="font-size:10px;color:var(--text-tertiary);">' + escHtml(lead.source_note) + '</span>'
+        + '</div>'
+      + '</div>'
+      + (rows ? '<div class="ul-body">' + rows + '</div>' : '')
+      + (tagsHtml ? '<div class="ul-tags">' + tagsHtml + '</div>' : '')
+      + '<div class="ul-footer">'
+        + '<span style="font-size:11px;color:var(--text-tertiary);">' + escHtml(suggestionTxt) + '</span>'
+        + '<button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">'
+          + '<span style="display:inline-flex;align-items:center;gap:4px;">' + svgAssign + ' Assign ngay</span>'
+        + '</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function renderSalePickerList(sales){
+  var container = document.getElementById('salePickerList');
+  if (!container) return;
+  if (sales.length === 0) {
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-tertiary);">Không có sale nào</div>';
+    return;
+  }
+  var avatarColors = ['var(--primary)', 'var(--teal)', '#f59e0b', '#8b5cf6', '#059669', '#ef4444'];
+  container.innerHTML = sales.map(function(sale, index){
+    var wClass   = sale.workload === 'high' ? 'high' : (sale.workload === 'mid' ? 'mid' : 'low');
+    var cntLabel = sale.active_leads + ' deal' + (sale.active_leads !== 1 ? 's' : '');
+    var avatarBg = avatarColors[index % avatarColors.length];
+    return '<div class="sale-pick-item" onclick="selectSalePick(this,' + sale.id + ')">'
+      + '<div class="spi-avatar" style="background:' + avatarBg + '">' + escHtml(sale.initials) + '</div>'
+      + '<div class="spi-info">'
+        + '<div class="spi-name">' + escHtml(sale.name) + '</div>'
+        + '<div class="spi-meta">' + escHtml(sale.active_leads + ' lead đang chăm') + '</div>'
+      + '</div>'
+      + '<div class="spi-workload"><span class="spi-leads ' + wClass + '">' + escHtml(cntLabel) + '</span></div>'
+      + '<span class="spi-check" id="sp-' + sale.id + '">○</span>'
+      + '</div>';
+  }).join('');
+}
+
+function renderAssignHistory(history){
+  var listEl  = document.getElementById('assignHistoryList');
+  var emptyEl = document.getElementById('assignHistoryEmpty');
+  if (!listEl) return;
+  if (!history || history.length === 0) {
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = '';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  var avatarColors = ['var(--primary)', 'var(--teal)', '#f59e0b', '#8b5cf6', '#059669'];
+  listEl.innerHTML = history.map(function(item, index){
+    var avatarBg = avatarColors[index % avatarColors.length];
+    return '<div class="ah-item">'
+      + '<div class="ah-avatar" style="background:' + avatarBg + ';">' + escHtml(item.sale_initials) + '</div>'
+      + '<div class="ah-info">'
+        + '<div class="ah-name">' + escHtml(item.sale_name) + '</div>'
+        + '<div class="ah-detail">Nhận lead: ' + escHtml(item.customer_name) + ' · ' + escHtml(item.lead_type) + ' ' + escHtml(item.budget_label) + '</div>'
+      + '</div>'
+      + '<div class="ah-time">' + escHtml(item.time_label) + '</div>'
+      + '</div>';
+  }).join('');
+}
 
 // ============ SEARCH STATE MACHINE ============
 // States: discovery | suggestions | results
@@ -4285,6 +4812,291 @@ function userAction(suffix, id, body, successMsg, method) {
       }
     })
     .catch(function() { showToast('Lỗi kết nối'); });
+}
+
+// ============ KPI & TEAM SALE ============
+var _kpiTeamData = null;
+
+window.loadKpiTeamData = function(force) {
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.kpiTeamJson) return;
+  if (_kpiTeamData && !force) { renderKpiTeam(_kpiTeamData); return; }
+
+  var loading  = document.getElementById('kpiTeamLoading');
+  var content  = document.getElementById('kpiTeamContent');
+  var empty    = document.getElementById('kpiTeamEmpty');
+  if (loading) loading.style.display = '';
+  if (content) content.style.display = 'none';
+  if (empty)   empty.style.display   = 'none';
+
+  fetch(cfg.kpiTeamJson, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (loading) loading.style.display = 'none';
+      if (!data.success || !data.sales || data.sales.length === 0) {
+        if (empty) empty.style.display = '';
+        return;
+      }
+      _kpiTeamData = data;
+      if (content) content.style.display = '';
+      renderKpiTeam(data);
+    })
+    .catch(function() {
+      if (loading) loading.style.display = 'none';
+      if (empty)   empty.style.display   = '';
+      showToast('Lỗi tải dữ liệu KPI');
+    });
+};
+
+window.kpiTabSwitch = function(btn, tab) {
+  var tabs = btn.closest('.sp-tabs');
+  if (tabs) tabs.querySelectorAll('.sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  if (_kpiTeamData) renderKpiSaleCards(_kpiTeamData.sales || [], tab);
+};
+
+window.kpiToggleDetail = function(saleId) {
+  var el = document.getElementById('kpi-detail-' + saleId);
+  if (!el) return;
+  var isOpen = el.classList.contains('open');
+  document.querySelectorAll('.sc-detail.open').forEach(function(d) { d.classList.remove('open'); });
+  if (!isOpen) el.classList.add('open');
+};
+
+window.kpiSendSupport = function(saleId, saleName) {
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.kpiTeamSupport) { showToast('Chức năng không khả dụng'); return; }
+  showToast('Đang gửi nhắc nhở cho ' + saleName + '...');
+  fetch(cfg.kpiTeamSupport, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': window.WEBAPP_CONFIG.csrfToken,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({ sale_id: saleId }),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      showToast(data.success ? ('Đã nhắc nhở ' + saleName + ' ✓') : (data.message || 'Không gửi được'));
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+};
+
+function renderKpiTeam(data) {
+  var t = data.team || {};
+  var hero = document.getElementById('kpiTeamHero');
+  if (hero) {
+    hero.innerHTML =
+      '<div class="th-label">THÁNG ' + _esc(t.month_label || '') + ' — TEAM SALE</div>' +
+      '<div class="th-title">Đà Lạt BĐS · ' + (t.team_count || 0) + ' Sale</div>' +
+      '<div class="th-grid">' +
+        '<div class="th-stat"><div class="th-stat-val">' + (t.deals_this_month || 0) + '</div><div class="th-stat-lbl">Deals tháng</div></div>' +
+        '<div class="th-stat"><div class="th-stat-val">' + (t.closed_this_month || 0) + '</div><div class="th-stat-lbl">Đã chốt</div></div>' +
+        '<div class="th-stat"><div class="th-stat-val">' + _esc(t.revenue_this_month || '0đ') + '</div><div class="th-stat-lbl">Doanh số</div></div>' +
+        '<div class="th-stat"><div class="th-stat-val">' + _esc(t.commission_this_month || '0đ') + '</div><div class="th-stat-lbl">HH phát sinh</div></div>' +
+      '</div>';
+  }
+
+  var lb = document.getElementById('kpiLeaderboard');
+  if (lb) {
+    var rankColors = { 1: 'var(--success)', 2: 'var(--primary)', 3: 'var(--warning)' };
+    var lbHtml =
+      '<div class="lb-title"><span style="display:inline-flex;align-items:center;gap:5px;">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>' +
+      ' BXH Tháng này</span></div>';
+    (data.leaderboard || []).forEach(function(s) {
+      var rankClass = s.rank <= 3 ? 'rank-' + s.rank : 'rank-n';
+      var color = rankColors[s.rank] || 'var(--text-tertiary)';
+      lbHtml +=
+        '<div class="lb-row">' +
+          '<div class="rank-badge ' + rankClass + '">' + s.rank + '</div>' +
+          '<div class="lb-name">' + _esc(s.name) + '</div>' +
+          '<div class="lb-bar-wrap"><div class="lb-bar-bg"><div class="lb-bar-fill" style="width:' + (s.bar_pct || 5) + '%;background:' + color + '"></div></div></div>' +
+          '<div class="lb-val" style="color:' + color + '">' + (s.da_chot || 0) + ' chốt</div>' +
+        '</div>';
+    });
+    lb.innerHTML = lbHtml;
+  }
+
+  var sales = data.sales || [];
+  var countActive  = sales.filter(function(s) { return !s.needs_support && (s.dang_cham > 0 || s.da_chot > 0); }).length;
+  var countSupport = sales.filter(function(s) { return s.needs_support; }).length;
+  var tabAll     = document.getElementById('kpiTabAll');
+  var tabActive  = document.getElementById('kpiTabActive');
+  var tabSupport = document.getElementById('kpiTabSupport');
+  if (tabAll)     tabAll.textContent     = 'Tất cả (' + sales.length + ')';
+  if (tabActive)  tabActive.textContent  = 'Đang active (' + countActive + ')';
+  if (tabSupport) tabSupport.textContent = 'Cần hỗ trợ (' + countSupport + ')';
+
+  // Reset to "all" tab
+  var tabBar = document.querySelector('#subpage-kpiteam .sp-tabs');
+  if (tabBar) tabBar.querySelectorAll('.sp-tab').forEach(function(t, i) { t.classList.toggle('active', i === 0); });
+
+  renderKpiSaleCards(sales, 'all');
+}
+
+function renderKpiSaleCards(sales, tab) {
+  var filtered = sales;
+  if (tab === 'active')  filtered = sales.filter(function(s) { return !s.needs_support && (s.dang_cham > 0 || s.da_chot > 0); });
+  if (tab === 'support') filtered = sales.filter(function(s) { return s.needs_support; });
+
+  var list = document.getElementById('kpiSaleCardsList');
+  if (!list) return;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="padding:48px 24px;text-align:center;color:var(--text-tertiary);font-size:13px;">Không có nhân viên nào trong mục này</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(renderSaleCard).join('') + '<div style="height:20px;"></div>';
+}
+
+var _kpiAvatarColors = ['var(--primary)', 'var(--teal)', '#f59e0b', '#8b5cf6', '#059669', '#ef4444', '#0ea5e9'];
+
+function renderSaleCard(s) {
+  var avatarColor = _kpiAvatarColors[s.id % _kpiAvatarColors.length];
+  var rankClass   = s.rank <= 3 ? 'rank-' + s.rank : 'rank-n';
+  var borderStyle = s.needs_support ? 'border-color:var(--warning);border-left:3px solid var(--warning);' : '';
+  var statusLabel = s.is_online ? 'Online' : (s.last_seen_label || 'Offline');
+  var statusColor = s.is_online ? 'color:var(--success);' : 'color:var(--text-tertiary);';
+  var onlineDot   = s.is_online ? '<div class="sc-online"></div>' : '';
+
+  // Close rate bar
+  var crPct   = Math.min(s.close_rate || 0, 100);
+  var crColor = crPct >= 60 ? 'var(--success)' : (crPct >= 30 ? 'var(--warning)' : 'var(--danger)');
+
+  // Response bar
+  var rh      = s.avg_response_h;
+  var rhLabel = rh === null || rh === undefined ? '—' : rh + 'h';
+  var rhPct   = rh === null || rh === undefined ? 0 : Math.max(5, Math.min(100, (8 - rh) / 8 * 100));
+  var rhColor = (rh === null || rh === undefined) ? 'var(--text-tertiary)' : (rh < 2 ? 'var(--success)' : (rh <= 5 ? 'var(--primary)' : 'var(--danger)'));
+  var rhWarn  = rh !== null && rh !== undefined && rh > 5
+    ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' : '';
+
+  // Bookings bar
+  var bw    = s.bookings_week || 0;
+  var bwPct = Math.min(bw, 7) / 7 * 100;
+
+  // Stuck warning banner
+  var warnBanner = '';
+  if (s.needs_support && s.stuck_items && s.stuck_items.length > 0) {
+    var si = s.stuck_items[0];
+    warnBanner =
+      '<div style="padding:8px 13px;background:var(--warning-light);border-top:1px solid #fde68a;">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--warning);display:inline-flex;align-items:center;gap:4px;">' +
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+          ' Deal #' + si.deal_id + ' bị stuck ' + si.days_stuck + ' ngày — Chưa cập nhật trạng thái' +
+        '</div>' +
+      '</div>';
+  }
+
+  // Footer buttons
+  var footerBtns = '';
+  footerBtns +=
+    '<button class="sc-btn" onclick="kpiToggleDetail(' + s.id + ')">' +
+      '<span style="display:inline-flex;align-items:center;gap:4px;">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>' +
+        ' Xem chi tiết' +
+      '</span>' +
+    '</button>';
+  if (s.needs_support) {
+    footerBtns +=
+      '<button class="sc-btn danger" onclick="kpiSendSupport(' + s.id + ', \'' + _esc(s.name) + '\')">' +
+        '<span style="display:inline-flex;align-items:center;gap:4px;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' +
+          ' Hỗ trợ ngay' +
+        '</span>' +
+      '</button>';
+  } else {
+    footerBtns +=
+      '<button class="sc-btn primary" onclick="openSubpage(\'assignlead\')">' +
+        '<span style="display:inline-flex;align-items:center;gap:4px;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>' +
+          ' Assign Lead' +
+        '</span>' +
+      '</button>';
+  }
+
+  // Detail panel: recent activities
+  var actHtml = '';
+  if (s.recent_activities && s.recent_activities.length > 0) {
+    actHtml = '<div style="margin-top:10px;"><div style="font-size:11px;font-weight:700;color:var(--text-tertiary);margin-bottom:6px;">HOẠT ĐỘNG GẦN ĐÂY</div>';
+    s.recent_activities.forEach(function(a) {
+      actHtml +=
+        '<div class="sc-tl-item">' +
+          '<div class="sc-tl-dot" style="background:var(--primary);"></div>' +
+          '<div class="sc-tl-text">' + _esc(a.type_label) + ' — ' + _esc(a.customer_name) + (a.content ? ': ' + _esc(a.content) : '') + '</div>' +
+          '<div class="sc-tl-time">' + _esc(a.time_ago) + '</div>' +
+        '</div>';
+    });
+    actHtml += '</div>';
+  } else {
+    actHtml = '<div style="font-size:12px;color:var(--text-tertiary);padding:8px 0;">Chưa có hoạt động nào</div>';
+  }
+
+  // Top tháng badge
+  var topBadge = s.rank === 1
+    ? '<div style="font-size:10px;color:var(--success);font-weight:600;display:inline-flex;align-items:center;gap:2px;">' +
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 6-8 10-8 10s8 4 8 10c0-6 8-10 8-10S12 8 12 2z"/></svg>' +
+        ' Top tháng</div>'
+    : '';
+
+  return (
+    '<div class="sale-card" style="' + borderStyle + '">' +
+      '<div class="sc-head">' +
+        '<div class="sc-avatar" style="background:' + avatarColor + ';">' + _esc(s.initials) + onlineDot + '</div>' +
+        '<div class="sc-info">' +
+          '<div class="sc-name">' + _esc(s.name) + '</div>' +
+          '<div class="sc-role">' +
+            '<span class="badge badge-blue" style="font-size:9px;">Sale</span>' +
+            '<span style="' + statusColor + '">· ' + _esc(statusLabel) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:right;">' +
+          '<div class="rank-badge ' + rankClass + '" style="margin-left:auto;margin-bottom:4px;">#' + s.rank + '</div>' +
+          topBadge +
+        '</div>' +
+      '</div>' +
+      '<div class="sc-kpi-grid">' +
+        '<div class="sc-kpi"><div class="sc-kpi-val" style="color:var(--danger);">' + (s.lead_moi || 0) + '</div><div class="sc-kpi-lbl">Lead mới</div></div>' +
+        '<div class="sc-kpi"><div class="sc-kpi-val" style="color:var(--primary);">' + (s.dang_cham || 0) + '</div><div class="sc-kpi-lbl">Đang chăm</div></div>' +
+        '<div class="sc-kpi"><div class="sc-kpi-val" style="color:var(--success);">' + (s.da_chot || 0) + '</div><div class="sc-kpi-lbl">Đã chốt</div></div>' +
+        '<div class="sc-kpi"><div class="sc-kpi-val" style="color:' + (s.da_chot > 0 ? 'var(--success)' : 'var(--text-tertiary)') + ';">' + _esc(s.hh_du_kien || '0đ') + '</div><div class="sc-kpi-lbl">HH dự kiến</div></div>' +
+      '</div>' +
+      warnBanner +
+      '<div class="sc-perf">' +
+        '<div class="sc-perf-row">' +
+          '<span class="sc-perf-label">Tỉ lệ chốt</span>' +
+          '<div class="sc-perf-bar"><div class="sc-perf-fill" style="width:' + crPct + '%;background:' + crColor + ';"></div></div>' +
+          '<span class="sc-perf-val" style="color:' + crColor + ';">' + crPct + '%</span>' +
+        '</div>' +
+        '<div class="sc-perf-row">' +
+          '<span class="sc-perf-label">Phản hồi lead</span>' +
+          '<div class="sc-perf-bar"><div class="sc-perf-fill" style="width:' + Math.round(rhPct) + '%;background:' + rhColor + ';"></div></div>' +
+          '<span class="sc-perf-val" style="color:' + rhColor + ';">' + rhLabel + rhWarn + '</span>' +
+        '</div>' +
+        '<div class="sc-perf-row">' +
+          '<span class="sc-perf-label">Lịch hẹn/tuần</span>' +
+          '<div class="sc-perf-bar"><div class="sc-perf-fill" style="width:' + Math.round(bwPct) + '%;background:var(--purple);"></div></div>' +
+          '<span class="sc-perf-val" style="color:var(--purple);">' + bw + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sc-footer">' + footerBtns + '</div>' +
+      '<div class="sc-detail" id="kpi-detail-' + s.id + '">' +
+        '<div style="padding:10px 13px;">' + actHtml + '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function _esc(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 }); // end DOMContentLoaded

@@ -12,6 +12,7 @@ use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Carbon;
 use App\Models\CrmLead;
@@ -225,6 +226,80 @@ class CrmLeadController extends Controller
         }
 
         return response()->json(['success' => true, 'sale_name' => $sale->name]);
+    }
+
+    public function bulkAssign(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer || !$customer->isSaleAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $leadIds = $request->input('lead_ids');
+        $saleId  = (int) $request->input('sale_id');
+
+        if (!is_array($leadIds) || count($leadIds) === 0) {
+            return response()->json(['success' => false, 'message' => 'Không có lead nào được chọn'], 422);
+        }
+        if (count($leadIds) > 50) {
+            return response()->json(['success' => false, 'message' => 'Tối đa 50 lead mỗi lần'], 422);
+        }
+
+        $sale = Customer::query()
+            ->where('id', $saleId)
+            ->where(fn ($q) => $q->where('role', 'sale')->orWhere('role', 'sale_admin'))
+            ->first();
+
+        if (!$sale) {
+            return response()->json(['success' => false, 'message' => 'Sale không hợp lệ'], 422);
+        }
+
+        $now      = Carbon::now();
+        $assigned = [];
+        $skipped  = [];
+
+        DB::transaction(function () use ($leadIds, $sale, $customer, $now, &$assigned, &$skipped) {
+            foreach ($leadIds as $leadId) {
+                $lead = CrmLead::find((int) $leadId);
+                if (!$lead || $lead->sale_id) {
+                    $skipped[] = (int) $leadId;
+                    continue;
+                }
+
+                $lead->sale_id     = $sale->id;
+                $lead->assigned_at = $now;
+                $lead->save();
+
+                CrmLeadActivity::create([
+                    'lead_id'  => $lead->id,
+                    'actor_id' => $customer->id,
+                    'type'     => 'assignment',
+                    'content'  => "Phân công cho: {$sale->name}",
+                ]);
+
+                $assigned[] = $lead->id;
+            }
+        });
+
+        // Send one Telegram notification for the whole batch
+        if (count($assigned) > 0 && $sale->telegram_id &&
+            $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
+            $firstLead = CrmLead::find($assigned[0]);
+            if ($firstLead) {
+                $message = count($assigned) === 1
+                    ? TelegramMessageTemplates::leadAssigned($firstLead)
+                    : 'Bạn được phân công ' . count($assigned) . ' lead mới. Vui lòng kiểm tra danh sách lead.';
+                $this->notificationService->sendToCustomer($sale, $message);
+            }
+        }
+
+        return response()->json([
+            'success'        => true,
+            'assigned_count' => count($assigned),
+            'assigned_ids'   => $assigned,
+            'skipped_ids'    => $skipped,
+            'sale_name'      => $sale->name,
+        ]);
     }
 
     public function createDeal(Request $request, $id)
