@@ -38,12 +38,34 @@ class Customer extends Authenticatable implements JWTSubject
         'role',
         'referral_code',
         'referred_by',
+        'notification_settings',
     ];
 
     protected $hidden = [
         'api_token',
         'remember_token',
     ];
+
+    protected $casts = [
+        'notification_settings' => 'array',
+    ];
+
+    public const DEFAULT_NOTIFICATION_SETTINGS = [
+        'master'   => true,
+        'lead'     => ['assigned' => true, 'followup' => true, 'channels' => ['telegram', 'in_app']],
+        'deal'     => ['status' => true, 'feedback' => true, 'stuck' => true, 'channels' => ['telegram', 'in_app']],
+        'booking'  => ['day_before' => true, 'hour_before' => true, 'result' => true, 'channels' => ['telegram', 'in_app']],
+        'commission' => ['approved' => true, 'status' => true, 'channels' => ['telegram', 'in_app', 'zalo']],
+        'property' => ['status' => true, 'interest' => true, 'expiry' => false, 'channels' => ['telegram', 'in_app']],
+        'market'   => ['news' => true, 'ai_suggest' => true, 'promotions' => false],
+        'quiet_hours' => ['enabled' => true, 'start' => '22:00', 'end' => '07:00'],
+    ];
+
+    public function getMergedNotifSettings(): array
+    {
+        $saved = $this->notification_settings ?? [];
+        return array_replace_recursive(self::DEFAULT_NOTIFICATION_SETTINGS, $saved);
+    }
 
     protected $appends = [
         'customertotalpost'

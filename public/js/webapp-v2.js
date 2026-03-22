@@ -248,6 +248,9 @@ window.openSubpage = function(id){
   if(id === 'referral') {
     loadReferralData();
   }
+  if(id === 'notifset') {
+    initNotifSettings();
+  }
 };
 window.closeSubpage = function(id){
   const sp = document.getElementById('subpage-'+id);
@@ -350,7 +353,7 @@ window.closeNotifDetail = function(id){
 
 // ============ ACCOUNT PAGES ============
 window.toggleMaster = function(cb){
-  const allToggles = document.querySelectorAll('#subpage-notifset .ios-toggle:not(#master-toggle)');
+  const allToggles = document.querySelectorAll('#subpage-notifset .ios-toggle:not(#ntog-master)');
   allToggles.forEach(t => { t.disabled = !cb.checked; t.style.opacity = cb.checked ? '1' : '.4'; });
 };
 window.toggleQuiet = function(cb){
@@ -359,6 +362,133 @@ window.toggleQuiet = function(cb){
 };
 window.toggleChBadge = function(el){
   el.classList.toggle('active');
+};
+
+// Notification settings — toggle id → settings key mapping
+var _notifToggleMap = [
+  ['ntog-master',             'master',               null],
+  ['ntog-lead-assigned',      'lead',                 'assigned'],
+  ['ntog-lead-followup',      'lead',                 'followup'],
+  ['ntog-deal-status',        'deal',                 'status'],
+  ['ntog-deal-feedback',      'deal',                 'feedback'],
+  ['ntog-deal-stuck',         'deal',                 'stuck'],
+  ['ntog-booking-day_before', 'booking',              'day_before'],
+  ['ntog-booking-hour_before','booking',              'hour_before'],
+  ['ntog-booking-result',     'booking',              'result'],
+  ['ntog-commission-approved','commission',           'approved'],
+  ['ntog-commission-status',  'commission',           'status'],
+  ['ntog-property-status',    'property',             'status'],
+  ['ntog-property-interest',  'property',             'interest'],
+  ['ntog-property-expiry',    'property',             'expiry'],
+  ['ntog-market-news',        'market',               'news'],
+  ['ntog-market-ai_suggest',  'market',               'ai_suggest'],
+  ['ntog-market-promotions',  'market',               'promotions'],
+  ['quiet-toggle',            'quiet_hours',          'enabled'],
+];
+
+window.initNotifSettings = function(){
+  var s = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.notifSettings) ? window.WEBAPP_CONFIG.notifSettings : {};
+
+  // Toggles
+  _notifToggleMap.forEach(function(row){
+    var elId = row[0], cat = row[1], key = row[2];
+    var el = document.getElementById(elId);
+    if(!el) return;
+    var val;
+    if(key === null) {
+      val = s.master !== undefined ? s.master : true;
+    } else {
+      val = (s[cat] && s[cat][key] !== undefined) ? s[cat][key] : true;
+    }
+    el.checked = !!val;
+  });
+
+  // Channel badges
+  document.querySelectorAll('#subpage-notifset .ch-badge[data-cat][data-ch]').forEach(function(badge){
+    var cat = badge.getAttribute('data-cat');
+    var ch  = badge.getAttribute('data-ch');
+    var channels = (s[cat] && Array.isArray(s[cat].channels)) ? s[cat].channels : [];
+    badge.classList.toggle('active', channels.indexOf(ch) !== -1);
+  });
+
+  // Quiet hours time selects
+  var startSel = document.getElementById('quiet-start');
+  var endSel   = document.getElementById('quiet-end');
+  var qh = s.quiet_hours || {};
+  if(startSel && qh.start) startSel.value = qh.start;
+  if(endSel   && qh.end)   endSel.value   = qh.end;
+
+  // Apply master toggle visual state
+  var masterEl = document.getElementById('ntog-master');
+  if(masterEl) toggleMaster(masterEl);
+
+  // Apply quiet toggle visual state
+  var quietEl = document.getElementById('quiet-toggle');
+  if(quietEl) toggleQuiet(quietEl);
+};
+
+window.saveNotifSettings = function(){
+  var s = {};
+
+  // Collect toggle values
+  _notifToggleMap.forEach(function(row){
+    var elId = row[0], cat = row[1], key = row[2];
+    var el = document.getElementById(elId);
+    var val = el ? el.checked : true;
+    if(key === null) {
+      s.master = val;
+    } else {
+      if(!s[cat]) s[cat] = {};
+      s[cat][key] = val;
+    }
+  });
+
+  // Collect channel badges
+  ['lead','deal','booking','commission','property'].forEach(function(cat){
+    var channels = [];
+    document.querySelectorAll('#subpage-notifset .ch-badge[data-cat="'+cat+'"].active').forEach(function(b){
+      channels.push(b.getAttribute('data-ch'));
+    });
+    if(!s[cat]) s[cat] = {};
+    s[cat].channels = channels;
+  });
+
+  // Quiet hours time
+  var startEl = document.getElementById('quiet-start');
+  var endEl   = document.getElementById('quiet-end');
+  if(!s.quiet_hours) s.quiet_hours = {};
+  s.quiet_hours.start = startEl ? startEl.value : '22:00';
+  s.quiet_hours.end   = endEl   ? endEl.value   : '07:00';
+
+  // Send as nested JSON — Laravel dot-notation validation handles nested objects
+  var payload = s;
+
+  var saveBtn = document.getElementById('notifset-save-btn');
+  if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu…'; }
+
+  var url  = window.WEBAPP_CONFIG.routes.notifSettingsSave;
+  var csrf = window.WEBAPP_CONFIG.csrfToken;
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+    body: JSON.stringify(payload),
+  })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(data && data.success) {
+        window.WEBAPP_CONFIG.notifSettings = s;
+        showToast('✓ Đã lưu cài đặt thông báo!');
+      } else {
+        showToast('⚠ Không thể lưu, thử lại!');
+      }
+    })
+    .catch(function(){
+      showToast('⚠ Không thể lưu, thử lại!');
+    })
+    .finally(function(){
+      if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '✓ Lưu cài đặt'; }
+    });
 };
 
 // FAQ accordion

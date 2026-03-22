@@ -187,7 +187,8 @@ class ApiController extends Controller
             'phone' => 'required',
             'secret' => 'required',
             'telegram_id' => 'nullable',
-            'first_name' => 'nullable'
+            'first_name' => 'nullable',
+            'referral_code' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {

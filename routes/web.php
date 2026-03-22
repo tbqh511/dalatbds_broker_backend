@@ -112,6 +112,9 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::patch('/webapp/api/bookings/{id}/reschedule', [TelegramWebAppController::class, 'apiRescheduleBooking'])->name('webapp.api.bookings.reschedule');
     Route::patch('/webapp/api/bookings/{id}/cancel', [TelegramWebAppController::class, 'apiCancelBooking'])->name('webapp.api.bookings.cancel');
     Route::get('/webapp/reviews', [TelegramWebAppController::class , 'reviews'])->name('webapp.reviews');
+    Route::post('/webapp/support/ticket', [TelegramWebAppController::class, 'submitSupportTicket'])->name('webapp.support.ticket');
+    Route::get('/webapp/notifications/settings', [TelegramWebAppController::class, 'getNotifSettings'])->name('webapp.notif.settings.get');
+    Route::post('/webapp/notifications/settings', [TelegramWebAppController::class, 'saveNotifSettings'])->name('webapp.notif.settings.save');
 
     // Admin user management routes
     Route::middleware(['webapp.role:admin'])->group(function () {

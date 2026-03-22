@@ -158,7 +158,15 @@ class UserService
                 $customer->firebase_id = $data['firebase_id'] ?? '';
                 $customer->address = '';
                 $customer->fcm_id = '';
-                
+
+                // Gán người giới thiệu nếu có referral_code
+                if (!empty($data['referral_code'])) {
+                    $referrer = Customer::where('referral_code', $data['referral_code'])->first();
+                    if ($referrer && $referrer->id !== $customer->id) {
+                        $customer->referred_by = $referrer->id;
+                    }
+                }
+
                 $customer->save();
                 
                 Log::info("Auto-registered new customer via API Login: ID {$customer->id}, Phone: {$customer->mobile}");

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Property;
@@ -136,7 +137,9 @@ class TelegramWebAppController extends Controller
 
         $categories = Category::where('status', 1)->orderBy('order')->get(['id', 'category']);
 
-        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices', 'likedIds', 'categories'));
+        $notifSettings = $customer ? $customer->getMergedNotifSettings() : Customer::DEFAULT_NOTIFICATION_SETTINGS;
+
+        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices', 'likedIds', 'categories', 'notifSettings'));
     //return view('frontend_dashboard', compact('customer', 'stats', 'properties'));
     }
 
@@ -3108,6 +3111,102 @@ class TelegramWebAppController extends Controller
             Log::error('myCommissionsApi: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
         }
+    }
+
+    public function submitSupportTicket(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $validated = $request->validate([
+            'category' => ['required', 'string', 'max:100'],
+            'subject'  => ['required', 'string', 'max:255'],
+            'message'  => ['required', 'string', 'max:2000'],
+        ], [
+            'category.required' => 'Vui lòng chọn loại vấn đề.',
+            'subject.required'  => 'Tiêu đề không được để trống.',
+            'message.required'  => 'Mô tả vấn đề không được để trống.',
+        ]);
+
+        try {
+            $notificationService = app(NotificationService::class);
+            $msg  = "🎫 *YÊU CẦU HỖ TRỢ MỚI*\n";
+            $msg .= "👤 " . $this->escapeTelegramText($customer->name ?? 'N/A') . " (ID: {$customer->id})\n";
+            $msg .= "📞 " . $this->escapeTelegramText($customer->mobile ?? 'N/A') . "\n";
+            $msg .= "🆔 Telegram: `" . ($customer->telegram_id ?? 'N/A') . "`\n";
+            $msg .= "📂 Loại: " . $this->escapeTelegramText($validated['category']) . "\n";
+            $msg .= "📝 Tiêu đề: " . $this->escapeTelegramText($validated['subject']) . "\n";
+            $msg .= "💬 Nội dung:\n" . $this->escapeTelegramText($validated['message']);
+
+            $notificationService->sendToGroup('bds_admin', $msg);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Support ticket error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi gửi yêu cầu.'], 500);
+        }
+    }
+
+    // ========== NOTIFICATION SETTINGS ==========
+
+    public function getNotifSettings(Request $request): JsonResponse
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer) {
+            return response()->json(['success' => false], 401);
+        }
+
+        return response()->json([
+            'success'  => true,
+            'settings' => $customer->getMergedNotifSettings(),
+        ]);
+    }
+
+    public function saveNotifSettings(Request $request): JsonResponse
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $validated = $request->validate([
+            'master'                    => ['required', 'boolean'],
+            'lead.assigned'             => ['required', 'boolean'],
+            'lead.followup'             => ['required', 'boolean'],
+            'lead.channels'             => ['required', 'array'],
+            'lead.channels.*'           => ['string', 'in:telegram,in_app,zalo'],
+            'deal.status'               => ['required', 'boolean'],
+            'deal.feedback'             => ['required', 'boolean'],
+            'deal.stuck'                => ['required', 'boolean'],
+            'deal.channels'             => ['required', 'array'],
+            'deal.channels.*'           => ['string', 'in:telegram,in_app,zalo'],
+            'booking.day_before'        => ['required', 'boolean'],
+            'booking.hour_before'       => ['required', 'boolean'],
+            'booking.result'            => ['required', 'boolean'],
+            'booking.channels'          => ['required', 'array'],
+            'booking.channels.*'        => ['string', 'in:telegram,in_app,zalo'],
+            'commission.approved'       => ['required', 'boolean'],
+            'commission.status'         => ['required', 'boolean'],
+            'commission.channels'       => ['required', 'array'],
+            'commission.channels.*'     => ['string', 'in:telegram,in_app,zalo'],
+            'property.status'           => ['required', 'boolean'],
+            'property.interest'         => ['required', 'boolean'],
+            'property.expiry'           => ['required', 'boolean'],
+            'property.channels'         => ['required', 'array'],
+            'property.channels.*'       => ['string', 'in:telegram,in_app,zalo'],
+            'market.news'               => ['required', 'boolean'],
+            'market.ai_suggest'         => ['required', 'boolean'],
+            'market.promotions'         => ['required', 'boolean'],
+            'quiet_hours.enabled'       => ['required', 'boolean'],
+            'quiet_hours.start'         => ['required', 'string', 'regex:/^\d{2}:\d{2}$/'],
+            'quiet_hours.end'           => ['required', 'string', 'regex:/^\d{2}:\d{2}$/'],
+        ]);
+
+        $customer->update(['notification_settings' => $validated]);
+
+        return response()->json(['success' => true]);
     }
 
     private function escapeTelegramText(?string $text): string

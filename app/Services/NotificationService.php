@@ -119,6 +119,57 @@ class NotificationService
     }
 
     /**
+     * Check if a notification should be sent to a customer based on their preferences.
+     *
+     * @param Customer $customer   The recipient
+     * @param string   $category   e.g. 'lead', 'deal', 'booking', 'commission', 'property', 'market'
+     * @param string   $key        e.g. 'assigned', 'status', 'day_before', 'approved'
+     * @param string   $channel    'telegram' | 'in_app' | 'zalo'
+     */
+    public function shouldNotify(Customer $customer, string $category, string $key, string $channel = 'telegram'): bool
+    {
+        $settings = $customer->getMergedNotifSettings();
+
+        // Master toggle
+        if (empty($settings['master'])) {
+            return false;
+        }
+
+        // Category key toggle
+        if (empty($settings[$category][$key])) {
+            return false;
+        }
+
+        // Channel preference (categories without a 'channels' key always pass)
+        $channels = $settings[$category]['channels'] ?? null;
+        if ($channels !== null && !in_array($channel, $channels, true)) {
+            return false;
+        }
+
+        // Quiet hours — non-critical notifications are blocked
+        $qh = $settings['quiet_hours'] ?? [];
+        if (!empty($qh['enabled']) && isset($qh['start'], $qh['end'])) {
+            $tz  = new \DateTimeZone('Asia/Ho_Chi_Minh');
+            $now = (new \DateTime('now', $tz))->format('H:i');
+
+            $start = $qh['start'];
+            $end   = $qh['end'];
+
+            // Handles overnight ranges (e.g. 22:00–07:00)
+            $inQuiet = ($start <= $end)
+                ? ($now >= $start && $now < $end)
+                : ($now >= $start || $now < $end);
+
+            if ($inQuiet) {
+                Log::info("NotificationService: Notification blocked by quiet hours for customer {$customer->id}.");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Send raw message to Telegram API with retry logic
      */
     protected function sendRaw(string $chatId, string $message, array $options = []): bool

@@ -218,8 +218,8 @@ class CrmLeadController extends Controller
             'content'  => "Phân công cho: {$sale->name}",
         ]);
 
-        // Notify assigned sale via Telegram
-        if ($sale->telegram_id) {
+        // Notify assigned sale via Telegram (respect their notification settings)
+        if ($sale->telegram_id && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
             $message = TelegramMessageTemplates::leadAssigned($lead);
             $this->notificationService->sendToCustomer($sale, $message);
         }
@@ -400,7 +400,7 @@ class CrmLeadController extends Controller
             'content'  => "Phân công qua WebApp (Telegram) cho: {$sale->name}",
         ]);
 
-        if ($sale->telegram_id) {
+        if ($sale->telegram_id && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
             $message = TelegramMessageTemplates::leadAssigned($lead);
             $this->notificationService->sendToCustomer($sale, $message);
         }

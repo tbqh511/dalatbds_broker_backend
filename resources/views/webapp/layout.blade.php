@@ -93,7 +93,10 @@
       adminUsersBase: '/webapp/api/admin/users/',
       profileUpdate: @json(route('webapp.profile.update')),
       profileAvatar: @json(route('webapp.profile.avatar')),
+      supportTicket: @json(route('webapp.support.ticket')),
+      notifSettingsSave: @json(route('webapp.notif.settings.save')),
     },
+    notifSettings: @json($notifSettings ?? \App\Models\Customer::DEFAULT_NOTIFICATION_SETTINGS),
     customerProfile: {
       name: @json($customer->name ?? ''),
       email: @json($customer->email ?? ''),
