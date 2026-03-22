@@ -1,7 +1,4 @@
-@extends('frontends.master')
-
-@section('hide_newsletter')@endsection
-@section('hide_footer')@endsection
+@extends('webapp.layout-form')
 
 @section('title', isset($editProperty) ? 'Chỉnh sửa tin đăng - Đà Lạt BDS' : 'Đăng tin mới - Đà Lạt BDS')
 

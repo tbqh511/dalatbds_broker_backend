@@ -91,6 +91,22 @@
       editListingBase: '/webapp/edit-listing/',
       adminUsersJson: @json(route('webapp.admin.users')),
       adminUsersBase: '/webapp/api/admin/users/',
+      profileUpdate: @json(route('webapp.profile.update')),
+      profileAvatar: @json(route('webapp.profile.avatar')),
+    },
+    customerProfile: {
+      name: @json($customer->name ?? ''),
+      email: @json($customer->email ?? ''),
+      mobile: @json($customer->mobile ?? ''),
+      zalo: @json($customer->zalo ?? ''),
+      bio: @json($customer->bio ?? ''),
+      facebook_link: @json($customer->facebook_link ?? ''),
+      years_experience: @json($customer->years_experience ?? ''),
+      work_area: @json($customer->work_area ?? ''),
+      specialization: @json($customer->specialization ?? ''),
+      telegram_id: @json($customer->telegram_id ?? ''),
+      avatar_url: @json($customer->getRawOriginal('profile') ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : ''),
+      role: @json($customer->getEffectiveRole() ?? 'guest'),
     }
   };
   window.likedIds = new Set((window.WEBAPP_CONFIG.likedPropertyIds || []).map(String));

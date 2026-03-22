@@ -1346,18 +1346,43 @@ class TelegramWebAppController extends Controller
         $customer = Auth::guard('webapp')->user();
 
         $validated = $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
-            'email'   => ['required', 'email', 'max:255'],
-            'mobile'  => ['nullable', 'string', 'regex:/^(0[3-9][0-9]{8})$/'],
-            'address' => ['nullable', 'string', 'max:500'],
+            'name'             => ['required', 'string', 'max:255'],
+            'email'            => ['nullable', 'email', 'max:255'],
+            'mobile'           => ['nullable', 'string', 'regex:/^(0[3-9][0-9]{8})$/'],
+            'zalo'             => ['nullable', 'string', 'regex:/^(0[3-9][0-9]{8})$/'],
+            'bio'              => ['nullable', 'string', 'max:1000'],
+            'facebook_link'    => ['nullable', 'url', 'max:255'],
+            'years_experience' => ['nullable', 'integer', 'min:0', 'max:50'],
+            'work_area'        => ['nullable', 'string', 'max:255'],
+            'specialization'   => ['nullable', 'string', 'max:255'],
         ], [
-            'name.required'   => 'Họ và tên không được để trống.',
-            'email.required'  => 'Email không được để trống.',
-            'email.email'     => 'Email không đúng định dạng.',
-            'mobile.regex'    => 'Số điện thoại phải là số VN 10 chữ số (bắt đầu bằng 03-09).',
+            'name.required'          => 'Họ và tên không được để trống.',
+            'email.email'            => 'Email không đúng định dạng.',
+            'mobile.regex'           => 'SĐT phải là số VN 10 chữ số (bắt đầu 03-09).',
+            'zalo.regex'             => 'SĐT Zalo phải là số VN 10 chữ số (bắt đầu 03-09).',
+            'facebook_link.url'      => 'Link Facebook không đúng định dạng URL.',
+            'years_experience.integer' => 'Số năm kinh nghiệm phải là số nguyên.',
         ]);
 
         $customer->fill($validated)->save();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật hồ sơ thành công!',
+                'customer' => [
+                    'name'             => $customer->name,
+                    'email'            => $customer->email,
+                    'mobile'           => $customer->mobile,
+                    'zalo'             => $customer->zalo,
+                    'bio'              => $customer->bio,
+                    'facebook_link'    => $customer->facebook_link,
+                    'years_experience' => $customer->years_experience,
+                    'work_area'        => $customer->work_area,
+                    'specialization'   => $customer->specialization,
+                ],
+            ]);
+        }
 
         return redirect()->route('webapp.profile')->with('success', 'Cập nhật hồ sơ thành công!');
     }
