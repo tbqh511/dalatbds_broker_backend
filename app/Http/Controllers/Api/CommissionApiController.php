@@ -7,6 +7,8 @@ use App\Models\CrmDealCommission;
 use App\Models\CrmDeal;
 use App\Models\User;
 use App\Enums\CommissionStatus;
+use App\Models\Customer;
+use App\Services\InAppNotificationService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -248,6 +250,25 @@ class CommissionApiController extends Controller
 
         // Notify Sale Admin Group
         $this->notificationService->sendToGroup('sale_admin', $message);
+
+        // In-app notification
+        if ($sale && $sale->telegram_id) {
+            $saleCustomer = Customer::where('telegram_id', $sale->telegram_id)->first();
+            if ($saleCustomer) {
+                $notifType = $type === 'created' ? 'commission_status' : 'commission_status';
+                app(InAppNotificationService::class)->notify($saleCustomer, $notifType, 'commission', 'status', [
+                    'title' => $type === 'created' ? 'Hoa hồng mới' : 'Hoa hồng cập nhật: ' . $commission->status->label(),
+                    'body'  => ($property->title ?? 'BĐS') . ' — ' . $commission->sale_commission . ' VNĐ',
+                    'notifiable_type' => CrmDealCommission::class,
+                    'notifiable_id'   => $commission->id,
+                    'data'  => [
+                        'commission_id'  => $commission->id,
+                        'property_title' => $property->title ?? '',
+                        'status'         => $commission->status->value,
+                    ],
+                ]);
+            }
+        }
     }
 
     /**

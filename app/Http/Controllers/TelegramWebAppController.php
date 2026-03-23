@@ -25,6 +25,7 @@ use App\Models\CrmDeal;
 use App\Models\CrmLead;
 use App\Models\Customer;
 use App\Models\MarketPrice;
+use App\Services\InAppNotificationService;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1692,6 +1693,50 @@ class TelegramWebAppController extends Controller
         }
         $booking->save();
 
+        // In-app notification for booking result
+        $booking->load('crmDealProduct.deal.lead');
+        $lead = $booking->crmDealProduct?->deal?->lead;
+        if ($lead) {
+            $statusLabels = [
+                'completed_success'      => 'Ưng ý',
+                'completed_negotiating'  => 'Đang thương lượng',
+                'completed_failed'       => 'Không ưng',
+                'cancelled'              => 'Đã hủy',
+            ];
+            $statusLabel = $statusLabels[$request->status] ?? $request->status;
+            $propTitle = $booking->crmDealProduct?->property?->title ?? 'BĐS';
+            $inAppService = app(InAppNotificationService::class);
+
+            // Notify sale assigned to this lead
+            if ($lead->sale_id) {
+                $sale = Customer::find($lead->sale_id);
+                if ($sale) {
+                    $inAppService->notify($sale, 'booking_result', 'booking', 'result', [
+                        'title' => 'Kết quả xem nhà: ' . $statusLabel,
+                        'body'  => $propTitle . ' — ' . ($lead->customer?->full_name ?? 'Khách'),
+                        'notifiable_type' => CrmDealProductBooking::class,
+                        'notifiable_id'   => $booking->id,
+                        'actor_id'        => $customer->id,
+                        'data'  => ['booking_id' => $booking->id, 'status' => $request->status, 'property_title' => $propTitle],
+                    ]);
+                }
+            }
+            // Notify broker who created the lead
+            if ($lead->user_id && $lead->user_id !== $lead->sale_id) {
+                $broker = Customer::find($lead->user_id);
+                if ($broker) {
+                    $inAppService->notify($broker, 'booking_result', 'booking', 'result', [
+                        'title' => 'Kết quả xem nhà: ' . $statusLabel,
+                        'body'  => $propTitle . ' — ' . ($lead->customer?->full_name ?? 'Khách'),
+                        'notifiable_type' => CrmDealProductBooking::class,
+                        'notifiable_id'   => $booking->id,
+                        'actor_id'        => $customer->id,
+                        'data'  => ['booking_id' => $booking->id, 'status' => $request->status, 'property_title' => $propTitle],
+                    ]);
+                }
+            }
+        }
+
         return response()->json(['success' => true, 'message' => 'Đã cập nhật kết quả']);
     }
 
@@ -1721,6 +1766,9 @@ class TelegramWebAppController extends Controller
         $booking->status = BookingStatus::RESCHEDULED;
         $booking->save();
 
+        // In-app notification for reschedule
+        $this->notifyBookingChanged($booking, $customer, 'Dời lịch xem nhà', 'Lịch mới: ' . $request->booking_date . ' ' . $request->booking_time);
+
         return response()->json(['success' => true, 'message' => 'Đã dời lịch thành công']);
     }
 
@@ -1739,7 +1787,41 @@ class TelegramWebAppController extends Controller
         $booking->status = BookingStatus::CANCELLED;
         $booking->save();
 
+        // In-app notification for cancel
+        $this->notifyBookingChanged($booking, $customer, 'Lịch xem nhà đã bị hủy', null);
+
         return response()->json(['success' => true, 'message' => 'Đã huỷ lịch hẹn']);
+    }
+
+    /**
+     * Helper: send in-app notification when booking is rescheduled or cancelled.
+     */
+    private function notifyBookingChanged(CrmDealProductBooking $booking, $actor, string $title, ?string $extraBody): void
+    {
+        $booking->load('crmDealProduct.deal.lead');
+        $lead = $booking->crmDealProduct?->deal?->lead;
+        if (!$lead) return;
+
+        $propTitle = $booking->crmDealProduct?->property?->title ?? 'BĐS';
+        $body = $propTitle . ($extraBody ? ' — ' . $extraBody : '');
+        $inAppService = app(InAppNotificationService::class);
+
+        // Notify sale + broker involved
+        $recipientIds = array_unique(array_filter([$lead->sale_id, $lead->user_id]));
+        foreach ($recipientIds as $rid) {
+            if ($rid == $actor->id) continue; // don't notify the actor
+            $recipient = Customer::find($rid);
+            if ($recipient) {
+                $inAppService->notify($recipient, 'booking_changed', 'booking', 'result', [
+                    'title' => $title,
+                    'body'  => $body,
+                    'notifiable_type' => CrmDealProductBooking::class,
+                    'notifiable_id'   => $booking->id,
+                    'actor_id'        => $actor->id,
+                    'data'  => ['booking_id' => $booking->id, 'property_title' => $propTitle],
+                ]);
+            }
+        }
     }
 
     public function reviews(Request $request)
@@ -2837,6 +2919,22 @@ class TelegramWebAppController extends Controller
             $message .= "🔗 [Xem tin]({$propertyUrl})";
 
             $notificationService->sendToGroup('public_channel', $message);
+
+            // In-app notification to bds_admin + admin
+            $admins = Customer::whereIn('role', ['bds_admin', 'admin'])->get();
+            app(InAppNotificationService::class)->notifyMany($admins, 'property_pending', 'admin', 'status', [
+                'title' => 'BĐS chờ duyệt: ' . ($property->title ?? 'BĐS'),
+                'body'  => 'Broker ' . ($customer->name ?? 'N/A') . ' gửi lúc ' . now()->format('H:i') . ' — ' . $type . ', ' . $price . ' VNĐ',
+                'notifiable_type' => Property::class,
+                'notifiable_id'   => $property->id,
+                'actor_id'        => $customer->id,
+                'data'  => [
+                    'property_id'  => $property->id,
+                    'title'        => $property->title,
+                    'broker_name'  => $customer->name ?? '',
+                    'price'        => $price,
+                ],
+            ]);
         }
         catch (\Exception $e) {
             Log::warning('Failed to send listing telegram notification: ' . $e->getMessage());
@@ -2909,6 +3007,24 @@ class TelegramWebAppController extends Controller
                 $brokerMsg .= "🏠 Loại BĐS: " . $this->escapeTelegramText($categories) . "\n";
                 $notificationService->sendToCustomer($creator, $brokerMsg);
             }
+
+            // In-app: notify sale_admin about new lead to assign
+            $inAppService = app(InAppNotificationService::class);
+            $leadBody = ($crmCustomer->full_name ?? 'N/A') . ' — ' . $leadType . ' | ' . $categories . ' | ' . $wards;
+            $saleAdmins = Customer::whereIn('role', ['sale_admin', 'admin'])->get();
+            $inAppService->notifyMany($saleAdmins, 'lead_created', 'lead', 'assigned', [
+                'title' => 'Lead mới cần phân công',
+                'body'  => $leadBody,
+                'notifiable_type' => CrmLead::class,
+                'notifiable_id'   => $lead->id,
+                'actor_id'        => $creator->id ?? null,
+                'data'  => [
+                    'lead_id'       => $lead->id,
+                    'customer_name' => $crmCustomer->full_name ?? '',
+                    'lead_type'     => $leadType,
+                    'budget'        => $budgetMin . ' - ' . $budgetMax,
+                ],
+            ]);
         }
         catch (\Exception $e) {
             Log::warning('Failed to send lead telegram notification: ' . $e->getMessage());
@@ -3489,6 +3605,18 @@ class TelegramWebAppController extends Controller
                 app(NotificationService::class)->sendToCustomer($broker, $message);
             }
 
+            // In-app notification to broker
+            if ($broker) {
+                app(InAppNotificationService::class)->notify($broker, 'property_approved', 'property', 'status', [
+                    'title' => 'BĐS của bạn đã được duyệt!',
+                    'body'  => ($property->title ?? 'BĐS') . ' — đang hiển thị công khai',
+                    'notifiable_type' => Property::class,
+                    'notifiable_id'   => $property->id,
+                    'actor_id'        => Auth::guard('webapp')->id(),
+                    'data'  => ['property_id' => $property->id, 'title' => $property->title],
+                ]);
+            }
+
             return response()->json([
                 'success'       => true,
                 'pending_count' => Property::where('status', 0)->count(),
@@ -3531,6 +3659,23 @@ class TelegramWebAppController extends Controller
                     . "⚠️ Lý do: {$reason}{$noteText}\n"
                     . "💡 Vui lòng bổ sung và gửi lại.";
                 app(NotificationService::class)->sendToCustomer($broker, $message);
+            }
+
+            // In-app notification to broker
+            if ($broker) {
+                app(InAppNotificationService::class)->notify($broker, 'property_rejected', 'property', 'status', [
+                    'title' => 'BĐS của bạn chưa được duyệt',
+                    'body'  => ($property->title ?? 'BĐS') . ' — Lý do: ' . $reason,
+                    'notifiable_type' => Property::class,
+                    'notifiable_id'   => $property->id,
+                    'actor_id'        => Auth::guard('webapp')->id(),
+                    'data'  => [
+                        'property_id' => $property->id,
+                        'title'       => $property->title,
+                        'reason'      => $reason,
+                        'note'        => $note ?: null,
+                    ],
+                ]);
             }
 
             return response()->json([
@@ -3655,20 +3800,41 @@ class TelegramWebAppController extends Controller
             $commission->save();
 
             // Notify sale person
+            $propTitle  = $commission->property?->title ?? 'BĐS';
+            $totalTrieu = round(
+                ((float) $commission->getRawOriginal('sale_commission')
+                + (float) $commission->getRawOriginal('app_commission')
+                + (float) $commission->getRawOriginal('owner_commission')) / 1_000_000,
+                1
+            );
+
             if ($commission->sale && $commission->sale->telegram_id) {
-                $propTitle  = $commission->property?->title ?? 'BĐS';
-                $totalTrieu = round(
-                    ((float) $commission->getRawOriginal('sale_commission')
-                    + (float) $commission->getRawOriginal('app_commission')
-                    + (float) $commission->getRawOriginal('owner_commission')) / 1_000_000,
-                    1
-                );
                 $message = "✅ *HOA HỒNG ĐÃ ĐƯỢC DUYỆT*\n"
                     . "🏠 {$propTitle}\n"
                     . "💰 Tổng HH: {$totalTrieu} triệu\n"
                     . "📌 Trạng thái: Chờ đặt cọc\n"
                     . "Admin đã xác nhận — Vui lòng tiến hành thu cọc.";
                 app(NotificationService::class)->sendToUser($commission->sale, $message);
+            }
+
+            // In-app notification — find Customer matching the User's telegram_id
+            if ($commission->sale && $commission->sale->telegram_id) {
+                $saleCustomer = Customer::where('telegram_id', $commission->sale->telegram_id)->first();
+                if ($saleCustomer) {
+                    app(InAppNotificationService::class)->notify($saleCustomer, 'commission_status', 'commission', 'status', [
+                        'title' => 'Hoa hồng đã được duyệt',
+                        'body'  => $propTitle . ' — Tổng HH: ' . $totalTrieu . ' triệu. Trạng thái: Chờ đặt cọc.',
+                        'notifiable_type' => CrmDealCommission::class,
+                        'notifiable_id'   => $commission->id,
+                        'actor_id'        => Auth::guard('webapp')->id(),
+                        'data'  => [
+                            'commission_id' => $commission->id,
+                            'property_title' => $propTitle,
+                            'total_million'  => $totalTrieu,
+                            'status'         => 'deposited',
+                        ],
+                    ]);
+                }
             }
 
             $pendingCount = CrmDealCommission::where('status', CommissionStatus::PENDING_DEPOSIT)->count();
@@ -3704,14 +3870,38 @@ class TelegramWebAppController extends Controller
             $commission->save();
 
             // Notify sale person
+            $propTitle  = $commission->property?->title ?? 'BĐS';
+            $statusLabel = $newStatus->label();
+
             if ($commission->sale && $commission->sale->telegram_id) {
-                $propTitle  = $commission->property?->title ?? 'BĐS';
-                $statusLabel = $newStatus->label();
                 $message = "📋 *CẬP NHẬT HOA HỒNG*\n"
                     . "🏠 {$propTitle}\n"
                     . "📌 Trạng thái mới: {$statusLabel}\n"
                     . "Admin đã xác nhận tiến độ giao dịch.";
                 app(NotificationService::class)->sendToUser($commission->sale, $message);
+            }
+
+            // In-app notification
+            if ($commission->sale && $commission->sale->telegram_id) {
+                $saleCustomer = Customer::where('telegram_id', $commission->sale->telegram_id)->first();
+                $notifType = $newStatus === CommissionStatus::COMPLETED ? 'commission_completed' : 'commission_status';
+                $title = $newStatus === CommissionStatus::COMPLETED
+                    ? 'Hoa hồng đã hoàn tất!'
+                    : 'Hoa hồng cập nhật: ' . $statusLabel;
+                if ($saleCustomer) {
+                    app(InAppNotificationService::class)->notify($saleCustomer, $notifType, 'commission', 'status', [
+                        'title' => $title,
+                        'body'  => $propTitle . ' — Trạng thái: ' . $statusLabel,
+                        'notifiable_type' => CrmDealCommission::class,
+                        'notifiable_id'   => $commission->id,
+                        'actor_id'        => Auth::guard('webapp')->id(),
+                        'data'  => [
+                            'commission_id'  => $commission->id,
+                            'property_title' => $propTitle,
+                            'status'         => $newStatus->value,
+                        ],
+                    ]);
+                }
             }
 
             return response()->json([

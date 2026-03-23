@@ -5612,3 +5612,249 @@ function _esc(str) {
 }
 
 }); // end DOMContentLoaded
+
+// ============ ACTIVITY PAGE (IN-APP NOTIFICATIONS) ============
+// Defined outside DOMContentLoaded so Alpine.js can find it during initialization
+window.activityApp = function() {
+  var ICON_SVGS = {
+    target: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>',
+    bell: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+    'user-plus': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
+    calendar: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    clipboard: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>',
+    refresh: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
+    check: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    'x-circle': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    clock: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    dollar: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    handshake: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    'alert-triangle': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    activity: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    eye: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    phone: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+    'check-circle': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+  };
+
+  // Action button configs per notification type
+  var TYPE_ACTIONS = {
+    lead_assigned: [
+      { label: 'Xem Lead', primary: true, icon: 'eye', subpage: 'leads' },
+      { label: 'Gọi ngay', primary: false, icon: 'phone', action: 'call' }
+    ],
+    lead_followup: [
+      { label: 'Xem Lead', primary: true, icon: 'eye', subpage: 'leads' }
+    ],
+    lead_created: [
+      { label: 'Phân công', primary: true, icon: 'eye', subpage: 'leads' }
+    ],
+    booking_reminder: [
+      { label: 'Xem chi tiết', primary: true, icon: 'clipboard', subpage: 'bookings' },
+      { label: 'Dời lịch', primary: false, icon: 'refresh', subpage: 'bookings' }
+    ],
+    booking_result: [
+      { label: 'Xem chi tiết', primary: true, icon: 'clipboard', subpage: 'bookings' }
+    ],
+    booking_changed: [
+      { label: 'Xem chi tiết', primary: true, icon: 'clipboard', subpage: 'bookings' }
+    ],
+    property_approved: [
+      { label: 'Xem tin', primary: true, icon: 'eye', subpage: 'mybds' }
+    ],
+    property_rejected: [
+      { label: 'Xem tin', primary: true, icon: 'eye', subpage: 'mybds' }
+    ],
+    property_pending: [
+      { label: 'Duyệt', primary: true, icon: 'check-circle', action: 'approve' },
+      { label: 'Từ chối', primary: false, icon: null, action: 'reject', style: 'color:var(--danger);border-color:var(--danger-light);background:var(--danger-light);' }
+    ],
+    commission_status: [
+      { label: 'Xem hoa hồng', primary: true, icon: 'dollar', subpage: 'commissions' }
+    ],
+    commission_completed: [
+      { label: 'Xem chi tiết', primary: true, icon: 'dollar', subpage: 'commissions' }
+    ],
+    deal_created: [
+      { label: 'Xem Deal', primary: true, icon: 'clipboard', subpage: 'deals' }
+    ],
+    deal_stuck: [
+      { label: 'Xem Deal', primary: true, icon: 'clipboard', subpage: 'deals' }
+    ],
+    deal_status: [
+      { label: 'Xem Deal', primary: true, icon: 'clipboard', subpage: 'deals' }
+    ]
+  };
+
+  // Navigation mapping
+  var TYPE_SUBPAGE = {
+    lead_assigned: 'leads', lead_followup: 'leads', lead_created: 'leads',
+    booking_reminder: 'bookings', booking_result: 'bookings', booking_changed: 'bookings',
+    property_approved: 'mybds', property_rejected: 'mybds', property_pending: 'approvebds',
+    commission_status: 'commissions', commission_completed: 'commissions',
+    deal_created: 'deals', deal_stuck: 'deals', deal_status: 'deals'
+  };
+
+  return {
+    tabs: [
+      { key: 'all', label: 'Tất cả', adminOnly: false },
+      { key: 'lead', label: 'Lead', adminOnly: false },
+      { key: 'deal', label: 'Deal', adminOnly: false },
+      { key: 'booking', label: 'Lịch hẹn', adminOnly: false },
+      { key: 'commission', label: 'Hoa hồng', adminOnly: false },
+      { key: 'admin', label: 'Duyệt BĐS', adminOnly: true }
+    ],
+    activeTab: 'all',
+    notifications: [],
+    loading: false,
+    currentPage: 1,
+    lastPage: 1,
+    isAdminRole: false,
+
+    get hasMore() { return this.currentPage < this.lastPage; },
+
+    init: function() {
+      var cfg = window.WEBAPP_CONFIG || {};
+      var role = cfg.customerRole || 'guest';
+      this.isAdminRole = ['admin', 'bds_admin', 'sale_admin'].indexOf(role) !== -1;
+      this.fetchNotifications();
+      this.updateBadge();
+    },
+
+    switchTab: function(tab) {
+      this.activeTab = tab;
+      this.currentPage = 1;
+      this.notifications = [];
+      this.fetchNotifications();
+    },
+
+    fetchNotifications: function() {
+      var self = this;
+      self.loading = true;
+      var cfg = window.WEBAPP_CONFIG || {};
+      var url = (cfg.routes && cfg.routes.notificationsJson) || '/webapp/api/notifications';
+      var params = 'page=' + self.currentPage;
+      if (self.activeTab !== 'all') params += '&category=' + self.activeTab;
+
+      fetch(url + '?' + params, {
+        headers: {
+          'X-CSRF-TOKEN': cfg.csrfToken || '',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(json) {
+        if (json.success) {
+          if (self.currentPage === 1) {
+            self.notifications = json.notifications;
+          } else {
+            self.notifications = self.notifications.concat(json.notifications);
+          }
+          self.lastPage = json.pagination.last_page;
+        }
+        self.loading = false;
+      })
+      .catch(function() {
+        self.loading = false;
+      });
+    },
+
+    loadMore: function() {
+      this.currentPage++;
+      this.fetchNotifications();
+    },
+
+    openDetail: function(notif) {
+      // Mark as read
+      if (notif.is_unread) {
+        var cfg = window.WEBAPP_CONFIG || {};
+        fetch('/webapp/api/notifications/' + notif.id + '/read', {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': cfg.csrfToken || '',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        notif.is_unread = false;
+        this.updateBadge();
+      }
+      // Navigate to relevant subpage
+      var subpage = TYPE_SUBPAGE[notif.type];
+      if (subpage && typeof openSubpage === 'function') {
+        openSubpage(subpage);
+      }
+    },
+
+    getActions: function(notif) {
+      var actions = TYPE_ACTIONS[notif.type] || [];
+      var result = [];
+      for (var i = 0; i < actions.length; i++) {
+        var a = actions[i];
+        var iconHtml = a.icon && ICON_SVGS[a.icon] ? ICON_SVGS[a.icon] + ' ' : '';
+        result.push({
+          label: a.label,
+          primary: a.primary,
+          style: a.style || '',
+          html: '<span style="display:inline-flex;align-items:center;gap:4px;">' + iconHtml + a.label + '</span>',
+          _action: a.action || null,
+          _subpage: a.subpage || null,
+          _notif: notif
+        });
+      }
+      return result;
+    },
+
+    handleAction: function(action, notif) {
+      if (action._action === 'call') {
+        var phone = notif.data && notif.data.customer_phone;
+        if (phone) {
+          window.location.href = 'tel:' + phone;
+        } else {
+          showToast('Không có số điện thoại');
+        }
+        return;
+      }
+      if (action._action === 'approve' && notif.data && notif.data.property_id) {
+        var cfg = window.WEBAPP_CONFIG || {};
+        fetch('/webapp/api/admin/properties/' + notif.data.property_id + '/approve', {
+          method: 'POST',
+          headers: { 'X-CSRF-TOKEN': cfg.csrfToken || '', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function(r) { return r.json(); }).then(function(res) {
+          if (res.success) showToast('Đã duyệt BĐS!');
+          else showToast(res.message || 'Lỗi');
+        });
+        return;
+      }
+      if (action._action === 'reject' && notif.data && notif.data.property_id) {
+        if (typeof openSubpage === 'function') openSubpage('approvebds');
+        return;
+      }
+      if (action._subpage && typeof openSubpage === 'function') {
+        openSubpage(action._subpage);
+      }
+    },
+
+    getIconSvg: function(iconName) {
+      return ICON_SVGS[iconName] || ICON_SVGS['bell'];
+    },
+
+    updateBadge: function() {
+      var cfg = window.WEBAPP_CONFIG || {};
+      var url = (cfg.routes && cfg.routes.notificationsUnread) || '/webapp/api/notifications/unread-count';
+      fetch(url, {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': cfg.csrfToken || '' }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(json) {
+        if (json.success) {
+          var badge = document.getElementById('notif-badge');
+          if (badge) {
+            badge.textContent = json.count > 0 ? (json.count > 99 ? '99+' : json.count) : '';
+            badge.style.display = json.count > 0 ? '' : 'none';
+          }
+        }
+      })
+      .catch(function() {});
+    }
+  };
+};

@@ -67,6 +67,11 @@ class Customer extends Authenticatable implements JWTSubject
         return array_replace_recursive(self::DEFAULT_NOTIFICATION_SETTINGS, $saved);
     }
 
+    public function inAppNotifications()
+    {
+        return $this->hasMany(InAppNotification::class);
+    }
+
     protected $appends = [
         'customertotalpost'
     ];

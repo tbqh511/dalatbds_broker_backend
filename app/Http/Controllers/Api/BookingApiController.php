@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\CrmDealProduct;
 use App\Models\CrmDealProductBooking;
 use App\Models\CrmDealAssigned;
+use App\Models\Customer;
+use App\Services\InAppNotificationService;
 use App\Services\NotificationService;
 use App\Enums\BookingStatus;
 use App\Models\User;
@@ -247,8 +249,52 @@ class BookingApiController extends Controller
             $this->notificationService->sendToCustomer($customer, $customerMsg);
         }
 
-        // Notify Owner (if User) - Not implemented fully yet as Owner linkage in Property is polymorphic or simple ID
-        // Assuming Property has user_id (added_by)
-        // If owner is external, we might not have telegram.
+        // In-app notifications for booking
+        $inApp = app(InAppNotificationService::class);
+        $lead = $dealProduct->deal->lead ?? null;
+        $propTitle = $property->title ?? 'BĐS';
+        $notifTitle = $type === 'created'
+            ? "Lịch xem nhà: {$date} lúc {$time}"
+            : "Lịch xem nhà thay đổi: {$date} lúc {$time}";
+
+        // Notify sales (find Customer by User's telegram_id)
+        foreach ($sales as $sale) {
+            if ($sale && $sale->telegram_id) {
+                $saleCustomer = Customer::where('telegram_id', $sale->telegram_id)->first();
+                if ($saleCustomer) {
+                    $inApp->notify($saleCustomer, 'booking_reminder', 'booking', 'day_before', [
+                        'title' => $notifTitle,
+                        'body'  => $propTitle . ' — ' . ($customer->full_name ?? 'Khách'),
+                        'notifiable_type' => CrmDealProductBooking::class,
+                        'notifiable_id'   => $booking->id,
+                        'data'  => [
+                            'booking_id'     => $booking->id,
+                            'property_title' => $propTitle,
+                            'booking_date'   => $date,
+                            'booking_time'   => $time,
+                        ],
+                    ]);
+                }
+            }
+        }
+
+        // Notify broker who created the lead
+        if ($lead && $lead->user_id) {
+            $broker = Customer::find($lead->user_id);
+            if ($broker) {
+                $inApp->notify($broker, 'booking_reminder', 'booking', 'day_before', [
+                    'title' => $notifTitle,
+                    'body'  => $propTitle . ' — ' . ($customer->full_name ?? 'Khách'),
+                    'notifiable_type' => CrmDealProductBooking::class,
+                    'notifiable_id'   => $booking->id,
+                    'data'  => [
+                        'booking_id'     => $booking->id,
+                        'property_title' => $propTitle,
+                        'booking_date'   => $date,
+                        'booking_time'   => $time,
+                    ],
+                ]);
+            }
+        }
     }
 }

@@ -51,6 +51,7 @@ use App\Http\Controllers\Api\PropertyApiController;
 use App\Http\Controllers\Api\LeadApiController;
 use App\Http\Controllers\Api\DealApiController;
 use App\Http\Controllers\Api\CommissionApiController;
+use App\Http\Controllers\WebAppNotificationController;
 use Illuminate\Http\Request;
 
 /*
@@ -115,6 +116,12 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::post('/webapp/support/ticket', [TelegramWebAppController::class, 'submitSupportTicket'])->name('webapp.support.ticket');
     Route::get('/webapp/notifications/settings', [TelegramWebAppController::class, 'getNotifSettings'])->name('webapp.notif.settings.get');
     Route::post('/webapp/notifications/settings', [TelegramWebAppController::class, 'saveNotifSettings'])->name('webapp.notif.settings.save');
+
+    // In-app notifications API
+    Route::get('/webapp/api/notifications', [WebAppNotificationController::class, 'index'])->name('webapp.api.notifications');
+    Route::get('/webapp/api/notifications/unread-count', [WebAppNotificationController::class, 'unreadCount'])->name('webapp.api.notifications.unread');
+    Route::post('/webapp/api/notifications/{id}/read', [WebAppNotificationController::class, 'markRead'])->name('webapp.api.notifications.read');
+    Route::post('/webapp/api/notifications/read-all', [WebAppNotificationController::class, 'markAllRead'])->name('webapp.api.notifications.read-all');
 
     // Admin user management routes
     Route::middleware(['webapp.role:admin'])->group(function () {

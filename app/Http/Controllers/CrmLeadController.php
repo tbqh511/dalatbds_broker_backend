@@ -8,6 +8,7 @@ use App\Models\CrmDeal;
 use App\Models\CrmLeadActivity;
 use App\Models\Customer;
 use App\Services\CrmLeadService;
+use App\Services\InAppNotificationService;
 use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Http\Request;
@@ -23,11 +24,13 @@ class CrmLeadController extends Controller
 {
     protected $leadService;
     protected $notificationService;
+    protected $inAppNotifService;
 
-    public function __construct(CrmLeadService $leadService, NotificationService $notificationService)
+    public function __construct(CrmLeadService $leadService, NotificationService $notificationService, InAppNotificationService $inAppNotifService)
     {
         $this->leadService = $leadService;
         $this->notificationService = $notificationService;
+        $this->inAppNotifService = $inAppNotifService;
     }
 
     public function index(Request $request)
@@ -225,6 +228,22 @@ class CrmLeadController extends Controller
             $this->notificationService->sendToCustomer($sale, $message);
         }
 
+        // In-app notification
+        $lead->load('customer');
+        $this->inAppNotifService->notify($sale, 'lead_assigned', 'lead', 'assigned', [
+            'title' => 'Lead mới được assign cho bạn',
+            'body'  => ($lead->customer->full_name ?? 'N/A') . ' — ' . ($lead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
+            'notifiable_type' => CrmLead::class,
+            'notifiable_id'   => $lead->id,
+            'actor_id'        => $customer->id,
+            'data'  => [
+                'lead_id'       => $lead->id,
+                'customer_name' => $lead->customer->full_name ?? '',
+                'customer_phone' => $lead->customer->contact ?? '',
+                'lead_type'     => $lead->lead_type,
+            ],
+        ]);
+
         return response()->json(['success' => true, 'sale_name' => $sale->name]);
     }
 
@@ -290,6 +309,30 @@ class CrmLeadController extends Controller
                     ? TelegramMessageTemplates::leadAssigned($firstLead)
                     : 'Bạn được phân công ' . count($assigned) . ' lead mới. Vui lòng kiểm tra danh sách lead.';
                 $this->notificationService->sendToCustomer($sale, $message);
+            }
+        }
+
+        // In-app notifications for bulk assign
+        if (count($assigned) > 0) {
+            if (count($assigned) === 1) {
+                $firstLead = CrmLead::with('customer')->find($assigned[0]);
+                if ($firstLead) {
+                    $this->inAppNotifService->notify($sale, 'lead_assigned', 'lead', 'assigned', [
+                        'title' => 'Lead mới được assign cho bạn',
+                        'body'  => ($firstLead->customer->full_name ?? 'N/A') . ' — ' . ($firstLead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
+                        'notifiable_type' => CrmLead::class,
+                        'notifiable_id'   => $firstLead->id,
+                        'actor_id'        => $customer->id,
+                        'data'  => ['lead_id' => $firstLead->id, 'customer_name' => $firstLead->customer->full_name ?? ''],
+                    ]);
+                }
+            } else {
+                $this->inAppNotifService->notify($sale, 'lead_assigned', 'lead', 'assigned', [
+                    'title' => 'Bạn được phân công ' . count($assigned) . ' lead mới',
+                    'body'  => 'Vui lòng kiểm tra danh sách lead để xử lý.',
+                    'actor_id' => $customer->id,
+                    'data'  => ['lead_ids' => $assigned, 'count' => count($assigned)],
+                ]);
             }
         }
 
@@ -479,6 +522,20 @@ class CrmLeadController extends Controller
             $message = TelegramMessageTemplates::leadAssigned($lead);
             $this->notificationService->sendToCustomer($sale, $message);
         }
+
+        // In-app notification
+        $this->inAppNotifService->notify($sale, 'lead_assigned', 'lead', 'assigned', [
+            'title' => 'Lead mới được assign cho bạn',
+            'body'  => ($lead->customer->full_name ?? 'N/A') . ' — ' . ($lead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
+            'notifiable_type' => CrmLead::class,
+            'notifiable_id'   => $lead->id,
+            'data'  => [
+                'lead_id'       => $lead->id,
+                'customer_name' => $lead->customer->full_name ?? '',
+                'customer_phone' => $lead->customer->contact ?? '',
+                'lead_type'     => $lead->lead_type,
+            ],
+        ]);
 
         return response()->json(['success' => true, 'sale_name' => $sale->name]);
     }

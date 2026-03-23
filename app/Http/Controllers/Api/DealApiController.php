@@ -8,6 +8,8 @@ use App\Models\CrmDeal;
 use App\Models\CrmLead;
 use App\Models\CrmDealAssigned;
 use App\Models\User;
+use App\Models\Customer;
+use App\Services\InAppNotificationService;
 use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Http\Request;
@@ -222,6 +224,39 @@ class DealApiController extends Controller
         if ($customer && $customer->telegram_id) {
             $customerMsg = "Xin chào {$customer->full_name}, hồ sơ giao dịch của bạn đã được khởi tạo. Mã hồ sơ: \#{$deal->id}. Chúng tôi sẽ sớm liên hệ lại.";
             $this->notificationService->sendToCustomer($customer, $customerMsg);
+        }
+
+        // 5. In-app notifications for sale + broker
+        $inApp = app(InAppNotificationService::class);
+        $lead = $deal->lead;
+        $dealTitle = 'Deal #' . $deal->id . ' — ' . ($customer->full_name ?? 'N/A');
+
+        // Notify sale (find Customer by telegram_id matching the User)
+        if ($sale && $sale->telegram_id) {
+            $saleCustomer = Customer::where('telegram_id', $sale->telegram_id)->first();
+            if ($saleCustomer) {
+                $inApp->notify($saleCustomer, 'deal_created', 'deal', 'status', [
+                    'title' => 'Deal mới được tạo',
+                    'body'  => $dealTitle,
+                    'notifiable_type' => CrmDeal::class,
+                    'notifiable_id'   => $deal->id,
+                    'data'  => ['deal_id' => $deal->id, 'customer_name' => $customer->full_name ?? ''],
+                ]);
+            }
+        }
+
+        // Notify broker who created the lead
+        if ($lead && $lead->user_id) {
+            $broker = Customer::find($lead->user_id);
+            if ($broker && (!$sale || $broker->telegram_id !== $sale->telegram_id)) {
+                $inApp->notify($broker, 'deal_created', 'deal', 'status', [
+                    'title' => 'Deal mới được tạo từ lead của bạn',
+                    'body'  => $dealTitle,
+                    'notifiable_type' => CrmDeal::class,
+                    'notifiable_id'   => $deal->id,
+                    'data'  => ['deal_id' => $deal->id, 'customer_name' => $customer->full_name ?? ''],
+                ]);
+            }
         }
     }
 }

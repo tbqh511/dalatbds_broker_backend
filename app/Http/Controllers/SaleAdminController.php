@@ -13,6 +13,7 @@ use App\Models\CrmLeadActivity;
 use App\Models\Customer;
 use App\Models\LocationsWard;
 use App\Models\Property;
+use App\Services\InAppNotificationService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -471,6 +472,13 @@ class SaleAdminController extends Controller
 
         $notif = app(NotificationService::class);
         $sent  = $notif->sendToCustomer($sale, $msg);
+
+        // In-app notification
+        app(InAppNotificationService::class)->notify($sale, 'deal_stuck', 'deal', 'stuck', [
+            'title' => 'Nhắc nhở từ Sale Admin',
+            'body'  => 'Bạn có deal/lead cần cập nhật trạng thái. Vui lòng kiểm tra.',
+            'actor_id' => $customer->id,
+        ]);
 
         return response()->json([
             'success' => $sent,

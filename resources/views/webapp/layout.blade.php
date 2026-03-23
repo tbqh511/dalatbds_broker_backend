@@ -6,6 +6,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Đà Lạt BĐS — WebApp</title>
 <link rel="stylesheet" href="{{ asset('css/webapp-v2.css') }}?v={{ filemtime(public_path('css/webapp-v2.css')) }}">
+<style>[x-cloak]{display:none!important;}</style>
 </head>
 <body>
 
@@ -99,6 +100,9 @@
       profileAvatar: @json(route('webapp.profile.avatar')),
       supportTicket: @json(route('webapp.support.ticket')),
       notifSettingsSave: @json(route('webapp.notif.settings.save')),
+      notificationsJson: '/webapp/api/notifications',
+      notificationsUnread: '/webapp/api/notifications/unread-count',
+      notificationsReadAll: '/webapp/api/notifications/read-all',
       assignData: @json(route('webapp.sale-admin.assign-data')),
       bulkAssign: @json(route('webapp.leads.bulk-assign')),
       kpiTeamJson:      @json(app('router')->has('webapp.api.kpi-team') ? route('webapp.api.kpi-team') : null),
@@ -125,5 +129,6 @@
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=places,marker"></script>
 <script src="{{ asset('js/webapp-v2.js') }}?v={{ filemtime(public_path('js/webapp-v2.js')) }}"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 </body>
 </html>
