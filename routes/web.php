@@ -133,6 +133,13 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
         Route::post('/webapp/api/admin/properties/{id}/approve', [TelegramWebAppController::class, 'adminApproveProperty'])->name('webapp.admin.properties.approve');
         Route::post('/webapp/api/admin/properties/{id}/reject', [TelegramWebAppController::class, 'adminRejectProperty'])->name('webapp.admin.properties.reject');
     });
+    // Commission approval routes (admin only)
+    Route::middleware(['webapp.role:admin'])->group(function () {
+        Route::get('/webapp/api/admin/commissions', [TelegramWebAppController::class, 'adminCommissionsApi'])->name('webapp.admin.commissions');
+        Route::post('/webapp/api/admin/commissions/{id}/approve', [TelegramWebAppController::class, 'adminApproveCommission'])->name('webapp.admin.commissions.approve');
+        Route::post('/webapp/api/admin/commissions/{id}/advance', [TelegramWebAppController::class, 'adminAdvanceCommission'])->name('webapp.admin.commissions.advance');
+        Route::post('/webapp/api/admin/commissions/{id}/hold', [TelegramWebAppController::class, 'adminHoldCommission'])->name('webapp.admin.commissions.hold');
+    });
     // Routes yêu cầu phải có số điện thoại
     Route::middleware(['webapp.require_phone'])->group(function () {
         // Đăng tin BĐS

@@ -3543,6 +3543,217 @@ class TelegramWebAppController extends Controller
         }
     }
 
+    // ─── Admin Commission Approval API ───────────────────────────────────────
+
+    public function adminCommissionsApi(Request $request): JsonResponse
+    {
+        $tab = $request->input('tab', 'pending');
+
+        // Stats (across all statuses, excluding cancelled)
+        $pendingCount    = CrmDealCommission::where('status', CommissionStatus::PENDING_DEPOSIT)->count();
+        $processingCount = CrmDealCommission::whereIn('status', [CommissionStatus::DEPOSITED, CommissionStatus::NOTARIZING])->count();
+
+        $monthlyTotal = CrmDealCommission::whereIn('status', [
+            CommissionStatus::DEPOSITED,
+            CommissionStatus::NOTARIZING,
+            CommissionStatus::COMPLETED,
+        ])
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->get()
+            ->sum(function ($c) {
+                return (float) $c->getRawOriginal('sale_commission')
+                    + (float) $c->getRawOriginal('app_commission')
+                    + (float) $c->getRawOriginal('owner_commission');
+            });
+
+        $stats = [
+            'pending_count'       => $pendingCount,
+            'processing_count'    => $processingCount,
+            'monthly_total_trieu' => round($monthlyTotal / 1_000_000, 1),
+            'waiting_deposit'     => $pendingCount,
+        ];
+
+        // Build query per tab
+        $query = CrmDealCommission::with(['deal.customer', 'sale', 'property.agent'])
+            ->orderByDesc('created_at');
+
+        if ($tab === 'processing') {
+            $query->whereIn('status', [CommissionStatus::DEPOSITED, CommissionStatus::NOTARIZING]);
+        } elseif ($tab === 'completed') {
+            $query->where('status', CommissionStatus::COMPLETED);
+        } else {
+            $query->where('status', CommissionStatus::PENDING_DEPOSIT);
+        }
+
+        $commissions = $query->get()->map(function (CrmDealCommission $c) {
+            $saleCom   = (float) $c->getRawOriginal('sale_commission');
+            $appCom    = (float) $c->getRawOriginal('app_commission');
+            $ownerCom  = (float) $c->getRawOriginal('owner_commission');
+            $total     = $saleCom + $appCom + $ownerCom;
+
+            $deal      = $c->deal;
+            $dealAmt   = $deal ? (float) $deal->getRawOriginal('amount') : 0;
+            $commPct   = ($dealAmt > 0 && $total > 0) ? round($total / $dealAmt * 100, 1) : 0;
+
+            $property  = $c->property;
+            $broker    = $property?->agent;
+
+            $saleComTrieu  = round($saleCom  / 1_000_000, 1);
+            $appComTrieu   = round($appCom   / 1_000_000, 1);
+            $ownerComTrieu = round($ownerCom / 1_000_000, 1);
+            $totalTrieu    = round($total    / 1_000_000, 1);
+            $dealAmtTrieu  = round($dealAmt  / 1_000_000, 1);
+
+            $salePct  = $total > 0 ? round($saleCom  / $total * 100) : 0;
+            $appPct   = $total > 0 ? round($appCom   / $total * 100) : 0;
+            $ownerPct = $total > 0 ? (100 - $salePct - $appPct) : 0;
+
+            return [
+                'id'                    => $c->id,
+                'status'                => $c->getRawOriginal('status'),
+                'notes'                 => $c->notes,
+                'deposit_expected_date' => $c->deposit_expected_date
+                    ? Carbon::parse($c->deposit_expected_date)->format('d/m/Y')
+                    : null,
+                'sale_commission_trieu' => $saleComTrieu,
+                'app_commission_trieu'  => $appComTrieu,
+                'owner_commission_trieu'=> $ownerComTrieu,
+                'total_trieu'           => $totalTrieu,
+                'deal_amount_trieu'     => $dealAmtTrieu,
+                'comm_pct'              => $commPct,
+                'sale_pct'              => $salePct,
+                'app_pct'               => $appPct,
+                'owner_pct'             => $ownerPct,
+                'deal_id'               => $c->deal_id,
+                'customer_name'         => $deal?->customer?->name ?? 'Khách hàng',
+                'sale_name'             => $c->sale?->name ?? 'Sale',
+                'broker_name'           => $broker?->name ?? null,
+                'property_title'        => $property?->title ?? 'BĐS #' . $c->property_id,
+                'created_at_fmt'        => Carbon::parse($c->getRawOriginal('created_at'))->format('d/m/Y'),
+            ];
+        });
+
+        return response()->json([
+            'success'     => true,
+            'stats'       => $stats,
+            'commissions' => $commissions,
+            'tab'         => $tab,
+        ]);
+    }
+
+    public function adminApproveCommission(int $id): JsonResponse
+    {
+        try {
+            $commission = CrmDealCommission::with(['sale', 'property'])->findOrFail($id);
+
+            if ($commission->getRawOriginal('status') !== CommissionStatus::PENDING_DEPOSIT->value) {
+                return response()->json(['success' => false, 'message' => 'Hoa hồng này không ở trạng thái chờ duyệt.'], 422);
+            }
+
+            $commission->status = CommissionStatus::DEPOSITED;
+            $commission->save();
+
+            // Notify sale person
+            if ($commission->sale && $commission->sale->telegram_id) {
+                $propTitle  = $commission->property?->title ?? 'BĐS';
+                $totalTrieu = round(
+                    ((float) $commission->getRawOriginal('sale_commission')
+                    + (float) $commission->getRawOriginal('app_commission')
+                    + (float) $commission->getRawOriginal('owner_commission')) / 1_000_000,
+                    1
+                );
+                $message = "✅ *HOA HỒNG ĐÃ ĐƯỢC DUYỆT*\n"
+                    . "🏠 {$propTitle}\n"
+                    . "💰 Tổng HH: {$totalTrieu} triệu\n"
+                    . "📌 Trạng thái: Chờ đặt cọc\n"
+                    . "Admin đã xác nhận — Vui lòng tiến hành thu cọc.";
+                app(NotificationService::class)->sendToUser($commission->sale, $message);
+            }
+
+            $pendingCount = CrmDealCommission::where('status', CommissionStatus::PENDING_DEPOSIT)->count();
+
+            return response()->json([
+                'success'       => true,
+                'message'       => 'Đã duyệt hoa hồng.',
+                'pending_count' => $pendingCount,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('adminApproveCommission error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    public function adminAdvanceCommission(int $id): JsonResponse
+    {
+        try {
+            $commission = CrmDealCommission::with(['sale', 'property'])->findOrFail($id);
+            $currentStatus = $commission->getRawOriginal('status');
+
+            $transitions = [
+                CommissionStatus::DEPOSITED->value  => CommissionStatus::NOTARIZING,
+                CommissionStatus::NOTARIZING->value => CommissionStatus::COMPLETED,
+            ];
+
+            if (!isset($transitions[$currentStatus])) {
+                return response()->json(['success' => false, 'message' => 'Không thể chuyển trạng thái này.'], 422);
+            }
+
+            $newStatus = $transitions[$currentStatus];
+            $commission->status = $newStatus;
+            $commission->save();
+
+            // Notify sale person
+            if ($commission->sale && $commission->sale->telegram_id) {
+                $propTitle  = $commission->property?->title ?? 'BĐS';
+                $statusLabel = $newStatus->label();
+                $message = "📋 *CẬP NHẬT HOA HỒNG*\n"
+                    . "🏠 {$propTitle}\n"
+                    . "📌 Trạng thái mới: {$statusLabel}\n"
+                    . "Admin đã xác nhận tiến độ giao dịch.";
+                app(NotificationService::class)->sendToUser($commission->sale, $message);
+            }
+
+            return response()->json([
+                'success'    => true,
+                'message'    => 'Đã cập nhật trạng thái.',
+                'new_status' => $newStatus->value,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('adminAdvanceCommission error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    public function adminHoldCommission(Request $request, int $id): JsonResponse
+    {
+        try {
+            $commission = CrmDealCommission::with(['sale', 'property'])->findOrFail($id);
+
+            $note = $request->input('note', '');
+            if (!empty($note)) {
+                $commission->notes = $note;
+                $commission->save();
+            }
+
+            // Notify sale person
+            if ($commission->sale && $commission->sale->telegram_id) {
+                $propTitle = $commission->property?->title ?? 'BĐS';
+                $noteText  = !empty($note) ? "\n📝 Ghi chú: {$note}" : '';
+                $message   = "⏸ *HOA HỒNG ĐANG ĐƯỢC XEM XÉT*\n"
+                    . "🏠 {$propTitle}\n"
+                    . "⚠️ Admin đang giữ lại để kiểm tra thêm.{$noteText}\n"
+                    . "Vui lòng chờ xác nhận.";
+                app(NotificationService::class)->sendToUser($commission->sale, $message);
+            }
+
+            return response()->json(['success' => true, 'message' => 'Đã giữ lại để xem xét.']);
+        } catch (\Exception $e) {
+            Log::error('adminHoldCommission error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
     // ─── Referral API ────────────────────────────────────────────────────────
 
     public function referralApi(Request $request)

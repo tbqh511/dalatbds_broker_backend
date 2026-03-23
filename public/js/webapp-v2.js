@@ -264,6 +264,16 @@ window.openSubpage = function(id){
     if(abdsDefaultTab) abdsDefaultTab.classList.add('active');
     loadApprovalBds(true);
   }
+  if(id === 'reports') {
+    loadAdminReports('month');
+  }
+  if(id === 'approvecomm') {
+    acommCurrentTab = 'pending';
+    document.querySelectorAll('#acommTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+    var acommDefaultTab = document.querySelector('#acommTabBar [data-tab="pending"]');
+    if(acommDefaultTab) acommDefaultTab.classList.add('active');
+    loadApproveComm(true);
+  }
 };
 window.closeSubpage = function(id){
   const sp = document.getElementById('subpage-'+id);
@@ -768,19 +778,521 @@ function _abdsUpdatePendingCount(count) {
 document.getElementById('rejectSheet')?.addEventListener('click', function(e) {
   if(e.target === this) this.classList.remove('open');
 });
+document.getElementById('acommHoldSheet')?.addEventListener('click', function(e) {
+  if(e.target === this) this.classList.remove('open');
+});
+document.getElementById('acommDetailSheet')?.addEventListener('click', function(e) {
+  if(e.target === this) this.classList.remove('open');
+});
 
 // ============ ADMIN — DUYỆT HOA HỒNG ============
-window.approveComm = function(id, name, amount){
-  const card = document.getElementById(id);
-  if(card) card.style.display='none';
-  showToast('✓ Đã duyệt HH ' + amount + ' — ' + name + ' → Chờ cọc');
+var acommCurrentTab = 'pending';
+var acommHoldId = null;
+
+window.switchAcommTab = function(tab, btn) {
+  acommCurrentTab = tab;
+  document.querySelectorAll('#acommTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  loadApproveComm(true);
 };
 
-// ============ ADMIN — REPORT ============
-window.switchRpTab = function(btn){
-  btn.closest('.report-period').querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
+window.loadApproveComm = function(reset) {
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if(!cfg || !cfg.adminCommissionsJson) return;
+  var url = cfg.adminCommissionsJson + '?tab=' + encodeURIComponent(acommCurrentTab);
+  var container = document.getElementById('acommListContainer');
+  if(!container) return;
+
+  if(reset) {
+    container.innerHTML =
+      '<div style="padding:16px;">'
+      + '<div style="height:140px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;opacity:.6;"></div>'
+      + '<div style="height:140px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;opacity:.4;"></div>'
+      + '</div>';
+  }
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if(!data.success) {
+        container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--danger);">Lỗi tải dữ liệu.</div>';
+        return;
+      }
+      var s = data.stats || {};
+      // Update hero stats
+      var heroMain = document.getElementById('acommHeroMain');
+      if(heroMain) heroMain.textContent = (s.monthly_total_trieu || 0) + ' triệu tháng này';
+      var elPending = document.getElementById('acommPendingCount');
+      if(elPending) elPending.textContent = s.pending_count || 0;
+      var elProcessing = document.getElementById('acommProcessingCount');
+      if(elProcessing) elProcessing.textContent = s.processing_count || 0;
+      var elMonthly = document.getElementById('acommMonthlyTotal');
+      if(elMonthly) elMonthly.textContent = (s.monthly_total_trieu || 0) + 'tr';
+      var elWaiting = document.getElementById('acommWaitingDeposit');
+      if(elWaiting) elWaiting.textContent = s.waiting_deposit || 0;
+      document.querySelectorAll('.acomm-tab-count-pending').forEach(function(el) {
+        el.textContent = s.pending_count || 0;
+      });
+      document.querySelectorAll('.acomm-tab-count-processing').forEach(function(el) {
+        el.textContent = s.processing_count || 0;
+      });
+
+      var comms = data.commissions || [];
+      if(comms.length === 0) {
+        container.innerHTML =
+          '<div style="text-align:center;padding:48px 16px;color:var(--text-tertiary);">'
+          + '<div style="font-size:14px;">Không có hoa hồng nào</div></div>';
+        return;
+      }
+      var html = '';
+      comms.forEach(function(c) { html += _renderAcommCard(c); });
+      container.innerHTML = html;
+    })
+    .catch(function() {
+      container.innerHTML =
+        '<div style="text-align:center;padding:32px;color:var(--danger);">Lỗi kết nối. '
+        + '<button onclick="loadApproveComm(true)" style="color:var(--primary);text-decoration:underline;background:none;border:none;cursor:pointer;">Thử lại</button></div>';
+    });
 };
+
+function _renderAcommCard(c) {
+  var status = c.status;
+
+  // Stepper HTML
+  var steps5 = [
+    { label: 'Chốt giá',  svg: '✓' },
+    { label: 'Chờ duyệt', svg: '⏳' },
+    { label: 'Đặt cọc',   svg: '3' },
+    { label: 'Công chứng',svg: '4' },
+    { label: 'Hoàn tất',  svg: '5' },
+  ];
+  var steps4 = [
+    { label: 'Chốt giá',  svg: '✓' },
+    { label: 'Đặt cọc',   svg: '2' },
+    { label: 'Công chứng',svg: '3' },
+    { label: 'Hoàn tất',  svg: '4' },
+  ];
+
+  var stepperHtml = '';
+  if(status === 'pending_deposit') {
+    stepperHtml = _acommStepper5([
+      { done: true, active: false, label: 'Chốt giá', dot: '✓' },
+      { done: false, active: true,  label: 'Chờ duyệt',dot: '⏳'},
+      { done: false, active: false, label: 'Đặt cọc',  dot: '3' },
+      { done: false, active: false, label: 'Công chứng',dot:'4' },
+      { done: false, active: false, label: 'Hoàn tất', dot: '5' },
+    ]);
+  } else if(status === 'deposited') {
+    stepperHtml = _acommStepper5([
+      { done: true, active: false, label: 'Chốt giá',   dot: '✓' },
+      { done: true, active: false, label: 'Chờ duyệt',  dot: '✓' },
+      { done: true, active: false, label: 'Đặt cọc',    dot: '✓' },
+      { done: false, active: true, label: 'Công chứng', dot: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' },
+      { done: false, active: false, label: 'Hoàn tất', dot: '5' },
+    ]);
+  } else if(status === 'notarizing') {
+    stepperHtml = _acommStepper5([
+      { done: true, active: false, label: 'Chốt giá',   dot: '✓' },
+      { done: true, active: false, label: 'Chờ duyệt',  dot: '✓' },
+      { done: true, active: false, label: 'Đặt cọc',    dot: '✓' },
+      { done: false, active: true, label: 'Công chứng', dot: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' },
+      { done: false, active: false, label: 'Hoàn tất', dot: '5' },
+    ]);
+  } else {
+    // completed
+    stepperHtml = _acommStepper5([
+      { done: true, active: false, label: 'Chốt giá',   dot: '✓' },
+      { done: true, active: false, label: 'Chờ duyệt',  dot: '✓' },
+      { done: true, active: false, label: 'Đặt cọc',    dot: '✓' },
+      { done: true, active: false, label: 'Công chứng', dot: '✓' },
+      { done: true, active: false, label: 'Hoàn tất',   dot: '✓' },
+    ]);
+  }
+
+  // Deal detail rows
+  var detailHtml =
+    '<div class="acomm-detail-item"><div class="acomm-detail-label">Giá chốt</div><div class="acomm-detail-val">' + escHtml(String(c.deal_amount_trieu || 0)) + ' triệu</div></div>'
+    + '<div class="acomm-detail-item"><div class="acomm-detail-label">Tổng HH (' + escHtml(String(c.comm_pct || 0)) + '%)</div><div class="acomm-detail-val">' + escHtml(String(c.total_trieu || 0)) + ' triệu</div></div>'
+    + '<div class="acomm-detail-item"><div class="acomm-detail-label">Ngày chốt</div><div class="acomm-detail-val">' + escHtml(c.created_at_fmt || '—') + '</div></div>'
+    + '<div class="acomm-detail-item"><div class="acomm-detail-label">Cọc dự kiến</div><div class="acomm-detail-val">' + escHtml(c.deposit_expected_date || '—') + '</div></div>';
+
+  // Commission breakdown
+  var brokerLine = c.broker_name
+    ? '<div class="acomm-bl-row"><div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--teal);"></div>Broker (' + escHtml(c.broker_name) + ')</div><div><span class="acomm-bl-val">' + escHtml(String(c.owner_commission_trieu)) + ' tr</span><span class="acomm-bl-pct">' + escHtml(String(c.owner_pct)) + '%</span></div></div>'
+    : '<div class="acomm-bl-row"><div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--teal);"></div>Broker</div><div><span class="acomm-bl-val">' + escHtml(String(c.owner_commission_trieu)) + ' tr</span><span class="acomm-bl-pct">' + escHtml(String(c.owner_pct)) + '%</span></div></div>';
+
+  var breakdownHtml =
+    '<div class="acomm-breakdown">'
+    + '<div class="acomm-bl-title">Phân chia hoa hồng</div>'
+    + '<div class="acomm-bl-row"><div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--primary);"></div>Sale (' + escHtml(c.sale_name || 'Sale') + ')</div><div><span class="acomm-bl-val">' + escHtml(String(c.sale_commission_trieu)) + ' tr</span><span class="acomm-bl-pct">' + escHtml(String(c.sale_pct)) + '%</span></div></div>'
+    + '<div class="acomm-bl-row"><div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--purple);"></div>App (Đà Lạt BĐS)</div><div><span class="acomm-bl-val">' + escHtml(String(c.app_commission_trieu)) + ' tr</span><span class="acomm-bl-pct">' + escHtml(String(c.app_pct)) + '%</span></div></div>'
+    + brokerLine
+    + '</div>';
+
+  // Notes timeline
+  var timelineHtml = '';
+  if(c.notes) {
+    timelineHtml =
+      '<div class="acomm-timeline">'
+      + '<div class="acomm-tl-item"><div class="acomm-tl-dot" style="background:var(--primary);"></div>'
+      + '<div class="acomm-tl-text">' + escHtml(c.notes) + '</div>'
+      + '<div class="acomm-tl-time">' + escHtml(c.created_at_fmt || '') + '</div></div>'
+      + '</div>';
+  }
+
+  // Action buttons per status
+  var safeTitle  = (c.property_title || 'BĐS').replace(/'/g, "\\'");
+  var safeTotal  = String(c.total_trieu || 0) + ' tr';
+  var commJson   = JSON.stringify(c).replace(/</g, '\\u003c').replace(/'/g, "\\'");
+  var actionHtml = '';
+
+  if(status === 'pending_deposit') {
+    actionHtml =
+      '<button class="acomm-btn hold" onclick="holdComm(' + c.id + ')">⏸ Giữ lại</button>'
+      + '<button class="acomm-btn detail" onclick="showCommDetail(\'' + commJson + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Hợp đồng</span></button>'
+      + '<button class="acomm-btn approve" onclick="approveComm(' + c.id + ',\'' + safeTitle + '\',\'' + safeTotal + '\')">✓ Xác nhận & Chờ cọc</button>';
+  } else if(status === 'deposited') {
+    actionHtml =
+      '<button class="acomm-btn detail" onclick="showCommDetail(\'' + commJson + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Chi tiết</span></button>'
+      + '<button class="acomm-btn approve" onclick="advanceComm(' + c.id + ',\'' + safeTitle + '\')">✓ Xác nhận Công chứng</button>';
+  } else if(status === 'notarizing') {
+    actionHtml =
+      '<button class="acomm-btn detail" onclick="showCommDetail(\'' + commJson + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Chi tiết</span></button>'
+      + '<button class="acomm-btn approve" onclick="advanceComm(' + c.id + ',\'' + safeTitle + '\')">✓ Xác nhận Hoàn tất</button>';
+  } else {
+    actionHtml =
+      '<button class="acomm-btn detail" onclick="showCommDetail(\'' + commJson + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Chi tiết</span></button>';
+  }
+
+  var amtColor = (status === 'notarizing') ? 'style="color:var(--warning);"' : '';
+  var amtSuffix = (status === 'notarizing') ? 'Đang CN' : (escHtml(String(c.comm_pct)) + '% / ' + escHtml(String(c.deal_amount_trieu)) + ',000 tr');
+
+  return '<div class="acomm-card" id="acomm-' + c.id + '">'
+    + '<div class="acomm-head">'
+    + '<div class="acomm-icon" style="background:var(--warning-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg></div>'
+    + '<div class="acomm-info"><div class="acomm-name">' + escHtml(c.property_title || 'BĐS') + '</div>'
+    + '<div class="acomm-sub">' + escHtml(c.customer_name || 'Khách hàng') + ' · Sale: ' + escHtml(c.sale_name || '') + '</div></div>'
+    + '<div class="acomm-amount"><div class="acomm-val" ' + amtColor + '>' + escHtml(String(c.total_trieu || 0)) + ' tr</div>'
+    + '<div class="acomm-pct">' + amtSuffix + '</div></div>'
+    + '</div>'
+    + stepperHtml
+    + '<div class="acomm-detail">' + detailHtml + '</div>'
+    + breakdownHtml
+    + timelineHtml
+    + '<div class="acomm-actions">' + actionHtml + '</div>'
+    + '</div>';
+}
+
+function _acommStepper5(steps) {
+  var html = '<div class="acomm-stepper">';
+  steps.forEach(function(s, i) {
+    var dotCls = s.done ? 'done' : (s.active ? 'active' : '');
+    var labelCls = s.done ? 'done' : (s.active ? 'active' : '');
+    html += '<div class="cs-step"><div class="cs-dot ' + dotCls + '" style="display:flex;align-items:center;justify-content:center;">' + s.dot + '</div><div class="cs-label ' + labelCls + '">' + escHtml(s.label) + '</div></div>';
+    if(i < steps.length - 1) {
+      html += '<div class="cs-line' + (s.done ? ' done' : '') + '"></div>';
+    }
+  });
+  html += '</div>';
+  return html;
+}
+
+window.approveComm = function(id, name, amount) {
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var url = cfg && cfg.adminCommissionsBase ? cfg.adminCommissionsBase + id + '/approve' : null;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if(!url || !csrf) { showToast('Lỗi cấu hình'); return; }
+
+  var card = document.getElementById('acomm-' + id);
+  if(card) { card.style.opacity = '0.5'; card.style.pointerEvents = 'none'; }
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({}),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if(data.success) {
+        if(card) {
+          card.style.transition = 'opacity .3s';
+          card.style.opacity = '0';
+          setTimeout(function() { if(card.parentNode) card.parentNode.removeChild(card); }, 300);
+        }
+        _acommUpdatePendingCount(data.pending_count);
+        showToast('✓ Đã duyệt: ' + (name || 'Hoa hồng') + ' — ' + (amount || '') + ' → Chờ cọc');
+      } else {
+        if(card) { card.style.opacity = '1'; card.style.pointerEvents = ''; }
+        showToast(data.message || 'Có lỗi xảy ra');
+      }
+    })
+    .catch(function() {
+      if(card) { card.style.opacity = '1'; card.style.pointerEvents = ''; }
+      showToast('Lỗi kết nối');
+    });
+};
+
+window.advanceComm = function(id, name) {
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var url = cfg && cfg.adminCommissionsBase ? cfg.adminCommissionsBase + id + '/advance' : null;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if(!url || !csrf) { showToast('Lỗi cấu hình'); return; }
+
+  var card = document.getElementById('acomm-' + id);
+  if(card) { card.style.opacity = '0.5'; card.style.pointerEvents = 'none'; }
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({}),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if(data.success) {
+        if(card) {
+          card.style.transition = 'opacity .3s';
+          card.style.opacity = '0';
+          setTimeout(function() { if(card.parentNode) card.parentNode.removeChild(card); }, 300);
+        }
+        var label = data.new_status === 'completed' ? 'Hoàn tất' : 'Công chứng';
+        showToast('✓ ' + (name || 'Hoa hồng') + ' → ' + label);
+      } else {
+        if(card) { card.style.opacity = '1'; card.style.pointerEvents = ''; }
+        showToast(data.message || 'Có lỗi xảy ra');
+      }
+    })
+    .catch(function() {
+      if(card) { card.style.opacity = '1'; card.style.pointerEvents = ''; }
+      showToast('Lỗi kết nối');
+    });
+};
+
+window.holdComm = function(id) {
+  acommHoldId = id;
+  var noteEl = document.getElementById('acommHoldNote');
+  if(noteEl) noteEl.value = '';
+  document.getElementById('acommHoldSheet').classList.add('open');
+};
+
+window.submitHoldComm = function() {
+  if(!acommHoldId) return;
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var url = cfg && cfg.adminCommissionsBase ? cfg.adminCommissionsBase + acommHoldId + '/hold' : null;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if(!url || !csrf) { showToast('Lỗi cấu hình'); return; }
+
+  var note = (document.getElementById('acommHoldNote') ? document.getElementById('acommHoldNote').value : '').trim();
+  var submitBtn = document.querySelector('#acommHoldSheet .rs-submit');
+  if(submitBtn) submitBtn.disabled = true;
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({ note: note }),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById('acommHoldSheet').classList.remove('open');
+      if(submitBtn) submitBtn.disabled = false;
+      if(data.success) {
+        showToast('⏸ Đã giữ lại — Sale đã được thông báo');
+      } else {
+        showToast(data.message || 'Có lỗi xảy ra');
+      }
+    })
+    .catch(function() {
+      if(submitBtn) submitBtn.disabled = false;
+      showToast('Lỗi kết nối');
+    });
+};
+
+window.showCommDetail = function(commJsonStr) {
+  var c;
+  try { c = JSON.parse(commJsonStr); } catch(e) { showToast('Lỗi dữ liệu'); return; }
+  var titleEl = document.getElementById('acommDetailTitle');
+  if(titleEl) titleEl.textContent = c.property_title || 'Chi tiết hoa hồng';
+  var bodyEl = document.getElementById('acommDetailBody');
+  if(bodyEl) {
+    bodyEl.innerHTML =
+      '<div style="padding:0 0 8px;">'
+      + '<div style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px;">'
+      + escHtml(c.customer_name || '') + ' · Sale: ' + escHtml(c.sale_name || '') + '</div>'
+      + '<div class="acomm-detail" style="margin-bottom:12px;">'
+      + '<div class="acomm-detail-item"><div class="acomm-detail-label">Giá chốt</div><div class="acomm-detail-val">' + escHtml(String(c.deal_amount_trieu || 0)) + ' triệu</div></div>'
+      + '<div class="acomm-detail-item"><div class="acomm-detail-label">Tổng HH (' + escHtml(String(c.comm_pct || 0)) + '%)</div><div class="acomm-detail-val">' + escHtml(String(c.total_trieu || 0)) + ' triệu</div></div>'
+      + '<div class="acomm-detail-item"><div class="acomm-detail-label">Ngày chốt</div><div class="acomm-detail-val">' + escHtml(c.created_at_fmt || '—') + '</div></div>'
+      + '<div class="acomm-detail-item"><div class="acomm-detail-label">Cọc dự kiến</div><div class="acomm-detail-val">' + escHtml(c.deposit_expected_date || '—') + '</div></div>'
+      + '</div>'
+      + '<div class="acomm-bl-title">Phân chia hoa hồng</div>'
+      + '<div class="acomm-bl-row"><div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--primary);"></div>Sale (' + escHtml(c.sale_name || 'Sale') + ')</div><div><span class="acomm-bl-val">' + escHtml(String(c.sale_commission_trieu)) + ' tr</span><span class="acomm-bl-pct">' + escHtml(String(c.sale_pct)) + '%</span></div></div>'
+      + '<div class="acomm-bl-row"><div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--purple);"></div>App (Đà Lạt BĐS)</div><div><span class="acomm-bl-val">' + escHtml(String(c.app_commission_trieu)) + ' tr</span><span class="acomm-bl-pct">' + escHtml(String(c.app_pct)) + '%</span></div></div>'
+      + '<div class="acomm-bl-row"><div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--teal);"></div>Broker' + (c.broker_name ? ' (' + escHtml(c.broker_name) + ')' : '') + '</div><div><span class="acomm-bl-val">' + escHtml(String(c.owner_commission_trieu)) + ' tr</span><span class="acomm-bl-pct">' + escHtml(String(c.owner_pct)) + '%</span></div></div>'
+      + (c.notes ? '<div style="margin-top:12px;padding:10px;background:var(--bg-secondary);border-radius:8px;font-size:12px;color:var(--text-secondary);">📝 ' + escHtml(c.notes) + '</div>' : '')
+      + '</div>';
+  }
+  document.getElementById('acommDetailSheet').classList.add('open');
+};
+
+function _acommUpdatePendingCount(count) {
+  if(count === undefined) return;
+  var el = document.getElementById('acommPendingCount');
+  if(el) el.textContent = count;
+  document.querySelectorAll('.acomm-tab-count-pending').forEach(function(el) {
+    el.textContent = count;
+  });
+  var heroMain = document.getElementById('acommHeroMain');
+  if(heroMain && count !== undefined) {
+    // Keep existing text, just update the pending count display
+  }
+}
+
+// ============ ADMIN — REPORT ============
+var _rpLoading = false;
+
+window.switchRpTab = function(btn, period) {
+  btn.closest('.report-period').querySelectorAll('.rp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  loadAdminReports(period || 'month');
+};
+
+window.loadAdminReports = function(period) {
+  if (_rpLoading) return;
+  var url = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes && window.WEBAPP_CONFIG.routes.adminReportsJson)
+    ? window.WEBAPP_CONFIG.routes.adminReportsJson + '?period=' + (period || 'month')
+    : null;
+  if (!url) return;
+  _rpLoading = true;
+  var loading = document.getElementById('rp-loading');
+  var grid    = document.getElementById('rp-metrics-grid');
+  if (loading) loading.style.display = 'block';
+  if (grid)    grid.style.opacity    = '0.4';
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      _rpLoading = false;
+      if (loading) loading.style.display = 'none';
+      if (grid)    grid.style.opacity    = '1';
+      renderAdminReports(data);
+    })
+    .catch(function() {
+      _rpLoading = false;
+      if (loading) loading.style.display = 'none';
+      if (grid)    grid.style.opacity    = '1';
+    });
+};
+
+window.renderAdminReports = function(d) {
+  // Hero
+  _rpTxt('rp-hero-label',   d.hero.label);
+  _rpTxt('rp-hero-revenue', d.hero.revenue_label);
+  _rpTxt('rp-stat-deals',   d.hero.deals_closed);
+  _rpTxt('rp-stat-comm',    d.hero.commission_label);
+  _rpTxt('rp-stat-live',    Number(d.hero.live_bds).toLocaleString('vi-VN'));
+  _rpTxt('rp-stat-views',   Number(d.hero.total_views).toLocaleString('vi-VN'));
+
+  // Metric cards
+  _rpSetMetric('revenue', d.metrics.revenue);
+  _rpSetMetric('deals',   d.metrics.deals);
+  _rpSetMetric('comm',    d.metrics.commission);
+  _rpSetMetric('cust',    d.metrics.new_customers);
+
+  // Bar chart
+  var barEl = document.getElementById('rp-bar-chart');
+  if (barEl && d.bar_chart && d.bar_chart.length) {
+    var maxVal = Math.max.apply(null, d.bar_chart.map(function(b) { return b.value; })) || 0.1;
+    barEl.innerHTML = d.bar_chart.map(function(b) {
+      var pct   = Math.round((b.value / maxVal) * 100);
+      var color = b.is_current ? 'var(--success)' : 'var(--primary-light)';
+      var style = b.is_current ? 'color:var(--success);font-weight:700;' : '';
+      return '<div class="bc-col">' +
+        '<div class="bc-val" style="' + style + '">' + b.value + '</div>' +
+        '<div class="bc-bars"><div class="bc-seg" style="height:' + pct + '%;background:' + color + ';"></div></div>' +
+        '<div class="bc-label" style="' + style + '">' + b.label + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // Funnel ring
+  var ring = document.getElementById('rp-stat-ring');
+  if (ring) ring.style.setProperty('--pct', d.funnel.conv_rate + '%');
+  _rpTxt('rp-ring-val',      d.funnel.conv_rate + '%');
+  _rpTxt('rp-funnel-leads',  d.funnel.leads);
+  _rpTxt('rp-funnel-deals',  d.funnel.deals_created);
+  _rpTxt('rp-funnel-closed', d.funnel.closed);
+  _rpTxt('rp-funnel-lost',   d.funnel.lost);
+
+  // Top brokers
+  var tbEl = document.getElementById('rp-top-brokers');
+  if (tbEl) {
+    if (!d.top_brokers || d.top_brokers.length === 0) {
+      tbEl.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:16px 0;font-size:12px;">Chưa có dữ liệu</td></tr>';
+    } else {
+      var rankClasses = ['rank-1', 'rank-2', 'rank-3'];
+      tbEl.innerHTML = d.top_brokers.map(function(b, i) {
+        var rc     = rankClasses[i] || 'rank-n';
+        var bold   = i < 3 ? 'font-weight:600;' : '';
+        var revCol = i === 0 ? 'color:var(--success);' : i === 1 ? 'color:var(--primary);' : '';
+        var rev    = b.revenue_raw > 0
+          ? '<span style="' + revCol + '">' + _esc(b.revenue_label) + '</span>'
+          : '<span style="color:var(--text-tertiary);">—</span>';
+        return '<tr>' +
+          '<td><span class="rank-badge ' + rc + '">' + b.rank + '</span></td>' +
+          '<td style="' + bold + '">' + _esc(b.name) + '</td>' +
+          '<td>' + b.deals + '</td>' +
+          '<td>' + rev + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+  }
+
+  // Property types
+  var ptEl = document.getElementById('rp-prop-types');
+  if (ptEl) {
+    if (!d.property_types || d.property_types.length === 0) {
+      ptEl.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);font-size:12px;padding:8px 0;">Chưa có dữ liệu</div>';
+    } else {
+      var typeColors = ['var(--primary)', 'var(--purple)', 'var(--teal)', 'var(--warning)', 'var(--danger)'];
+      ptEl.innerHTML = d.property_types.map(function(t, i) {
+        var col = typeColors[i] || 'var(--primary)';
+        return '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span style="font-size:12px;min-width:70px;color:var(--text-secondary);">' + _esc(t.name) + '</span>' +
+          '<div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + t.pct + '%;background:' + col + ';border-radius:4px;"></div>' +
+          '</div>' +
+          '<span style="font-size:12px;font-weight:700;color:' + col + ';min-width:28px;">' + t.pct + '%</span>' +
+          '</div>';
+      }).join('');
+    }
+  }
+};
+
+function _rpTxt(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val != null ? val : '—';
+}
+function _rpSetMetric(key, m) {
+  _rpTxt('rp-mc-' + key + '-val', m.label);
+  var el = document.getElementById('rp-mc-' + key + '-delta');
+  if (!el) return;
+  if (m.delta == null) { el.textContent = '—'; el.className = 'mc2-delta'; return; }
+  var isUp  = m.delta_dir === 'up';
+  var sign  = isUp ? '↑ +' : '↓ ';
+  var value = m.delta_abs ? Math.abs(m.delta) : Math.abs(m.delta) + '%';
+  el.textContent = sign + value + ' so kỳ trước';
+  el.className   = 'mc2-delta ' + (isUp ? 'up' : 'dn');
+}
 
 window.toggleScDetail = function(id){
   const el = document.getElementById(id);

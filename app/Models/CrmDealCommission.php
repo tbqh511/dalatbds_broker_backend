@@ -21,6 +21,7 @@ class CrmDealCommission extends Model
         'lead_commission',
         'owner_commission',
         'notes',
+        'deposit_expected_date',
         'status',
     ];
 

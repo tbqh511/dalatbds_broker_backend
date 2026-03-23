@@ -1,193 +1,52 @@
-  <!-- ========== SUBPAGE: DUYỆT HOA HỒNG ========== -->
-  <div class="subpage" id="subpage-approvecomm">
-    <div class="sp-header">
-      <button class="sp-back" onclick="closeSubpage('approvecomm')">←</button>
-      <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Duyệt hoa hồng</span></div>
-      <div class="sp-actions">
-        <button class="sp-action-btn" onclick="showToast('Xuất sao kê hoa hồng')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>
-      </div>
+<!-- ========== SUBPAGE: DUYỆT HOA HỒNG ========== -->
+<div class="subpage" id="subpage-approvecomm">
+  <div class="sp-header">
+    <button class="sp-back" onclick="closeSubpage('approvecomm')">←</button>
+    <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Duyệt hoa hồng</span></div>
+    <div class="sp-actions">
+      <button class="sp-action-btn" onclick="loadApproveComm(true)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
     </div>
+  </div>
 
-    <div class="admin-hero purple-grad">
-      <div class="ah-label">QUẢN LÝ HOA HỒNG — ADMIN</div>
-      <div class="ah-main">Tổng chờ duyệt: 324 triệu</div>
-      <div class="ah-grid">
-        <div class="ah-stat"><div class="ah-stat-val">2</div><div class="ah-stat-lbl">Chờ duyệt</div></div>
-        <div class="ah-stat"><div class="ah-stat-val">5</div><div class="ah-stat-lbl">Đang CN</div></div>
-        <div class="ah-stat"><div class="ah-stat-val">684tr</div><div class="ah-stat-lbl">Tháng này</div></div>
-        <div class="ah-stat"><div class="ah-stat-val">3</div><div class="ah-stat-lbl">Chờ cọc</div></div>
-      </div>
+  <div class="admin-hero purple-grad">
+    <div class="ah-label">QUẢN LÝ HOA HỒNG — ADMIN</div>
+    <div class="ah-main"><span id="acommHeroMain">— triệu chờ duyệt</span></div>
+    <div class="ah-grid">
+      <div class="ah-stat"><div class="ah-stat-val" id="acommPendingCount">—</div><div class="ah-stat-lbl">Chờ duyệt</div></div>
+      <div class="ah-stat"><div class="ah-stat-val" id="acommProcessingCount">—</div><div class="ah-stat-lbl">Đang CN</div></div>
+      <div class="ah-stat"><div class="ah-stat-val" id="acommMonthlyTotal">—</div><div class="ah-stat-lbl">Tháng này</div></div>
+      <div class="ah-stat"><div class="ah-stat-val" id="acommWaitingDeposit">—</div><div class="ah-stat-lbl">Chờ cọc</div></div>
     </div>
+  </div>
 
-    <div class="sp-tabs">
-      <button class="sp-tab active" onclick="spTabSwitch(this)">Chờ duyệt (2)</button>
-      <button class="sp-tab" onclick="spTabSwitch(this)">Đang xử lý (5)</button>
-      <button class="sp-tab" onclick="spTabSwitch(this)">Đã hoàn tất</button>
+  <div class="sp-tabs" id="acommTabBar">
+    <button class="sp-tab active" data-tab="pending" onclick="switchAcommTab('pending',this)">Chờ duyệt (<span class="acomm-tab-count-pending">—</span>)</button>
+    <button class="sp-tab" data-tab="processing" onclick="switchAcommTab('processing',this)">Đang xử lý (<span class="acomm-tab-count-processing">—</span>)</button>
+    <button class="sp-tab" data-tab="completed" onclick="switchAcommTab('completed',this)">Đã hoàn tất</button>
+  </div>
+
+  <div class="sp-scroll" style="padding-bottom:16px;">
+    <div id="acommListContainer"></div>
+    <div style="height:16px;"></div>
+  </div>
+
+  <!-- Hold sheet — Giữ lại -->
+  <div class="reject-sheet" id="acommHoldSheet">
+    <div class="reject-sheet-inner">
+      <div class="rs-handle"></div>
+      <div class="rs-title">⏸ Giữ lại để xem xét</div>
+      <textarea id="acommHoldNote" class="rs-note" rows="3" placeholder="Ghi chú lý do giữ lại (tùy chọn)..."></textarea>
+      <button class="rs-submit" onclick="submitHoldComm()">Gửi thông báo → Sale</button>
     </div>
+  </div>
 
-    <div class="sp-scroll" style="padding-bottom:16px;">
-
-      <!-- COMM APPROVE 1 — Chốt deal, cần duyệt để sang trạng thái Chờ cọc -->
-      <div class="acomm-card" id="acomm1">
-        <div class="acomm-head">
-          <div class="acomm-icon" style="background:var(--warning-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg></div>
-          <div class="acomm-info">
-            <div class="acomm-name">Biệt thự View Đồi Chè Cầu Đất</div>
-            <div class="acomm-sub">Chị Thu Hà · Sale: Huy Thái</div>
-          </div>
-          <div class="acomm-amount">
-            <div class="acomm-val">240 tr</div>
-            <div class="acomm-pct">3% / 8,000 tr</div>
-          </div>
-        </div>
-
-        <!-- Status stepper (reuse cs-step style) -->
-        <div class="acomm-stepper">
-          <div class="cs-step"><div class="cs-dot done">✓</div><div class="cs-label done">Chốt giá</div></div>
-          <div class="cs-line done"></div>
-          <div class="cs-step"><div class="cs-dot active">⏳</div><div class="cs-label active">Chờ duyệt</div></div>
-          <div class="cs-line"></div>
-          <div class="cs-step"><div class="cs-dot">3</div><div class="cs-label">Đặt cọc</div></div>
-          <div class="cs-line"></div>
-          <div class="cs-step"><div class="cs-dot">4</div><div class="cs-label">Công chứng</div></div>
-          <div class="cs-line"></div>
-          <div class="cs-step"><div class="cs-dot">5</div><div class="cs-label">Hoàn tất</div></div>
-        </div>
-
-        <div class="acomm-detail">
-          <div class="acomm-detail-item"><div class="acomm-detail-label">Giá chốt</div><div class="acomm-detail-val">8,000 triệu</div></div>
-          <div class="acomm-detail-item"><div class="acomm-detail-label">Tổng HH (3%)</div><div class="acomm-detail-val">240 triệu</div></div>
-          <div class="acomm-detail-item"><div class="acomm-detail-label">Ngày chốt</div><div class="acomm-detail-val">14/03/2026</div></div>
-          <div class="acomm-detail-item"><div class="acomm-detail-label">Cọc dự kiến</div><div class="acomm-detail-val">20/03/2026</div></div>
-        </div>
-
-        <div class="acomm-breakdown">
-          <div class="acomm-bl-title">Phân chia hoa hồng</div>
-          <div class="acomm-bl-row">
-            <div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--primary);"></div>Sale (Huy Thái)</div>
-            <div><span class="acomm-bl-val">120 tr</span><span class="acomm-bl-pct">50%</span></div>
-          </div>
-          <div class="acomm-bl-row">
-            <div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--purple);"></div>App (Đà Lạt BĐS)</div>
-            <div><span class="acomm-bl-val">80 tr</span><span class="acomm-bl-pct">33%</span></div>
-          </div>
-          <div class="acomm-bl-row">
-            <div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--teal);"></div>Broker (Huy Thái)</div>
-            <div><span class="acomm-bl-val">40 tr</span><span class="acomm-bl-pct">17%</span></div>
-          </div>
-        </div>
-
-        <div class="acomm-timeline">
-          <div class="acomm-tl-item">
-            <div class="acomm-tl-dot" style="background:var(--success);"></div>
-            <div class="acomm-tl-text">Deal chốt thành công · Chị Thu Hà đồng ý giá 8,000 triệu</div>
-            <div class="acomm-tl-time">14/03</div>
-          </div>
-          <div class="acomm-tl-item">
-            <div class="acomm-tl-dot" style="background:var(--primary);"></div>
-            <div class="acomm-tl-text">Huy Thái tạo commission request · Chờ Admin duyệt</div>
-            <div class="acomm-tl-time">14/03</div>
-          </div>
-        </div>
-
-        <div class="acomm-actions">
-          <button class="acomm-btn hold" onclick="showToast('Yêu cầu kiểm tra thêm...')">⏸ Giữ lại</button>
-          <button class="acomm-btn detail" onclick="showToast('Xem hợp đồng...')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Hợp đồng</span></button>
-          <button class="acomm-btn approve" onclick="approveComm('acomm1','Biệt thự Cầu Đất','240 triệu')">✓ Xác nhận & Chờ cọc</button>
-        </div>
-      </div>
-
-      <!-- COMM APPROVE 2 -->
-      <div class="acomm-card" id="acomm2">
-        <div class="acomm-head">
-          <div class="acomm-icon" style="background:var(--primary-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg></div>
-          <div class="acomm-info">
-            <div class="acomm-name">Nhà phố Trần Phú, P.1</div>
-            <div class="acomm-sub">Anh Ngọc Lâm · Sale: Minh Khoa</div>
-          </div>
-          <div class="acomm-amount">
-            <div class="acomm-val">84 tr</div>
-            <div class="acomm-pct">3% / 2,800 tr</div>
-          </div>
-        </div>
-
-        <div class="acomm-stepper">
-          <div class="cs-step"><div class="cs-dot done">✓</div><div class="cs-label done">Chốt giá</div></div>
-          <div class="cs-line done"></div>
-          <div class="cs-step"><div class="cs-dot active">⏳</div><div class="cs-label active">Chờ duyệt</div></div>
-          <div class="cs-line"></div>
-          <div class="cs-step"><div class="cs-dot">3</div><div class="cs-label">Đặt cọc</div></div>
-          <div class="cs-line"></div>
-          <div class="cs-step"><div class="cs-dot">4</div><div class="cs-label">Công chứng</div></div>
-          <div class="cs-line"></div>
-          <div class="cs-step"><div class="cs-dot">5</div><div class="cs-label">Hoàn tất</div></div>
-        </div>
-
-        <div class="acomm-detail">
-          <div class="acomm-detail-item"><div class="acomm-detail-label">Giá chốt</div><div class="acomm-detail-val">2,800 triệu</div></div>
-          <div class="acomm-detail-item"><div class="acomm-detail-label">Tổng HH (3%)</div><div class="acomm-detail-val">84 triệu</div></div>
-          <div class="acomm-detail-item"><div class="acomm-detail-label">Ngày chốt</div><div class="acomm-detail-val">15/03/2026</div></div>
-          <div class="acomm-detail-item"><div class="acomm-detail-label">Cọc dự kiến</div><div class="acomm-detail-val">17/03/2026</div></div>
-        </div>
-
-        <div class="acomm-breakdown">
-          <div class="acomm-bl-title">Phân chia hoa hồng</div>
-          <div class="acomm-bl-row">
-            <div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--primary);"></div>Sale (Minh Khoa)</div>
-            <div><span class="acomm-bl-val">42 tr</span><span class="acomm-bl-pct">50%</span></div>
-          </div>
-          <div class="acomm-bl-row">
-            <div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--purple);"></div>App (Đà Lạt BĐS)</div>
-            <div><span class="acomm-bl-val">28 tr</span><span class="acomm-bl-pct">33%</span></div>
-          </div>
-          <div class="acomm-bl-row">
-            <div class="acomm-bl-who"><div class="acomm-bl-who-dot" style="background:var(--teal);"></div>Broker</div>
-            <div><span class="acomm-bl-val">14 tr</span><span class="acomm-bl-pct">17%</span></div>
-          </div>
-        </div>
-
-        <div class="acomm-actions">
-          <button class="acomm-btn hold" onclick="showToast('Giữ lại kiểm tra...')">⏸ Giữ lại</button>
-          <button class="acomm-btn detail" onclick="showToast('Xem hợp đồng...')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Hợp đồng</span></button>
-          <button class="acomm-btn approve" onclick="approveComm('acomm2','Nhà phố Trần Phú','84 triệu')">✓ Xác nhận & Chờ cọc</button>
-        </div>
-      </div>
-
-      <!-- Đang xử lý section -->
-      <div class="user-divider" style="margin-top:12px;">
-        <span>Đang trong quá trình xử lý</span>
-        <span class="badge badge-blue">5 giao dịch</span>
-      </div>
-
-      <!-- Comm processing 1 — Đang công chứng -->
-      <div class="acomm-card" style="opacity:.85;">
-        <div class="acomm-head">
-          <div class="acomm-icon" style="background:var(--success-light);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.97-5 9-8.58 9-12A9 9 0 0 0 3 10c0 3.42 4.03 7 9 12z"/></svg></div>
-          <div class="acomm-info">
-            <div class="acomm-name">Đất ở Phường 3, 200m²</div>
-            <div class="acomm-sub">Chị Lan Hương · Sale: Huy Thái</div>
-          </div>
-          <div class="acomm-amount">
-            <div class="acomm-val" style="color:var(--warning);">54 tr</div>
-            <div class="acomm-pct">Đang CN</div>
-          </div>
-        </div>
-        <div class="acomm-stepper">
-          <div class="cs-step"><div class="cs-dot done">✓</div><div class="cs-label done">Chốt giá</div></div>
-          <div class="cs-line done"></div>
-          <div class="cs-step"><div class="cs-dot done">✓</div><div class="cs-label done">Đặt cọc</div></div>
-          <div class="cs-line done"></div>
-          <div class="cs-step"><div class="cs-dot active" style="display:flex;align-items:center;justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div><div class="cs-label active">Công chứng</div></div>
-          <div class="cs-line"></div>
-          <div class="cs-step"><div class="cs-dot">5</div><div class="cs-label">Hoàn tất</div></div>
-        </div>
-        <div class="acomm-actions">
-          <button class="acomm-btn detail" onclick="showToast('Xem chi tiết...')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Chi tiết</span></button>
-          <button class="acomm-btn approve" onclick="showToast('✓ Cập nhật: Hoàn tất công chứng!')">✓ Xác nhận Hoàn tất</button>
-        </div>
-      </div>
-
-      <div style="height:16px;"></div>
+  <!-- Detail sheet — Hợp đồng / Chi tiết -->
+  <div class="reject-sheet" id="acommDetailSheet">
+    <div class="reject-sheet-inner">
+      <div class="rs-handle"></div>
+      <div class="rs-title" id="acommDetailTitle">Chi tiết hoa hồng</div>
+      <div id="acommDetailBody" style="padding-bottom:8px;"></div>
+      <button class="rs-submit" style="background:var(--bg-secondary);color:var(--text-primary);" onclick="document.getElementById('acommDetailSheet').classList.remove('open')">Đóng</button>
     </div>
-  </div><!-- end subpage-approvecomm -->
-
+  </div>
+</div><!-- end subpage-approvecomm -->
