@@ -88,13 +88,17 @@ class InAppNotificationService
     /**
      * Get paginated notifications with optional category filter.
      */
-    public function getNotifications(int $customerId, ?string $category = null, int $perPage = 15): LengthAwarePaginator
+    public function getNotifications(int $customerId, ?string $category = null, int $perPage = 15, bool $unreadOnly = false): LengthAwarePaginator
     {
         $query = InAppNotification::where('customer_id', $customerId)
             ->orderByDesc('created_at');
 
         if ($category) {
             $query->where('category', $category);
+        }
+
+        if ($unreadOnly) {
+            $query->whereNull('read_at');
         }
 
         return $query->paginate($perPage);

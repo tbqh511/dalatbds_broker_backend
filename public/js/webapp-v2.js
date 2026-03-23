@@ -5611,6 +5611,184 @@ function _esc(str) {
     .replace(/'/g, '&#39;');
 }
 
+// ============ HEADER PANELS ============
+var _npFilter = 'all';
+
+var _NP_ICONS = {
+  target: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>',
+  bell: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  'user-plus': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
+  calendar: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  clipboard: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>',
+  refresh: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
+  check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  'x-circle': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+  clock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  dollar: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  handshake: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  'alert-triangle': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  activity: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'
+};
+
+var _NP_TYPE_SUBPAGE = {
+  lead_assigned:'leads', lead_followup:'leads', lead_created:'leads',
+  booking_reminder:'bookings', booking_result:'bookings', booking_changed:'bookings',
+  property_approved:'mybds', property_rejected:'mybds', property_pending:'approvebds',
+  commission_status:'commissions', commission_completed:'commissions',
+  deal_created:'deals', deal_stuck:'deals', deal_status:'deals'
+};
+
+window.toggleNotifPanel = function(e) {
+  if (e) e.stopPropagation();
+  var panel = document.getElementById('notif-panel');
+  var isOpen = panel && panel.style.display !== 'none';
+  closeAllPanels();
+  if (!isOpen) {
+    panel.style.display = 'flex';
+    document.getElementById('panel-backdrop').style.display = 'block';
+    loadNotifPanel(_npFilter);
+  }
+};
+
+window.closeNotifPanel = function() {
+  var panel = document.getElementById('notif-panel');
+  if (panel) panel.style.display = 'none';
+};
+
+window.toggleUserMenu = function(e) {
+  if (e) e.stopPropagation();
+  var menu = document.getElementById('user-menu');
+  var isOpen = menu && menu.style.display !== 'none';
+  closeAllPanels();
+  if (!isOpen) {
+    menu.style.display = 'block';
+    document.getElementById('panel-backdrop').style.display = 'block';
+  }
+};
+
+window.closeUserMenu = function() {
+  var menu = document.getElementById('user-menu');
+  if (menu) menu.style.display = 'none';
+};
+
+window.closeAllPanels = function() {
+  closeNotifPanel();
+  closeUserMenu();
+  var bd = document.getElementById('panel-backdrop');
+  if (bd) bd.style.display = 'none';
+};
+
+window.notifPanelTab = function(tab) {
+  _npFilter = tab;
+  var allBtn = document.getElementById('nptab-all');
+  var unreadBtn = document.getElementById('nptab-unread');
+  if (allBtn) allBtn.classList.toggle('active', tab === 'all');
+  if (unreadBtn) unreadBtn.classList.toggle('active', tab === 'unread');
+  loadNotifPanel(tab);
+};
+
+function loadNotifPanel(tab) {
+  var list = document.getElementById('notif-panel-list');
+  if (!list) return;
+  list.innerHTML = '<div class="notif-panel-loading">Đang tải...</div>';
+
+  var cfg = window.WEBAPP_CONFIG || {};
+  var url = '/webapp/api/notifications?per_page=10';
+  if (tab === 'unread') url += '&unread=1';
+
+  fetch(url, {
+    headers: {
+      'X-CSRF-TOKEN': cfg.csrfToken || '',
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(json) {
+    if (!json.success || !json.notifications || !json.notifications.length) {
+      list.innerHTML = '<div class="notif-panel-loading">Không có thông báo nào</div>';
+      return;
+    }
+    var html = '';
+    json.notifications.forEach(function(n) {
+      var iconBg = (n.type_config && n.type_config.icon_bg) ? n.type_config.icon_bg : 'var(--bg-secondary)';
+      var iconName = (n.type_config && n.type_config.icon) ? n.type_config.icon : 'bell';
+      var iconSvg = _NP_ICONS[iconName] || _NP_ICONS['bell'];
+      var unreadClass = n.is_unread ? ' unread' : '';
+      html += '<div class="np-item' + unreadClass + '" onclick="notifPanelClick(' + n.id + ',\'' + _esc(n.type) + '\')">';
+      html += '<div class="np-icon" style="background:' + iconBg + ';">' + iconSvg + '</div>';
+      html += '<div class="np-body">';
+      html += '<div class="np-title">' + _esc(n.title) + '</div>';
+      if (n.body) html += '<div class="np-desc">' + _esc(n.body) + '</div>';
+      html += '<div class="np-time">' + _esc(n.time_ago || '') + '</div>';
+      html += '</div>';
+      if (n.is_unread) html += '<div class="np-dot"></div>';
+      html += '</div>';
+    });
+    list.innerHTML = html;
+  })
+  .catch(function() {
+    list.innerHTML = '<div class="notif-panel-loading">Không thể tải thông báo</div>';
+  });
+}
+
+window.notifPanelClick = function(id, type) {
+  var cfg = window.WEBAPP_CONFIG || {};
+  fetch('/webapp/api/notifications/' + id + '/read', {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': cfg.csrfToken || '',
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  });
+  closeAllPanels();
+  var subpage = _NP_TYPE_SUBPAGE[type];
+  if (subpage && typeof openSubpage === 'function') {
+    openSubpage(subpage);
+  } else {
+    goTo('activity');
+  }
+};
+
+// Sync header badge with the unread count (called from activityApp.updateBadge)
+var _origUpdateBadge;
+document.addEventListener('webapp:badge-update', function(e) {
+  var count = e.detail && e.detail.count ? e.detail.count : 0;
+  var badge = document.getElementById('header-notif-badge');
+  if (badge) {
+    badge.textContent = count > 99 ? '99+' : (count > 0 ? count : '');
+    badge.style.display = count > 0 ? '' : 'none';
+  }
+});
+
+// Initial badge load on page ready
+(function initHeaderBadge() {
+  var cfg = window.WEBAPP_CONFIG || {};
+  var url = (cfg.routes && cfg.routes.notificationsUnread) || '/webapp/api/notifications/unread-count';
+  fetch(url, {
+    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': cfg.csrfToken || '' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(json) {
+    if (json.success) {
+      var count = json.count || 0;
+      var badge = document.getElementById('header-notif-badge');
+      if (badge) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = count > 0 ? '' : 'none';
+      }
+      // Also sync the bottom-nav badge
+      var navBadge = document.getElementById('notif-badge');
+      if (navBadge) {
+        navBadge.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
+        navBadge.style.display = count > 0 ? 'flex' : 'none';
+      }
+    }
+  })
+  .catch(function() {});
+})();
+
 }); // end DOMContentLoaded
 
 // ============ ACTIVITY PAGE (IN-APP NOTIFICATIONS) ============

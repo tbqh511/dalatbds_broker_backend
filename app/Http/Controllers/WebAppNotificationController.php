@@ -29,10 +29,14 @@ class WebAppNotificationController extends Controller
             $category = null;
         }
 
+        $perPage = min((int) $request->input('per_page', 15), 50);
+        $unreadOnly = $request->boolean('unread');
+
         $paginator = $this->notifService->getNotifications(
             $customer->id,
             $category,
-            15
+            $perPage,
+            $unreadOnly
         );
 
         $notifications = collect($paginator->items())->map(fn ($n) => $n->toActivityArray());

@@ -198,6 +198,238 @@ img {
   border: 2px solid var(--primary-light);
 }
 
+/* ============ NOTIFICATION PANEL ============ */
+.notif-panel {
+  position: fixed;
+  top: var(--header-h);
+  right: 8px;
+  width: 340px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - var(--header-h) - 24px);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.notif-panel-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.notif-panel-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.notif-panel-tabs {
+  display: flex;
+  gap: 4px;
+}
+.nptab {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nptab.active {
+  background: var(--primary);
+  color: #fff;
+}
+.notif-panel-list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.notif-panel-loading {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+.notif-panel-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-light);
+  padding: 10px;
+  text-align: center;
+}
+.notif-panel-footer button {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  transition: background 0.15s;
+}
+.notif-panel-footer button:hover {
+  background: var(--primary-light);
+}
+.np-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+}
+.np-item:hover {
+  background: var(--bg-secondary);
+}
+.np-item.unread {
+  background: #eef3ff;
+}
+.np-item.unread:hover {
+  background: #e2eaff;
+}
+.np-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.np-body {
+  flex: 1;
+  min-width: 0;
+}
+.np-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+  margin-bottom: 2px;
+}
+.np-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.np-time {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 500;
+  margin-top: 3px;
+}
+.np-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ============ USER MENU ============ */
+.user-menu {
+  position: fixed;
+  top: var(--header-h);
+  right: 8px;
+  width: 260px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  z-index: 200;
+  overflow: hidden;
+}
+.user-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+.user-menu-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid var(--primary-light);
+}
+.user-menu-info {
+  min-width: 0;
+}
+.user-menu-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-menu-role {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+  font-weight: 500;
+}
+.user-menu-item:hover {
+  background: var(--bg-secondary);
+}
+.user-menu-item-primary {
+  color: var(--primary);
+  font-weight: 600;
+}
+.user-menu-item-danger {
+  color: var(--danger);
+}
+.user-menu-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.user-menu-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 4px 0;
+}
+
 /* ============ ROLE SWITCHER (dev tool) ============ */
 .role-switcher {
   background: var(--text-primary);
