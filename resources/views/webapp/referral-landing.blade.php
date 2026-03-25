@@ -49,7 +49,7 @@
             <div class="benefit-text"><strong>Quản lý dễ dàng</strong> qua Telegram — leads, deals, hoa hồng ngay trên điện thoại.</div>
         </div>
 
-        <a href="https://t.me/DalatBDSBot?start={{ $code }}" class="cta">
+        <a href="https://t.me/{{ config('services.telegram.bot_username', 'DalatBDSBot') }}?start={{ $code }}" class="cta">
             Tham gia qua Telegram
         </a>
         <div class="note">Mã giới thiệu sẽ được ghi nhận tự động khi bạn đăng ký.</div>

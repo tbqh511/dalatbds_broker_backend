@@ -198,6 +198,9 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
 // Public referral landing page
 Route::get('/ref/{code}', [TelegramWebAppController::class, 'referralLanding'])->name('referral.landing');
 
+// Smart property share redirect
+Route::get('/share/p/{id}', [TelegramWebAppController::class, 'propertyShareRedirect'])->name('property.share.redirect');
+
 //property controller
 Route::get('/property/{id}', [FrontEndPropertiesController::class , 'getPropertyById'])->name('property.showid');
 Route::get('/bds/{slug}', [FrontEndPropertiesController::class , 'show'])->name('bds.show');

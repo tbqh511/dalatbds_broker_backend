@@ -7,6 +7,7 @@
 <title>Đà Lạt BĐS — WebApp</title>
 <link rel="stylesheet" href="{{ asset('css/webapp-v2.css') }}?v={{ filemtime(public_path('css/webapp-v2.css')) }}">
 <style>[x-cloak]{display:none!important;}</style>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
@@ -74,6 +75,8 @@
     csrfToken: @json(csrf_token()),
     mapsKey: @json(config('services.google_maps.place_api_key')),
     likedPropertyIds: @json($likedIds ?? []),
+    telegramBotUsername: @json(config('services.telegram.bot_username')),
+    telegramWebappShortName: @json(config('services.telegram.webapp_short_name')),
     routes: {
       addListing: @json(route('webapp.add_listing')),
       addCustomer: @json(route('webapp.add_customer')),

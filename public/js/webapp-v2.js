@@ -144,20 +144,44 @@ window.propCallAction = function(propData, e) {
   .catch(function(){ showToast('Không thể kết nối, thử lại sau'); });
 };
 
-// Nút Chia sẻ trên prop-card: log → copy/share
+// ============ UNIFIED PROPERTY SHARE MODULE ============
+var _sharePropId = null, _sharePropTitle = null, _sharePropSlug = null;
+
+function openPropertyShareSheet(id, title, slug) {
+  _sharePropId = id; _sharePropTitle = title; _sharePropSlug = slug;
+  logAction('property', id, 'share', title);
+  document.getElementById('shareSheetOverlay').classList.add('open');
+}
+
+window.copyPropertyShareLink = function() {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var url;
+  if (tg && tg.initData) {
+    var cfg = window.WEBAPP_CONFIG || {};
+    url = 'https://t.me/' + (cfg.telegramBotUsername || 'DalatBDSBot')
+        + '/' + (cfg.telegramWebappShortName || 'dangtin')
+        + '?startapp=property_' + _sharePropId;
+  } else {
+    url = window.location.origin + '/share/p/' + _sharePropId;
+  }
+  if (navigator.clipboard) navigator.clipboard.writeText(url);
+  closeShareSheet();
+  showToast('Đã sao chép link BĐS!');
+};
+
+window.openSendFromShare = function() {
+  closeShareSheet();
+  openSendModal();
+};
+
+window.closeShareSheet = function() {
+  document.getElementById('shareSheetOverlay').classList.remove('open');
+};
+
+// Nút Chia sẻ trên prop-card: mở share sheet
 window.propShareAction = function(propData, e) {
   e.stopPropagation();
-  logAction('property', propData.id, 'share', propData.title);
-  const url = window.location.origin + '/property/' + propData.id;
-  const title = propData.title || 'BĐS Đà Lạt';
-  if (navigator.share) {
-    navigator.share({ title: title, url: url }).catch(function(){});
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(url);
-    showToast('Đã sao chép link BĐS!');
-  } else {
-    showToast('Đã sao chép link BĐS!');
-  }
+  openPropertyShareSheet(propData.id, propData.title, propData.slug);
 };
 
 // Nút Sửa trên prop-card: log → navigate to edit
@@ -2602,6 +2626,7 @@ let selectedDeal = null;
 let currentDetailPhone = null;  // host phone for callOwner
 let currentDetailPropId = null; // property id for logging
 let currentDetailTitle = null;  // property title for logging
+let currentDetailSlug = null;   // property slug for share links
 
 // ---- gallery helpers ----
 function buildGallery(images){
@@ -2646,6 +2671,7 @@ function populateBasic(d){
   // Store for logging
   currentDetailPropId = d.id || null;
   currentDetailTitle  = d.title || null;
+  currentDetailSlug   = d.slug || null;
 
   setDetailText('detailTitle', d.title||'Chi tiết BĐS');
   setDetailText('detailPrice', d.price||'--');
@@ -2913,6 +2939,7 @@ window.closeDetail = function(){
   document.querySelector('.app-header').style.zIndex='100';
   document.querySelector('.bottom-nav').style.transform='';
   closeSendModal();
+  closeShareSheet();
   closeBookingForm();
 };
 
@@ -3048,21 +3075,9 @@ function _applyBookmarkState(btn, liked, isDetailHeader){
   }
 }
 
-// share detail
+// share detail — mở share sheet thống nhất
 window.shareDetail = function(){
-  if(currentDetailPropId) {
-    logAction('property', currentDetailPropId, 'share', currentDetailTitle);
-  }
-  const url = window.location.origin + '/property/' + (currentDetailPropId || '');
-  const title = currentDetailTitle || 'BĐS Đà Lạt';
-  if(navigator.share){
-    navigator.share({ title: title, url: url }).catch(function(){});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(url);
-    showToast('Đã sao chép link!');
-  } else {
-    showToast('Đã sao chép link!');
-  }
+  openPropertyShareSheet(currentDetailPropId, currentDetailTitle, currentDetailSlug);
 };
 
 // full map logic
@@ -3305,6 +3320,11 @@ document.getElementById('sendModalOverlay')?.addEventListener('click',function(e
   if(e.target===this) closeSendModal();
 });
 
+// wire share-sheet close on backdrop
+document.getElementById('shareSheetOverlay')?.addEventListener('click',function(e){
+  if(e.target===this) closeShareSheet();
+});
+
 // ============ REFERRAL FUNCTIONS ============
 var _refData = null;
 var _refTreeAll = [];
@@ -3545,6 +3565,7 @@ function renderPropertyCard(p) {
 
   const propJson = JSON.stringify({
     id: p.id || null,
+    slug: p.slug || null,
     title: p.title || '',
     price: p.price || '',
     type: p.category_name || 'BĐS',
@@ -3592,6 +3613,19 @@ function renderPropertyCard(p) {
 }
 
 let homeFeedFilters = { type: '', category: '' };
+
+function refreshHomeFeed() {
+  const feed = document.getElementById('prop-feed');
+  const sentinel = document.getElementById('feed-sentinel');
+  if (!feed || !sentinel) return;
+  feed.innerHTML = '';
+  sentinel.dataset.page = '1';
+  sentinel.dataset.hasMore = 'true';
+  sentinel.dataset.loading = 'false';
+  const spinner = document.getElementById('feed-spinner');
+  if (spinner) spinner.style.display = '';
+  loadHomeFeedPage();
+}
 
 window.resetHomeFeed = function(chip) {
   const bar = document.getElementById('home-filter-bar');
@@ -3955,6 +3989,7 @@ window.mybdsToggleStatus = function(id, currentStatus) {
         showToast(msg);
         mybdsLoaded = false;
         loadMyBds(true);
+        refreshHomeFeed();
       } else {
         showToast(res.message || 'Lỗi cập nhật trạng thái');
       }
@@ -3978,6 +4013,7 @@ window.mybdsDelete = function(id) {
         showToast('Đã xóa tin đăng');
         mybdsLoaded = false;
         loadMyBds(true);
+        refreshHomeFeed();
       } else {
         showToast(res.message || 'Lỗi xóa tin');
       }
@@ -6036,3 +6072,22 @@ window.activityApp = function() {
     }
   };
 };
+
+// ============ TELEGRAM DEEP LINK (startapp) HANDLING ============
+(function handleDeepLink() {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.start_param) return;
+  var param = tg.initDataUnsafe.start_param;
+
+  if (param.indexOf('property_') === 0) {
+    var propId = parseInt(param.substring(9));
+    if (propId) {
+      setTimeout(function() { openDetail({ id: propId }); }, 500);
+    }
+  } else if (param.indexOf('ref_') === 0) {
+    var refCode = param.substring(4);
+    if (refCode) {
+      sessionStorage.setItem('referral_code', refCode);
+    }
+  }
+})();

@@ -585,6 +585,48 @@
   </div>
 </div>
 
+<!-- SHARE SHEET OVERLAY -->
+<div class="send-modal-overlay" id="shareSheetOverlay">
+  <div class="send-modal">
+    <div class="send-modal-handle"></div>
+    <div class="send-modal-title"><span style="display:inline-flex;align-items:center;gap:6px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+        <polyline points="16 6 12 2 8 6"/>
+        <line x1="12" y1="2" x2="12" y2="15"/>
+      </svg> Chia se BDS</span>
+    </div>
+    <!-- Option 1: Copy link -->
+    <div class="deal-pick-item" onclick="copyPropertyShareLink()" style="cursor:pointer;">
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="deal-pick-name">Copy link chia se BDS</div>
+        <div class="deal-pick-meta">Sao chep link de gui cho bat ky ai</div>
+      </div>
+    </div>
+    <!-- Option 2: Gui cho khach (chi sale/admin thay) -->
+    <div class="deal-pick-item role-sale role-sale_admin role-bds_admin role-admin" onclick="openSendFromShare()" style="cursor:pointer;">
+      <div style="width:40px;height:40px;border-radius:12px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="deal-pick-name">Gui BDS cho khach</div>
+        <div class="deal-pick-meta">Chon deal de gui BDS nay cho khach</div>
+      </div>
+    </div>
+    <button onclick="closeShareSheet()"
+      style="display:block;width:calc(100% - 40px);margin:10px 20px 0;padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:14px;color:var(--text-secondary);">Huy</button>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast">✓ Đã lưu bookmark</div>
 

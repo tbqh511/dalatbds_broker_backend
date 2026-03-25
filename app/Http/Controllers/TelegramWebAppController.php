@@ -874,6 +874,7 @@ class TelegramWebAppController extends Controller
             'facilities'     => $facilities,
             'host'           => $hostData,
             'broker'         => $broker,
+            'slug'           => $property->slug,
             'similar'        => $similar,
         ]);
     }
@@ -982,6 +983,7 @@ class TelegramWebAppController extends Controller
                 'type_label'     => $p->type,
                 'property_type'  => $p->property_type,
                 'gallery_images' => $galleryImages,
+                'slug'           => $p->slug,
                 'added_by'       => $p->added_by,
             ];
         });
@@ -3959,7 +3961,10 @@ class TelegramWebAppController extends Controller
             $customer->save();
         }
 
-        $shareUrl = url('/ref/' . $customer->referral_code);
+        $botUsername = config('services.telegram.bot_username', 'DalatBDSBot');
+        $webappShortName = config('services.telegram.webapp_short_name', 'dangtin');
+
+        $shareUrl = "https://t.me/{$botUsername}/{$webappShortName}?startapp=ref_{$customer->referral_code}";
         $telegramShareUrl = 'https://t.me/share/url?url=' . urlencode($shareUrl)
             . '&text=' . urlencode('Tham gia Đà Lạt BĐS với mã giới thiệu ' . $customer->referral_code . '. Đăng ký ngay!');
 
@@ -4111,5 +4116,16 @@ class TelegramWebAppController extends Controller
         session(['referral_code' => $code]);
 
         return view('webapp.referral-landing', compact('referrer', 'code'));
+    }
+
+    /**
+     * GET /share/p/{id}
+     * Smart redirect: browser → public property page (/bds/{slug})
+     */
+    public function propertyShareRedirect($id)
+    {
+        $property = Property::findOrFail($id);
+
+        return redirect(route('bds.show', $property->slug));
     }
 }

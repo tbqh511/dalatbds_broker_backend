@@ -193,6 +193,7 @@
               'priceM2'   => $p->formatted_price_m2 ?? '',
               'direction' => $p->direction ?? '—',
               'transactionType' => $p->property_type == 1 ? 'rent' : 'sale',
+              'slug'  => $p->slug,
             ];
           @endphp
           <div class="prop-card"
