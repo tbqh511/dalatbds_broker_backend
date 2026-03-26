@@ -995,12 +995,15 @@ class TelegramWebAppController extends Controller
         ]);
     }
 
-    public function searchResults(Request $request)
+    /**
+     * Build the base search query with all filters applied.
+     * Shared by searchResults() and searchResultsMap().
+     */
+    private function buildSearchQuery(Request $request)
     {
         $q = trim($request->get('q', ''));
-        $page = (int) $request->get('page', 1);
 
-        $query = Property::with(['category', 'ward', 'host', 'propery_image'])
+        $query = Property::with(['category', 'ward', 'host'])
             ->where('status', 1);
 
         // Default sort
@@ -1008,7 +1011,6 @@ class TelegramWebAppController extends Controller
 
         if ($q !== '') {
             $query->where(function ($qBuilder) use ($q) {
-                // Bỏ chữ "Đường " hoặc "Đ. " hoặc "Phường " ở đầu để search linh hoạt hơn
                 $streetQ = trim(preg_replace('/^(Đường|đường|Đ\.|đ\.)\s+/iu', '', $q));
                 $wardQ = trim(preg_replace('/^(Phường|phường|P\.|p\.|Xã|xã|X\.|x\.)\s+/iu', '', $q));
 
@@ -1054,7 +1056,7 @@ class TelegramWebAppController extends Controller
                 $query->where('price', '>', 10000000000);
             }
         }
-        
+
         // Filter: category name
         $categoryName = $request->get('categoryName');
         if ($categoryName) {
@@ -1143,6 +1145,16 @@ class TelegramWebAppController extends Controller
                 break;
         }
 
+        return $query;
+    }
+
+    public function searchResults(Request $request)
+    {
+        $page = (int) $request->get('page', 1);
+
+        $query = $this->buildSearchQuery($request);
+        $query->with('propery_image');
+
         $paginator = $query->paginate(10, ['*'], 'page', $page);
 
         $galleryBase = url('') . config('global.IMG_PATH') . config('global.PROPERTY_GALLERY_IMG_PATH');
@@ -1171,6 +1183,8 @@ class TelegramWebAppController extends Controller
                 'created_at_diff' => \Carbon\Carbon::parse($p->created_at)->diffForHumans(),
                 'added_by'       => $p->added_by,
                 'host_phone'     => optional($p->host)->contact,
+                'latitude'       => $p->latitude ? (float) $p->latitude : null,
+                'longitude'      => $p->longitude ? (float) $p->longitude : null,
             ];
         });
 
@@ -1180,6 +1194,47 @@ class TelegramWebAppController extends Controller
             'total'      => $paginator->total(),
             'has_more'   => $paginator->hasMorePages(),
             'next_page'  => $paginator->currentPage() + 1,
+        ]);
+    }
+
+    /**
+     * Return all matching properties with coordinates for the map view (max 200).
+     */
+    public function searchResultsMap(Request $request)
+    {
+        $query = $this->buildSearchQuery($request);
+        $totalAll = (clone $query)->count();
+
+        $query->whereNotNull('latitude')
+              ->whereNotNull('longitude')
+              ->where('latitude', '!=', '')
+              ->where('longitude', '!=', '');
+
+        $items = $query->limit(200)->get()->map(function ($p) {
+            return [
+                'id'             => $p->id,
+                'title'          => $p->title_by_address,
+                'price'          => $p->formatted_prices,
+                'price_raw'      => $p->price,
+                'location'       => $p->address_location,
+                'area'           => $p->area,
+                'legal'          => $p->legal,
+                'category_name'  => $p->category?->category,
+                'type_label'     => $p->type,
+                'property_type'  => $p->property_type,
+                'title_image'    => $p->title_image ?: null,
+                'latitude'       => (float) $p->latitude,
+                'longitude'      => (float) $p->longitude,
+                'number_room'    => $p->number_room,
+                'host_phone'     => optional($p->host)->contact,
+            ];
+        });
+
+        return response()->json([
+            'success'          => true,
+            'properties'       => $items,
+            'total'            => $totalAll,
+            'total_with_coords' => $items->count(),
         ]);
     }
 

@@ -2379,6 +2379,16 @@ img {
   border-top-color: var(--warning);
 }
 
+/* Search map pin overrides (inside AdvancedMarkerElement, positioned by Google Maps) */
+.search-map-pin {
+  position: relative !important;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.search-map-pin.active {
+  transform: scale(1.1);
+}
+
 /* Map bottom card */
 .map-bottom-card {
   background: var(--bg-card);

@@ -168,7 +168,7 @@
             </div>
             <div class="view-toggle">
               <button class="view-btn active" id="viewList" onclick="switchView('list')">☰</button>
-              <button class="view-btn" id="viewMap" onclick="switchView('map')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></button>
+              <button class="view-btn role-sale role-bds_admin role-sale_admin role-admin" id="viewMap" onclick="switchView('map')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></button>
             </div>
           </div>
         </div>
@@ -367,75 +367,30 @@
 
       </div><!-- end listView -->
 
-      <!-- MAP VIEW (fake) -->
-      <div id="mapView" style="display:none;">
-        <div style="height:420px;background:linear-gradient(180deg,#e8f4f0 0%,#d1e8e0 100%);position:relative;overflow:hidden;margin:0 0 0 0;">
-          <!-- Fake map grid -->
-          <div style="position:absolute;inset:0;opacity:0.3;">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#aac" stroke-width="0.5"/></pattern></defs>
-              <rect width="100%" height="100%" fill="url(#grid)"/>
-              <!-- Fake roads -->
-              <line x1="0" y1="180" x2="430" y2="160" stroke="#fff" stroke-width="6" opacity="0.8"/>
-              <line x1="0" y1="280" x2="430" y2="260" stroke="#fff" stroke-width="4" opacity="0.7"/>
-              <line x1="120" y1="0" x2="100" y2="420" stroke="#fff" stroke-width="5" opacity="0.8"/>
-              <line x1="280" y1="0" x2="260" y2="420" stroke="#fff" stroke-width="3" opacity="0.6"/>
-              <!-- Fake blocks -->
-              <rect x="20" y="60" width="80" height="100" rx="4" fill="#c8ddd5" opacity="0.7"/>
-              <rect x="140" y="40" width="100" height="120" rx="4" fill="#c8ddd5" opacity="0.7"/>
-              <rect x="300" y="70" width="110" height="80" rx="4" fill="#c8ddd5" opacity="0.7"/>
-              <rect x="20" y="210" width="75" height="60" rx="4" fill="#c8ddd5" opacity="0.7"/>
-              <rect x="140" y="200" width="90" height="50" rx="4" fill="#c8ddd5" opacity="0.7"/>
-              <rect x="290" y="195" width="120" height="55" rx="4" fill="#c8ddd5" opacity="0.7"/>
-              <rect x="30" y="310" width="60" height="80" rx="4" fill="#c8ddd5" opacity="0.7"/>
-              <rect x="140" y="300" width="100" height="90" rx="4" fill="#c8ddd5" opacity="0.7"/>
-              <rect x="290" y="305" width="115" height="85" rx="4" fill="#c8ddd5" opacity="0.7"/>
-            </svg>
-          </div>
-          <!-- Price pins -->
-          <div class="map-pin" style="left:60px;top:130px;" onclick="showMapCard(0)">1,000tr</div>
-          <div class="map-pin active" style="left:170px;top:90px;" onclick="showMapCard(1)">2,800tr</div>
-          <div class="map-pin" style="left:310px;top:120px;" onclick="showMapCard(2)">3,200tr</div>
-          <div class="map-pin featured" style="left:55px;top:240px;" onclick="showMapCard(3)">8,500tr <svg width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="1.5" style="vertical-align:middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-          <div class="map-pin" style="left:185px;top:250px;" onclick="showMapCard(4)">1,500tr</div>
-          <div class="map-pin" style="left:300px;top:230px;" onclick="showMapCard(5)">15,000tr</div>
-          <div class="map-pin" style="left:90px;top:340px;" onclick="showMapCard(6)">650tr</div>
-          <div class="map-pin" style="left:220px;top:330px;" onclick="showMapCard(7)">4,200tr</div>
+      <!-- MAP VIEW (real Google Maps) -->
+      <div id="mapView" style="display:none;" class="role-sale role-bds_admin role-sale_admin role-admin">
+        <div style="position:relative;">
+          <!-- Map canvas -->
+          <div id="searchMapCanvas" style="height:calc(100vh - 220px);width:100%;"></div>
 
-          <!-- Map controls -->
-          <div style="position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:6px;">
-            <button style="width:34px;height:34px;background:#fff;border:none;border-radius:8px;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;">＋</button>
-            <button style="width:34px;height:34px;background:#fff;border:none;border-radius:8px;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;">－</button>
+          <!-- My Location button -->
+          <button id="myLocationBtn" onclick="goToMyLocation()" style="position:absolute;top:12px;left:12px;background:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:pointer;display:flex;align-items:center;gap:5px;z-index:5;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Vị trí của tôi
+          </button>
+
+          <!-- Property count badge -->
+          <div id="mapPropertyCount" style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#fff;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:600;color:var(--text-secondary);box-shadow:0 2px 8px rgba(0,0,0,0.12);z-index:5;"></div>
+
+          <!-- Loading overlay -->
+          <div id="mapLoading" style="position:absolute;inset:0;background:rgba(255,255,255,0.7);display:none;align-items:center;justify-content:center;z-index:10;">
+            <div class="spinner" style="width:32px;height:32px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
           </div>
-          <button style="position:absolute;top:12px;left:12px;background:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:pointer;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Vị trí của tôi</button>
-          <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#fff;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:600;color:var(--text-secondary);box-shadow:0 2px 8px rgba(0,0,0,0.12);">8 bất động sản trong khu vực này</div>
         </div>
 
-        <!-- Map bottom card -->
-        <div class="map-bottom-card" id="mapBottomCard">
+        <!-- Map bottom card (hidden by default) -->
+        <div class="map-bottom-card" id="mapBottomCard" style="display:none;">
           <div class="mbc-handle"></div>
-          <div style="display:flex;gap:12px;padding:0 4px;">
-            <div style="width:70px;height:70px;border-radius:10px;overflow:hidden;flex-shrink:0;">
-              <div class="img-prop3" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg></div>
-            </div>
-            <div style="flex:1;min-width:0;">
-              <div style="display:flex;gap:5px;margin-bottom:4px;">
-                <span class="badge badge-amber" style="font-size:9px;">Nhà phố</span>
-                <span class="badge badge-purple" style="font-size:9px;">Thương lượng</span>
-              </div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:2px;line-height:1.3;">Nhà mặt tiền Trần Phú gần chợ Đà Lạt</div>
-              <div style="font-size:14px;font-weight:700;color:var(--primary);">2,800 triệu</div>
-              <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;display:flex;align-items:center;gap:5px;"><span style="display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>120m²</span> · <span style="display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>4PN</span> · Sổ hồng</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-            <button style="flex:1;min-width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);">Xem chi tiết</button>
-            <!-- Guest: Đăng ký + Gửi yêu cầu -->
-            <button style="flex:1;min-width:80px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-guest"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Đăng ký</span></button>
-            <button style="flex:1;min-width:80px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-guest"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi</span></button>
-            <!-- Broker: Gửi yêu cầu -->
-            <button style="flex:1;min-width:100px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" class="role-broker"><span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi yêu cầu</span></button>
-          </div>
+          <div id="mapBottomCardContent"></div>
         </div>
       </div><!-- end mapView -->
 

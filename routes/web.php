@@ -87,6 +87,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/home-feed', [TelegramWebAppController::class , 'homeFeed'])->name('webapp.home_feed');
     Route::get('/webapp/search/suggestions', [TelegramWebAppController::class, 'searchSuggestions'])->name('webapp.search.suggestions');
     Route::get('/webapp/search/results', [TelegramWebAppController::class, 'searchResults'])->name('webapp.search.results');
+    Route::get('/webapp/search/results/map', [TelegramWebAppController::class, 'searchResultsMap'])->name('webapp.search.results.map');
     Route::get('/webapp/search/leads', [TelegramWebAppController::class, 'searchLeads'])->name('webapp.search.leads');
     Route::get('/webapp/search/areas', [TelegramWebAppController::class, 'searchAreas'])->name('webapp.search.areas');
     Route::post('/webapp/log-action', [TelegramWebAppController::class, 'logAction'])->name('webapp.log_action');

@@ -2053,6 +2053,11 @@ window.doSearch = function(query, chipEl, append = false, page = 1){
   setState('results');
   
   if(!append) {
+      // Invalidate map so it reloads when user switches to map view
+      searchMapNeedsReload = true;
+      searchMapData = [];
+      hideMapBottomCard();
+
       switchView('list');
       document.getElementById('scrollArea').scrollTop = 0;
       document.getElementById('listView').innerHTML = '<div style="padding:20px;text-align:center;"><div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div><div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">Đang tìm kiếm...</div></div>';
@@ -2208,11 +2213,305 @@ window.addActiveFilter = function(txt) {
     }
 };
 
+// ============ SEARCH MAP ============
+let searchMap = null;
+let searchMapMarkers = [];
+let searchMapData = [];
+let myLocationMarker = null;
+let activeSearchMarkerIdx = -1;
+let searchMapNeedsReload = true;
+
 window.switchView = function(view){
   document.getElementById('listView').style.display = view==='list'?'block':'none';
   document.getElementById('mapView').style.display = view==='map'?'block':'none';
   document.getElementById('viewList').classList.toggle('active', view==='list');
   document.getElementById('viewMap').classList.toggle('active', view==='map');
+
+  if(view === 'map' && searchMapNeedsReload) {
+    loadSearchMap();
+  }
+};
+
+function buildCurrentSearchParams() {
+  let params = [];
+  const input = document.getElementById('searchInput');
+  const query = input ? input.value : '';
+  if(query && query !== 'Tất cả') params.push('q=' + encodeURIComponent(query));
+
+  // Use currentFilters (already declared elsewhere in this file)
+  if(currentFilters.price) params.push('price=' + encodeURIComponent(currentFilters.price));
+  if(currentFilters.categoryName) params.push('categoryName=' + encodeURIComponent(currentFilters.categoryName));
+  if(currentSort && currentSort !== 'latest') params.push('sort=' + encodeURIComponent(currentSort));
+  if(currentFilters.property_type) params.push('type=' + encodeURIComponent(currentFilters.property_type));
+  if(currentFilters.location) params.push('location=' + encodeURIComponent(currentFilters.location));
+  if(currentFilters.area) params.push('area_range=' + encodeURIComponent(currentFilters.area));
+  if(currentFilters.direction) params.push('direction=' + encodeURIComponent(currentFilters.direction));
+  if(currentFilters.legal) params.push('legal=' + encodeURIComponent(currentFilters.legal));
+
+  // Also check active filter chips for price/category not yet in currentFilters
+  const activeChips = document.getElementById('activeFilters').querySelectorAll('.af-chip');
+  activeChips.forEach(c => {
+    let txt = c.textContent.replace('×', '').trim();
+    if(!currentFilters.price && (c.dataset.filterType === 'price' || txt.includes('tỷ'))) {
+      params.push('price=' + encodeURIComponent(txt));
+    } else if(!currentFilters.categoryName && c.dataset.filterType === 'category') {
+      params.push('categoryName=' + encodeURIComponent(txt));
+    }
+  });
+
+  return params.join('&');
+}
+
+function loadSearchMap() {
+  const params = buildCurrentSearchParams();
+
+  const loadingEl = document.getElementById('mapLoading');
+  if(loadingEl) loadingEl.style.display = 'flex';
+
+  fetch('/webapp/search/results/map?' + params)
+    .then(r => r.json())
+    .then(res => {
+      if(res.success) {
+        searchMapData = res.properties;
+        searchMapNeedsReload = false;
+        initSearchMap(res.properties, res.total, res.total_with_coords);
+      }
+      if(loadingEl) loadingEl.style.display = 'none';
+    })
+    .catch(() => {
+      if(loadingEl) loadingEl.style.display = 'none';
+      showToast('Không thể tải bản đồ');
+    });
+}
+
+function initSearchMap(properties, total, totalWithCoords) {
+  const defaultCenter = { lat: 11.9404, lng: 108.4583 };
+  const hasAdvancedMarkers = !!(window.google && google.maps.marker && google.maps.marker.AdvancedMarkerElement);
+
+  if(!searchMap) {
+    const mapOptions = {
+      center: defaultCenter,
+      zoom: 14,
+      mapTypeControl: false,
+      zoomControl: true,
+      zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+      streetViewControl: false,
+      fullscreenControl: false
+    };
+    if(hasAdvancedMarkers) {
+      mapOptions.mapId = 'search_map';
+    }
+    searchMap = new google.maps.Map(document.getElementById('searchMapCanvas'), mapOptions);
+
+    // Click on map to hide bottom card
+    searchMap.addListener('click', function() {
+      hideMapBottomCard();
+    });
+  }
+
+  // Clear existing markers
+  searchMapMarkers.forEach(m => {
+    if(m.setMap) m.setMap(null); // legacy Marker
+    else if(m.map !== undefined) m.map = null; // AdvancedMarkerElement
+  });
+  searchMapMarkers = [];
+  activeSearchMarkerIdx = -1;
+  hideMapBottomCard();
+
+  if(properties.length === 0) {
+    document.getElementById('mapPropertyCount').textContent = '0/' + total + ' BĐS có tọa độ';
+    searchMap.setCenter(defaultCenter);
+    searchMap.setZoom(14);
+    return;
+  }
+
+  const bounds = new google.maps.LatLngBounds();
+
+  properties.forEach((p, idx) => {
+    const lat = parseFloat(p.latitude);
+    const lng = parseFloat(p.longitude);
+    if(isNaN(lat) || isNaN(lng)) return;
+
+    const pos = { lat: lat, lng: lng };
+
+    if(hasAdvancedMarkers) {
+      // Create price pin HTML element
+      const pinEl = document.createElement('div');
+      pinEl.className = 'map-pin search-map-pin';
+      pinEl.textContent = p.price;
+      pinEl.dataset.idx = idx;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map: searchMap,
+        position: pos,
+        content: pinEl,
+        title: p.title
+      });
+
+      marker.addListener('click', () => {
+        selectSearchMarker(idx, pinEl);
+      });
+
+      marker._pinEl = pinEl;
+      searchMapMarkers.push(marker);
+    } else {
+      // Fallback: regular Marker with label
+      const marker = new google.maps.Marker({
+        position: pos,
+        map: searchMap,
+        label: { text: p.price, fontSize: '10px', fontWeight: '700', color: '#fff' },
+        title: p.title,
+        icon: {
+          url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+          scaledSize: new google.maps.Size(32, 32)
+        }
+      });
+
+      marker.addListener('click', () => {
+        selectSearchMarker(idx, null);
+      });
+
+      searchMapMarkers.push(marker);
+    }
+
+    bounds.extend(pos);
+  });
+
+  // Update count badge
+  document.getElementById('mapPropertyCount').textContent =
+    totalWithCoords + '/' + total + ' BĐS trong khu vực';
+
+  // Fit bounds
+  if(!bounds.isEmpty()) {
+    searchMap.fitBounds(bounds, { top: 60, bottom: 100, left: 20, right: 20 });
+    google.maps.event.addListenerOnce(searchMap, 'bounds_changed', function() {
+      if(this.getZoom() > 16) this.setZoom(16);
+    });
+  }
+}
+
+function selectSearchMarker(idx, pinEl) {
+  // Deselect previous
+  searchMapMarkers.forEach(m => {
+    if(m._pinEl) m._pinEl.classList.remove('active');
+  });
+
+  // Select current
+  if(pinEl) pinEl.classList.add('active');
+  activeSearchMarkerIdx = idx;
+
+  // Pan map
+  const p = searchMapData[idx];
+  if(p) {
+    searchMap.panTo({ lat: parseFloat(p.latitude), lng: parseFloat(p.longitude) });
+    renderMapBottomCard(p);
+  }
+}
+
+function renderMapBottomCard(p) {
+  const card = document.getElementById('mapBottomCard');
+  const content = document.getElementById('mapBottomCardContent');
+
+  const imgHtml = p.title_image
+    ? '<img src="' + escHtml(p.title_image) + '" style="width:100%;height:100%;object-fit:cover;display:block;" alt="">'
+    : '<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1e2a3a;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>';
+
+  let tagsHtml = '';
+  if(p.category_name) tagsHtml += '<span class="badge badge-blue" style="font-size:9px;">' + escHtml(p.category_name) + '</span>';
+  if(p.type_label) tagsHtml += '<span class="badge badge-green" style="font-size:9px;margin-left:4px;">' + escHtml(p.type_label) + '</span>';
+
+  let metaParts = [];
+  if(p.area) metaParts.push(escHtml(p.area));
+  if(p.number_room) metaParts.push(p.number_room + 'PN');
+  if(p.legal) metaParts.push(escHtml(p.legal));
+
+  content.innerHTML =
+    '<div style="display:flex;gap:12px;padding:0 4px;cursor:pointer;" onclick="hideMapBottomCard(); openDetail({id:' + p.id + '})">' +
+      '<div style="width:70px;height:70px;border-radius:10px;overflow:hidden;flex-shrink:0;">' + imgHtml + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="display:flex;gap:5px;margin-bottom:4px;">' + tagsHtml + '</div>' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:2px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(p.title) + '</div>' +
+        '<div style="font-size:14px;font-weight:700;color:var(--primary);">' + escHtml(p.price) + '</div>' +
+        '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">' + metaParts.join(' · ') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:12px;">' +
+      '<button style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);" onclick="hideMapBottomCard(); openDetail({id:' + p.id + '})">Xem chi tiết</button>' +
+      '<button style="flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" onclick="event.stopPropagation();careForProperty(' + p.id + ',\'' + escHtml(p.title).replace(/'/g, "\\'") + '\')">' +
+        '<span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span>' +
+      '</button>' +
+    '</div>';
+
+  card.style.display = 'block';
+}
+
+function hideMapBottomCard() {
+  const card = document.getElementById('mapBottomCard');
+  if(card) card.style.display = 'none';
+  // Deselect markers
+  searchMapMarkers.forEach(m => {
+    if(m._pinEl) m._pinEl.classList.remove('active');
+  });
+  activeSearchMarkerIdx = -1;
+}
+
+window.goToMyLocation = function() {
+  if(!navigator.geolocation) {
+    showToast('Trình duyệt không hỗ trợ định vị');
+    return;
+  }
+  if(!searchMap) return;
+
+  const btn = document.getElementById('myLocationBtn');
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '<div class="spinner" style="width:12px;height:12px;border:2px solid #ccc;border-top:2px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;display:inline-block;"></div> Đang định vị...';
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      const myPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      const hasAdvancedMarkers = !!(google.maps.marker && google.maps.marker.AdvancedMarkerElement);
+
+      // Remove old my-location marker
+      if(myLocationMarker) {
+        if(myLocationMarker.setMap) myLocationMarker.setMap(null);
+        else if(myLocationMarker.map !== undefined) myLocationMarker.map = null;
+      }
+
+      if(hasAdvancedMarkers) {
+        const dotEl = document.createElement('div');
+        dotEl.style.cssText = 'width:16px;height:16px;background:#4285f4;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(66,133,244,0.5);';
+        myLocationMarker = new google.maps.marker.AdvancedMarkerElement({
+          map: searchMap,
+          position: myPos,
+          content: dotEl,
+          title: 'Vị trí của tôi'
+        });
+      } else {
+        myLocationMarker = new google.maps.Marker({
+          map: searchMap,
+          position: myPos,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: '#4285f4',
+            fillOpacity: 1,
+            strokeColor: '#fff',
+            strokeWeight: 3
+          },
+          title: 'Vị trí của tôi'
+        });
+      }
+
+      searchMap.panTo(myPos);
+      searchMap.setZoom(15);
+      btn.innerHTML = origHtml;
+    },
+    function() {
+      showToast('Không thể lấy vị trí. Vui lòng cho phép truy cập vị trí.');
+      btn.innerHTML = origHtml;
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
 };
 
 let currentSearchMode = 'bds';
