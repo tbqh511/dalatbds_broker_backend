@@ -5687,7 +5687,8 @@ var _NP_TYPE_SUBPAGE = {
   booking_reminder:'bookings', booking_result:'bookings', booking_changed:'bookings',
   property_approved:'mybds', property_rejected:'mybds', property_pending:'approvebds',
   commission_status:'commissions', commission_completed:'commissions',
-  deal_created:'deals', deal_stuck:'deals', deal_status:'deals'
+  deal_created:'deals', deal_stuck:'deals', deal_status:'deals',
+  referral_new_signup:'referral'
 };
 
 window.toggleNotifPanel = function(e) {
@@ -5862,7 +5863,8 @@ window.activityApp = function() {
     activity: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
     eye: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
     phone: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
-    'check-circle': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    'check-circle': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    gift: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>'
   };
 
   // Action button configs per notification type
@@ -5911,6 +5913,9 @@ window.activityApp = function() {
     ],
     deal_status: [
       { label: 'Xem Deal', primary: true, icon: 'clipboard', subpage: 'deals' }
+    ],
+    referral_new_signup: [
+      { label: 'Xem mạng lưới', primary: true, icon: 'gift', subpage: 'referral' }
     ]
   };
 
@@ -5920,7 +5925,8 @@ window.activityApp = function() {
     booking_reminder: 'bookings', booking_result: 'bookings', booking_changed: 'bookings',
     property_approved: 'mybds', property_rejected: 'mybds', property_pending: 'approvebds',
     commission_status: 'commissions', commission_completed: 'commissions',
-    deal_created: 'deals', deal_stuck: 'deals', deal_status: 'deals'
+    deal_created: 'deals', deal_stuck: 'deals', deal_status: 'deals',
+    referral_new_signup: 'referral'
   };
 
   return {

@@ -166,6 +166,10 @@ class InAppNotificationService
                 'icon_bg' => 'var(--primary-light)',
                 'icon'    => 'activity',
             ],
+            'referral_new_signup' => [
+                'icon_bg' => 'var(--purple-light, rgba(124,58,237,0.12))',
+                'icon'    => 'gift',
+            ],
         ];
 
         return $configs[$type] ?? ['icon_bg' => 'var(--primary-light)', 'icon' => 'bell'];

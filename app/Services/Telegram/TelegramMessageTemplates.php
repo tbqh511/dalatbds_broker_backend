@@ -256,6 +256,23 @@ class TelegramMessageTemplates
     }
 
     /**
+     * Người mới đăng ký qua referral code
+     */
+    public static function referralNewSignup(Customer $referrer, Customer $newUser): string
+    {
+        $name = self::escape($newUser->name ?? 'Thành viên mới');
+        $code = self::escape($referrer->referral_code ?? '');
+
+        return "🎉 *THÀNH VIÊN MỚI QUA GIỚI THIỆU*\n" .
+               "────────────────\n" .
+               "👤 Người đăng ký: {$name}\n" .
+               "🔗 Mã giới thiệu: `{$code}`\n" .
+               "📅 Thời gian: " . now()->format('d/m/Y H:i') . "\n" .
+               "────────────────\n" .
+               "🎁 Bạn sẽ nhận 5% thu nhập hoa hồng từ người này\\!";
+    }
+
+    /**
      * Helper to escape special characters for MarkdownV2
      * Characters to escape: _ * [ ] ( ) ~ ` > # + - = | { } . !
      */

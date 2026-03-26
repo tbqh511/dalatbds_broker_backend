@@ -57,6 +57,7 @@ class Customer extends Authenticatable implements JWTSubject
         'booking'  => ['day_before' => true, 'hour_before' => true, 'result' => true, 'channels' => ['telegram', 'in_app']],
         'commission' => ['approved' => true, 'status' => true, 'channels' => ['telegram', 'in_app', 'zalo']],
         'property' => ['status' => true, 'interest' => true, 'expiry' => false, 'channels' => ['telegram', 'in_app']],
+        'referral' => ['new_signup' => true, 'channels' => ['telegram', 'in_app']],
         'market'   => ['news' => true, 'ai_suggest' => true, 'promotions' => false],
         'quiet_hours' => ['enabled' => true, 'start' => '22:00', 'end' => '07:00'],
     ];

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Services\NotificationService;
+use App\Services\InAppNotificationService;
 use Exception;
 
 class UserService
@@ -166,17 +168,25 @@ class UserService
                     $cacheKey = "pending_referral:{$data['telegram_id']}";
                     $refCode = \Cache::pull($cacheKey); // pull = get + delete
                 }
+                $referrer = null;
                 if (!empty($refCode)) {
                     $referrer = Customer::where('referral_code', $refCode)->first();
                     if ($referrer && $referrer->id !== $customer->id) {
                         $customer->referred_by = $referrer->id;
                         \Log::info("Referral assigned: new Customer referred by #{$referrer->id} (code: {$refCode})");
+                    } else {
+                        $referrer = null;
                     }
                 }
 
                 $customer->save();
-                
+
                 Log::info("Auto-registered new customer via API Login: ID {$customer->id}, Phone: {$customer->mobile}");
+
+                // Gửi thông báo cho người giới thiệu
+                if ($referrer) {
+                    $this->sendReferralNotification($referrer, $customer);
+                }
                 
             } catch (\Exception $e) {
                 Log::error("Auto-registration failed: " . $e->getMessage());
@@ -288,5 +298,44 @@ class UserService
     public function getProfile(Customer $customer)
     {
         return $customer;
+    }
+
+    /**
+     * Gửi thông báo Telegram + in-app cho người giới thiệu.
+     */
+    private function sendReferralNotification(Customer $referrer, Customer $newUser): void
+    {
+        try {
+            $notifService = app(NotificationService::class);
+            $inAppService = app(InAppNotificationService::class);
+
+            // 1. Telegram message
+            if ($referrer->telegram_id && $notifService->shouldNotify($referrer, 'referral', 'new_signup', 'telegram')) {
+                $message = \App\Services\Telegram\TelegramMessageTemplates::referralNewSignup($referrer, $newUser);
+                $notifService->sendToCustomer($referrer, $message);
+            }
+
+            // 2. In-app notification
+            $inAppService->notify(
+                $referrer,
+                'referral_new_signup',
+                'referral',
+                'new_signup',
+                [
+                    'title' => 'Có người đăng ký qua mã giới thiệu của bạn!',
+                    'body'  => ($newUser->name ?? 'Thành viên mới') . ' vừa tham gia Đà Lạt BĐS qua link của bạn.',
+                    'notifiable_type' => Customer::class,
+                    'notifiable_id'   => $newUser->id,
+                    'actor_id'        => $newUser->id,
+                    'data'  => [
+                        'referred_id'   => $newUser->id,
+                        'referred_name' => $newUser->name ?? '',
+                        'referral_code' => $referrer->referral_code,
+                    ],
+                ]
+            );
+        } catch (\Exception $e) {
+            Log::error("Referral notification failed: " . $e->getMessage());
+        }
     }
 }
