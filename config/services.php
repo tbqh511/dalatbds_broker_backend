@@ -40,7 +40,7 @@ return [
     'telegram' => [
         'bot_token'      => env('TELEGRAM_BOT_TOKEN'),
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
-        'bot_username'   => env('TELEGRAM_BOT_USERNAME', 'DalatBDSBot'),
+        'bot_username'   => env('TELEGRAM_BOT_USERNAME', 'dalatbds_telegram_bot'),
         'webapp_short_name' => env('TELEGRAM_WEBAPP_SHORT_NAME', 'dangtin'),
         'groups' => [
             'public_channel' => env('TELEGRAM_PUBLIC_CHANNEL_ID'),

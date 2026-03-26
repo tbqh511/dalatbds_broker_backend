@@ -7947,6 +7947,7 @@ textarea.form-row-value {
   opacity: 0.75;
   margin-bottom: 6px;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .ref-hero-title {
@@ -7954,47 +7955,67 @@ textarea.form-row-value {
   font-weight: 800;
   margin-bottom: 4px;
   line-height: 1.2;
+  text-align: center;
 }
 
 .ref-hero-sub {
   font-size: 12px;
   opacity: 0.8;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   line-height: 1.5;
+  text-align: center;
 }
 
-.ref-code-box {
+.ref-qr-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.ref-qr-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ref-qr-box img,
+.ref-qr-box canvas,
+.ref-qr-box table {
+  display: block;
+}
+
+.ref-code-compact {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1.5px dashed rgba(255, 255, 255, 0.4);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  backdrop-filter: blur(4px);
+  justify-content: center;
+  gap: 8px;
 }
 
-.ref-code-val {
-  flex: 1;
-  font-size: 18px;
+.ref-code-val-sm {
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   font-family: 'Courier New', monospace;
+  opacity: 0.9;
 }
 
-.ref-copy-btn {
-  padding: 7px 14px;
+.ref-copy-btn-sm {
+  padding: 5px 8px;
   background: rgba(255, 255, 255, 0.25);
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #fff;
-  font-size: 12px;
-  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
 }
 
-.ref-copy-btn:active {
+.ref-copy-btn-sm:active {
   background: rgba(255, 255, 255, 0.4);
   transform: scale(0.95);
 }

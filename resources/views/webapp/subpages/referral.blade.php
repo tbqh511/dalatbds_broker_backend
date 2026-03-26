@@ -10,17 +10,28 @@
 
     <div class="sp-scroll">
 
-      <!-- Hero card with referral code -->
+      <!-- Hero card with referral code + QR -->
       <div style="padding-top:14px;"></div>
       <div class="ref-hero">
         <div class="ref-hero-label">CHƯƠNG TRÌNH GIỚI THIỆU — MULTI LEVEL</div>
         <div class="ref-hero-title">Nhận 5% thu nhập<br>từ người bạn giới thiệu</div>
-        <div class="ref-hero-sub">Chia sẻ mã giới thiệu của bạn. Khi ai đó tham gia Đà Lạt BĐS qua link của bạn, bạn sẽ nhận 5% thu nhập của họ — mãi mãi!</div>
-        <div class="ref-code-box">
-          <div class="ref-code-val" id="refCodeDisplay">
-            <span id="refCodeSkeleton" style="display:inline-block;width:120px;height:18px;background:rgba(255,255,255,0.25);border-radius:4px;vertical-align:middle;"></span>
+        <div class="ref-hero-sub">Quét mã QR hoặc chia sẻ link để mời bạn bè tham gia — nhận 5% thu nhập mãi mãi!</div>
+
+        <!-- QR Code -->
+        <div class="ref-qr-wrap">
+          <div class="ref-qr-box" id="refQrCode">
+            <div id="refQrSkeleton" style="width:140px;height:140px;background:rgba(0,0,0,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+            </div>
           </div>
-          <button class="ref-copy-btn" onclick="copyRefCode()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Sao chép</span></button>
+        </div>
+
+        <!-- Compact code + copy -->
+        <div class="ref-code-compact">
+          <span class="ref-code-val-sm" id="refCodeDisplay">
+            <span id="refCodeSkeleton" style="display:inline-block;width:80px;height:14px;background:rgba(255,255,255,0.25);border-radius:3px;vertical-align:middle;"></span>
+          </span>
+          <button class="ref-copy-btn-sm" onclick="copyRefCode()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
       </div>
 

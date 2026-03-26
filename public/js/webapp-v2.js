@@ -158,7 +158,7 @@ window.copyPropertyShareLink = function() {
   var url;
   if (tg && tg.initData) {
     var cfg = window.WEBAPP_CONFIG || {};
-    url = 'https://t.me/' + (cfg.telegramBotUsername || 'DalatBDSBot')
+    url = 'https://t.me/' + (cfg.telegramBotUsername || 'dalatbds_telegram_bot')
         + '/' + (cfg.telegramWebappShortName || 'dangtin')
         + '?startapp=property_' + _sharePropId;
   } else {
@@ -3366,6 +3366,22 @@ function loadReferralData() {
       if(codeDisplay) {
         if(codeSkeleton) codeSkeleton.style.display = 'none';
         codeDisplay.textContent = _refData.referral_code || '';
+      }
+
+      // Generate QR code
+      var qrContainer = document.getElementById('refQrCode');
+      var qrSkeleton = document.getElementById('refQrSkeleton');
+      if(qrContainer && _refData.share_url && typeof qrcode === 'function') {
+        var qr = qrcode(0, 'M');
+        qr.addData(_refData.share_url);
+        qr.make();
+        if(qrSkeleton) qrSkeleton.remove();
+        var qrImg = document.createElement('img');
+        qrImg.src = qr.createDataURL(4, 8);
+        qrImg.width = 140;
+        qrImg.height = 140;
+        qrImg.style.borderRadius = '4px';
+        qrContainer.appendChild(qrImg);
       }
 
       // Update stats
