@@ -2068,7 +2068,7 @@ build. --}}
         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
+        <div class="bg-white w-full h-full flex flex-col overflow-hidden">
 
             <div class="relative flex-1 w-full h-full bg-gray-100">
                 <div id="picker-map" class="w-full h-full"></div>
@@ -2129,7 +2129,7 @@ build. --}}
             <div class="absolute top-0 left-0 right-0 z-50 p-4 pt-safe-top">
                 <div class="flex items-center gap-3 pointer-events-auto">
                     <button @click="showMapPicker = false" style="pointer-events: auto !important; z-index: 1000003;"
-                        class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-transform relative pointer-events-auto">
+                        class="w-10 h-10 bg-primary rounded-full shadow-md flex items-center justify-center text-white active:scale-95 transition-transform relative pointer-events-auto">
                         <i class="fa-solid fa-arrow-left"></i>
                     </button>
 

@@ -14,6 +14,7 @@ window.goTo = function(page){
     if(btn) btn.classList.toggle('active',pages[i]===page);
   });
   document.getElementById('scrollArea').scrollTop=0;
+  window.dispatchEvent(new CustomEvent('webapp:page-changed', { detail: { page: page } }));
 };
 
 window.toggleSearch = function(){goTo('search');};
@@ -5948,11 +5949,22 @@ window.activityApp = function() {
     get hasMore() { return this.currentPage < this.lastPage; },
 
     init: function() {
+      var self = this;
       var cfg = window.WEBAPP_CONFIG || {};
       var role = cfg.customerRole || 'guest';
       this.isAdminRole = ['admin', 'bds_admin', 'sale_admin'].indexOf(role) !== -1;
       this.fetchNotifications();
       this.updateBadge();
+
+      // Refresh khi chuyển sang tab Hoạt động
+      window.addEventListener('webapp:page-changed', function(e) {
+        if (e.detail && e.detail.page === 'activity') {
+          self.currentPage = 1;
+          self.notifications = [];
+          self.fetchNotifications();
+          self.updateBadge();
+        }
+      });
     },
 
     switchTab: function(tab) {
