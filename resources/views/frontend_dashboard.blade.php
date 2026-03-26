@@ -170,13 +170,17 @@
             return;
         }
         try {
+            // Lấy referral_code từ deep link (nếu có)
+            var refCode = sessionStorage.getItem('referral_code') || '';
             // Authenticate with Laravel Backend
             const response = await axios.post('/api/webapp/login', {
-                initData: initData
+                initData: initData,
+                referral_code: refCode
             });
             const data = response.data;
             if (data.status === 'authenticated') {
-                // Success
+                // Xóa referral_code sau khi đã xử lý
+                sessionStorage.removeItem('referral_code');
                 // Reload to let Server-side Middleware handle the rest
                 window.location.reload();
             } else if (data.status === 'guest') {

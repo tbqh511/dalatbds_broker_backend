@@ -160,10 +160,17 @@ class UserService
                 $customer->fcm_id = '';
 
                 // Gán người giới thiệu nếu có referral_code
-                if (!empty($data['referral_code'])) {
-                    $referrer = Customer::where('referral_code', $data['referral_code'])->first();
+                // Ưu tiên: request data > cache (từ Mini App deep link)
+                $refCode = $data['referral_code'] ?? null;
+                if (empty($refCode) && !empty($data['telegram_id'])) {
+                    $cacheKey = "pending_referral:{$data['telegram_id']}";
+                    $refCode = \Cache::pull($cacheKey); // pull = get + delete
+                }
+                if (!empty($refCode)) {
+                    $referrer = Customer::where('referral_code', $refCode)->first();
                     if ($referrer && $referrer->id !== $customer->id) {
                         $customer->referred_by = $referrer->id;
+                        \Log::info("Referral assigned: new Customer referred by #{$referrer->id} (code: {$refCode})");
                     }
                 }
 

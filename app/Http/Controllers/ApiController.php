@@ -2896,8 +2896,9 @@ class ApiController extends Controller
     //HuyTBQ: Telegram WebApp Login
     public function loginViaMiniApp(Request $request)
     {
-        // 1. Nhận initData từ Frontend gửi lên
+        // 1. Nhận initData và referral_code từ Frontend gửi lên
         $initData = $request->input('initData');
+        $referralCode = $request->input('referral_code');
         
         if (!$initData) {
             return response()->json(['error' => true, 'message' => 'Không tìm thấy initData'], 400);
@@ -2957,6 +2958,16 @@ class ApiController extends Controller
         $customer = Customer::where('telegram_id', $telegramId)->first();
 
         if ($customer) {
+            // Gán referrer nếu user chưa có referred_by và có referral_code
+            if (!empty($referralCode) && empty($customer->referred_by)) {
+                $referrer = Customer::where('referral_code', $referralCode)->first();
+                if ($referrer && $referrer->id !== $customer->id) {
+                    $customer->referred_by = $referrer->id;
+                    $customer->save();
+                    \Log::info("Referral assigned via WebApp: Customer #{$customer->id} referred by #{$referrer->id} (code: {$referralCode})");
+                }
+            }
+
             // Log in the user to the session for Blade views
             Auth::guard('webapp')->login($customer, true);
 
@@ -2979,11 +2990,18 @@ class ApiController extends Controller
                 'access_token' => $token,
             ]);
         } else {
+            // Lưu referral_code vào cache theo telegram_id để dùng khi đăng ký qua Bot
+            // (Bot gọi server-to-server nên không share session với browser)
+            if (!empty($referralCode) && !empty($telegramId)) {
+                \Cache::put("pending_referral:{$telegramId}", $referralCode, now()->addHours(24));
+            }
+
             // Chưa có user -> Trả về Guest để Frontend điều hướng
             return response()->json([
                 'status' => 'guest',
                 'message' => 'User chưa đăng ký hệ thống',
-                'telegram_user' => $telegramUserData // Trả về để frontend có thể hiển thị tên
+                'telegram_user' => $telegramUserData,
+                'referral_code' => $referralCode ?: null,
             ]);
         }
     }
