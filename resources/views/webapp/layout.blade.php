@@ -137,10 +137,22 @@
 <script>
 (function() {
   var cfg = window.WEBAPP_CONFIG || {};
-  // Only run login flow if user is NOT authenticated
-  if (cfg.customerId !== null && cfg.customerId !== undefined) return;
-
   var tg = window.Telegram && window.Telegram.WebApp;
+
+  // If already authenticated, verify identity matches current Telegram user
+  if (cfg.customerId !== null && cfg.customerId !== undefined) {
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      var sessionTgId = String(cfg.customerProfile.telegram_id || '');
+      var currentTgId = String(tg.initDataUnsafe.user.id || '');
+      if (sessionTgId && currentTgId && sessionTgId === currentTgId) {
+        return; // Identity matches, keep session
+      }
+      // Identity mismatch — fall through to re-authenticate
+    } else {
+      return; // Not inside Telegram, keep existing session
+    }
+  }
+
   if (!tg || !tg.initData) {
     // Not inside Telegram — nothing to do
     return;

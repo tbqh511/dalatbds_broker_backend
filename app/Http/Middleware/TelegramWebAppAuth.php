@@ -33,7 +33,7 @@ class TelegramWebAppAuth
                 }
 
                 if ($devCustomer) {
-                    Auth::guard('webapp')->login($devCustomer, true);
+                    Auth::guard('webapp')->login($devCustomer, false);
                 }
             }
 

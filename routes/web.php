@@ -83,6 +83,12 @@ Route::post('/webapp/leads/{id}/assign', [CrmLeadController::class, 'doAssign'])
     ->name('webapp.leads.do-assign')
     ->middleware('signed');
 Route::group(['middleware' => 'telegram.webapp'], function () {
+    Route::get('/webapp/logout', function () {
+        \Illuminate\Support\Facades\Auth::guard('webapp')->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect('/webapp');
+    })->name('webapp.logout');
     Route::get('/webapp', [TelegramWebAppController::class , 'index'])->name('webapp');
     Route::get('/webapp/home-feed', [TelegramWebAppController::class , 'homeFeed'])->name('webapp.home_feed');
     Route::get('/webapp/search/suggestions', [TelegramWebAppController::class, 'searchSuggestions'])->name('webapp.search.suggestions');
