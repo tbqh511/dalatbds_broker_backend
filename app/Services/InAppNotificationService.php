@@ -82,7 +82,11 @@ class InAppNotificationService
      */
     public function unreadCount(int $customerId): int
     {
-        return InAppNotification::where('customer_id', $customerId)->whereNull('read_at')->count();
+        try {
+            return InAppNotification::where('customer_id', $customerId)->whereNull('read_at')->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
     /**

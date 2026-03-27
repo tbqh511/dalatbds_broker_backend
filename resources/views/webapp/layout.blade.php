@@ -124,8 +124,8 @@
       work_area: @json($customer->work_area ?? ''),
       specialization: @json($customer->specialization ?? ''),
       telegram_id: @json($customer->telegram_id ?? ''),
-      avatar_url: @json($customer->getRawOriginal('profile') ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : ''),
-      role: @json($customer->getEffectiveRole() ?? 'guest'),
+      avatar_url: @json(($customer && $customer->getRawOriginal('profile')) ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : ''),
+      role: @json($customer ? $customer->getEffectiveRole() : 'guest'),
     }
   };
   window.likedIds = new Set((window.WEBAPP_CONFIG.likedPropertyIds || []).map(String));
@@ -133,6 +133,57 @@
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=places,marker"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script src="{{ asset('js/webapp-v2.js') }}?v={{ filemtime(public_path('js/webapp-v2.js')) }}"></script>
+{{-- Telegram auto-login: runs after webapp-v2.js so deep link handler has already set referral_code in sessionStorage --}}
+<script>
+(function() {
+  var cfg = window.WEBAPP_CONFIG || {};
+  // Only run login flow if user is NOT authenticated
+  if (cfg.customerId !== null && cfg.customerId !== undefined) return;
+
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg || !tg.initData) {
+    // Not inside Telegram — nothing to do
+    return;
+  }
+
+  tg.expand();
+
+  // Wait for DOMContentLoaded so deep link handler in webapp-v2.js has set sessionStorage
+  document.addEventListener('DOMContentLoaded', function() {
+    var refCode = sessionStorage.getItem('referral_code') || '';
+
+    fetch('/api/webapp/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': cfg.csrfToken || document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ initData: tg.initData, referral_code: refCode })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status === 'authenticated') {
+        sessionStorage.removeItem('referral_code');
+        window.location.reload();
+      } else if (data.status === 'guest') {
+        if (tg.showPopup) {
+          tg.showPopup({
+            title: 'Chua co tai khoan',
+            message: 'Vui long quay lai Bot chat va chia se so dien thoai de tao tai khoan.',
+            buttons: [{ type: 'close' }]
+          });
+        } else {
+          alert('Ban chua co tai khoan. Vui long quay lai Bot chat va chia se so dien thoai de tao tai khoan.');
+        }
+      }
+    })
+    .catch(function(err) {
+      console.error('Telegram WebApp login error:', err);
+    });
+  });
+})();
+</script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 </body>
 </html>
