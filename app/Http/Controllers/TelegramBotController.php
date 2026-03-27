@@ -36,6 +36,10 @@ class TelegramBotController extends Controller
             $this->handleCallbackQuery($body['callback_query']);
         }
 
+        if (isset($body['message'])) {
+            $this->handleMessage($body['message']);
+        }
+
         return response()->json(['ok' => true]);
     }
 
@@ -198,5 +202,92 @@ class TelegramBotController extends Controller
     private function escape(?string $text): string
     {
         return str_replace(['*', '_', '`', '['], ['\*', '\_', '\`', '\['], $text ?? '');
+    }
+
+    protected function handleMessage(array $message): void
+    {
+        $chatId = $message['chat']['id'] ?? null;
+        if (!$chatId) return;
+
+        $text = $message['text'] ?? '';
+        $token = Config::get('services.telegram.bot_token');
+        if (!$token) return;
+
+        // Capture phone number if shared
+        if (isset($message['contact'])) {
+            $telegramId = $message['from']['id'] ?? null;
+            $phoneNumber = $message['contact']['phone_number'] ?? '';
+            $firstName = $message['from']['first_name'] ?? '';
+            $lastName = $message['from']['last_name'] ?? '';
+
+            if ($telegramId && $phoneNumber) {
+                // Formatting phone number
+                if (str_starts_with($phoneNumber, '+')) {
+                    $phoneNumber = substr($phoneNumber, 1);
+                }
+
+                $customer = Customer::where('telegram_id', $telegramId)->first();
+                if (!$customer) {
+                    $fullName = trim($firstName . ' ' . $lastName);
+                    if (empty($fullName)) {
+                        $fullName = 'Thành viên mới';
+                    }
+
+                    $customer = Customer::create([
+                        'name' => $fullName,
+                        'full_name' => $fullName,
+                        'mobile' => $phoneNumber,
+                        'contact' => $phoneNumber,
+                        'telegram_id' => $telegramId,
+                        'role' => 'broker',
+                    ]);
+                } else {
+                    $customer->mobile = $phoneNumber;
+                    $customer->contact = $phoneNumber;
+                    $customer->save();
+                }
+
+                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => "✅ Đã lưu số điện thoại của bạn thành công. Hãy quay lại WebApp để tiếp tục trải nghiệm!",
+                    'reply_markup' => ['remove_keyboard' => true],
+                ]);
+            }
+            return;
+        }
+
+        // Request phone number if text is /start
+        if (str_starts_with($text, '/start')) {
+            $telegramId = $message['from']['id'] ?? null;
+            $customer = Customer::where('telegram_id', $telegramId)->first();
+
+            // Store referral code if any (e.g. /start 12345)
+            $parts = explode(' ', $text);
+            if (count($parts) > 1 && $telegramId) {
+                \Cache::put("pending_referral:{$telegramId}", $parts[1], now()->addHours(24));
+            }
+
+            if (!$customer || empty($customer->mobile)) {
+                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => "Chào bạn! Để sử dụng hệ thống Đà Lạt BĐS, vui lòng chia sẻ số điện thoại của bạn bằng cách nhấn vào nút bên dưới.",
+                    'reply_markup' => [
+                        'keyboard' => [
+                            [
+                                ['text' => '📱 Chia sẻ Số điện thoại', 'request_contact' => true]
+                            ]
+                        ],
+                        'resize_keyboard' => true,
+                        'one_time_keyboard' => true
+                    ]
+                ]);
+            } else {
+                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => "Chào mừng bạn quay lại Đà Lạt BĐS!",
+                    'reply_markup' => ['remove_keyboard' => true],
+                ]);
+            }
+        }
     }
 }

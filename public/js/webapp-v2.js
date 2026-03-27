@@ -5,6 +5,20 @@ const pages = ['home','search','post','activity','profile'];
 const navIds = ['nav-home','nav-search','nav-post','nav-activity','nav-profile'];
 
 window.goTo = function(page){
+  if((page === 'activity' || page === 'profile') && window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.customerRole === 'guest') {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.showPopup) {
+      tg.showPopup({
+        title: 'Chua co tai khoan',
+        message: 'Vui long quay lai Bot chat va chia se so dien thoai de tao tai khoan.',
+        buttons: [{ type: 'close' }]
+      });
+    } else {
+      alert('Ban chua co tai khoan. Vui long quay lai Bot chat va chia se so dien thoai de tao tai khoan.');
+    }
+    return;
+  }
+  
   pages.forEach(p=>{
     const el=document.getElementById('page-'+p);
     if(el) el.classList.toggle('active',p===page);
