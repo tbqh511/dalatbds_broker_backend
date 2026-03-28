@@ -4037,8 +4037,8 @@ class TelegramWebAppController extends Controller
             $activeIds = CrmDealCommission::whereHas('deal.lead', function ($q) use ($referralIds) {
                 $q->whereIn('user_id', $referralIds)->orWhereIn('sale_id', $referralIds);
             })
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->where('status', '!=', CommissionStatus::CANCELLED->value)
+                ->whereBetween('crm_deals_commissions.created_at', [$monthStart, $monthEnd])
+                ->where('crm_deals_commissions.status', '!=', CommissionStatus::CANCELLED->value)
                 ->join('crm_deals', 'crm_deals_commissions.deal_id', '=', 'crm_deals.id')
                 ->join('crm_leads', 'crm_deals.lead_id', '=', 'crm_leads.id')
                 ->selectRaw('COALESCE(crm_leads.user_id, crm_leads.sale_id) as cid')
