@@ -162,34 +162,56 @@
   var tg = window.Telegram && window.Telegram.WebApp;
   var hasSession = cfg.customerId !== null && cfg.customerId !== undefined;
 
-  // If already authenticated, verify identity matches current Telegram user
+  // ─── CASE 1: Already authenticated ───────────────────────────────
   if (hasSession) {
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
       var sessionTgId = String(cfg.customerProfile.telegram_id || '');
       var currentTgId = String(tg.initDataUnsafe.user.id || '');
 
       if (sessionTgId && currentTgId && sessionTgId === currentTgId) {
-        return; // Identity matches, keep session
+        return; // Identity matches, keep session — no reload
       }
 
       if (sessionTgId && currentTgId && sessionTgId !== currentTgId) {
-        // True identity mismatch — logout old session first, then re-authenticate
+        // True identity mismatch — logout old session, then re-authenticate
         fetch('/webapp/logout', { method: 'GET', credentials: 'same-origin' })
           .then(function() { window.location.reload(); })
           .catch(function() { window.location.reload(); });
         return;
       }
 
-      // sessionTgId is empty — session customer has no telegram_id.
-      // Don't logout. Fall through to call loginViaMiniApp which will link telegram_id.
-    } else {
-      return; // Not inside Telegram, keep existing session
+      // sessionTgId is empty — customer has no telegram_id yet.
+      // Silently link telegram_id via API, but DO NOT reload or show guest dialog.
+      // The user already has a valid session, so the page looks correct.
+      if (tg.initData) {
+        fetch('/api/webapp/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': cfg.csrfToken || document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ initData: tg.initData, referral_code: '' })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          console.log('[WebApp] telegram_id link result:', data.status || 'error');
+          // Do NOT reload — session is already valid, UI is already correct
+        })
+        .catch(function(err) {
+          console.warn('[WebApp] telegram_id link failed:', err);
+        });
+      }
+      return; // Keep current session regardless
     }
+    // Not inside Telegram but has session — keep it
+    return;
   }
 
+  // ─── CASE 2: No session — need to authenticate ──────────────────
   if (!tg || !tg.initData) {
-    // Not inside Telegram — nothing to do
-    return;
+    return; // Not inside Telegram — nothing to do
   }
 
   tg.expand();
@@ -220,15 +242,10 @@
         sessionStorage.removeItem('referral_code');
         window.location.reload();
       } else if (data.status === 'guest') {
-        // Only show guest dialog if user doesn't already have a valid session.
-        // If hasSession is true, loginViaMiniApp couldn't link telegram_id but
-        // the session is still valid — keep it, don't show guest dialog.
-        if (!hasSession) {
-          if (typeof showGuestDialog === 'function') {
-            showGuestDialog();
-          } else {
-            alert('Bạn chưa có tài khoản. Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.');
-          }
+        if (typeof showGuestDialog === 'function') {
+          showGuestDialog();
+        } else {
+          alert('Bạn chưa có tài khoản. Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.');
         }
       } else if (data.error) {
         console.error('[WebApp Login] Server error:', data.message);
