@@ -59,7 +59,8 @@ php artisan test
 
 **Telegram WebApp Middleware** (`TelegramWebAppAuth`, đăng ký là `telegram.webapp`):
 - Production: kiểm tra `Auth::guard('webapp')` session
-- Dev bypass: set `WEBAPP_DEV_MODE=true` và `WEBAPP_DEV_CUSTOMER_ID=<id>` trong `.env`
+- Cho phép truy cập `/webapp` không cần auth (để JS auto-login chạy)
+- Tất cả route con khác yêu cầu session hợp lệ
 
 ### 2 Model người dùng
 
@@ -113,8 +114,6 @@ Tính năng CRM mới nên theo pattern này, không đặt logic trực tiếp 
 |---|---|
 | `API_LOGIN_SECRET` | Xác thực server-to-server cho `POST /api/check_telegram_user` và `POST /api/login` |
 | `PLACE_API_KEY` | Google Maps JavaScript API + Places API |
-| `WEBAPP_DEV_MODE` | Đặt `true` để bỏ qua xác thực Telegram khi dev local |
-| `WEBAPP_DEV_CUSTOMER_ID` | Customer ID để auto-login ở dev mode |
 
 ---
 
@@ -126,7 +125,7 @@ Tính năng CRM mới nên theo pattern này, không đặt logic trực tiếp 
 
 | Middleware | Đăng ký | Chức năng |
 |---|---|---|
-| `telegram.webapp` | `TelegramWebAppAuth` | Xác thực session guard `webapp` (bỏ qua khi dev mode) |
+| `telegram.webapp` | `TelegramWebAppAuth` | Xác thực session guard `webapp` |
 | `webapp.require_phone` | `RequirePhoneVerified` | Chặn truy cập nếu chưa xác minh SĐT |
 | `webapp.role:sale,sale_admin` | `WebAppRoleMiddleware` | Phân quyền theo role của `Customer` |
 
@@ -263,12 +262,13 @@ Dùng trong `frontend_dashboard_temp.blade.php` với Alpine.js:
 3. **Thông số kỹ thuật** — số tầng, phòng ngủ, phòng tắm, kích thước, hướng (chỉ hiện nếu là nhà)
 4. **Tiện ích** — chọn các tiện ích xung quanh
 
-### Chạy WebApp ở local (dev mode)
+### Chạy WebApp ở local
 
-```env
-WEBAPP_DEV_MODE=true
-WEBAPP_DEV_CUSTOMER_ID=1   # Customer ID để auto-login; để trống = dùng Customer::first()
-```
+Không còn dev mode bypass. Để dev local, cần:
+1. Mở webapp trong Telegram Mini App hoặc
+2. Login trực tiếp qua `Auth::guard('webapp')->login($customer)` trong tinker
+
+> **Role-switcher** chỉ hiển thị cho tài khoản có role `admin`.
 
 ---
 

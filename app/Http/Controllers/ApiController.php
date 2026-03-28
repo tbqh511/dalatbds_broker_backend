@@ -127,7 +127,6 @@ class ApiController extends Controller
             }
         }
         $language = Language::select('code', 'name')->get();
-        $tempRow['demo_mode'] = env('DEMO_MODE');
         $tempRow['languages'] = $language;
 
         if (!empty($result)) {

@@ -93,10 +93,7 @@
 @endpush
 
 @section('content')
-{{-- TEMPORARY: Dev mode flag to allow running WebApp outside Telegram --}}
-{{-- HuyTBQ: @if(Auth::guard('webapp')->check()) --}}
-@php($webappDevMode = env('WEBAPP_DEV_MODE', false))
-@if($webappDevMode || Auth::guard('webapp')->check())
+@if(Auth::guard('webapp')->check())
 <script>document.body.classList.add('webapp-mode');</script>
 @include('frontends.components.dashboard_home')
 @else
@@ -148,7 +145,7 @@
         }
     }
 </script>
-@if(!env('WEBAPP_DEV_MODE', false) && !Auth::guard('webapp')->check())
+@if(!Auth::guard('webapp')->check())
 <script>
     // Auth-specific Logic
     async function initWebApp() {

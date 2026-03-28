@@ -15,7 +15,7 @@
 
   @include('webapp.partials.header')
 
-  @if(config('app.debug') || env('WEBAPP_DEV_MODE'))
+  @if(isset($customer) && $customer->getEffectiveRole() === 'admin')
     @include('webapp.partials.role-switcher')
   @endif
 

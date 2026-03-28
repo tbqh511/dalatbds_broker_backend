@@ -392,9 +392,6 @@ class PropertController extends Controller
      */
     public function destroy($id)
     {
-        if (env('DEMO_MODE') && Auth::user()->email != "superadmin@gmail.com") {
-            return redirect()->back()->with('error', 'This is not allowed in the Demo Version');
-        }
         if (!has_permissions('delete', 'property')) {
             return redirect()->back()->with('error', PERMISSION_ERROR_MSG);
         } else {

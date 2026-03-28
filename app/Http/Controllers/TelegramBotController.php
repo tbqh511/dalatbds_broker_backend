@@ -244,6 +244,10 @@ class TelegramBotController extends Controller
                 } else {
                     $customer->mobile = $phoneNumber;
                     $customer->contact = $phoneNumber;
+                    // Nếu role chưa được set hoặc là guest → mặc định broker khi share phone
+                    if (empty($customer->role) || $customer->role === 'guest' || !in_array($customer->role, Customer::VALID_ROLES)) {
+                        $customer->role = 'broker';
+                    }
                     $customer->save();
                 }
 

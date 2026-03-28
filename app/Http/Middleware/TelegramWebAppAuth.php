@@ -18,27 +18,6 @@ class TelegramWebAppAuth
      */
     public function handle(Request $request, Closure $next)
     {
-        // TEMPORARY: Dev mode to allow running WebApp outside Telegram for UI development
-        if (env('WEBAPP_DEV_MODE', false)) {
-            if (!Auth::guard('webapp')->check()) {
-                $devCustomer = null;
-
-                $devCustomerId = env('WEBAPP_DEV_CUSTOMER_ID');
-                if ($devCustomerId) {
-                    $devCustomer = Customer::find($devCustomerId);
-                }
-
-                if (!$devCustomer) {
-                    $devCustomer = Customer::first();
-                }
-
-                if ($devCustomer) {
-                    Auth::guard('webapp')->login($devCustomer, false);
-                }
-            }
-
-            return $next($request);
-        }
 
         // Check if user is logged in via 'webapp' guard
         if (Auth::guard('webapp')->check()) {
