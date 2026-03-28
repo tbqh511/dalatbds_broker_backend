@@ -16,19 +16,16 @@
   ];
   $effectiveRole = $customer ? $customer->getEffectiveRole() : 'guest';
   $roleLabel = $roleLabels[$effectiveRole] ?? 'Broker';
+  $defaultAvatarUrl = 'https://dalatbds.com/images/users/1693209486.1303.png';
   $hasAvatar = $customer && $customer->getRawOriginal('profile');
-  $avatarUrl = $hasAvatar ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : '';
+  $avatarUrl = $hasAvatar ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : $defaultAvatarUrl;
 @endphp
 
 <div class="page" id="page-profile">
 
   <div class="profile-hero">
     <div class="profile-avatar">
-      @if($hasAvatar)
-        <img src="{{ $avatarUrl }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="{{ $customer->name }}">
-      @else
-        {{ $initials }}
-      @endif
+      <img src="{{ $avatarUrl }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="{{ $customer->name ?? 'Khách' }}">
     </div>
     <div class="profile-name">{{ $customer->name ?? 'Khách' }}</div>
     <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">

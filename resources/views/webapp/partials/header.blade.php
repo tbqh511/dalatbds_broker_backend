@@ -16,8 +16,9 @@
   ];
   $hRole = $customer ? $customer->getEffectiveRole() : 'guest';
   $hRoleLabel = $hRoleLabels[$hRole] ?? 'Broker';
+  $defaultAvatarUrl = 'https://dalatbds.com/images/users/1693209486.1303.png';
   $hHasAvatar = $customer && $customer->getRawOriginal('profile');
-  $hAvatarUrl = $hHasAvatar ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : '';
+  $hAvatarUrl = $hHasAvatar ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : $defaultAvatarUrl;
 @endphp
 
 <div class="app-header">
@@ -33,11 +34,7 @@
       <span id="header-notif-badge" class="badge-num" style="display:none;"></span>
     </button>
     <div class="avatar-btn" id="btn-avatar" onclick="toggleUserMenu(event)">
-      @if($hHasAvatar)
-        <img src="{{ $hAvatarUrl }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">
-      @else
-        {{ $hInitials }}
-      @endif
+      <img src="{{ $hAvatarUrl }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">
     </div>
   </div>
 </div>
@@ -63,11 +60,7 @@
 <div id="user-menu" class="user-menu" style="display:none;">
   <div class="user-menu-header">
     <div class="user-menu-avatar">
-      @if($hHasAvatar)
-        <img src="{{ $hAvatarUrl }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">
-      @else
-        {{ $hInitials }}
-      @endif
+      <img src="{{ $hAvatarUrl }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">
     </div>
     <div class="user-menu-info">
       <div class="user-menu-name">{{ $customer->name ?? 'Khách' }}</div>

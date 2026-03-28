@@ -124,7 +124,7 @@
       work_area: @json($customer->work_area ?? ''),
       specialization: @json($customer->specialization ?? ''),
       telegram_id: @json($customer->telegram_id ?? ''),
-      avatar_url: @json(($customer && $customer->getRawOriginal('profile')) ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : ''),
+      avatar_url: @json(($customer && $customer->getRawOriginal('profile')) ? url('images' . config('global.USER_IMG_PATH') . $customer->getRawOriginal('profile')) : 'https://dalatbds.com/images/users/1693209486.1303.png'),
       role: @json($customer ? $customer->getEffectiveRole() : 'guest'),
     }
   };
@@ -147,7 +147,11 @@
       if (sessionTgId && currentTgId && sessionTgId === currentTgId) {
         return; // Identity matches, keep session
       }
-      // Identity mismatch — fall through to re-authenticate
+      // Identity mismatch — logout old session first, then re-authenticate
+      fetch('/webapp/logout', { method: 'GET', credentials: 'same-origin' })
+        .then(function() { window.location.reload(); })
+        .catch(function() { window.location.reload(); });
+      return;
     } else {
       return; // Not inside Telegram, keep existing session
     }
