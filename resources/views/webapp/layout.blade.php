@@ -211,9 +211,19 @@
     .then(function(data) {
       if (data.status === 'authenticated') {
         sessionStorage.removeItem('referral_code');
-        var url = new URL(window.location.href);
-        url.searchParams.set('t', new Date().getTime());
-        window.location.replace(url.href);
+        
+        // Hiển thị trạng thái đang đồng bộ để tránh chớp giật UI Khách/Khách
+        var appEl = document.getElementById('app');
+        if (appEl) {
+            appEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;"><div style="width:24px;height:24px;border:3px solid #f3f3f3;border-top:3px solid var(--primary-color);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px;"></div><p style="color:#666;font-size:14px;margin:0;">Đang đồng bộ dữ liệu...</p></div><style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>';
+        }
+
+        // Delay 800ms để trình duyệt (đặc biệt là iOS WKWebView) kịp lưu Session Cookie từ fetch xuống bộ nhớ Local trước khi redirect
+        setTimeout(function() {
+            var url = new URL(window.location.href);
+            url.searchParams.set('t', new Date().getTime());
+            window.location.replace(url.href);
+        }, 800);
       } else if (data.status === 'guest') {
         // Bot có thể chưa kịp xử lý webhook → retry sau 2 giây
         if (retriesLeft > 0) {
