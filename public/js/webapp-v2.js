@@ -3710,7 +3710,7 @@ function loadReferralData() {
   if(codeSkeleton) codeSkeleton.style.display = 'inline-block';
   var codeDisplay = document.getElementById('refCodeDisplay');
 
-  fetch('/webapp/referral/data')
+  fetch('/webapp/referral/data', { headers: { 'Accept': 'application/json' } })
     .then(function(res) { return res.json(); })
     .then(function(data) {
       _refData = data;
@@ -3725,20 +3725,24 @@ function loadReferralData() {
       // Generate QR code
       var qrContainer = document.getElementById('refQrCode');
       var qrSkeleton = document.getElementById('refQrSkeleton');
-      if(qrContainer && _refData.share_url && typeof qrcode === 'function') {
-        // Clear old QR images before generating new one
-        var oldImgs = qrContainer.querySelectorAll('img');
-        oldImgs.forEach(function(img) { img.remove(); });
-        var qr = qrcode(0, 'M');
-        qr.addData(_refData.share_url);
-        qr.make();
-        if(qrSkeleton) qrSkeleton.remove();
-        var qrImg = document.createElement('img');
-        qrImg.src = qr.createDataURL(4, 8);
-        qrImg.width = 140;
-        qrImg.height = 140;
-        qrImg.style.borderRadius = '4px';
-        qrContainer.appendChild(qrImg);
+      if(qrSkeleton) qrSkeleton.remove();
+      if(qrContainer && _refData.share_url) {
+        if(typeof qrcode === 'function') {
+          // Clear old QR images before generating new one
+          var oldImgs = qrContainer.querySelectorAll('img');
+          oldImgs.forEach(function(img) { img.remove(); });
+          var qr = qrcode(0, 'M');
+          qr.addData(_refData.share_url);
+          qr.make();
+          var qrImg = document.createElement('img');
+          qrImg.src = qr.createDataURL(4, 8);
+          qrImg.width = 140;
+          qrImg.height = 140;
+          qrImg.style.borderRadius = '4px';
+          qrContainer.appendChild(qrImg);
+        } else {
+          qrContainer.innerHTML = '<div style="width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(255,255,255,0.7);text-align:center;padding:8px;">QR không khả dụng</div>';
+        }
       }
 
       // Update stats
@@ -3763,6 +3767,8 @@ function loadReferralData() {
     })
     .catch(function(err) {
       console.error('Referral data error:', err);
+      var qrSkeleton = document.getElementById('refQrSkeleton');
+      if(qrSkeleton) qrSkeleton.remove();
       if(treeLoading) { treeLoading.style.display=''; treeLoading.innerHTML = '<span style="color:var(--danger);">Không tải được dữ liệu</span>'; }
       if(histLoading) { histLoading.style.display=''; histLoading.innerHTML = '<span style="color:var(--danger);">Không tải được dữ liệu</span>'; }
     });
@@ -3887,16 +3893,26 @@ window.shareRefLink = function(platform){
   var tgUrl   = _refData ? _refData.telegram_share_url : '';
   if(!code) { showToast('Chưa tải được mã giới thiệu'); return; }
 
+  var tg = window.Telegram && window.Telegram.WebApp;
+
   if(platform === 'telegram') {
-    if(tgUrl) window.open(tgUrl, '_blank');
+    if(tg && tg.openTelegramLink && tgUrl) {
+      tg.openTelegramLink(tgUrl);
+    } else if(tgUrl) {
+      window.open(tgUrl, '_blank');
+    }
     showToast('Đang mở Telegram để chia sẻ...');
   } else if(platform === 'zalo') {
     var zaloUrl = 'https://zalo.me/s/share?url=' + encodeURIComponent(link)
       + '&text=' + encodeURIComponent('Tham gia Đà Lạt BĐS với mã giới thiệu ' + code + '. Đăng ký ngay!');
-    window.open(zaloUrl, '_blank');
+    if(tg && tg.openLink) {
+      tg.openLink(zaloUrl);
+    } else {
+      window.open(zaloUrl, '_blank');
+    }
     showToast('Đang mở Zalo để chia sẻ...');
   } else {
-    if(navigator.clipboard) navigator.clipboard.writeText(link);
+    if(navigator.clipboard) navigator.clipboard.writeText(link).catch(function(){});
     showToast('Đã sao chép link: ' + link);
   }
 };
