@@ -211,7 +211,9 @@
     .then(function(data) {
       if (data.status === 'authenticated') {
         sessionStorage.removeItem('referral_code');
-        window.location.reload();
+        var url = new URL(window.location.href);
+        url.searchParams.set('t', new Date().getTime());
+        window.location.replace(url.href);
       } else if (data.status === 'guest') {
         // Bot có thể chưa kịp xử lý webhook → retry sau 2 giây
         if (retriesLeft > 0) {
