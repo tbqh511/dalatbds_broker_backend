@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Traits\ValidatesTelegramInitData;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +43,7 @@ use App\Services\Telegram\TelegramMessageTemplates;
 
 class TelegramWebAppController extends Controller
 {
+    use ValidatesTelegramInitData;
     public function index(Request $request)
     {
         // Get authenticated customer
@@ -4182,5 +4185,53 @@ class TelegramWebAppController extends Controller
         $property = Property::findOrFail($id);
 
         return redirect(route('bds.show', $property->slug));
+    }
+
+    /**
+     * POST /webapp/auth
+     * Form-based auth: validates Telegram initData, logs in via session, redirects.
+     * Dùng form POST thay vì fetch+reload để session cookie được set trong navigation response,
+     * tránh vấn đề iOS WKWebView không persist cookie từ XHR response kịp thời.
+     */
+    public function authRedirect(Request $request)
+    {
+        $initData     = $request->input('initData', '');
+        $referralCode = $request->input('referral_code', '');
+        $retry        = (int) $request->input('retry', 0);
+
+        if (!$initData) {
+            return redirect('/webapp?login_status=error');
+        }
+
+        $telegramUserData = $this->validateTelegramInitData($initData);
+        if (!$telegramUserData) {
+            \Log::warning('WebApp authRedirect: Telegram initData validation failed');
+            return redirect('/webapp?login_status=error');
+        }
+
+        $telegramId = $telegramUserData['id'];
+        $customer   = \App\Models\Customer::where('telegram_id', $telegramId)->first();
+
+        if ($customer) {
+            // Gán referrer nếu user chưa có referred_by và có referral_code
+            if (!empty($referralCode) && empty($customer->referred_by)) {
+                $referrer = \App\Models\Customer::where('referral_code', $referralCode)->first();
+                if ($referrer && $referrer->id !== $customer->id) {
+                    $customer->referred_by = $referrer->id;
+                    $customer->save();
+                    \Log::info("Referral assigned via authRedirect: Customer #{$customer->id} referred by #{$referrer->id}");
+                }
+            }
+
+            Auth::guard('webapp')->login($customer, true);
+            return redirect('/webapp');
+        }
+
+        // Chưa có user → cache referral code để Bot dùng khi tạo account
+        if (!empty($referralCode) && !empty($telegramId)) {
+            \Cache::put("pending_referral:{$telegramId}", $referralCode, now()->addHours(24));
+        }
+
+        return redirect('/webapp?login_status=guest&retry=' . $retry);
     }
 }

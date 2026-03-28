@@ -160,12 +160,26 @@
 (function() {
   var cfg = window.WEBAPP_CONFIG || {};
   var tg = window.Telegram && window.Telegram.WebApp;
-  
+
+  // ─── Đọc login_status TRƯỚC KHI xóa khỏi URL ────────────────────────
+  var _params     = new URLSearchParams(window.location.search);
+  var _loginStatus = _params.get('login_status');
+  var _loginRetry  = parseInt(_params.get('retry') || '0', 10);
+
+  // Dọn sạch query params login_status/retry khỏi URL để không ảnh hưởng deep links
+  if (_loginStatus || _params.has('retry')) {
+    var _cleanUrl = new URL(window.location.href);
+    _cleanUrl.searchParams.delete('login_status');
+    _cleanUrl.searchParams.delete('retry');
+    _cleanUrl.searchParams.delete('t');
+    history.replaceState(null, '', _cleanUrl.pathname + (_cleanUrl.search || '') + (_cleanUrl.hash || ''));
+  }
+
+  // ─── ĐÃ CÓ SESSION KHỚP VỚI TELEGRAM → KHÔNG LÀM GÌ CẢ ────────────
   var hasSession = false;
   if (cfg.customerId) {
     var tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
     if (tgUser) {
-      // Nếu mở trong Telegram, bắt buộc telegram_id của session phải khớp với user Telegram hiện tại
       if (cfg.customerProfile && String(cfg.customerProfile.telegram_id) === String(tgUser.id)) {
         hasSession = true;
       }
@@ -174,11 +188,7 @@
       hasSession = true;
     }
   }
-
-  // ─── ĐÃ CÓ SESSION KHỚP VỚI TELEGRAM → KHÔNG LÀM GÌ CẢ ────────────
-  if (hasSession) {
-    return;
-  }
+  if (hasSession) return;
 
   // ─── CHƯA CÓ SESSION (hoặc session không khớp) → Cần xác thực qua Telegram ──────────────
   if (!tg || !tg.initData) {
@@ -195,53 +205,66 @@
 
   tg.expand();
 
-  function doLogin(retriesLeft) {
-    var refCode = sessionStorage.getItem('referral_code') || '';
-    fetch('/api/webapp/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': cfg.csrfToken || document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        'Accept': 'application/json'
-      },
-      credentials: 'same-origin',
-      body: JSON.stringify({ initData: tg.initData, referral_code: refCode })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.status === 'authenticated') {
-        sessionStorage.removeItem('referral_code');
-        
-        // Hiển thị trạng thái đang đồng bộ để tránh chớp giật UI Khách/Khách
-        var appEl = document.getElementById('app');
-        if (appEl) {
-            appEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;"><div style="width:24px;height:24px;border:3px solid #f3f3f3;border-top:3px solid var(--primary-color);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px;"></div><p style="color:#666;font-size:14px;margin:0;">Đang đồng bộ dữ liệu...</p></div><style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>';
-        }
+  // ─── Xử lý kết quả redirect từ POST /webapp/auth ────────────────────
+  if (_loginStatus === 'guest') {
+    if (_loginRetry < 2) {
+      // Bot có thể chưa kịp xử lý webhook → thử lại sau 2.5 giây
+      setTimeout(function() { submitAuthForm(_loginRetry + 1); }, 2500);
+    } else {
+      // Hết retry → hiện guest dialog
+      document.addEventListener('DOMContentLoaded', function() {
+        if (typeof showGuestDialog === 'function') showGuestDialog();
+      });
+    }
+    return;
+  }
 
-        // Delay 800ms để trình duyệt (đặc biệt là iOS WKWebView) kịp lưu Session Cookie từ fetch xuống bộ nhớ Local trước khi redirect
-        setTimeout(function() {
-            var url = new URL(window.location.href);
-            url.searchParams.set('t', new Date().getTime());
-            window.location.replace(url.href);
-        }, 800);
-      } else if (data.status === 'guest') {
-        // Bot có thể chưa kịp xử lý webhook → retry sau 2 giây
-        if (retriesLeft > 0) {
-          setTimeout(function() { doLogin(retriesLeft - 1); }, 2000);
-        } else {
-          if (typeof showGuestDialog === 'function') {
-            showGuestDialog();
-          }
-        }
-      }
-    })
-    .catch(function(err) {
-      console.error('[WebApp Login] Failed:', err);
+  if (_loginStatus === 'error') {
+    // initData không hợp lệ — không retry tự động, hiện guest dialog
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof showGuestDialog === 'function') showGuestDialog();
     });
+    return;
+  }
+
+  // ─── Lần đầu mở app (không có login_status) → submit form auth ──────
+  function submitAuthForm(retryCount) {
+    var refCode = sessionStorage.getItem('referral_code') || '';
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/webapp/auth';
+    form.style.display = 'none';
+
+    [
+      ['_token',        cfg.csrfToken || document.querySelector('meta[name="csrf-token"]').getAttribute('content')],
+      ['initData',      tg.initData],
+      ['referral_code', refCode],
+      ['retry',         String(retryCount)],
+    ].forEach(function(pair) {
+      var inp = document.createElement('input');
+      inp.type  = 'hidden';
+      inp.name  = pair[0];
+      inp.value = pair[1] || '';
+      form.appendChild(inp);
+    });
+
+    document.body.appendChild(form);
+
+    // Hiển thị spinner trong lúc chờ server redirect
+    var appEl = document.getElementById('app');
+    if (appEl) {
+      appEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;">'
+        + '<div style="width:24px;height:24px;border:3px solid #f3f3f3;border-top:3px solid var(--primary-color,#2563eb);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px;"></div>'
+        + '<p style="color:#666;font-size:14px;margin:0;">Đang đồng bộ dữ liệu...</p>'
+        + '</div><style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>';
+    }
+
+    sessionStorage.removeItem('referral_code');
+    form.submit();
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    doLogin(2); // Thử tối đa 3 lần (1 lần đầu + 2 retry)
+    submitAuthForm(0);
   });
 })();
 </script>

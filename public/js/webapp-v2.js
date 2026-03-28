@@ -3657,13 +3657,26 @@ window.guestShareContact = function(){
             + '<p style="font-size:13px;color:#9ca3af;margin:8px 0 0;">Vui lòng chờ trong giây lát</p>'
             + '</div>';
         }
-        // Đợi 3 giây cho bot xử lý webhook rồi reload trang
-        // Trang mới sẽ có initData mới (tránh initData cũ bị stale sau requestContact)
-        // và auto-login trong layout.blade.php sẽ tìm thấy Customer đã được bot tạo
+        // Đợi 3 giây cho bot xử lý webhook rồi submit form POST tới /webapp/auth.
+        // Dùng form POST thay vì window.location.replace để session cookie được set
+        // trong navigation response (tránh vấn đề iOS WKWebView không persist cookie XHR).
         setTimeout(function(){
-          var url = new URL(window.location.href);
-          url.searchParams.set('t', new Date().getTime());
-          window.location.replace(url.href);
+          var cfg = window.WEBAPP_CONFIG || {};
+          var form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '/webapp/auth';
+          form.style.display = 'none';
+          [
+            ['_token',   cfg.csrfToken || (document.querySelector('meta[name="csrf-token"]') || {getAttribute: function(){return '';}}).getAttribute('content')],
+            ['initData', tg.initData || ''],
+            ['retry',    '0'],
+          ].forEach(function(pair) {
+            var inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = pair[0]; inp.value = pair[1] || '';
+            form.appendChild(inp);
+          });
+          document.body.appendChild(form);
+          form.submit();
         }, 3000);
       }
     });

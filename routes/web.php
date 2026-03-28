@@ -66,6 +66,9 @@ use Illuminate\Http\Request;
 // Telegram WebApp Login (Moved from API to support Session)
 Route::post('/api/webapp/login', [ApiController::class , 'loginViaMiniApp']);
 
+// Telegram WebApp Auth Redirect (form POST → sets session cookie in navigation response → reliable on iOS WKWebView)
+Route::post('/webapp/auth', [TelegramWebAppController::class, 'authRedirect'])->name('webapp.auth');
+
 
 //HuyTBQ: Route for Frontend Page
 // Route::get('/', function () {
