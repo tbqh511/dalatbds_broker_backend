@@ -18,23 +18,19 @@ class TelegramWebAppAuth
      */
     public function handle(Request $request, Closure $next)
     {
-
         // Check if user is logged in via 'webapp' guard
         if (Auth::guard('webapp')->check()) {
-            // User is authenticated, proceed
             return $next($request);
         }
 
-        // If not logged in:
+        // Not logged in:
         
-        // 1. Allow access to the root /webapp so the JS can run and perform login
-        // We check strict equality or pattern matching
+        // Allow access to root /webapp so the JS auto-login can run
         if ($request->is('webapp')) {
-             return $next($request);
+            return $next($request);
         }
         
-        // 2. For any other sub-route (e.g. /webapp/profile), redirect to /webapp
-        // to force the initial Telegram check
+        // For any other sub-route, reject
         if ($request->expectsJson()) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }

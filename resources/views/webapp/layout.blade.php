@@ -162,61 +162,29 @@
   var tg = window.Telegram && window.Telegram.WebApp;
   var hasSession = cfg.customerId !== null && cfg.customerId !== undefined;
 
-  // ─── CASE 1: Already authenticated ───────────────────────────────
+  // ─── ĐÃ CÓ SESSION → KHÔNG LÀM GÌ CẢ ─────────────────────────
+  // Session hợp lệ = trang đã render đúng role từ server.
+  // TUYỆT ĐỐI không gọi API, không reload, không show guest dialog.
   if (hasSession) {
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      var sessionTgId = String(cfg.customerProfile.telegram_id || '');
-      var currentTgId = String(tg.initDataUnsafe.user.id || '');
-
-      if (sessionTgId && currentTgId && sessionTgId === currentTgId) {
-        return; // Identity matches, keep session — no reload
-      }
-
-      if (sessionTgId && currentTgId && sessionTgId !== currentTgId) {
-        // True identity mismatch — logout old session, then re-authenticate
-        fetch('/webapp/logout', { method: 'GET', credentials: 'same-origin' })
-          .then(function() { window.location.reload(); })
-          .catch(function() { window.location.reload(); });
-        return;
-      }
-
-      // sessionTgId is empty — customer has no telegram_id yet.
-      // Silently link telegram_id via API, but DO NOT reload or show guest dialog.
-      // The user already has a valid session, so the page looks correct.
-      if (tg.initData) {
-        fetch('/api/webapp/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': cfg.csrfToken || document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json'
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify({ initData: tg.initData, referral_code: '' })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          console.log('[WebApp] telegram_id link result:', data.status || 'error');
-          // Do NOT reload — session is already valid, UI is already correct
-        })
-        .catch(function(err) {
-          console.warn('[WebApp] telegram_id link failed:', err);
-        });
-      }
-      return; // Keep current session regardless
-    }
-    // Not inside Telegram but has session — keep it
     return;
   }
 
-  // ─── CASE 2: No session — need to authenticate ──────────────────
+  // ─── CHƯA CÓ SESSION → Cần xác thực qua Telegram ──────────────
   if (!tg || !tg.initData) {
-    return; // Not inside Telegram — nothing to do
+    // Không phải Telegram → hiện thông báo yêu cầu mở qua Telegram
+    var appEl = document.getElementById('app');
+    if (appEl) {
+      appEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:20px;">'
+        + '<img src="/images/logo.svg" alt="Đà Lạt BĐS" style="height:48px;margin-bottom:16px;">'
+        + '<h3 style="margin:0 0 8px;">Vui lòng mở qua Telegram</h3>'
+        + '<p style="color:#666;margin:0;">Ứng dụng này chỉ hoạt động bên trong Telegram Mini App.</p>'
+        + '</div>';
+    }
+    return;
   }
 
   tg.expand();
 
-  // Wait for DOMContentLoaded so deep link handler in webapp-v2.js has set sessionStorage
   document.addEventListener('DOMContentLoaded', function() {
     var refCode = sessionStorage.getItem('referral_code') || '';
 
@@ -230,29 +198,19 @@
       credentials: 'same-origin',
       body: JSON.stringify({ initData: tg.initData, referral_code: refCode })
     })
-    .then(function(res) {
-      if (!res.ok) {
-        console.error('[WebApp Login] HTTP error:', res.status, res.statusText);
-      }
-      return res.json();
-    })
+    .then(function(res) { return res.json(); })
     .then(function(data) {
-      console.log('[WebApp Login] Response:', data.status || 'error', data.message || '');
       if (data.status === 'authenticated') {
         sessionStorage.removeItem('referral_code');
         window.location.reload();
       } else if (data.status === 'guest') {
         if (typeof showGuestDialog === 'function') {
           showGuestDialog();
-        } else {
-          alert('Bạn chưa có tài khoản. Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.');
         }
-      } else if (data.error) {
-        console.error('[WebApp Login] Server error:', data.message);
       }
     })
     .catch(function(err) {
-      console.error('[WebApp Login] Request failed:', err);
+      console.error('[WebApp Login] Failed:', err);
     });
   });
 })();
