@@ -244,6 +244,16 @@ class TelegramBotController extends Controller
                 } else {
                     $customer->mobile = $phoneNumber;
                     $customer->contact = $phoneNumber;
+
+                    // Cập nhật lại tên thật nếu user đang bị dính tên ẩn danh của Guest
+                    if (empty($customer->name) || in_array($customer->name, ['Khách', 'Khách vãng lai', 'Thành viên mới'])) {
+                        $fullName = trim($firstName . ' ' . $lastName);
+                        if (!empty($fullName)) {
+                            $customer->name = $fullName;
+                            $customer->full_name = $fullName;
+                        }
+                    }
+
                     // Nếu role chưa được set hoặc là guest → mặc định broker khi share phone
                     if (empty($customer->role) || $customer->role === 'guest' || !in_array($customer->role, Customer::VALID_ROLES)) {
                         $customer->role = 'broker';

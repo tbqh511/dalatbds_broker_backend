@@ -160,14 +160,27 @@
 (function() {
   var cfg = window.WEBAPP_CONFIG || {};
   var tg = window.Telegram && window.Telegram.WebApp;
-  var hasSession = cfg.customerId !== null && cfg.customerId !== undefined;
+  
+  var hasSession = false;
+  if (cfg.customerId) {
+    var tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+    if (tgUser) {
+      // Nếu mở trong Telegram, bắt buộc telegram_id của session phải khớp với user Telegram hiện tại
+      if (cfg.customerProfile && String(cfg.customerProfile.telegram_id) === String(tgUser.id)) {
+        hasSession = true;
+      }
+    } else {
+      // Mở ngoài Telegram nhưng đã có session hợp lệ
+      hasSession = true;
+    }
+  }
 
-  // ─── ĐÃ CÓ SESSION → KHÔNG LÀM GÌ CẢ ─────────────────────────
+  // ─── ĐÃ CÓ SESSION KHỚP VỚI TELEGRAM → KHÔNG LÀM GÌ CẢ ────────────
   if (hasSession) {
     return;
   }
 
-  // ─── CHƯA CÓ SESSION → Cần xác thực qua Telegram ──────────────
+  // ─── CHƯA CÓ SESSION (hoặc session không khớp) → Cần xác thực qua Telegram ──────────────
   if (!tg || !tg.initData) {
     var appEl = document.getElementById('app');
     if (appEl) {
