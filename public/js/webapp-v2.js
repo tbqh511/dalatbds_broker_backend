@@ -6,16 +6,7 @@ const navIds = ['nav-home','nav-search','nav-post','nav-activity','nav-profile']
 
 window.goTo = function(page){
   if((page === 'activity' || page === 'profile') && window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.customerRole === 'guest') {
-    var tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && tg.showPopup) {
-      tg.showPopup({
-        title: 'Chua co tai khoan',
-        message: 'Vui long quay lai Bot chat va chia se so dien thoai de tao tai khoan.',
-        buttons: [{ type: 'close' }]
-      });
-    } else {
-      alert('Ban chua co tai khoan. Vui long quay lai Bot chat va chia se so dien thoai de tao tai khoan.');
-    }
+    showGuestDialog();
     return;
   }
   
@@ -3637,6 +3628,38 @@ document.getElementById('sendModalOverlay')?.addEventListener('click',function(e
 // wire share-sheet close on backdrop
 document.getElementById('shareSheetOverlay')?.addEventListener('click',function(e){
   if(e.target===this) closeShareSheet();
+});
+
+// ============ GUEST DIALOG (no-account prompt) ============
+window.showGuestDialog = function(){
+  var el = document.getElementById('guestDialogOverlay');
+  if(el) el.classList.add('open');
+};
+
+window.closeGuestDialog = function(){
+  var el = document.getElementById('guestDialogOverlay');
+  if(el) el.classList.remove('open');
+};
+
+window.guestShareContact = function(){
+  closeGuestDialog();
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if(!tg) return;
+
+  if(typeof tg.requestContact === 'function'){
+    tg.requestContact(function(sent){
+      if(sent){
+        tg.close();
+      }
+    });
+  } else {
+    tg.close();
+  }
+};
+
+// wire guest-dialog close on backdrop
+document.getElementById('guestDialogOverlay')?.addEventListener('click',function(e){
+  if(e.target===this) closeGuestDialog();
 });
 
 // ============ REFERRAL FUNCTIONS ============

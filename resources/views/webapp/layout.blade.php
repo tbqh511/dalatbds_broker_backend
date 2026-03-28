@@ -63,6 +63,28 @@
   @include('webapp.subpages.likedbds')
   @include('webapp.subpages.reviews')
 
+  {{-- GUEST DIALOG — no-account prompt --}}
+  <div class="guest-dialog-overlay" id="guestDialogOverlay">
+    <div class="guest-dialog">
+      <button class="guest-dialog-close" onclick="closeGuestDialog()" aria-label="Đóng">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="guest-dialog-logo">
+        <img src="{{ asset('images/logo.svg') }}" alt="Đà Lạt BĐS" style="height:40px;width:auto;">
+      </div>
+      <div class="guest-dialog-title">Bắt đầu hành trình ngay!</div>
+      <div class="guest-dialog-body">
+        Bạn hãy quay lại Bot chat và chia sẻ số điện thoại để tụi mình mở tài khoản cho bạn nhé. Hàng ngàn cơ hội an cư và đầu tư đang chờ đón!
+      </div>
+      <div class="guest-dialog-actions">
+        <button class="guest-dialog-btn guest-dialog-btn-outline" onclick="closeGuestDialog()">Đóng</button>
+        <button class="guest-dialog-btn guest-dialog-btn-primary" onclick="guestShareContact()">Chia sẻ</button>
+      </div>
+    </div>
+  </div>
+
   @include('webapp.partials.toast')
 
 </div><!-- end #app -->
@@ -183,14 +205,10 @@
         sessionStorage.removeItem('referral_code');
         window.location.reload();
       } else if (data.status === 'guest') {
-        if (tg.showPopup) {
-          tg.showPopup({
-            title: 'Chua co tai khoan',
-            message: 'Vui long quay lai Bot chat va chia se so dien thoai de tao tai khoan.',
-            buttons: [{ type: 'close' }]
-          });
+        if (typeof showGuestDialog === 'function') {
+          showGuestDialog();
         } else {
-          alert('Ban chua co tai khoan. Vui long quay lai Bot chat va chia se so dien thoai de tao tai khoan.');
+          alert('Bạn chưa có tài khoản. Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.');
         }
       }
     })
