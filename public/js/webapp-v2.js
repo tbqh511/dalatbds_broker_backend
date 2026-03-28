@@ -3642,20 +3642,89 @@ window.closeGuestDialog = function(){
 };
 
 window.guestShareContact = function(){
-  closeGuestDialog();
   var tg = window.Telegram && window.Telegram.WebApp;
   if(!tg) return;
 
   if(typeof tg.requestContact === 'function'){
     tg.requestContact(function(sent){
       if(sent){
-        tg.close();
+        showContactProcessingUI();
+        pollLoginAfterContact(5);
       }
     });
   } else {
+    // Fallback: đóng webapp, user quay lại bot để share thủ công
+    closeGuestDialog();
     tg.close();
   }
 };
+
+function showContactProcessingUI(){
+  var dialog = document.querySelector('#guestDialogOverlay .guest-dialog');
+  if(dialog){
+    dialog.innerHTML = '<div style="text-align:center;padding:32px 16px;">'
+      + '<div style="width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:var(--primary-color,#2563eb);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;"></div>'
+      + '<p style="font-size:15px;color:#374151;margin:0;">Đang tạo tài khoản...</p>'
+      + '<p style="font-size:13px;color:#9ca3af;margin:8px 0 0;">Vui lòng chờ trong giây lát</p>'
+      + '</div>';
+  }
+}
+
+function showContactRetryFailed(){
+  var dialog = document.querySelector('#guestDialogOverlay .guest-dialog');
+  if(dialog){
+    dialog.innerHTML = '<div style="text-align:center;padding:32px 16px;">'
+      + '<p style="font-size:15px;color:#374151;margin:0 0 12px;">Chưa thể đồng bộ tài khoản</p>'
+      + '<p style="font-size:13px;color:#9ca3af;margin:0 0 20px;">Vui lòng đóng và mở lại ứng dụng</p>'
+      + '<button onclick="window.Telegram.WebApp.close()" style="background:var(--primary-color,#2563eb);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Đóng ứng dụng</button>'
+      + '</div>';
+  }
+}
+
+function pollLoginAfterContact(retriesLeft){
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var cfg = window.WEBAPP_CONFIG || {};
+
+  fetch('/api/webapp/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': cfg.csrfToken || document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      'Accept': 'application/json'
+    },
+    credentials: 'same-origin',
+    body: JSON.stringify({
+      initData: tg.initData,
+      referral_code: sessionStorage.getItem('referral_code') || ''
+    })
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    if(data.status === 'authenticated'){
+      sessionStorage.removeItem('referral_code');
+      var appEl = document.getElementById('app');
+      if(appEl){
+        appEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;"><div style="width:24px;height:24px;border:3px solid #f3f3f3;border-top:3px solid var(--primary-color);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px;"></div><p style="color:#666;font-size:14px;margin:0;">Đang đồng bộ dữ liệu...</p></div>';
+      }
+      setTimeout(function(){
+        var url = new URL(window.location.href);
+        url.searchParams.set('t', new Date().getTime());
+        window.location.replace(url.href);
+      }, 800);
+    } else if(retriesLeft > 0){
+      setTimeout(function(){ pollLoginAfterContact(retriesLeft - 1); }, 2000);
+    } else {
+      showContactRetryFailed();
+    }
+  })
+  .catch(function(){
+    if(retriesLeft > 0){
+      setTimeout(function(){ pollLoginAfterContact(retriesLeft - 1); }, 2000);
+    } else {
+      showContactRetryFailed();
+    }
+  });
+}
 
 // wire guest-dialog close on backdrop
 document.getElementById('guestDialogOverlay')?.addEventListener('click',function(e){
