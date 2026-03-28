@@ -158,6 +158,12 @@
 {{-- Telegram auto-login: runs after webapp-v2.js so deep link handler has already set referral_code in sessionStorage --}}
 <script>
 (function() {
+  // Nếu browser đang ở /webapp/auth (do authRedirect() render page trực tiếp thay vì redirect)
+  // → sửa URL về /webapp để tránh prompt "resubmit form?" khi refresh
+  if (window.location.pathname === '/webapp/auth') {
+    history.replaceState(null, '', '/webapp');
+  }
+
   var cfg = window.WEBAPP_CONFIG || {};
   var tg = window.Telegram && window.Telegram.WebApp;
 

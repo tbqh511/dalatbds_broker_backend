@@ -4223,16 +4223,16 @@ class TelegramWebAppController extends Controller
                 }
             }
 
-            // Ghi user ID trực tiếp vào session hiện tại, KHÔNG regenerate session ID.
-            // Auth::login() nội bộ gọi session()->migrate(true) tạo session ID mới → trả về
-            // Set-Cookie trong 302 redirect. Telegram WebView không xử lý Set-Cookie từ
-            // redirect response đáng tin cậy nên browser follow redirect với cookie cũ
-            // (đã bị invalidate) → server tạo guest session mới → lặp vô hạn.
-            // Giải pháp: put user vào session hiện tại, session ID không đổi, không cần
-            // Set-Cookie mới, browser dùng đúng cookie khi follow redirect.
+            // Thay vì redirect (302 → GET /webapp), render page trực tiếp từ POST response.
+            // Lý do: Telegram WebView (cả Android lẫn iOS) đôi khi không gửi đúng session
+            // cookie khi follow redirect sau form POST, khiến server tạo session mới và
+            // không nhận ra user → loop vô hạn.
+            // Giải pháp PRG thay thế: set user vào guard + session, render index() ngay tại đây.
+            // JS trong layout sẽ dùng history.replaceState để sửa URL từ /webapp/auth → /webapp.
+            Auth::guard('webapp')->setUser($customer); // set in-memory cho request này
             $request->session()->put(Auth::guard('webapp')->getName(), $customer->id);
-            $request->session()->save(); // Force flush before redirect so cookie is valid immediately
-            return redirect('/webapp?login_status=ok');
+            $request->session()->save(); // flush để các request sau (refresh) cũng có session
+            return $this->index($request);
         }
 
         // Chưa có user → cache referral code để Bot dùng khi tạo account
