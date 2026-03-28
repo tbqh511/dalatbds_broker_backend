@@ -4231,7 +4231,8 @@ class TelegramWebAppController extends Controller
             // Giải pháp: put user vào session hiện tại, session ID không đổi, không cần
             // Set-Cookie mới, browser dùng đúng cookie khi follow redirect.
             $request->session()->put(Auth::guard('webapp')->getName(), $customer->id);
-            return redirect('/webapp');
+            $request->session()->save(); // Force flush before redirect so cookie is valid immediately
+            return redirect('/webapp?login_status=ok');
         }
 
         // Chưa có user → cache referral code để Bot dùng khi tạo account

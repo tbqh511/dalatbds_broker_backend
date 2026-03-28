@@ -188,7 +188,11 @@
       hasSession = true;
     }
   }
-  if (hasSession) return;
+  if (hasSession) {
+    sessionStorage.removeItem('_auth_submit');
+    sessionStorage.removeItem('_auth_loop');
+    return;
+  }
 
   // ─── CHƯA CÓ SESSION (hoặc session không khớp) → Cần xác thực qua Telegram ──────────────
   if (!tg || !tg.initData) {
@@ -224,6 +228,31 @@
     document.addEventListener('DOMContentLoaded', function() {
       if (typeof showGuestDialog === 'function') showGuestDialog();
     });
+    return;
+  }
+
+  // ─── Auth thành công server-side (login_status=ok) nhưng session chưa load ──
+  if (_loginStatus === 'ok') {
+    // Trường hợp bình thường đã được xử lý ở hasSession=true phía trên.
+    // Đây là trường hợp hiếm: server set session thành công nhưng browser
+    // chưa đọc được (race condition hoặc WebView quirk).
+    // → Thử reload 1 lần sạch; nếu vẫn không được thì hiện lỗi.
+    var _loopCount = parseInt(sessionStorage.getItem('_auth_loop') || '0', 10);
+    if (_loopCount >= 1) {
+      sessionStorage.removeItem('_auth_loop');
+      var _errEl = document.getElementById('app');
+      if (_errEl) {
+        _errEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:24px;">'
+          + '<img src="/images/logo.svg" alt="Đà Lạt BĐS" style="height:48px;margin-bottom:16px;">'
+          + '<h3 style="margin:0 0 8px;color:#333;">Không thể kết nối phiên</h3>'
+          + '<p style="color:#666;font-size:14px;margin:0 0 20px;">Vui lòng đóng và mở lại ứng dụng.</p>'
+          + '<button onclick="window.location.reload()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Thử lại</button>'
+          + '</div>';
+      }
+      return;
+    }
+    sessionStorage.setItem('_auth_loop', '1');
+    window.location.replace(window.location.pathname); // reload không có query param
     return;
   }
 
@@ -264,6 +293,23 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
+    // Bảo vệ chống loop vô hạn: nếu đã submit quá 3 lần mà vẫn không có session
+    // (trường hợp không có login_status=ok trong URL) → hiện lỗi thay vì loop tiếp
+    var _submitCount = parseInt(sessionStorage.getItem('_auth_submit') || '0', 10);
+    if (_submitCount >= 3) {
+      sessionStorage.removeItem('_auth_submit');
+      var _errEl2 = document.getElementById('app');
+      if (_errEl2) {
+        _errEl2.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:24px;">'
+          + '<img src="/images/logo.svg" alt="Đà Lạt BĐS" style="height:48px;margin-bottom:16px;">'
+          + '<h3 style="margin:0 0 8px;color:#333;">Không thể xác thực</h3>'
+          + '<p style="color:#666;font-size:14px;margin:0 0 20px;">Vui lòng đóng và mở lại ứng dụng trong Telegram.</p>'
+          + '<button onclick="sessionStorage.clear();window.location.reload()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Thử lại</button>'
+          + '</div>';
+      }
+      return;
+    }
+    sessionStorage.setItem('_auth_submit', _submitCount + 1);
     submitAuthForm(0);
   });
 })();
