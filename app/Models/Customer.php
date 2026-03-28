@@ -154,7 +154,7 @@ class Customer extends Authenticatable implements JWTSubject
         return $this->hasMany(Usertokens::class, 'customer_id');
     }
     // Danh sách role hợp lệ của webapp
-    public const VALID_ROLES = ['guest', 'broker', 'bds_admin', 'sale', 'sale_admin', 'admin'];
+    public const VALID_ROLES = ['broker', 'bds_admin', 'sale', 'sale_admin', 'admin'];
 
     // Hierarchy: mỗi role kế thừa quyền của các role thấp hơn (đồng bộ với webapp-v2.js)
     public static function roleHierarchy(): array
@@ -172,8 +172,8 @@ class Customer extends Authenticatable implements JWTSubject
     /**
      * Tính role hiệu lực theo logic nghiệp vụ:
      * - Không có SĐT → guest (dù role DB là gì)
-     * - Có SĐT, role được cấp (broker/sale/sale_admin/bds_admin/admin) → dùng role đó
-     * - Có SĐT, role DB là 'customer'/null/unknown → broker (mặc định)
+     * - Có SĐT, role hợp lệ (broker/sale/sale_admin/bds_admin/admin) → dùng role đó
+     * - Có SĐT, role DB là 'guest'/null/unknown → broker (mặc định)
      */
     public function getEffectiveRole(): string
     {
@@ -185,6 +185,7 @@ class Customer extends Authenticatable implements JWTSubject
             return $this->role;
         }
 
+        // Có SĐT nhưng role không hợp lệ (guest/null/unknown) → mặc định broker
         return 'broker';
     }
 
