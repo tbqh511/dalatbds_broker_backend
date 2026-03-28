@@ -2951,6 +2951,9 @@ class ApiController extends Controller
 
         $telegramUserData = $this->validateTelegramInitData($initData);
         if (!$telegramUserData) {
+            \Log::warning('WebApp login: Telegram initData validation failed', [
+                'has_bot_token' => !empty(env('TELEGRAM_BOT_TOKEN')),
+            ]);
             return response()->json(['error' => true, 'message' => 'Xác thực Telegram thất bại'], 403);
         }
 

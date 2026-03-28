@@ -205,10 +205,17 @@
         'X-CSRF-TOKEN': cfg.csrfToken || document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
         'Accept': 'application/json'
       },
+      credentials: 'same-origin',
       body: JSON.stringify({ initData: tg.initData, referral_code: refCode })
     })
-    .then(function(res) { return res.json(); })
+    .then(function(res) {
+      if (!res.ok) {
+        console.error('[WebApp Login] HTTP error:', res.status, res.statusText);
+      }
+      return res.json();
+    })
     .then(function(data) {
+      console.log('[WebApp Login] Response:', data.status || 'error', data.message || '');
       if (data.status === 'authenticated') {
         sessionStorage.removeItem('referral_code');
         window.location.reload();
@@ -223,10 +230,12 @@
             alert('Bạn chưa có tài khoản. Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.');
           }
         }
+      } else if (data.error) {
+        console.error('[WebApp Login] Server error:', data.message);
       }
     })
     .catch(function(err) {
-      console.error('Telegram WebApp login error:', err);
+      console.error('[WebApp Login] Request failed:', err);
     });
   });
 })();
