@@ -160,20 +160,28 @@
 (function() {
   var cfg = window.WEBAPP_CONFIG || {};
   var tg = window.Telegram && window.Telegram.WebApp;
+  var hasSession = cfg.customerId !== null && cfg.customerId !== undefined;
 
   // If already authenticated, verify identity matches current Telegram user
-  if (cfg.customerId !== null && cfg.customerId !== undefined) {
+  if (hasSession) {
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
       var sessionTgId = String(cfg.customerProfile.telegram_id || '');
       var currentTgId = String(tg.initDataUnsafe.user.id || '');
+
       if (sessionTgId && currentTgId && sessionTgId === currentTgId) {
         return; // Identity matches, keep session
       }
-      // Identity mismatch — logout old session first, then re-authenticate
-      fetch('/webapp/logout', { method: 'GET', credentials: 'same-origin' })
-        .then(function() { window.location.reload(); })
-        .catch(function() { window.location.reload(); });
-      return;
+
+      if (sessionTgId && currentTgId && sessionTgId !== currentTgId) {
+        // True identity mismatch — logout old session first, then re-authenticate
+        fetch('/webapp/logout', { method: 'GET', credentials: 'same-origin' })
+          .then(function() { window.location.reload(); })
+          .catch(function() { window.location.reload(); });
+        return;
+      }
+
+      // sessionTgId is empty — session customer has no telegram_id.
+      // Don't logout. Fall through to call loginViaMiniApp which will link telegram_id.
     } else {
       return; // Not inside Telegram, keep existing session
     }
@@ -205,10 +213,15 @@
         sessionStorage.removeItem('referral_code');
         window.location.reload();
       } else if (data.status === 'guest') {
-        if (typeof showGuestDialog === 'function') {
-          showGuestDialog();
-        } else {
-          alert('Bạn chưa có tài khoản. Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.');
+        // Only show guest dialog if user doesn't already have a valid session.
+        // If hasSession is true, loginViaMiniApp couldn't link telegram_id but
+        // the session is still valid — keep it, don't show guest dialog.
+        if (!hasSession) {
+          if (typeof showGuestDialog === 'function') {
+            showGuestDialog();
+          } else {
+            alert('Bạn chưa có tài khoản. Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.');
+          }
         }
       }
     })

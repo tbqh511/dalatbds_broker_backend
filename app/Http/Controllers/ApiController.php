@@ -2894,68 +2894,82 @@ class ApiController extends Controller
     //* END :: get_customers_statistics *//
 
     //HuyTBQ: Telegram WebApp Login
-    public function loginViaMiniApp(Request $request)
+    /**
+     * Xác thực chữ ký Telegram initData.
+     * Trả về mảng thông tin user nếu hợp lệ, null nếu không.
+     */
+    private function validateTelegramInitData(string $initData): ?array
     {
-        // 1. Nhận initData và referral_code từ Frontend gửi lên
-        $initData = $request->input('initData');
-        $referralCode = $request->input('referral_code');
-        
-        if (!$initData) {
-            return response()->json(['error' => true, 'message' => 'Không tìm thấy initData'], 400);
-        }
-
-        // 2. Phân tách chuỗi dữ liệu thành mảng
         parse_str($initData, $data);
 
-        // Kiểm tra chữ ký hash
         if (!isset($data['hash'])) {
-            return response()->json(['error' => true, 'message' => 'Dữ liệu không hợp lệ (thiếu hash)'], 401);
+            return null;
         }
 
         $receivedHash = $data['hash'];
-        unset($data['hash']); // QUAN TRỌNG: Phải bỏ hash ra trước khi sắp xếp
+        unset($data['hash']);
 
-        // 3. Sắp xếp dữ liệu theo key (a-z) theo quy chuẩn Telegram
         ksort($data);
 
-        // 4. Tạo chuỗi đối chiếu (Data Check String)
         $dataCheckArr = [];
         foreach ($data as $key => $value) {
             $dataCheckArr[] = $key . '=' . $value;
         }
         $dataCheckString = implode("\n", $dataCheckArr);
 
-        // 5. Tạo Secret Key từ Bot Token
-        // Theo tài liệu: HMAC-SHA256 của Bot Token với key là "WebAppData"
         $botToken = env('TELEGRAM_BOT_TOKEN');
         if (!$botToken) {
-            return response()->json(['error' => true, 'message' => 'Server chưa cấu hình Bot Token'], 500);
+            return null;
         }
-        
-        $secretKey = hash_hmac('sha256', $botToken, "WebAppData", true);
 
-        // 6. Tính toán Hash
+        $secretKey = hash_hmac('sha256', $botToken, "WebAppData", true);
         $calculatedHash = bin2hex(hash_hmac('sha256', $dataCheckString, $secretKey, true));
 
-        // 7. SO SÁNH CHỮ KÝ
         if (strcmp($calculatedHash, $receivedHash) !== 0) {
-            return response()->json(['error' => true, 'message' => 'Xác thực thất bại! Chữ ký không khớp.'], 403);
+            return null;
         }
 
-        // --- ĐẾN ĐÂY LÀ HÀNG THẬT 100% ---
-
-        // 8. Kiểm tra thời hạn (Optional: ví dụ 24h)
         if (isset($data['auth_date']) && (time() - $data['auth_date'] > 86400)) {
-             return response()->json(['error' => true, 'message' => 'Phiên đăng nhập đã hết hạn, vui lòng tải lại trang'], 401);
+            return null;
         }
 
-        // 9. Lấy thông tin User
-        // initData chứa field 'user' dạng JSON String -> Cần decode
-        $telegramUserData = json_decode($data['user'], true);
+        if (!isset($data['user'])) {
+            return null;
+        }
+
+        return json_decode($data['user'], true);
+    }
+
+    public function loginViaMiniApp(Request $request)
+    {
+        $initData = $request->input('initData');
+        $referralCode = $request->input('referral_code');
+
+        if (!$initData) {
+            return response()->json(['error' => true, 'message' => 'Không tìm thấy initData'], 400);
+        }
+
+        $telegramUserData = $this->validateTelegramInitData($initData);
+        if (!$telegramUserData) {
+            return response()->json(['error' => true, 'message' => 'Xác thực Telegram thất bại'], 403);
+        }
+
         $telegramId = $telegramUserData['id'];
 
-        // 10. Tìm Customer trong Database
+        // Tìm Customer theo telegram_id
         $customer = Customer::where('telegram_id', $telegramId)->first();
+
+        // Nếu không tìm thấy, kiểm tra session hiện tại có customer chưa có telegram_id
+        if (!$customer) {
+            $sessionCustomer = Auth::guard('webapp')->user();
+            if ($sessionCustomer && empty($sessionCustomer->telegram_id)) {
+                // Liên kết telegram_id với customer hiện tại trong session
+                $sessionCustomer->telegram_id = $telegramId;
+                $sessionCustomer->save();
+                $customer = $sessionCustomer;
+                \Log::info("Linked telegram_id {$telegramId} to session Customer #{$customer->id}");
+            }
+        }
 
         if ($customer) {
             // Gán referrer nếu user chưa có referred_by và có referral_code
@@ -2976,7 +2990,7 @@ class ApiController extends Controller
 
             // Logic tái sử dụng hoặc tạo mới JWT
             $token = $this->handleJwtToken($customer);
-            
+
             if (!$token) {
                 return response()->json(['error' => true, 'message' => 'Lỗi tạo Token'], 500);
             }
