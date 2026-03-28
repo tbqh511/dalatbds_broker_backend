@@ -3728,14 +3728,27 @@ function loadReferralData() {
       if(qrSkeleton) qrSkeleton.remove();
       if(qrContainer && _refData.share_url) {
         if(typeof qrcode === 'function') {
-          // Clear old content before generating new QR
-          qrContainer.innerHTML = '';
           try {
             var qr = qrcode(0, 'M');
             qr.addData(_refData.share_url);
             qr.make();
-            // Use createTableTag (pure HTML table) to avoid canvas/dataURL issues in Telegram WebView
-            qrContainer.innerHTML = qr.createTableTag(4, 0);
+            // Build SVG manually — no canvas, no table, works in Telegram WebView
+            var n = qr.getModuleCount();
+            var cell = Math.floor(140 / n);
+            var sz = n * cell;
+            var rects = '';
+            for(var ri = 0; ri < n; ri++) {
+              for(var ci = 0; ci < n; ci++) {
+                if(qr.isDark(ri, ci)) {
+                  rects += '<rect x="' + (ci * cell) + '" y="' + (ri * cell) + '" width="' + cell + '" height="' + cell + '"/>';
+                }
+              }
+            }
+            var svgHtml = '<svg xmlns="http://www.w3.org/2000/svg" width="' + sz + '" height="' + sz + '" style="display:block;border-radius:4px;">'
+              + '<rect width="' + sz + '" height="' + sz + '" fill="#fff"/>'
+              + '<g fill="#000">' + rects + '</g>'
+              + '</svg>';
+            qrContainer.innerHTML = svgHtml;
           } catch(e) {
             qrContainer.innerHTML = '<div style="width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666;text-align:center;padding:8px;">QR không khả dụng</div>';
           }
