@@ -181,19 +181,10 @@
     history.replaceState(null, '', _cleanUrl.pathname + (_cleanUrl.search || '') + (_cleanUrl.hash || ''));
   }
 
-  // ─── ĐÃ CÓ SESSION KHỚP VỚI TELEGRAM → KHÔNG LÀM GÌ CẢ ────────────
-  var hasSession = false;
-  if (cfg.customerId) {
-    var tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
-    if (tgUser) {
-      if (cfg.customerProfile && String(cfg.customerProfile.telegram_id) === String(tgUser.id)) {
-        hasSession = true;
-      }
-    } else {
-      // Mở ngoài Telegram nhưng đã có session hợp lệ
-      hasSession = true;
-    }
-  }
+  // ─── ĐÃ CÓ SESSION → KHÔNG LÀM GÌ CẢ ────────────────────────────────
+  // Nếu server đã render page với customerId, auth đã được xác minh server-side
+  // (HMAC-SHA256 của initData). Không cần cross-check Telegram ID phía JS nữa.
+  var hasSession = !!cfg.customerId;
   if (hasSession) {
     sessionStorage.removeItem('_auth_submit');
     sessionStorage.removeItem('_auth_loop');

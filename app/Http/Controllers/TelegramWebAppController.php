@@ -4232,7 +4232,13 @@ class TelegramWebAppController extends Controller
             Auth::guard('webapp')->setUser($customer); // set in-memory cho request này
             $request->session()->put(Auth::guard('webapp')->getName(), $customer->id);
             $request->session()->save(); // flush để các request sau (refresh) cũng có session
-            return $this->index($request);
+            \Log::info("WebApp authRedirect: customer #{$customer->id} (tg:{$telegramId}) authenticated, rendering index directly");
+            try {
+                return $this->index($request);
+            } catch (\Throwable $e) {
+                \Log::error("WebApp authRedirect: index() threw: " . $e->getMessage(), ['customer_id' => $customer->id]);
+                return redirect('/webapp?login_status=ok');
+            }
         }
 
         // Chưa có user → cache referral code để Bot dùng khi tạo account
