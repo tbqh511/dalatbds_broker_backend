@@ -3709,6 +3709,9 @@ function loadReferralData() {
       var qrContainer = document.getElementById('refQrCode');
       var qrSkeleton = document.getElementById('refQrSkeleton');
       if(qrContainer && _refData.share_url && typeof qrcode === 'function') {
+        // Clear old QR images before generating new one
+        var oldImgs = qrContainer.querySelectorAll('img');
+        oldImgs.forEach(function(img) { img.remove(); });
         var qr = qrcode(0, 'M');
         qr.addData(_refData.share_url);
         qr.make();

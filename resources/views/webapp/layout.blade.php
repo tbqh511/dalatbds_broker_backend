@@ -163,15 +163,12 @@
   var hasSession = cfg.customerId !== null && cfg.customerId !== undefined;
 
   // ─── ĐÃ CÓ SESSION → KHÔNG LÀM GÌ CẢ ─────────────────────────
-  // Session hợp lệ = trang đã render đúng role từ server.
-  // TUYỆT ĐỐI không gọi API, không reload, không show guest dialog.
   if (hasSession) {
     return;
   }
 
   // ─── CHƯA CÓ SESSION → Cần xác thực qua Telegram ──────────────
   if (!tg || !tg.initData) {
-    // Không phải Telegram → hiện thông báo yêu cầu mở qua Telegram
     var appEl = document.getElementById('app');
     if (appEl) {
       appEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:20px;">'
@@ -185,9 +182,8 @@
 
   tg.expand();
 
-  document.addEventListener('DOMContentLoaded', function() {
+  function doLogin(retriesLeft) {
     var refCode = sessionStorage.getItem('referral_code') || '';
-
     fetch('/api/webapp/login', {
       method: 'POST',
       headers: {
@@ -204,14 +200,23 @@
         sessionStorage.removeItem('referral_code');
         window.location.reload();
       } else if (data.status === 'guest') {
-        if (typeof showGuestDialog === 'function') {
-          showGuestDialog();
+        // Bot có thể chưa kịp xử lý webhook → retry sau 2 giây
+        if (retriesLeft > 0) {
+          setTimeout(function() { doLogin(retriesLeft - 1); }, 2000);
+        } else {
+          if (typeof showGuestDialog === 'function') {
+            showGuestDialog();
+          }
         }
       }
     })
     .catch(function(err) {
       console.error('[WebApp Login] Failed:', err);
     });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    doLogin(2); // Thử tối đa 3 lần (1 lần đầu + 2 retry)
   });
 })();
 </script>
