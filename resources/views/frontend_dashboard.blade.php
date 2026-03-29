@@ -188,8 +188,8 @@
             } else if (data.status === 'guest') {
                 document.getElementById('webapp-status').innerText = "Bạn chưa có tài khoản.";
                 tg.showPopup({
-                    title: 'Chưa có tài khoản',
-                    message: 'Vui lòng quay lại Bot chat và chia sẻ số điện thoại để tạo tài khoản.',
+                    title: 'Chào mừng đến DalatBDS!',
+                    message: 'Nhấn "Xác nhận" và chia sẻ số điện thoại để tụi mình tạo tài khoản miễn phí cho bạn ngay nhé.',
                     buttons: [{ type: 'close' }]
                 });
             }

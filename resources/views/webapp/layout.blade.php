@@ -74,13 +74,13 @@
       <div class="guest-dialog-logo">
         <img src="{{ asset('images/logo.svg') }}" alt="Đà Lạt BĐS" style="height:40px;width:auto;">
       </div>
-      <div class="guest-dialog-title">Bắt đầu hành trình ngay!</div>
+      <div class="guest-dialog-title">Chào mừng đến DalatBDS!</div>
       <div class="guest-dialog-body">
-        Bạn hãy quay lại Bot chat và chia sẻ số điện thoại để tụi mình mở tài khoản cho bạn nhé. Hàng ngàn cơ hội an cư và đầu tư đang chờ đón!
+        Chỉ một bước nữa thôi! Nhấn <strong>"Xác nhận"</strong> và chia sẻ số điện thoại để tụi mình tạo tài khoản miễn phí cho bạn ngay nhé. 🏡
       </div>
       <div class="guest-dialog-actions">
-        <button class="guest-dialog-btn guest-dialog-btn-outline" onclick="closeGuestDialog()">Đóng</button>
-        <button class="guest-dialog-btn guest-dialog-btn-primary" onclick="guestShareContact()">Chia sẻ</button>
+        <button class="guest-dialog-btn guest-dialog-btn-outline" onclick="closeGuestDialog()">Để sau</button>
+        <button class="guest-dialog-btn guest-dialog-btn-primary" onclick="guestShareContact()">Xác nhận</button>
       </div>
     </div>
   </div>
