@@ -263,7 +263,7 @@ class TelegramBotController extends Controller
 
                 Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                     'chat_id' => $chatId,
-                    'text' => "✅ Đã lưu số điện thoại của bạn thành công. Hãy quay lại WebApp để tiếp tục trải nghiệm!",
+                    'text' => "🎉 Chào mừng bạn gia nhập đội ngũ môi giới DalatBDS!\n\nSố điện thoại đã được xác nhận thành công. Từ giờ bạn có thể đăng tin, quản lý khách hàng và theo dõi hoa hồng ngay trên ứng dụng.\n\nChúc bạn nhiều giao dịch thành công! 💪🏡",
                     'reply_markup' => ['remove_keyboard' => true],
                 ]);
             }
