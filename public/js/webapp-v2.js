@@ -3676,6 +3676,8 @@ window.guestShareContact = function(){
             form.appendChild(inp);
           });
           document.body.appendChild(form);
+          // Đánh dấu user vừa share SĐT để auth handler biết cần retry (chờ bot webhook xử lý)
+          try { sessionStorage.setItem('_phone_shared', '1'); } catch(e) {}
           form.submit();
         }, 3000);
       }

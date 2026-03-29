@@ -11,6 +11,14 @@
 </head>
 <body>
 
+@if(!isset($customer) || $customer === null)
+<div id="auth-loading-overlay" style="position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+  <div style="width:28px;height:28px;border:3px solid #f3f3f3;border-top-color:#3270FC;border-radius:50%;animation:authOverlaySpin 1s linear infinite;margin-bottom:14px;"></div>
+  <p style="color:#666;font-size:14px;margin:0;">Đang đồng bộ dữ liệu...</p>
+  <style>@keyframes authOverlaySpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+</div>
+@endif
+
 <div id="app">
 
   @include('webapp.partials.header')
@@ -158,6 +166,11 @@
 {{-- Telegram auto-login: runs after webapp-v2.js so deep link handler has already set referral_code in sessionStorage --}}
 <script>
 (function() {
+  function removeAuthOverlay() {
+    var ov = document.getElementById('auth-loading-overlay');
+    if (ov) ov.parentNode.removeChild(ov);
+  }
+
   // Nếu browser đang ở /webapp/auth (do authRedirect() render page trực tiếp thay vì redirect)
   // → sửa URL về /webapp để tránh prompt "resubmit form?" khi refresh
   if (window.location.pathname === '/webapp/auth') {
@@ -188,6 +201,7 @@
   if (hasSession) {
     sessionStorage.removeItem('_auth_submit');
     sessionStorage.removeItem('_auth_loop');
+    removeAuthOverlay();
     return;
   }
 
@@ -208,11 +222,16 @@
 
   // ─── Xử lý kết quả redirect từ POST /webapp/auth ────────────────────
   if (_loginStatus === 'guest') {
-    if (_loginRetry < 2) {
-      // Bot có thể chưa kịp xử lý webhook → thử lại sau 2.5 giây
+    var _phoneShared = false;
+    try { _phoneShared = sessionStorage.getItem('_phone_shared') === '1'; } catch(e) {}
+
+    if (_phoneShared && _loginRetry < 2) {
+      // Vừa share SĐT → bot có thể chưa kịp xử lý webhook → retry sau 2.5 giây
       setTimeout(function() { submitAuthForm(_loginRetry + 1); }, 2500);
     } else {
-      // Hết retry → hiện guest dialog
+      // Lần đầu mở (chưa share SĐT) HOẶC hết retry → hiện guest dialog ngay
+      sessionStorage.removeItem('_phone_shared');
+      removeAuthOverlay();
       document.addEventListener('DOMContentLoaded', function() {
         if (typeof showGuestDialog === 'function') showGuestDialog();
       });
@@ -222,6 +241,8 @@
 
   if (_loginStatus === 'error') {
     // initData không hợp lệ — không retry tự động, hiện guest dialog
+    sessionStorage.removeItem('_phone_shared');
+    removeAuthOverlay();
     document.addEventListener('DOMContentLoaded', function() {
       if (typeof showGuestDialog === 'function') showGuestDialog();
     });
@@ -295,6 +316,7 @@
     var _submitCount = parseInt(sessionStorage.getItem('_auth_submit') || '0', 10);
     if (_submitCount >= 3) {
       sessionStorage.removeItem('_auth_submit');
+      removeAuthOverlay();
       var _errEl2 = document.getElementById('app');
       if (_errEl2) {
         _errEl2.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:24px;">'
