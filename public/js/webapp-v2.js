@@ -304,6 +304,7 @@ window.openSubpage = function(id){
     if(acommDefaultTab) acommDefaultTab.classList.add('active');
     loadApproveComm(true);
   }
+  if(id === 'marketprices') { loadMarketPrices(true); }
 };
 window.closeSubpage = function(id){
   const sp = document.getElementById('subpage-'+id);
@@ -6579,3 +6580,241 @@ window.activityApp = function() {
     }
   }
 })();
+
+// ============================================================
+// MARKET PRICES ADMIN
+// ============================================================
+
+var mpGroups = [];
+var mpCurrentGroupLabel = null;
+
+window.loadMarketPrices = function(reset) {
+  var url = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes && window.WEBAPP_CONFIG.routes.adminMarketPricesJson;
+  if (!url) return;
+  if (reset) {
+    mpGroups = [];
+    mpCurrentGroupLabel = null;
+    var container = document.getElementById('mpListContainer');
+    if (container) {
+      container.innerHTML = '<div id="mpSkeletonLoader" style="padding:16px;">' +
+        '<div style="height:70px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;animation:pulse 1.5s infinite;"></div>' +
+        '<div style="height:70px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;animation:pulse 1.5s infinite;animation-delay:.15s;"></div>' +
+        '<div style="height:70px;background:var(--bg-secondary);border-radius:12px;animation:pulse 1.5s infinite;animation-delay:.3s;"></div>' +
+        '</div>';
+    }
+    document.getElementById('mpTabBar').innerHTML = '';
+  }
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      // Update hero stats
+      var stats = data.stats || {};
+      var heroEl = document.getElementById('mpHeroMain');
+      if (heroEl) heroEl.textContent = (stats.area_count || 0) + ' khu vực';
+      var areaEl = document.getElementById('mpAreaCount');
+      if (areaEl) areaEl.textContent = stats.area_count || '0';
+      var monthEl = document.getElementById('mpCurrentMonth');
+      if (monthEl) monthEl.textContent = stats.current_month || '—';
+      var avgEl = document.getElementById('mpAvgPrice');
+      if (avgEl) avgEl.textContent = stats.avg_price || '—';
+      var recEl = document.getElementById('mpRecordCount');
+      if (recEl) recEl.textContent = stats.record_count || '0';
+
+      mpGroups = data.groups || [];
+
+      // Render tabs
+      var tabBar = document.getElementById('mpTabBar');
+      if (tabBar) {
+        if (mpGroups.length === 0) {
+          tabBar.innerHTML = '';
+        } else {
+          tabBar.innerHTML = mpGroups.map(function(g, i) {
+            return '<button class="sp-tab' + (i === 0 ? ' active' : '') + '" onclick="mpSwitchTab(\'' + g.label + '\',this)">' + g.label + '</button>';
+          }).join('');
+        }
+      }
+
+      // Render first group
+      if (mpGroups.length > 0) {
+        mpCurrentGroupLabel = mpGroups[0].label;
+        mpRenderGroup(mpGroups[0]);
+      } else {
+        mpCurrentGroupLabel = null;
+        var container = document.getElementById('mpListContainer');
+        if (container) {
+          container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-tertiary);">' +
+            '<div style="font-size:32px;margin-bottom:12px;">📊</div>' +
+            '<div style="font-size:14px;font-weight:600;margin-bottom:6px;">Chưa có dữ liệu</div>' +
+            '<div style="font-size:12px;">Nhấn "Thêm khu vực mới" để bắt đầu nhập giá thị trường.</div>' +
+            '</div>';
+        }
+      }
+    })
+    .catch(function() {
+      var container = document.getElementById('mpListContainer');
+      if (container) {
+        container.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text-tertiary);">' +
+          '<div style="font-size:13px;">Lỗi kết nối. <a href="#" onclick="loadMarketPrices(true);return false;" style="color:var(--primary);">Thử lại</a></div>' +
+          '</div>';
+      }
+    });
+};
+
+window.mpSwitchTab = function(label, btn) {
+  document.querySelectorAll('#mpTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  mpCurrentGroupLabel = label;
+  var group = mpGroups.find(function(g) { return g.label === label; });
+  if (group) mpRenderGroup(group);
+};
+
+function mpRenderGroup(group) {
+  var container = document.getElementById('mpListContainer');
+  if (!container) return;
+  if (!group || !group.items || group.items.length === 0) {
+    container.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text-tertiary);font-size:13px;">Không có dữ liệu cho ' + (group ? group.label : 'tháng này') + '.</div>';
+    return;
+  }
+  var html = '<div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;">';
+  group.items.forEach(function(mp) {
+    var trendHtml = '';
+    if (mp.trend_dir === 'up') {
+      trendHtml = '<span style="color:#16a34a;font-size:11px;font-weight:600;">↑ ' + mp.trend_pct + '%</span>';
+    } else if (mp.trend_dir === 'dn') {
+      trendHtml = '<span style="color:#dc2626;font-size:11px;font-weight:600;">↓ ' + mp.trend_pct + '%</span>';
+    } else {
+      trendHtml = '<span style="color:var(--text-tertiary);font-size:11px;">—</span>';
+    }
+    html += '<div style="background:var(--bg-primary);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + mp.area_name + '</div>' +
+        '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">' + mp.formatted_price + '/m² &nbsp;' + trendHtml + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+        '<button onclick="mpOpenEditForm(' + mp.id + ',\'' + mp.area_name.replace(/'/g, "\\'") + '\',' + mp.avg_price_m2 + ',' + (mp.prev_price_m2 || 0) + ',' + mp.month + ',' + mp.year + ')" ' +
+          'style="padding:6px 10px;background:var(--primary-light);color:var(--primary);border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;">Sửa</button>' +
+        '<button onclick="mpOpenDelete(' + mp.id + ',\'' + mp.area_name.replace(/'/g, "\\'") + '\',' + mp.month + ',' + mp.year + ')" ' +
+          'style="padding:6px 10px;background:#fee2e2;color:#ef4444;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;">Xoá</button>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+window.mpOpenAddForm = function() {
+  document.getElementById('mpFormId').value = '';
+  document.getElementById('mpFormTitle').textContent = 'Thêm khu vực mới';
+  document.getElementById('mpFormAreaName').value = '';
+  document.getElementById('mpFormAvgPrice').value = '';
+  document.getElementById('mpFormPrevPrice').value = '';
+  var now = new Date();
+  document.getElementById('mpFormMonth').value = now.getMonth() + 1;
+  document.getElementById('mpFormYear').value = now.getFullYear();
+  document.getElementById('mpFormSheet').style.display = 'flex';
+};
+
+window.mpOpenEditForm = function(id, areaName, avgPrice, prevPrice, month, year) {
+  document.getElementById('mpFormId').value = id;
+  document.getElementById('mpFormTitle').textContent = 'Sửa: ' + areaName;
+  document.getElementById('mpFormAreaName').value = areaName;
+  document.getElementById('mpFormAvgPrice').value = avgPrice;
+  document.getElementById('mpFormPrevPrice').value = prevPrice || '';
+  document.getElementById('mpFormMonth').value = month;
+  document.getElementById('mpFormYear').value = year;
+  document.getElementById('mpFormSheet').style.display = 'flex';
+};
+
+window.mpCloseForm = function() {
+  document.getElementById('mpFormSheet').style.display = 'none';
+};
+
+window.mpSubmitForm = function() {
+  var id = document.getElementById('mpFormId').value;
+  var areaName = document.getElementById('mpFormAreaName').value.trim();
+  var avgPrice = document.getElementById('mpFormAvgPrice').value;
+  var prevPrice = document.getElementById('mpFormPrevPrice').value;
+  var month = document.getElementById('mpFormMonth').value;
+  var year = document.getElementById('mpFormYear').value;
+
+  if (!areaName || !avgPrice || !month || !year) {
+    if (typeof showToast === 'function') showToast('Vui lòng điền đầy đủ các trường bắt buộc.');
+    return;
+  }
+
+  var base = window.WEBAPP_CONFIG.routes.adminMarketPricesBase;
+  var url = id ? (base + id) : base.slice(0, -1);
+  var method = id ? 'PUT' : 'POST';
+
+  var btn = document.getElementById('mpFormSubmitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang lưu...'; }
+
+  fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': window.WEBAPP_CONFIG.csrfToken,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({
+      area_name:     areaName,
+      avg_price_m2:  parseFloat(avgPrice),
+      prev_price_m2: prevPrice ? parseFloat(prevPrice) : null,
+      month:         parseInt(month),
+      year:          parseInt(year),
+    }),
+  })
+  .then(function(r) {
+    if (r.status === 422) return r.json().then(function(d) { throw { userMsg: d.message || 'Dữ liệu không hợp lệ.' }; });
+    if (!r.ok) throw new Error('server');
+    return r.json();
+  })
+  .then(function() {
+    mpCloseForm();
+    if (typeof showToast === 'function') showToast('✓ Đã lưu thành công!');
+    loadMarketPrices(true);
+  })
+  .catch(function(err) {
+    var msg = (err && err.userMsg) ? err.userMsg : 'Lỗi kết nối. Vui lòng thử lại.';
+    if (typeof showToast === 'function') showToast(msg);
+  })
+  .finally(function() {
+    if (btn) { btn.disabled = false; btn.textContent = 'Lưu'; }
+  });
+};
+
+window.mpOpenDelete = function(id, areaName, month, year) {
+  document.getElementById('mpDeleteId').value = id;
+  var txt = document.getElementById('mpDeleteConfirmText');
+  if (txt) txt.innerHTML = 'Bạn chắc chắn muốn xoá dữ liệu giá của<br><strong style="color:#ef4444;">' + areaName + '</strong><br>tháng ' + month + '/' + year + '?';
+  document.getElementById('mpDeleteSheet').style.display = 'flex';
+};
+
+window.mpCloseDelete = function() {
+  document.getElementById('mpDeleteSheet').style.display = 'none';
+};
+
+window.mpConfirmDelete = function() {
+  var id = document.getElementById('mpDeleteId').value;
+  if (!id) return;
+  var url = window.WEBAPP_CONFIG.routes.adminMarketPricesBase + id;
+  fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRF-TOKEN': window.WEBAPP_CONFIG.csrfToken,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('server');
+    return r.json();
+  })
+  .then(function() {
+    mpCloseDelete();
+    if (typeof showToast === 'function') showToast('✓ Đã xoá thành công!');
+    loadMarketPrices(true);
+  })
+  .catch(function() {
+    if (typeof showToast === 'function') showToast('Lỗi kết nối. Vui lòng thử lại.');
+  });
+};

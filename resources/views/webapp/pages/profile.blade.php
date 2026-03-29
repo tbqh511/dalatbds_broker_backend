@@ -195,6 +195,14 @@
       </div>
       <div class="menu-item-right">›</div>
     </div>
+    <div class="menu-item" onclick="openSubpage('marketprices')">
+      <div class="menu-item-icon" style="background:#fef9c3;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="1 4 1 20 23 20"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Giá thị trường</div>
+        <div class="menu-item-sub">Quản lý giá/m² theo khu vực</div>
+      </div>
+      <div class="menu-item-right">›</div>
+    </div>
   </div>
 
   <!-- Referral section — tất cả roles -->

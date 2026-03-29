@@ -63,6 +63,7 @@
   @include('webapp.subpages.users')
   @include('webapp.subpages.reports')
   @include('webapp.subpages.approvecomm')
+  @include('webapp.subpages.marketprices')
   @include('webapp.subpages.editprofile')
   @include('webapp.subpages.notifset')
   @include('webapp.subpages.support')
@@ -141,6 +142,8 @@
       kpiTeamJson:      @json(app('router')->has('webapp.api.kpi-team') ? route('webapp.api.kpi-team') : null),
       kpiTeamSupport:   @json(app('router')->has('webapp.api.kpi-team.support') ? route('webapp.api.kpi-team.support') : null),
       adminReportsJson: @json(app('router')->has('webapp.admin.reports') ? route('webapp.admin.reports') : null),
+      adminMarketPricesJson: @json(app('router')->has('webapp.admin.market-prices.index') ? route('webapp.admin.market-prices.index') : null),
+      adminMarketPricesBase: '/webapp/api/admin/market-prices/',
     },
     notifSettings: @json($notifSettings ?? \App\Models\Customer::DEFAULT_NOTIFICATION_SETTINGS),
     customerProfile: {

@@ -144,6 +144,11 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
         Route::patch('/webapp/api/admin/users/{id}/role', [TelegramWebAppController::class, 'adminChangeUserRole'])->name('webapp.admin.change-role');
         Route::patch('/webapp/api/admin/users/{id}/toggle-active', [TelegramWebAppController::class, 'adminToggleUserActive'])->name('webapp.admin.toggle');
         Route::delete('/webapp/api/admin/users/{id}', [TelegramWebAppController::class, 'adminDeleteUser'])->name('webapp.admin.delete');
+        // Market Prices CRUD (admin only)
+        Route::get('/webapp/api/admin/market-prices', [TelegramWebAppController::class, 'adminMarketPricesIndex'])->name('webapp.admin.market-prices.index');
+        Route::post('/webapp/api/admin/market-prices', [TelegramWebAppController::class, 'adminMarketPricesStore'])->name('webapp.admin.market-prices.store');
+        Route::put('/webapp/api/admin/market-prices/{id}', [TelegramWebAppController::class, 'adminMarketPricesUpdate'])->name('webapp.admin.market-prices.update');
+        Route::delete('/webapp/api/admin/market-prices/{id}', [TelegramWebAppController::class, 'adminMarketPricesDestroy'])->name('webapp.admin.market-prices.destroy');
     });
     // Property approval routes (bds_admin + admin)
     Route::middleware(['webapp.role:bds_admin,admin'])->group(function () {

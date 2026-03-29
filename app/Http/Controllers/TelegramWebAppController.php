@@ -4324,4 +4324,115 @@ class TelegramWebAppController extends Controller
         if ($value === null) return $fallback;
         return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
+
+    // ============================================================
+    // MARKET PRICES ADMIN CRUD
+    // ============================================================
+
+    public function adminMarketPricesIndex()
+    {
+        $all = MarketPrice::orderByDesc('year')->orderByDesc('month')->orderBy('area_name')->get();
+
+        // Group by year-month
+        $grouped = [];
+        foreach ($all as $mp) {
+            $key = $mp->year . '-' . $mp->month;
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'label' => 'Tháng ' . $mp->month . '/' . $mp->year,
+                    'month' => $mp->month,
+                    'year'  => $mp->year,
+                    'items' => [],
+                ];
+            }
+            $grouped[$key]['items'][] = [
+                'id'            => $mp->id,
+                'area_name'     => $mp->area_name,
+                'avg_price_m2'  => $mp->avg_price_m2,
+                'prev_price_m2' => $mp->prev_price_m2,
+                'formatted_price' => $mp->formatted_price,
+                'trend_pct'     => $mp->trend_pct,
+                'trend_dir'     => $mp->trend_dir,
+                'month'         => $mp->month,
+                'year'          => $mp->year,
+            ];
+        }
+        $groups = array_values($grouped);
+
+        // Stats from the latest group
+        $latestGroup = $groups[0] ?? null;
+        $latestItems = $latestGroup ? $latestGroup['items'] : [];
+        $areaCount   = count($latestItems);
+        $avgPrice    = $areaCount > 0
+            ? round(array_sum(array_column($latestItems, 'avg_price_m2')) / $areaCount / 1_000_000, 1)
+            : 0;
+
+        return response()->json([
+            'stats' => [
+                'area_count'    => $areaCount,
+                'record_count'  => $all->count(),
+                'avg_price'     => $avgPrice . 'tr',
+                'current_month' => $latestGroup ? $latestGroup['label'] : '—',
+            ],
+            'groups' => $groups,
+        ]);
+    }
+
+    public function adminMarketPricesStore(Request $request)
+    {
+        $data = $request->validate([
+            'area_name'     => 'required|string|max:150',
+            'avg_price_m2'  => 'required|numeric|min:0',
+            'prev_price_m2' => 'nullable|numeric|min:0',
+            'month'         => 'required|integer|min:1|max:12',
+            'year'          => 'required|integer|min:2000|max:2100',
+        ]);
+
+        $exists = MarketPrice::where('area_name', $data['area_name'])
+            ->where('month', $data['month'])
+            ->where('year', $data['year'])
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Khu vực này đã có dữ liệu cho tháng/năm này.'], 422);
+        }
+
+        $record = MarketPrice::create($data);
+
+        return response()->json(['success' => true, 'id' => $record->id]);
+    }
+
+    public function adminMarketPricesUpdate(Request $request, int $id)
+    {
+        $record = MarketPrice::findOrFail($id);
+
+        $data = $request->validate([
+            'area_name'     => 'required|string|max:150',
+            'avg_price_m2'  => 'required|numeric|min:0',
+            'prev_price_m2' => 'nullable|numeric|min:0',
+            'month'         => 'required|integer|min:1|max:12',
+            'year'          => 'required|integer|min:2000|max:2100',
+        ]);
+
+        $exists = MarketPrice::where('area_name', $data['area_name'])
+            ->where('month', $data['month'])
+            ->where('year', $data['year'])
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Khu vực này đã có dữ liệu cho tháng/năm này.'], 422);
+        }
+
+        $record->update($data);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function adminMarketPricesDestroy(int $id)
+    {
+        MarketPrice::findOrFail($id)->delete();
+
+        return response()->json(['success' => true]);
+    }
 }
