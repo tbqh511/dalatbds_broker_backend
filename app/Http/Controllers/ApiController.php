@@ -228,8 +228,9 @@ class ApiController extends Controller
     {
         // 1. Validate dữ liệu đầu vào
         $validator = Validator::make($request->all(), [
-            'telegram_id' => 'required|numeric',
-            'secret' => 'required',
+            'telegram_id'   => 'required|numeric',
+            'secret'        => 'required',
+            'referral_code' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -249,7 +250,8 @@ class ApiController extends Controller
             ], 401);
         }
 
-        $telegramId = $request->telegram_id;
+        $telegramId   = $request->telegram_id;
+        $referralCode = trim($request->input('referral_code', ''));
 
         // 3. Tìm user trong Database
         $customer = Customer::where('telegram_id', $telegramId)->first();
@@ -262,6 +264,17 @@ class ApiController extends Controller
                     'status' => 'blocked',
                     'message' => 'Tài khoản đã bị khóa.'
                 ], 401);
+            }
+
+            // Gán referrer nếu user chưa có referred_by và bot truyền referral_code
+            if (!empty($referralCode) && empty($customer->referred_by)) {
+                $referrer = Customer::where('referral_code', $referralCode)->first();
+                if ($referrer && $referrer->id !== $customer->id) {
+                    $customer->referred_by = $referrer->id;
+                    $customer->save();
+                    \Log::info("Referral assigned via check_telegram_user: Customer #{$customer->id} referred by #{$referrer->id} (code: {$referralCode})");
+                    $this->sendReferralNotification($referrer, $customer);
+                }
             }
 
             // Xử lý JWT Token
@@ -305,13 +318,19 @@ class ApiController extends Controller
                 'user' => [
                     'id' => $customer->id,
                     'name' => $customer->name,
-                    'phone' => $customer->mobile, 
+                    'phone' => $customer->mobile,
                 ],
                 'access_token' => $token,
             ], 200);
         }
 
         // --- TRƯỜNG HỢP B: CHƯA CÓ USER (KHÁCH VÃNG LAI) ---
+        // Cache referral_code để UserService::login() dùng khi bot gọi POST /api/login
+        if (!empty($referralCode)) {
+            \Cache::put("pending_referral:{$telegramId}", $referralCode, now()->addHours(24));
+            \Log::info("Referral code cached via check_telegram_user: pending_referral:{$telegramId} = {$referralCode}");
+        }
+
         return response()->json([
             'status' => 'guest',
             'message' => 'Người dùng chưa tồn tại. Vui lòng gửi Contact.',

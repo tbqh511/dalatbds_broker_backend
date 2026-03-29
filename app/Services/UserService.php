@@ -193,7 +193,25 @@ class UserService
                 throw new Exception('Tự động đăng ký thất bại. Vui lòng thử lại sau.');
             }
         } else {
-             Log::info("Customer login: ID {$customer->id}, Phone: {$customer->mobile}");
+            Log::info("Customer login: ID {$customer->id}, Phone: {$customer->mobile}");
+
+            // Gán referrer cho user cũ nếu chưa có — ví dụ: đăng ký trước khi dùng link giới thiệu
+            if (empty($customer->referred_by)) {
+                $refCode = $data['referral_code'] ?? null;
+                if (empty($refCode) && !empty($data['telegram_id'])) {
+                    $cacheKey = "pending_referral:{$data['telegram_id']}";
+                    $refCode = \Cache::pull($cacheKey);
+                }
+                if (!empty($refCode)) {
+                    $referrer = Customer::where('referral_code', $refCode)->first();
+                    if ($referrer && $referrer->id !== $customer->id) {
+                        $customer->referred_by = $referrer->id;
+                        $customer->save();
+                        Log::info("Referral assigned to existing Customer #{$customer->id} via login, referred by #{$referrer->id} (code: {$refCode})");
+                        $this->sendReferralNotification($referrer, $customer);
+                    }
+                }
+            }
         }
 
         // 3. Check status

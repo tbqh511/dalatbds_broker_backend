@@ -111,6 +111,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/api/deals', [TelegramWebAppController::class, 'myDealsApi'])->name('webapp.api.deals');
     Route::get('/webapp/api/commissions', [TelegramWebAppController::class, 'myCommissionsApi'])->name('webapp.api.commissions');
     Route::get('/webapp/referral/data', [TelegramWebAppController::class, 'referralApi'])->name('webapp.referral.data');
+    Route::post('/webapp/referral/claim', [TelegramWebAppController::class, 'claimReferral'])->name('webapp.referral.claim');
     Route::get('/webapp/profile', [TelegramWebAppController::class , 'profile'])->name('webapp.profile');
     Route::post('/webapp/profile', [TelegramWebAppController::class , 'updateProfile'])->name('webapp.profile.update');
     Route::post('/webapp/profile/avatar', [TelegramWebAppController::class , 'updateAvatar'])->name('webapp.profile.avatar');

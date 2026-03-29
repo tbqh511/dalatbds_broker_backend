@@ -4150,6 +4150,7 @@ class TelegramWebAppController extends Controller
 
         return response()->json([
             'referral_code'      => $customer->referral_code,
+            'has_referrer'       => !empty($customer->referred_by),
             'share_url'          => $shareUrl,
             'telegram_share_url' => $telegramShareUrl,
             'stats'              => [
@@ -4160,6 +4161,70 @@ class TelegramWebAppController extends Controller
             ],
             'tree'    => $tree,
             'history' => $history,
+        ]);
+    }
+
+    /**
+     * POST /webapp/referral/claim
+     * Cho phép user tự nhập mã giới thiệu của người đã giới thiệu mình (sau khi đăng ký).
+     * Dùng để fix trường hợp referral không được gán tự động khi đăng ký.
+     */
+    public function claimReferral(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+        if (!$customer) {
+            return response()->json(['error' => true, 'message' => 'Unauthenticated'], 401);
+        }
+
+        if (!empty($customer->referred_by)) {
+            return response()->json(['error' => true, 'message' => 'Bạn đã có người giới thiệu rồi.'], 422);
+        }
+
+        $code = strtoupper(trim($request->input('referral_code', '')));
+        if (empty($code)) {
+            return response()->json(['error' => true, 'message' => 'Vui lòng nhập mã giới thiệu.'], 422);
+        }
+
+        $referrer = Customer::where('referral_code', $code)->first();
+        if (!$referrer) {
+            return response()->json(['error' => true, 'message' => 'Mã giới thiệu không hợp lệ.'], 404);
+        }
+        if ($referrer->id === $customer->id) {
+            return response()->json(['error' => true, 'message' => 'Không thể tự giới thiệu chính mình.'], 422);
+        }
+
+        $customer->referred_by = $referrer->id;
+        $customer->save();
+
+        \Log::info("Referral claimed: Customer #{$customer->id} claimed referral from #{$referrer->id} (code: {$code})");
+
+        // Gửi thông báo cho người giới thiệu
+        try {
+            $notifService = app(\App\Services\NotificationService::class);
+            $inAppService = app(\App\Services\InAppNotificationService::class);
+
+            if ($referrer->telegram_id && $notifService->shouldNotify($referrer, 'referral', 'new_signup', 'telegram')) {
+                $message = \App\Services\Telegram\TelegramMessageTemplates::referralNewSignup($referrer, $customer);
+                $notifService->sendToCustomer($referrer, $message);
+            }
+
+            $inAppService->notify(
+                $referrer,
+                'referral_new_signup',
+                'referral',
+                'new_signup',
+                '🎉 ' . ($customer->name ?? 'Thành viên mới') . ' vừa xác nhận bạn là người giới thiệu!',
+                ['referee_id' => $customer->id, 'referee_name' => $customer->name ?? ''],
+                '/webapp?page=referral'
+            );
+        } catch (\Throwable $e) {
+            \Log::warning("Referral claim notification failed: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'success'       => true,
+            'message'       => 'Đã xác nhận người giới thiệu thành công!',
+            'referrer_name' => $referrer->name ?? 'Thành viên',
         ]);
     }
 

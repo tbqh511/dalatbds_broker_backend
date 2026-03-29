@@ -3784,6 +3784,10 @@ function loadReferralData() {
       var treeTitle = document.getElementById('refTreeTitle');
       if(treeTitle) treeTitle.textContent = 'Cấp 1 — Bạn giới thiệu trực tiếp (' + _refTreeAll.length + ' người)';
 
+      // Hiện section nhập mã nếu user chưa có người giới thiệu
+      var claimSection = document.getElementById('refClaimSection');
+      if(claimSection) claimSection.style.display = _refData.has_referrer ? 'none' : '';
+
       // Render tree
       renderReferralTree();
 
@@ -3901,6 +3905,53 @@ function _escHtml(str) {
   if(!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+window.claimReferralCode = function(){
+  var input = document.getElementById('refClaimInput');
+  var btn   = document.getElementById('refClaimBtn');
+  var msg   = document.getElementById('refClaimMsg');
+  var code  = (input ? input.value.trim().toUpperCase() : '');
+  if(!code) { showToast('Vui lòng nhập mã giới thiệu'); return; }
+
+  if(btn) { btn.disabled = true; btn.textContent = '...'; }
+  if(msg) msg.style.display = 'none';
+
+  var csrf = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken)
+    || document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  fetch('/webapp/referral/claim', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+    body: JSON.stringify({ referral_code: code }),
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if(btn) { btn.disabled = false; btn.textContent = 'Xác nhận'; }
+    if(data.success) {
+      if(msg) {
+        msg.style.display = '';
+        msg.style.color = 'var(--success)';
+        msg.textContent = '✓ ' + (data.message || 'Thành công!');
+      }
+      // Ẩn section sau 2 giây rồi reload dữ liệu
+      setTimeout(function(){
+        var sec = document.getElementById('refClaimSection');
+        if(sec) sec.style.display = 'none';
+        loadReferralData();
+      }, 2000);
+    } else {
+      if(msg) {
+        msg.style.display = '';
+        msg.style.color = 'var(--danger)';
+        msg.textContent = '✗ ' + (data.message || 'Có lỗi xảy ra');
+      }
+    }
+  })
+  .catch(function(){
+    if(btn) { btn.disabled = false; btn.textContent = 'Xác nhận'; }
+    if(msg) { msg.style.display = ''; msg.style.color = 'var(--danger)'; msg.textContent = '✗ Lỗi kết nối, thử lại.'; }
+  });
+};
 
 window.copyRefCode = function(){
   var codeEl = document.getElementById('refCodeDisplay');

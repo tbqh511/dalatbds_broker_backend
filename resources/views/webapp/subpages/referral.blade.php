@@ -48,6 +48,27 @@
         </button>
       </div>
 
+      <!-- Claim referrer (hiện khi user chưa có người giới thiệu) -->
+      <div id="refClaimSection" style="display:none;margin:0 14px 12px;">
+        <div style="background:var(--bg-card);border:1.5px dashed var(--border);border-radius:var(--radius-lg);padding:14px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            Bạn có mã giới thiệu không?
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Nếu ai đó đã giới thiệu bạn vào hệ thống, nhập mã của họ để kết nối.</div>
+          <div style="display:flex;gap:8px;">
+            <input id="refClaimInput" type="text" placeholder="Ví dụ: DLBDS-ABC123"
+              style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:13px;font-family:monospace;background:var(--bg-secondary);color:var(--text-primary);text-transform:uppercase;outline:none;"
+              oninput="this.value=this.value.toUpperCase()" maxlength="20">
+            <button onclick="claimReferralCode()" id="refClaimBtn"
+              style="padding:8px 14px;background:var(--primary-color);color:#fff;border:none;border-radius:var(--radius-md);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
+              Xác nhận
+            </button>
+          </div>
+          <div id="refClaimMsg" style="display:none;margin-top:8px;font-size:12px;font-weight:600;"></div>
+        </div>
+      </div>
+
       <!-- Earnings summary -->
       <div class="ref-earn-card">
         <div class="ref-earn-header">
