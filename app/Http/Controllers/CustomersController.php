@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CustomersController extends Controller
 {
@@ -59,6 +60,47 @@ class CustomersController extends Controller
         return response()->json(['error' => false]);
     }
 
+    /**
+     * PATCH customer/{id}/referrer
+     * Chỉ superadmin (type=0) mới được thay đổi người giới thiệu của broker.
+     * Body: { referral_code: "ABC123" } để gán, hoặc { referral_code: "" } để xóa.
+     */
+    public function updateReferrer(Request $request, $id)
+    {
+        if (intval(Auth::user()->type) !== 0) {
+            return response()->json(['error' => true, 'message' => 'Chỉ Admin mới được thay đổi người giới thiệu.'], 403);
+        }
+
+        $customer = Customer::find($id);
+        if (!$customer) {
+            return response()->json(['error' => true, 'message' => 'Không tìm thấy broker.'], 404);
+        }
+
+        $code = strtoupper(trim($request->input('referral_code', '')));
+
+        if ($code === '') {
+            // Xóa người giới thiệu
+            $customer->referred_by = null;
+            $customer->save();
+            \Log::info("Admin #{" . Auth::id() . "} cleared referrer for Customer #{$customer->id}");
+            return response()->json(['error' => false, 'message' => 'Đã xóa người giới thiệu.', 'referrer_name' => null]);
+        }
+
+        $referrer = Customer::where('referral_code', $code)->first();
+        if (!$referrer) {
+            return response()->json(['error' => true, 'message' => 'Mã giới thiệu không hợp lệ.'], 404);
+        }
+        if ($referrer->id === $customer->id) {
+            return response()->json(['error' => true, 'message' => 'Không thể tự giới thiệu chính mình.'], 422);
+        }
+
+        $customer->referred_by = $referrer->id;
+        $customer->save();
+        \Log::info("Admin #{" . Auth::id() . "} set referrer for Customer #{$customer->id} to #{$referrer->id} (code: {$code})");
+
+        return response()->json(['error' => false, 'message' => 'Đã cập nhật người giới thiệu.', 'referrer_name' => $referrer->name]);
+    }
+
     public function customerList()
     {
         $offset = 0;
@@ -100,7 +142,9 @@ class CustomersController extends Controller
         }
 
 
-        $res = $sql->get();
+        $res = $sql->with('referrer:id,name')->get();
+
+        $isAdmin = intval(Auth::user()->type) === 0;
 
         $bulkData = array();
         $bulkData['total'] = $total;
@@ -151,6 +195,17 @@ class CustomersController extends Controller
             // }
 
             $tempRow['customertotalpost'] =  '<a href="' . url('property') . '?customer=' . $row->id . '">' . $row->customertotalpost . '</a>';
+
+            $referrerName = $row->referrer ? htmlspecialchars($row->referrer->name, ENT_QUOTES) : '';
+            if ($isAdmin) {
+                $tempRow['referred_by'] = '<span class="referrer-name" id="ref-name-' . $row->id . '">'
+                    . ($referrerName ?: '<span class="text-muted">—</span>')
+                    . '</span>'
+                    . ' <button class="btn btn-xs btn-outline-secondary ms-1" onclick="changeReferrer(' . $row->id . ')" title="Thay đổi người giới thiệu" style="padding:1px 6px;font-size:11px">✏️</button>';
+            } else {
+                $tempRow['referred_by'] = $referrerName ?: '<span class="text-muted">—</span>';
+            }
+
             $tempRow['operate'] = $operate;
             $rows[] = $tempRow;
             $count++;

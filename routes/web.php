@@ -369,6 +369,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
             Route::get('customerList', [CustomersController::class , 'customerList']);
             Route::post('customerstatus', [CustomersController::class , 'update'])->name('customer.customerstatus');
             Route::patch('customer/{id}/role', [CustomersController::class , 'updateRole'])->name('customer.updaterole');
+            Route::patch('customer/{id}/referrer', [CustomersController::class , 'updateReferrer'])->name('customer.updatereferrer');
             /// END :: CUSTOMER ROUTE
     
             /// START :: SLIDER ROUTE

@@ -6550,7 +6550,7 @@ window.activityApp = function() {
           var badge = document.getElementById('notif-badge');
           if (badge) {
             badge.textContent = json.count > 0 ? (json.count > 99 ? '99+' : json.count) : '';
-            badge.style.display = json.count > 0 ? '' : 'none';
+            badge.style.display = json.count > 0 ? 'flex' : 'none';
           }
         }
       })

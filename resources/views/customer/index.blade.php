@@ -55,6 +55,8 @@
                                     <th scope="col" data-field="role" data-sortable="false" data-align="center">
                                         {{ __('Role') }}
                                     </th>
+                                    <th scope="col" data-field="referred_by" data-sortable="false" data-align="center">
+                                        {{ __('Người giới thiệu') }}</th>
                                     <th scope="col" data-field="operate" data-sortable="false" data-align="center">
                                         {{ __('Action') }}</th>
                                 </tr>
@@ -112,6 +114,38 @@
                 },
                 error: function(error) {
 
+                }
+            });
+        }
+
+        // Referrer change handler (admin only)
+        function changeReferrer(customerId) {
+            var code = prompt('Nhập mã giới thiệu mới (để trống để xóa người giới thiệu):');
+            if (code === null) return; // bấm Cancel
+            $.ajax({
+                url: '/customer/' + customerId + '/referrer',
+                type: 'PATCH',
+                data: { '_token': "{{ csrf_token() }}", referral_code: code.trim() },
+                success: function (result) {
+                    if (!result.error) {
+                        var nameEl = document.getElementById('ref-name-' + customerId);
+                        if (nameEl) {
+                            nameEl.innerHTML = result.referrer_name
+                                ? result.referrer_name
+                                : '<span class="text-muted">—</span>';
+                        }
+                    }
+                    Toastify({
+                        text: result.message,
+                        duration: 3000, close: true,
+                        backgroundColor: result.error
+                            ? 'linear-gradient(to right, #ff5f6d, #ffc371)'
+                            : 'linear-gradient(to right, #00b09b, #96c93d)'
+                    }).showToast();
+                },
+                error: function (xhr) {
+                    var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Lỗi hệ thống';
+                    Toastify({ text: msg, duration: 3000, close: true, backgroundColor: 'linear-gradient(to right, #ff5f6d, #ffc371)' }).showToast();
                 }
             });
         }

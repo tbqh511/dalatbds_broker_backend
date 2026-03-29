@@ -166,6 +166,11 @@
             document.getElementById('webapp-status').innerText = "Vui lòng mở ứng dụng trong Telegram.";
             return;
         }
+        // Lấy referral_code từ deep link (startapp=ref_CODE) nếu chưa có trong sessionStorage
+        var startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
+        if (startParam && startParam.indexOf('ref_') === 0) {
+            sessionStorage.setItem('referral_code', startParam.substring(4));
+        }
         try {
             // Lấy referral_code từ deep link (nếu có)
             var refCode = sessionStorage.getItem('referral_code') || '';
