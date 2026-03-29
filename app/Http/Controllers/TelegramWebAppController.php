@@ -4088,14 +4088,15 @@ class TelegramWebAppController extends Controller
                     : null;
             } catch (\Exception $e) {}
 
+            $safeName = $this->safeStr($ref->name, 'Thành viên');
             return [
-                'name'              => $ref->name ?? 'Thành viên',
+                'name'              => $safeName,
                 'role_label'        => $roleLabel,
                 'joined_at'         => $ref->created_at ? $ref->created_at->format('d/m/Y') : '',
-                'ward_name'         => $ward ?? 'Chưa có khu vực',
+                'ward_name'         => $this->safeStr($ward, 'Chưa có khu vực'),
                 'is_active'         => in_array($refId, $activeIds),
                 'month_earned_trieu'=> round($monthEarnedRef * 0.05 / 1_000_000, 1),
-                'avatar_letter'     => strtoupper(substr($ref->name ?? 'U', 0, 1)),
+                'avatar_letter'     => mb_strtoupper(mb_substr($safeName ?: 'U', 0, 1)),
                 'avatar_color'      => $avatarColors[$idx % count($avatarColors)],
             ];
         })->values()->toArray();
@@ -4130,14 +4131,14 @@ class TelegramWebAppController extends Controller
                     default                                  => 'upcoming',
                 };
 
-                $propertyLabel = $comm->property?->title ?? ('Deal #' . ($deal->id ?? '?'));
+                $propertyLabel = $this->safeStr($comm->property?->title, 'Deal #' . ($deal->id ?? '?'));
                 if ($comm->property && $comm->property->ward_code) {
                     $wardName = LocationsWard::where('code', $comm->property->ward_code)->first()?->name;
-                    if ($wardName) $propertyLabel .= ' · ' . $wardName;
+                    if ($wardName) $propertyLabel .= ' · ' . $this->safeStr($wardName);
                 }
 
                 $history[] = [
-                    'referee_name'           => $refCustomer?->name ?? 'Thành viên',
+                    'referee_name'           => $this->safeStr($refCustomer?->name, 'Thành viên'),
                     'deal_id'                => $deal->id ?? null,
                     'property_label'         => $propertyLabel,
                     'date'                   => $comm->updated_at?->format('d/m/Y') ?? '',
@@ -4149,7 +4150,7 @@ class TelegramWebAppController extends Controller
         }
 
         return response()->json([
-            'referral_code'      => $customer->referral_code,
+            'referral_code'      => $this->safeStr($customer->referral_code),
             'has_referrer'       => !empty($customer->referred_by),
             'share_url'          => $shareUrl,
             'telegram_share_url' => $telegramShareUrl,
@@ -4161,7 +4162,7 @@ class TelegramWebAppController extends Controller
             ],
             'tree'    => $tree,
             'history' => $history,
-        ]);
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**
@@ -4312,5 +4313,15 @@ class TelegramWebAppController extends Controller
         }
 
         return redirect('/webapp?login_status=guest&retry=' . $retry);
+    }
+
+    /**
+     * Sanitize a string to valid UTF-8, stripping/replacing invalid byte sequences.
+     * Prevents InvalidArgumentException from json_encode when DB fields have bad encoding.
+     */
+    private function safeStr(?string $value, string $fallback = ''): string
+    {
+        if ($value === null) return $fallback;
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }
