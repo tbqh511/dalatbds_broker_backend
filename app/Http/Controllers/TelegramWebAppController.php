@@ -1428,7 +1428,19 @@ class TelegramWebAppController extends Controller
             'years_experience.integer' => 'Số năm kinh nghiệm phải là số nguyên.',
         ]);
 
+        $originalMobile = $customer->getOriginal('mobile');
         $customer->fill($validated)->save();
+
+        if ($customer->wasChanged('mobile') && $customer->mobile && empty($originalMobile)) {
+            \App\Models\InAppNotification::create([
+                'customer_id' => $customer->id,
+                'type'        => 'welcome_ebroker',
+                'category'    => 'system',
+                'title'       => 'Chào mừng bạn đến với DalatBDS eBroker! 🎉',
+                'body'        => 'Hồ sơ của bạn đã được xác nhận. Bắt đầu đăng tin, quản lý leads và theo dõi hoa hồng ngay hôm nay.',
+                'data'        => ['phone' => $customer->mobile],
+            ]);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([

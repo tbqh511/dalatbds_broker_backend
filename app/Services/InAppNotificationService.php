@@ -174,6 +174,10 @@ class InAppNotificationService
                 'icon_bg' => 'var(--purple-light, rgba(124,58,237,0.12))',
                 'icon'    => 'gift',
             ],
+            'welcome_ebroker' => [
+                'icon_bg' => 'var(--success-light)',
+                'icon'    => 'star',
+            ],
         ];
 
         return $configs[$type] ?? ['icon_bg' => 'var(--primary-light)', 'icon' => 'bell'];

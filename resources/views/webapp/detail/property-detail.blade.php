@@ -2,7 +2,7 @@
 
   <!-- sticky header -->
   <div class="detail-sticky-header" id="detailStickyHeader">
-    <button class="dh-btn" onclick="closeDetail()"><span style="color:var(--primary);">←</span></button>
+    <button class="search-back-btn" style="margin-right:0;flex-shrink:0;" onclick="closeDetail()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="dh-title" id="detailHeaderTitle">Chi tiết BĐS</div>
     <div class="dh-actions">
       <button class="dh-btn" onclick="toggleBookmark(this)" id="bookmarkBtn"><span><svg width="18" height="18"
@@ -383,12 +383,11 @@
           <polyline points="15 18 9 12 15 6" />
         </svg></button>
     </div>
-    <button class="crm-primary-btn" onclick="showToast('Yêu cầu đã gửi!')"><span
+    <button class="crm-primary-btn" onclick="window.location.href='/webapp/add-customer' + (currentDetailPropId ? '?property_id=' + currentDetailPropId : '')"><span
         style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13" />
-          <polygon points="22 2 15 22 11 13 2 9 22 2" />
-        </svg> Gửi yêu cầu</span></button>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+        </svg> Thêm Lead / Khách mới</span></button>
   </div>
 
   <!-- BĐS Admin: Quay lại + Duyệt BĐS -->

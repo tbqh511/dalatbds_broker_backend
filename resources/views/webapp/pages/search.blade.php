@@ -153,7 +153,7 @@
       <!-- Result header bar -->
       <div class="result-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-bottom:12px;">
         <div style="display:flex;align-items:center;gap:8px;width:100%;">
-          <button onclick="resetSearch(event, true)" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;background:var(--bg-card);border-radius:50%;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;flex-shrink:0;">
+          <button onclick="resetSearch(event, true)" class="search-back-btn" style="margin-right:0;flex-shrink:0;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           
