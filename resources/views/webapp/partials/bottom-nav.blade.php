@@ -51,12 +51,12 @@
 <div class="bottom-sheet" id="bottomSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">Tạo mới</div>
-  {{-- Guest only: Đăng ký Broker --}}
-  <div class="sheet-option" data-for-role="guest" style="display:none;" onclick="closeSheet();showToast('Tính năng đăng ký Broker đang phát triển!')">
+  {{-- Guest only: Làm môi giới (mở flow xác minh SĐT) --}}
+  <div class="sheet-option" data-for-role="guest" style="display:none;" onclick="closeSheet();openBrokerRegisterSheet()">
     <div class="sheet-opt-icon" style="background:var(--primary-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
     <div class="sheet-opt-body">
-      <div class="sheet-opt-title">Đăng ký Broker</div>
-      <div class="sheet-opt-sub">Tham gia mạng lưới eBroker Đà Lạt</div>
+      <div class="sheet-opt-title">Làm môi giới</div>
+      <div class="sheet-opt-sub">Xác minh số điện thoại để tham gia eBroker</div>
     </div>
   </div>
   {{-- Broker trở lên: Đăng BĐS mới --}}
@@ -67,8 +67,8 @@
       <div class="sheet-opt-sub">Gửi tin bán/cho thuê để duyệt</div>
     </div>
   </div>
-  {{-- Tất cả roles: Thêm Lead / Khách mới --}}
-  <div class="sheet-option" onclick="closeSheet();window.location.href='/webapp/add-customer'">
+  {{-- Broker trở lên: Thêm Lead / Khách mới --}}
+  <div class="sheet-option role-broker" onclick="closeSheet();window.location.href='/webapp/add-customer'">
     <div class="sheet-opt-icon" style="background:var(--danger-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg></div>
     <div class="sheet-opt-body">
       <div class="sheet-opt-title">Thêm Lead / Khách mới</div>
