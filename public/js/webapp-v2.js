@@ -3024,11 +3024,18 @@ function populateFull(d){
   if(d.legal){ setDetailText('specLegal',d.legal); showHideEl('specLegalItem',true); }
   // priceM2
   if(d.priceM2){ setDetailText('specPriceM2',d.priceM2); showHideEl('specPriceM2Item',true); }
-  // commission
+  // commission — only visible to sale/bds_admin/sale_admin/admin or the broker who posted the property
   if(d.commissionRate){
-    const el = document.getElementById('specCommission');
-    if(el) el.textContent = d.commissionRate + '%' + (d.commission ? ' (' + formatVND(d.commission) + ')' : '');
-    showHideEl('specCommissionItem',true);
+    const cfg = window.WEBAPP_CONFIG || {};
+    const canSeeCommission = ['sale','bds_admin','sale_admin','admin'].includes(cfg.customerRole)
+      || (cfg.customerId && d.addedBy && String(cfg.customerId) === String(d.addedBy));
+    if(canSeeCommission){
+      const el = document.getElementById('specCommission');
+      if(el) el.textContent = d.commissionRate + '%' + (d.commission ? ' (' + formatVND(d.commission) + ')' : '');
+      showHideEl('specCommissionItem',true);
+    } else {
+      showHideEl('specCommissionItem',false);
+    }
   }
 
   // dynamic parameters from DB
@@ -3415,7 +3422,15 @@ window.openGoogleMaps = function(){
   const centerLng = parseFloat(lngStr);
 
   document.getElementById('fullMapModal').style.display = 'flex';
-  
+
+  // Trigger resize nếu map đã init trước đó (re-open)
+  if(currentFullMap){
+    setTimeout(()=>{
+      google.maps.event.trigger(currentFullMap, 'resize');
+      currentFullMap.setCenter({lat:centerLat, lng:centerLng});
+    }, 100);
+  }
+
   if (!currentFullMap) {
     currentFullMap = new google.maps.Map(document.getElementById('fullMapCanvas'), {
       center: { lat: centerLat, lng: centerLng },

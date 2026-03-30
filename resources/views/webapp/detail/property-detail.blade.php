@@ -50,6 +50,7 @@
       </div>
     </div>
 
+    @if(isset($customer) && $customer->getEffectiveRole() === 'admin')
     <!-- ROLE SWITCHER (dev tool) — below gallery, scrolls with content -->
     <div class="detail-role-switcher"
       style="display:flex;gap:6px;padding:8px 12px;background:rgba(0,0,0,0.65);overflow-x:auto;scrollbar-width:none;flex-shrink:0;">
@@ -72,6 +73,7 @@
         style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👑
         Admin</button>
     </div>
+    @endif
 
     <!-- INFO CARD -->
     <div class="detail-info-card">
@@ -159,7 +161,7 @@
           </div>
           <div class="spec-item" id="specCommissionItem" style="display:none;">
             <span class="spec-label">Hoa hồng</span>
-            <span class="spec-value" id="specCommission">—</span>
+            <span class="spec-value blue" id="specCommission">—</span>
           </div>
           <!-- dynamic params appended here by JS -->
         </div>
@@ -642,5 +644,5 @@
     </button>
     <div style="font-weight:600;font-size:16px;margin-left:8px;">Bản đồ vị trí</div>
   </div>
-  <div id="fullMapCanvas" style="flex:1;width:100%;"></div>
+  <div id="fullMapCanvas" style="flex:1;width:100%;min-height:200px;"></div>
 </div>

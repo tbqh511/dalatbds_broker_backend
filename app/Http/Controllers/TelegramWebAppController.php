@@ -877,6 +877,7 @@ class TelegramWebAppController extends Controller
             'facilities'     => $facilities,
             'host'           => $hostData,
             'broker'         => $broker,
+            'addedBy'        => $property->added_by,
             'slug'           => $property->slug,
             'similar'        => $similar,
         ]);
