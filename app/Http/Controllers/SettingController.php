@@ -118,11 +118,13 @@ class SettingController extends Controller
                 'APP_NAME=' . '"' . $request->company_name . '"',
                 file_get_contents(base_path('.env'))
             ));
-            file_put_contents(base_path('.env'), str_replace(
-                'PLACE_API_KEY=' . '"' . env('PLACE_API_KEY') . '"',
-                'PLACE_API_KEY=' . '"' . $request->place_api_key . '"',
-                file_get_contents(base_path('.env'))
-            ));
+            $envContent = file_get_contents(base_path('.env'));
+            $envContent = preg_replace(
+                '/^PLACE_API_KEY=.*$/m',
+                'PLACE_API_KEY=' . $request->place_api_key,
+                $envContent
+            );
+            file_put_contents(base_path('.env'), $envContent);
             $result = Setting::where('type', $key)->first();
 
             if (empty($result)) {
