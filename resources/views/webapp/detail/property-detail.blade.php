@@ -359,15 +359,15 @@
           stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg></button>
-      <button class="crm-primary-btn"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14"
+      <button class="crm-primary-btn" onclick="openBrokerRegisterSheet()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14"
             height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
             stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="8.5" cy="7" r="4" />
             <line x1="20" y1="8" x2="20" y2="14" />
             <line x1="23" y1="11" x2="17" y2="11" />
-          </svg> Đăng ký Broker</span></button>
-      <button class="crm-primary-btn crm-outline-btn" onclick="showToast('Yêu cầu đã gửi!')"><span
+          </svg> Gia nhập ngay!</span></button>
+      <button class="crm-primary-btn crm-outline-btn" onclick="window.location.href='/webapp/leads/create' + (currentDetailPropId ? '?property_id=' + currentDetailPropId : '')"><span
           style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24"
             fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13" />
@@ -502,6 +502,32 @@
           <path
             d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
         </svg> Gọi chủ nhà</span></button>
+  </div>
+
+  <!-- BROKER REGISTER — phone verification notice -->
+  <div id="brokerRegisterOverlay"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:650;align-items:flex-end;justify-content:center;">
+    <div style="background:var(--bg-card);border-radius:20px 20px 0 0;padding:8px 0 32px;width:100%;max-width:430px;">
+      <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
+      <div style="padding:0 20px 16px;border-bottom:1px solid var(--border);">
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg> Xác minh số điện thoại
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">
+          Để trở thành Broker và xem đầy đủ thông tin BĐS, bạn cần xác minh số điện thoại trong hồ sơ cá nhân.
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;display:flex;gap:10px;">
+        <button onclick="closeBrokerRegisterSheet()" style="flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:none;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;">Để sau</button>
+        <button onclick="closeBrokerRegisterSheet();goTo('profile')" style="flex:2;padding:11px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg> Xác minh ngay
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- BOOKING MINI FORM -->

@@ -3324,6 +3324,16 @@ window.toggleReadMore = function(){
   document.getElementById('readMoreBtn').textContent = descExpanded?'Thu gọn ▴':'Xem thêm ▾';
 };
 
+// broker register — show phone verification notice
+window.openBrokerRegisterSheet = function(){
+  const el = document.getElementById('brokerRegisterOverlay');
+  if(el){ el.style.display='flex'; }
+};
+window.closeBrokerRegisterSheet = function(){
+  const el = document.getElementById('brokerRegisterOverlay');
+  if(el){ el.style.display='none'; }
+};
+
 // bookmark — works for both prop-card heart and detail page header button
 window.toggleBookmark = function(btn, propId){
   const id = propId || currentDetailPropId;
@@ -3379,7 +3389,7 @@ function _applyBookmarkState(btn, liked, isDetailHeader){
   // Get computed primary color
   const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
   if(isDetailHeader){
-    svg.setAttribute('stroke', liked ? primaryColor : 'currentColor');
+    svg.setAttribute('stroke', primaryColor);
     svg.setAttribute('fill', liked ? primaryColor : 'none');
   } else {
     svg.setAttribute('stroke', primaryColor);
