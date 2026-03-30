@@ -3445,6 +3445,7 @@ window.openGoogleMaps = function(){
     currentFullMap = new google.maps.Map(document.getElementById('fullMapCanvas'), {
       center: { lat: centerLat, lng: centerLng },
       zoom: 16,
+      mapId: 'DEMO_MAP_ID',
       mapTypeControl: true, // Allow user to toggle layers (Satellite vs Map)
       mapTypeControlOptions: {
           style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
@@ -3505,35 +3506,35 @@ window.openGoogleMaps = function(){
   }
 
   // Clear old markers
-  mapMarkers.forEach(m => m.setMap(null));
+  mapMarkers.forEach(m => { m.map = null; });
   mapMarkers = [];
   bounds = new google.maps.LatLngBounds();
 
   // Add center marker (Current Property)
   const centerPos = { lat: centerLat, lng: centerLng };
-  const centerMarker = new google.maps.Marker({
+  const centerMarkerEl = document.createElement('div');
+  centerMarkerEl.style.cssText = 'width:20px;height:20px;background:#ea4335;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(234,67,53,0.5);';
+  const centerMarker = new google.maps.marker.AdvancedMarkerElement({
     position: centerPos,
     map: currentFullMap,
-    icon: {
-      url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-      scaledSize: new google.maps.Size(40, 40)
-    },
+    content: centerMarkerEl,
+    title: 'BĐS đang xem',
     zIndex: 999
   });
-  
+
   const infoWindow = new google.maps.InfoWindow({
     content: `<div style="padding:4px;"><strong style="color:var(--primary);font-size:14px;">BĐS đang xem</strong><br><span style="font-size:12px;">${currentDetailTitle||'Đà Lạt'}</span></div>`
   });
-  
+
   centerMarker.addListener("click", () => {
-    infoWindow.open(currentFullMap, centerMarker);
+    infoWindow.open({ map: currentFullMap, anchor: centerMarker });
   });
-  
+
   mapMarkers.push(centerMarker);
   bounds.extend(centerPos);
-  
+
   // Also open the infowindow initially for the main property
-  infoWindow.open(currentFullMap, centerMarker);
+  infoWindow.open({ map: currentFullMap, anchor: centerMarker });
 };
 
 window.closeFullMap = function() {
@@ -3545,13 +3546,12 @@ function renderNearbyProperties(data) {
 
   data.forEach(p => {
     const pos = { lat: p.lat, lng: p.lng };
-    const marker = new google.maps.Marker({
+    const nearbyMarkerEl = document.createElement('div');
+    nearbyMarkerEl.style.cssText = 'width:14px;height:14px;background:#1a73e8;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 4px rgba(26,115,232,0.4);';
+    const marker = new google.maps.marker.AdvancedMarkerElement({
       position: pos,
       map: currentFullMap,
-      icon: {
-        url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-        scaledSize: new google.maps.Size(32, 32)
-      },
+      content: nearbyMarkerEl,
       title: p.title
     });
     
@@ -3567,9 +3567,9 @@ function renderNearbyProperties(data) {
         </div>
       `;
       activeInfoWindow.setContent(html);
-      activeInfoWindow.open(currentFullMap, marker);
+      activeInfoWindow.open({ map: currentFullMap, anchor: marker });
     });
-    
+
     mapMarkers.push(marker);
     bounds.extend(pos);
   });

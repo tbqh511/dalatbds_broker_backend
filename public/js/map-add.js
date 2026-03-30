@@ -1,7 +1,4 @@
 function singleMap() {
-    var markerIcon = {
-        url: 'images/marker2.png',
-    }
     var myLatLng = {
         lng: $('#singleMap').data('longitude'),
         lat: $('#singleMap').data('latitude'),
@@ -17,6 +14,7 @@ function singleMap() {
         panControl: false,
         navigationControl: false,
         streetViewControl: true,
+        mapId: 'DEMO_MAP_ID',
         styles: [{
             "featureType": "landscape",
             "elementType": "all",
@@ -25,17 +23,26 @@ function singleMap() {
             }]
         }]
     });
-    var marker = new google.maps.Marker({
+
+    var markerEl = document.createElement('img');
+    markerEl.src = 'images/marker2.png';
+    markerEl.style.width = '35px';
+    markerEl.style.height = '35px';
+
+    var marker = new google.maps.marker.AdvancedMarkerElement({
         position: myLatLng,
         map: single_map,
-        icon: markerIcon,
-        draggable: true,
+        content: markerEl,
+        gmpDraggable: true,
         title: 'Your location'
     });
-    google.maps.event.addListener(marker, 'dragend', function (event) {
-        document.getElementById("lat").value = event.latLng.lat();
-        document.getElementById("long").value = event.latLng.lng();
+
+    marker.addListener('gmp-dragend', function () {
+        var pos = marker.position;
+        document.getElementById("lat").value = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
+        document.getElementById("long").value = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
     });
+
     var zoomControlDiv = document.createElement('div');
     var zoomControl = new ZoomControl(zoomControlDiv, single_map);
 
@@ -51,10 +58,10 @@ function singleMap() {
         var zoomOutButton = document.createElement('div');
         zoomOutButton.className = "mapzoom-out";
         controlWrapper.appendChild(zoomOutButton);
-        google.maps.event.addDomListener(zoomInButton, 'click', function () {
+        zoomInButton.addEventListener('click', function () {
             single_map.setZoom(single_map.getZoom() + 1);
         });
-        google.maps.event.addDomListener(zoomOutButton, 'click', function () {
+        zoomOutButton.addEventListener('click', function () {
             single_map.setZoom(single_map.getZoom() - 1);
         });
     }
@@ -69,5 +76,5 @@ head.insertBefore = function (newElement, referenceElement) {
 };
 var single_map = document.getElementById('singleMap');
 if (typeof (single_map) != 'undefined' && single_map != null) {
-    google.maps.event.addDomListener(window, 'load', singleMap);
+    window.addEventListener('load', singleMap);
 }
