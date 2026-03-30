@@ -147,7 +147,7 @@ class Customer extends Authenticatable implements JWTSubject
     }
     public function getProfileAttribute($image)
     {
-        return $image != '' ? url('') . config('global.IMG_PATH') . config('global.USER_IMG_PATH') . $image : url('') . config('global.IMG_PATH') . config('global.USER_IMG_PATH').'1693209486.1303.png';
+        return $image != '' ? url('') . config('global.IMG_PATH') . config('global.USER_IMG_PATH') . $image : url('') . config('global.IMG_PATH') . '/default-user-img.png';
     }
     public function usertokens()
     {

@@ -24,7 +24,7 @@ class WebAppNotificationController extends Controller
         $customer = Auth::guard('webapp')->user();
 
         $category = $request->input('category');
-        $validCategories = ['lead', 'deal', 'booking', 'commission', 'property', 'admin'];
+        $validCategories = ['lead', 'deal', 'booking', 'commission', 'property', 'admin', 'system'];
         if ($category && !in_array($category, $validCategories)) {
             $category = null;
         }

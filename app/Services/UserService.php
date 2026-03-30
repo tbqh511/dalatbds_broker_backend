@@ -183,6 +183,9 @@ class UserService
 
                 Log::info("Auto-registered new customer via API Login: ID {$customer->id}, Phone: {$customer->mobile}");
 
+                // Gửi thông báo chào mừng
+                $this->sendWelcomeNotification($customer);
+
                 // Gửi thông báo cho người giới thiệu
                 if ($referrer) {
                     $this->sendReferralNotification($referrer, $customer);
@@ -316,6 +319,46 @@ class UserService
     public function getProfile(Customer $customer)
     {
         return $customer;
+    }
+
+    /**
+     * Gửi thông báo chào mừng cho thành viên mới đăng ký.
+     * Bypass shouldNotify vì đây là thông báo hệ thống một lần.
+     */
+    private function sendWelcomeNotification(Customer $customer): void
+    {
+        try {
+            $firstName = explode(' ', trim($customer->name ?? ''))[0] ?: 'bạn';
+            $firstName = mb_convert_case($firstName, MB_CASE_TITLE, 'UTF-8');
+
+            $welcomeMessages = [
+                [
+                    'title' => "Chào mừng {$firstName} gia nhập Đà Lạt BĐS!",
+                    'body'  => 'Hành trình của bạn bắt đầu từ hôm nay. Mỗi giao dịch thành công đều khởi nguồn từ một bước đầu tiên dũng cảm như bước bạn vừa làm!',
+                ],
+                [
+                    'title' => "Tuyệt vời {$firstName}, bạn đã sẵn sàng!",
+                    'body'  => 'Đà Lạt BĐS luôn đồng hành cùng bạn. Hãy bắt đầu bằng việc đăng tin BĐS đầu tiên hoặc thêm khách hàng tiềm năng vào danh sách lead nhé!',
+                ],
+                [
+                    'title' => "Chào {$firstName}, chào mừng đến với đội ngũ!",
+                    'body'  => 'Bạn đã gia nhập cộng đồng môi giới BĐS Đà Lạt. Mỗi ngày là một cơ hội mới — hãy tận dụng từng khoảnh khắc và kết quả sẽ đến đúng lúc!',
+                ],
+            ];
+
+            $picked = $welcomeMessages[($customer->id ?? 0) % count($welcomeMessages)];
+
+            \App\Models\InAppNotification::create([
+                'customer_id' => $customer->id,
+                'type'        => 'welcome_ebroker',
+                'category'    => 'system',
+                'title'       => $picked['title'],
+                'body'        => $picked['body'],
+                'data'        => ['action' => 'onboard'],
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Welcome notification failed for customer #{$customer->id}: " . $e->getMessage());
+        }
     }
 
     /**
