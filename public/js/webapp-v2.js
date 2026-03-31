@@ -6285,6 +6285,19 @@ window.notifPanelClick = function(id, type) {
   }
 };
 
+// Helper: sync bottom-nav badge + dot indicator (mutually exclusive)
+function syncNavBadge(count) {
+  var navBadge = document.getElementById('notif-badge');
+  var navDot   = document.getElementById('notif-dot');
+  if (navBadge) {
+    navBadge.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
+    navBadge.style.display = count > 0 ? 'flex' : 'none';
+  }
+  if (navDot) {
+    navDot.style.display = count > 0 ? 'none' : '';
+  }
+}
+
 // Sync header badge with the unread count (called from activityApp.updateBadge)
 var _origUpdateBadge;
 document.addEventListener('webapp:badge-update', function(e) {
@@ -6294,6 +6307,7 @@ document.addEventListener('webapp:badge-update', function(e) {
     badge.textContent = count > 99 ? '99+' : (count > 0 ? count : '');
     badge.style.display = count > 0 ? '' : 'none';
   }
+  syncNavBadge(count);
 });
 
 // Initial badge load on page ready
@@ -6312,12 +6326,7 @@ document.addEventListener('webapp:badge-update', function(e) {
         badge.textContent = count > 99 ? '99+' : count;
         badge.style.display = count > 0 ? '' : 'none';
       }
-      // Also sync the bottom-nav badge
-      var navBadge = document.getElementById('notif-badge');
-      if (navBadge) {
-        navBadge.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
-        navBadge.style.display = count > 0 ? 'flex' : 'none';
-      }
+      syncNavBadge(count);
     }
   })
   .catch(function() {});
@@ -6575,11 +6584,7 @@ window.activityApp = function() {
       .then(function(r) { return r.json(); })
       .then(function(json) {
         if (json.success) {
-          var badge = document.getElementById('notif-badge');
-          if (badge) {
-            badge.textContent = json.count > 0 ? (json.count > 99 ? '99+' : json.count) : '';
-            badge.style.display = json.count > 0 ? 'flex' : 'none';
-          }
+          document.dispatchEvent(new CustomEvent('webapp:badge-update', { detail: { count: json.count || 0 } }));
         }
       })
       .catch(function() {});

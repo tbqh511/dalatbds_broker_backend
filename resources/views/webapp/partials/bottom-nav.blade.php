@@ -35,7 +35,7 @@
       <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-6px;background:var(--danger);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 4px;line-height:1;"></span>
     </span>
     Hoạt động
-    <span class="nav-indicator"></span>
+    <span class="nav-indicator" id="notif-dot"></span>
   </button>
   <button class="nav-item" id="nav-profile" onclick="goTo('profile')">
     <span class="nav-icon">
