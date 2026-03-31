@@ -2955,7 +2955,7 @@ class TelegramWebAppController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Thêm khách hàng thành công.',
-                'redirect_url' => route('webapp.leads') // Or back to dashboard
+                'redirect_url' => route('webapp') . '#activity'
             ]);
 
         }

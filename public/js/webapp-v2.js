@@ -24,6 +24,15 @@ window.goTo = function(page){
 
 window.toggleSearch = function(){goTo('search');};
 
+// ============ HASH-BASED NAVIGATION ============
+(function(){
+  var hash = window.location.hash.replace('#', '');
+  if(hash && pages.indexOf(hash) !== -1) {
+    goTo(hash);
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
+
 // ============ ROLE SYSTEM ============
 let currentRole = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.customerRole) || 'guest';
 const roleHierarchy={
@@ -3114,9 +3123,11 @@ function populateFull(d){
     // Store URL for click overlay
     const preview = document.getElementById('detailMapPreview');
     if(preview) {
-      preview.dataset.mapsUrl = mapsUrl;
-      preview.dataset.lat = d.latitude;
-      preview.dataset.lng = d.longitude;
+      preview.dataset.mapsUrl  = mapsUrl;
+      preview.dataset.lat      = d.latitude;
+      preview.dataset.lng      = d.longitude;
+      preview.dataset.price    = d.price    || '';
+      preview.dataset.propType = d.type     || '';
     }
 
     // Inject Google Maps iframe embed (no API key needed)
@@ -3419,9 +3430,11 @@ window.openGoogleMaps = function(){
   // We already have latitude/longitude implicitly. Let's get it from the iframe src or store it during populateFull.
   // Easiest is to add data attributes to detailMapPreview in populateFull.
   
-  const latStr = el.dataset.lat;
-  const lngStr = el.dataset.lng;
-  
+  const latStr   = el.dataset.lat;
+  const lngStr   = el.dataset.lng;
+  const propPrice = el.dataset.price    || '';
+  const propType  = el.dataset.propType || 'BĐS';
+
   // If we can't find coords, fallback to old behavior
   if (!latStr || !lngStr) {
     if(url) window.open(url, '_blank');
@@ -3457,48 +3470,40 @@ window.openGoogleMaps = function(){
       fullscreenControl: false
     });
     
-    // Create Custom Control "BĐS Khác"
+    // Create Custom Control "BĐS Lân Cận" — icon tròn tối giản góc trên trái
     const customControlDiv = document.createElement("div");
     customControlDiv.style.margin = "10px";
-    
+
     const controlButton = document.createElement("button");
-    controlButton.style.backgroundColor = "#fff";
-    controlButton.style.border = "none";
-    controlButton.style.outline = "none";
-    controlButton.style.width = "auto";
-    controlButton.style.height = "40px";
-    controlButton.style.borderRadius = "20px";
-    controlButton.style.boxShadow = "rgba(0, 0, 0, 0.3) 0px 1px 4px -1px";
-    controlButton.style.cursor = "pointer";
-    controlButton.style.padding = "0 16px";
-    controlButton.style.display = "flex";
-    controlButton.style.alignItems = "center";
-    controlButton.style.justifyContent = "center";
-    controlButton.style.gap = "6px";
-    controlButton.innerHTML = `<span style="color:var(--primary);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg></span><span style="font-size:14px;font-weight:600;color:#374151;">BĐS khác</span>`;
-    
+    controlButton.title = "BĐS lân cận";
+    controlButton.style.cssText = "background:#fff;border:none;outline:none;width:40px;height:40px;border-radius:50%;box-shadow:rgba(0,0,0,0.3) 0px 1px 4px -1px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;";
+    const _nearbyIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary,#2563eb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="5" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/><circle cx="12" cy="5" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/><circle cx="19" cy="5" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/><circle cx="5" cy="12" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/><circle cx="5" cy="19" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/><circle cx="19" cy="19" r="1.5" fill="var(--primary,#2563eb)" stroke="none"/></svg>`;
+    const _spinnerIcon = `<div style="width:16px;height:16px;border:2px solid #e5e7eb;border-top:2px solid var(--primary,#2563eb);border-radius:50%;animation:spin 1s linear infinite;"></div>`;
+    controlButton.innerHTML = _nearbyIcon;
+
     controlButton.addEventListener("click", () => {
-      controlButton.innerHTML = `<span style="font-size:14px;font-weight:600;color:#374151;">Đang tìm...</span>`;
+      controlButton.innerHTML = _spinnerIcon;
+      controlButton.style.cursor = 'default';
       fetch(`/webapp/properties/nearby?lat=${centerLat}&lng=${centerLng}&exclude_id=${currentDetailPropId}`)
         .then(r => r.json())
         .then(res => {
           if (res.success && res.data && res.data.length > 0) {
             renderNearbyProperties(res.data);
-            controlButton.innerHTML = `<span style="font-size:14px;font-weight:600;color:#374151;">Đã tải ${res.data.length} BĐS lân cận</span>`;
+            showToast(`Đã tải ${res.data.length} BĐS lân cận`);
           } else {
-            controlButton.innerHTML = `<span style="font-size:14px;font-weight:600;color:#374151;">Không có BĐS lân cận</span>`;
             showToast('Không tìm thấy BĐS lân cận nào');
           }
-          setTimeout(()=>{ controlButton.style.display = 'none'; }, 3000);
+          setTimeout(()=>{ controlButton.style.display = 'none'; }, 2000);
         })
         .catch(() => {
-          controlButton.innerHTML = `<span style="font-size:14px;font-weight:600;color:#374151;">Lỗi tải dữ liệu</span>`;
+          controlButton.innerHTML = _nearbyIcon;
+          controlButton.style.cursor = 'pointer';
           showToast('Có lỗi xảy ra khi tải BĐS lân cận');
         });
     });
-    
+
     customControlDiv.appendChild(controlButton);
-    currentFullMap.controls[google.maps.ControlPosition.TOP_CENTER].push(customControlDiv);
+    currentFullMap.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
   } else {
     // Re-center map if map already initialized
     currentFullMap.setCenter({ lat: centerLat, lng: centerLng });
@@ -3510,10 +3515,15 @@ window.openGoogleMaps = function(){
   mapMarkers = [];
   bounds = new google.maps.LatLngBounds();
 
-  // Add center marker (Current Property)
+  // Add center marker (Current Property) — card pin với Loại BĐS + Giá
   const centerPos = { lat: centerLat, lng: centerLng };
   const centerMarkerEl = document.createElement('div');
-  centerMarkerEl.style.cssText = 'width:20px;height:20px;background:#ea4335;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(234,67,53,0.5);';
+  centerMarkerEl.innerHTML = `
+    <div style="background:var(--primary,#2563eb);color:#fff;border-radius:10px 10px 10px 2px;padding:7px 12px;box-shadow:0 4px 14px rgba(37,99,235,0.45);white-space:nowrap;position:relative;cursor:pointer;user-select:none;">
+      ${propType ? `<div style="font-size:10px;opacity:0.85;font-weight:500;letter-spacing:.3px;margin-bottom:2px;">${propType}</div>` : ''}
+      <div style="font-size:14px;font-weight:800;line-height:1.2;">${propPrice || 'BĐS đang xem'}</div>
+      <div style="position:absolute;bottom:-6px;left:12px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--primary,#2563eb);"></div>
+    </div>`;
   const centerMarker = new google.maps.marker.AdvancedMarkerElement({
     position: centerPos,
     map: currentFullMap,
@@ -3523,7 +3533,7 @@ window.openGoogleMaps = function(){
   });
 
   const infoWindow = new google.maps.InfoWindow({
-    content: `<div style="padding:4px;"><strong style="color:var(--primary);font-size:14px;">BĐS đang xem</strong><br><span style="font-size:12px;">${currentDetailTitle||'Đà Lạt'}</span></div>`
+    content: `<div style="padding:4px 2px;max-width:200px;"><strong style="color:var(--primary,#2563eb);font-size:13px;">BĐS đang xem</strong><br><span style="font-size:12px;color:#374151;">${currentDetailTitle||'Đà Lạt'}</span></div>`
   });
 
   centerMarker.addListener("click", () => {
@@ -3532,9 +3542,6 @@ window.openGoogleMaps = function(){
 
   mapMarkers.push(centerMarker);
   bounds.extend(centerPos);
-
-  // Also open the infowindow initially for the main property
-  infoWindow.open({ map: currentFullMap, anchor: centerMarker });
 };
 
 window.closeFullMap = function() {

@@ -78,9 +78,9 @@
         <div class="sticky top-0 z-49 bg-white/95 backdrop-blur-md border-b border-gray-100 px-6 py-5 shadow-sm">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('webapp.listings') }}" class="text-gray-600 hover:text-primary transition-colors">
+                    <button type="button" onclick="history.back()" class="text-gray-600 hover:text-primary transition-colors">
                         <i class="fas fa-arrow-left text-lg"></i>
-                    </a>
+                    </button>
                     <h1 class="text-xl font-bold text-gray-800">Thông tin khách hàng</h1>
                 </div>
             </div>
