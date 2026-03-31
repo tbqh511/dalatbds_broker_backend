@@ -3128,6 +3128,7 @@ function populateFull(d){
       preview.dataset.lng      = d.longitude;
       preview.dataset.price    = d.price    || '';
       preview.dataset.propType = d.type     || '';
+      preview.dataset.addr     = addr       || '';
     }
 
     // Inject Google Maps iframe embed (no API key needed)
@@ -3430,10 +3431,11 @@ window.openGoogleMaps = function(){
   // We already have latitude/longitude implicitly. Let's get it from the iframe src or store it during populateFull.
   // Easiest is to add data attributes to detailMapPreview in populateFull.
   
-  const latStr   = el.dataset.lat;
-  const lngStr   = el.dataset.lng;
+  const latStr    = el.dataset.lat;
+  const lngStr    = el.dataset.lng;
   const propPrice = el.dataset.price    || '';
   const propType  = el.dataset.propType || 'BĐS';
+  const propAddr  = el.dataset.addr     || '';
 
   // If we can't find coords, fallback to old behavior
   if (!latStr || !lngStr) {
@@ -3519,9 +3521,10 @@ window.openGoogleMaps = function(){
   const centerPos = { lat: centerLat, lng: centerLng };
   const centerMarkerEl = document.createElement('div');
   centerMarkerEl.innerHTML = `
-    <div style="background:var(--primary,#2563eb);color:#fff;border-radius:10px 10px 10px 2px;padding:7px 12px;box-shadow:0 4px 14px rgba(37,99,235,0.45);white-space:nowrap;position:relative;cursor:pointer;user-select:none;">
+    <div style="background:var(--primary,#2563eb);color:#fff;border-radius:10px 10px 10px 2px;padding:7px 12px;box-shadow:0 4px 14px rgba(37,99,235,0.45);white-space:nowrap;position:relative;cursor:pointer;user-select:none;max-width:200px;">
       ${propType ? `<div style="font-size:10px;opacity:0.85;font-weight:500;letter-spacing:.3px;margin-bottom:2px;">${propType}</div>` : ''}
       <div style="font-size:14px;font-weight:800;line-height:1.2;">${propPrice || 'BĐS đang xem'}</div>
+      ${propAddr ? `<div style="font-size:10px;opacity:0.8;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${propAddr}</div>` : ''}
       <div style="position:absolute;bottom:-6px;left:12px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--primary,#2563eb);"></div>
     </div>`;
   const centerMarker = new google.maps.marker.AdvancedMarkerElement({

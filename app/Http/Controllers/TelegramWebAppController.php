@@ -885,9 +885,9 @@ class TelegramWebAppController extends Controller
 
     public function nearbyProperties(Request $request)
     {
-        $lat = clone $request->query('lat');
-        $lng = clone $request->query('lng');
-        $exclude_id = clone $request->query('exclude_id');
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+        $exclude_id = $request->query('exclude_id');
 
         $lat = (float) $lat;
         $lng = (float) $lng;
