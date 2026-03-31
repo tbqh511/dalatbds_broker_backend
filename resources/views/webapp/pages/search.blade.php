@@ -11,7 +11,6 @@
         background: var(--primary);
         color: #fff;
         cursor: pointer;
-        margin-right: 8px;
         border-radius: 20px;
         flex-shrink: 0;
         transition: opacity 0.2s;

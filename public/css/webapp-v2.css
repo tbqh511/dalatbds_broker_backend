@@ -851,10 +851,13 @@ img {
 
 /* ============ FILTER CHIPS ============ */
 .filter-bar {
-  padding: 8px 16px;
+  padding: 6px 16px;
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
   width: 100%;
   box-sizing: border-box;
 }
@@ -864,7 +867,7 @@ img {
 }
 
 .chip {
-  padding: 5px 11px;
+  padding: 6px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
@@ -1903,20 +1906,21 @@ img {
 
 .search-bar-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   margin-bottom: 0;
 }
 
 .search-box-main {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--bg-secondary);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-xl);
-  padding: 10px 14px;
+  padding: 10px 12px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
@@ -1949,14 +1953,15 @@ img {
 .filter-pill {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   background: var(--primary);
   color: #fff;
-  padding: 9px 14px;
+  padding: 9px 12px;
   border-radius: var(--radius-xl);
   font-size: 12px;
   font-weight: 600;
   flex-shrink: 0;
+  white-space: nowrap;
   position: relative;
 }
 
