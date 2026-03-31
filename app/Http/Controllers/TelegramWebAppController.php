@@ -1468,11 +1468,16 @@ class TelegramWebAppController extends Controller
     {
         $customer = Auth::guard('webapp')->user();
 
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Phiên đăng nhập hết hạn. Vui lòng mở lại ứng dụng.'], 401);
+        }
+
         $request->validate([
-            'avatar' => ['required', 'image', 'max:2048'],
+            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'],
         ], [
             'avatar.required' => 'Vui lòng chọn ảnh.',
             'avatar.image'    => 'File phải là ảnh (jpg, png, gif...).',
+            'avatar.mimes'    => 'Chỉ chấp nhận định dạng jpg, png, gif, webp.',
             'avatar.max'      => 'Ảnh không được vượt quá 2MB.',
         ]);
 
@@ -1484,11 +1489,16 @@ class TelegramWebAppController extends Controller
             mkdir($destinationPath, 0777, true);
         }
 
+        // Xóa ảnh cũ nếu có (không phải ảnh mặc định)
+        $oldProfile = $customer->getRawOriginal('profile');
+        if ($oldProfile && file_exists($destinationPath . $oldProfile)) {
+            @unlink($destinationPath . $oldProfile);
+        }
+
         $file->move($destinationPath, $filename);
 
-        // Lưu raw filename (accessor sẽ build full URL)
-        $customer->setRawAttributes(array_merge($customer->getAttributes(), ['profile' => $filename]));
-        $customer->save();
+        // Dùng DB update trực tiếp để tránh accessor can thiệp khi save
+        \DB::table('customers')->where('id', $customer->id)->update(['profile' => $filename]);
 
         return response()->json([
             'success' => true,

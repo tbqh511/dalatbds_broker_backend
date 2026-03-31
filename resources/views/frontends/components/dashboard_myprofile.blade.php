@@ -39,11 +39,11 @@
                         </div>
                         <div class="dasboard-widget-box nopad-dash-widget-box fl-wrap" x-data="avatarUpload()">
                             <div class="edit-profile-photo">
-                                <img :src="avatarUrl" class="respimg" alt="" id="avatarPreview">
+                                <img :src="avatarUrl" class="respimg" alt="">
                                 <div class="change-photo-btn">
                                     <div class="photoUpload">
                                         <span x-text="uploading ? 'Đang tải...' : 'Tải ảnh mới'"></span>
-                                        <input type="file" class="upload" accept="image/*" @change="uploadAvatar($event)" :disabled="uploading">
+                                        <input type="file" x-ref="fileInput" class="upload" accept="image/jpeg,image/png,image/gif,image/webp" @change="uploadAvatar($event)" :disabled="uploading">
                                     </div>
                                 </div>
                             </div>
@@ -52,6 +52,9 @@
                             </div>
                             <template x-if="uploadError">
                                 <div style="padding:8px 16px;color:#991b1b;font-size:13px;" x-text="uploadError"></div>
+                            </template>
+                            <template x-if="uploadSuccess">
+                                <div style="padding:8px 16px;color:#166534;font-size:13px;">✓ Cập nhật ảnh đại diện thành công!</div>
                             </template>
                         </div>
 
@@ -133,32 +136,56 @@ function avatarUpload() {
         avatarUrl: '{{ $customer->profile ?? asset("images/avatar/1.jpg") }}',
         uploading: false,
         uploadError: null,
+        uploadSuccess: false,
 
         uploadAvatar(event) {
             const file = event.target.files[0];
             if (!file) return;
 
+            // Kiểm tra kích thước file phía client (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                this.uploadError = 'Ảnh không được vượt quá 2MB.';
+                this.$refs.fileInput.value = '';
+                return;
+            }
+
             this.uploading = true;
             this.uploadError = null;
+            this.uploadSuccess = false;
 
             const formData = new FormData();
             formData.append('avatar', file);
-            formData.append('_token', '{{ csrf_token() }}');
+
+            // Đọc CSRF token từ meta tag (luôn fresh, tránh hết hạn)
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '{{ csrf_token() }}';
+            formData.append('_token', csrfToken);
 
             axios.post('{{ route("webapp.profile.avatar") }}', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data', 'X-CSRF-TOKEN': csrfToken }
             })
             .then(response => {
                 if (response.data.success) {
                     this.avatarUrl = response.data.url + '?t=' + Date.now();
+                    this.uploadSuccess = true;
+                    setTimeout(() => { this.uploadSuccess = false; }, 3000);
                 }
             })
             .catch(error => {
-                const msg = error.response?.data?.errors?.avatar?.[0] ?? 'Tải ảnh thất bại. Vui lòng thử lại.';
-                this.uploadError = msg;
+                if (error.response?.status === 401) {
+                    this.uploadError = 'Phiên đăng nhập hết hạn. Vui lòng mở lại ứng dụng.';
+                } else if (error.response?.status === 419) {
+                    this.uploadError = 'Phiên làm việc hết hạn. Vui lòng tải lại trang.';
+                } else {
+                    const msg = error.response?.data?.errors?.avatar?.[0]
+                        ?? error.response?.data?.message
+                        ?? 'Tải ảnh thất bại. Vui lòng thử lại.';
+                    this.uploadError = msg;
+                }
             })
             .finally(() => {
                 this.uploading = false;
+                // Reset input để có thể chọn lại cùng file nếu cần
+                this.$refs.fileInput.value = '';
             });
         }
     }

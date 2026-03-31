@@ -3157,7 +3157,14 @@ function populateFull(d){
 
   // ---- broker (poster) ----
   if(d.broker){
-    setDetailText('ownerInitials', d.broker.initials||'BK');
+    const ownerAvatarEl = document.getElementById('ownerInitials');
+    if(ownerAvatarEl){
+      if(d.broker.avatar){
+        ownerAvatarEl.innerHTML = '<img src="'+escAttr(d.broker.avatar)+'" alt="'+escAttr(d.broker.name||'Môi giới')+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      } else {
+        ownerAvatarEl.textContent = d.broker.initials||'BK';
+      }
+    }
     setDetailText('ownerName',     d.broker.name||'Môi giới');
     setDetailText('ownerRole',     d.broker.role||'eBroker · Đà Lạt BĐS');
   }

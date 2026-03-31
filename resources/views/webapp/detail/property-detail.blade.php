@@ -2,7 +2,11 @@
 
   <!-- sticky header -->
   <div class="detail-sticky-header" id="detailStickyHeader">
-    <button class="search-back-btn" style="margin-right:0;flex-shrink:0;" onclick="closeDetail()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="search-back-btn" style="margin-right:0;flex-shrink:0;" onclick="closeDetail()"><svg width="20"
+        height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6" />
+      </svg></button>
     <div class="dh-title" id="detailHeaderTitle">Chi tiết BĐS</div>
     <div class="dh-actions">
       <button class="dh-btn" onclick="toggleBookmark(this)" id="bookmarkBtn"><span><svg width="18" height="18"
@@ -51,28 +55,28 @@
     </div>
 
     @if(isset($customer) && $customer->getEffectiveRole() === 'admin')
-    <!-- ROLE SWITCHER (dev tool) — below gallery, scrolls with content -->
-    <div class="detail-role-switcher"
-      style="display:flex;gap:6px;padding:8px 12px;background:rgba(0,0,0,0.65);overflow-x:auto;scrollbar-width:none;flex-shrink:0;">
-      <button class="rbtn" onclick="setRole('guest',this)"
-        style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👤
-        Guest</button>
-      <button class="rbtn" onclick="setRole('broker',this)"
-        style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏠
-        Broker</button>
-      <button class="rbtn" onclick="setRole('bds_admin',this)"
-        style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏘️
-        BĐS Admin</button>
-      <button class="rbtn active" onclick="setRole('sale',this)"
-        style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:#3270FC;color:#fff;white-space:nowrap;">💼
-        Sale</button>
-      <button class="rbtn" onclick="setRole('sale_admin',this)"
-        style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">📋
-        Sale Admin</button>
-      <button class="rbtn" onclick="setRole('admin',this)"
-        style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👑
-        Admin</button>
-    </div>
+      <!-- ROLE SWITCHER (dev tool) — below gallery, scrolls with content -->
+      <div class="detail-role-switcher"
+        style="display:flex;gap:6px;padding:8px 12px;background:rgba(0,0,0,0.65);overflow-x:auto;scrollbar-width:none;flex-shrink:0;">
+        <button class="rbtn" onclick="setRole('guest',this)"
+          style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👤
+          Guest</button>
+        <button class="rbtn" onclick="setRole('broker',this)"
+          style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏠
+          Broker</button>
+        <button class="rbtn" onclick="setRole('bds_admin',this)"
+          style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">🏘️
+          BĐS Admin</button>
+        <button class="rbtn active" onclick="setRole('sale',this)"
+          style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:#3270FC;color:#fff;white-space:nowrap;">💼
+          Sale</button>
+        <button class="rbtn" onclick="setRole('sale_admin',this)"
+          style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">📋
+          Sale Admin</button>
+        <button class="rbtn" onclick="setRole('admin',this)"
+          style="padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);white-space:nowrap;">👑
+          Admin</button>
+      </div>
     @endif
 
     <!-- INFO CARD -->
@@ -298,11 +302,8 @@
               stroke-linecap="round" stroke-linejoin="round">
               <path
                 d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-            </svg></div>
-          <div class="owner-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg></div>
+            </svg>
+          </div>
         </div>
       </div>
       <!-- Send to customer — Sale+ -->
@@ -359,15 +360,16 @@
           stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg></button>
-      <button class="crm-primary-btn" onclick="openBrokerRegisterSheet()"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="14"
-            height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
-            stroke-linejoin="round">
+      <button class="crm-primary-btn" onclick="openBrokerRegisterSheet()"><span
+          style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="8.5" cy="7" r="4" />
             <line x1="20" y1="8" x2="20" y2="14" />
             <line x1="23" y1="11" x2="17" y2="11" />
-          </svg> Gia nhập ngay!</span></button>
-      <button class="crm-primary-btn crm-outline-btn" onclick="window.location.href='/webapp/leads/create' + (currentDetailPropId ? '?property_id=' + currentDetailPropId : '')"><span
+          </svg> Đăng ký</span></button>
+      <button class="crm-primary-btn crm-outline-btn"
+        onclick="window.location.href='/webapp/add-customer' + (currentDetailPropId ? '?property_id=' + currentDetailPropId : '')"><span
           style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24"
             fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13" />
@@ -385,10 +387,14 @@
           <polyline points="15 18 9 12 15 6" />
         </svg></button>
     </div>
-    <button class="crm-primary-btn" onclick="window.location.href='/webapp/add-customer' + (currentDetailPropId ? '?property_id=' + currentDetailPropId : '')"><span
+    <button class="crm-primary-btn"
+      onclick="window.location.href='/webapp/add-customer' + (currentDetailPropId ? '?property_id=' + currentDetailPropId : '')"><span
         style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="8.5" cy="7" r="4" />
+          <line x1="20" y1="8" x2="20" y2="14" />
+          <line x1="23" y1="11" x2="17" y2="11" />
         </svg> Thêm Lead / Khách mới</span></button>
   </div>
 
@@ -510,9 +516,12 @@
     <div style="background:var(--bg-card);border-radius:20px 20px 0 0;padding:8px 0 32px;width:100%;max-width:430px;">
       <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
       <div style="padding:0 20px 16px;border-bottom:1px solid var(--border);">
-        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;display:flex;align-items:center;gap:6px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+        <div
+          style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
           </svg> Xác minh số điện thoại
         </div>
         <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">
@@ -520,10 +529,14 @@
         </div>
       </div>
       <div style="padding:16px 20px 0;display:flex;gap:10px;">
-        <button onclick="closeBrokerRegisterSheet()" style="flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:none;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;">Để sau</button>
-        <button onclick="closeBrokerRegisterSheet();goTo('profile')" style="flex:2;padding:11px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
+        <button onclick="closeBrokerRegisterSheet()"
+          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:none;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;">Để
+          sau</button>
+        <button onclick="closeBrokerRegisterSheet();goTo('profile')"
+          style="flex:2;padding:11px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6" />
           </svg> Xác minh ngay
         </button>
       </div>
@@ -543,7 +556,8 @@
           <line x1="16" y1="2" x2="16" y2="6" />
           <line x1="8" y1="2" x2="8" y2="6" />
           <line x1="3" y1="10" x2="21" y2="10" />
-        </svg> Đặt lịch xem nhà</div>
+        </svg> Đặt lịch xem nhà
+      </div>
       <div style="padding:16px 20px;">
         <div
           style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">
@@ -617,18 +631,21 @@
   <div class="send-modal">
     <div class="send-modal-handle"></div>
     <div class="send-modal-title"><span style="display:inline-flex;align-items:center;gap:6px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-        <polyline points="16 6 12 2 8 6"/>
-        <line x1="12" y1="2" x2="12" y2="15"/>
-      </svg> Chia se BDS</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+          <polyline points="16 6 12 2 8 6" />
+          <line x1="12" y1="2" x2="12" y2="15" />
+        </svg> Chia se BDS</span>
     </div>
     <!-- Option 1: Copy link -->
     <div class="deal-pick-item" onclick="copyPropertyShareLink()" style="cursor:pointer;">
-      <div style="width:40px;height:40px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      <div
+        style="width:40px;height:40px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
         </svg>
       </div>
       <div style="flex:1;min-width:0;">
@@ -637,11 +654,14 @@
       </div>
     </div>
     <!-- Option 2: Gui cho khach (chi sale/admin thay) -->
-    <div class="deal-pick-item role-sale role-sale_admin role-bds_admin role-admin" onclick="openSendFromShare()" style="cursor:pointer;">
-      <div style="width:40px;height:40px;border-radius:12px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13"/>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    <div class="deal-pick-item role-sale role-sale_admin role-bds_admin role-admin" onclick="openSendFromShare()"
+      style="cursor:pointer;">
+      <div
+        style="width:40px;height:40px;border-radius:12px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.7"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13" />
+          <polygon points="22 2 15 22 11 13 2 9 22 2" />
         </svg>
       </div>
       <div style="flex:1;min-width:0;">

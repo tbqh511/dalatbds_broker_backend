@@ -54,11 +54,6 @@
         </button>
       </div>
 
-      <!-- Search mode tabs -->
-      <div class="search-mode-tabs" id="searchModeTabs">
-        <button class="smt active" onclick="switchMode('bds',this)"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> BĐS</span></button>
-        <button class="smt role-sale role-bds_admin role-sale_admin role-admin" onclick="switchMode('lead',this)"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg> Khách/Lead</span></button>
-      </div>
     </div>
 
     <!-- ---- STATE: DISCOVERY (mặc định khi chưa gõ) ---- -->
@@ -190,6 +185,7 @@
         <div class="chip" onclick="doSearchPrice('3–5 tỷ',this)">3–5 tỷ</div>
         <div class="chip" onclick="doSearchPrice('5–7 tỷ',this)">5–7 tỷ</div>
         <div class="chip" onclick="doSearchPrice('7–10 tỷ',this)">7–10 tỷ</div>
+        <div class="chip" onclick="doSearchPrice('Trên 10 tỷ',this)">Trên 10 tỷ</div>
       </div>
 
       <div id="resultsFilterLocation" class="filter-bar" style="padding:4px 16px 4px;">
