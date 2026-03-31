@@ -3525,7 +3525,7 @@ window.openGoogleMaps = function(){
       ${propType ? `<div style="font-size:10px;opacity:0.85;font-weight:500;letter-spacing:.3px;margin-bottom:2px;">${propType}</div>` : ''}
       <div style="font-size:14px;font-weight:800;line-height:1.2;">${propPrice || 'BĐS đang xem'}</div>
       ${propAddr ? `<div style="font-size:10px;opacity:0.8;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${propAddr}</div>` : ''}
-      <div style="position:absolute;bottom:-6px;left:12px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--primary,#2563eb);"></div>
+      <div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid var(--primary,#2563eb);"></div>
     </div>`;
   const centerMarker = new google.maps.marker.AdvancedMarkerElement({
     position: centerPos,
