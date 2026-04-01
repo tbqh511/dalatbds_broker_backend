@@ -2237,14 +2237,28 @@ let activeSearchMarkerIdx = -1;
 let searchMapNeedsReload = true;
 
 window.switchView = function(view){
-  document.getElementById('listView').style.display = view==='list'?'block':'none';
-  document.getElementById('mapView').style.display = view==='map'?'block':'none';
   document.getElementById('viewList').classList.toggle('active', view==='list');
   document.getElementById('viewMap').classList.toggle('active', view==='map');
 
-  if(view === 'map' && searchMapNeedsReload) {
-    loadSearchMap();
+  if(view === 'map') {
+    const modal = document.getElementById('searchMapModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    if(searchMapNeedsReload) {
+      loadSearchMap();
+    } else if(searchMap) {
+      google.maps.event.trigger(searchMap, 'resize');
+    }
+  } else {
+    document.getElementById('listView').style.display = 'block';
   }
+};
+
+window.closeSearchMapModal = function() {
+  document.getElementById('searchMapModal').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('viewMap').classList.remove('active');
+  document.getElementById('viewList').classList.add('active');
 };
 
 function buildCurrentSearchParams() {
@@ -2334,7 +2348,7 @@ function initSearchMap(properties, total, totalWithCoords) {
   hideMapBottomCard();
 
   if(properties.length === 0) {
-    document.getElementById('mapPropertyCount').textContent = '0/' + total + ' BĐS có tọa độ';
+    document.getElementById('mapModalPropertyCount').textContent = '0/' + total + ' BĐS có tọa độ';
     searchMap.setCenter(defaultCenter);
     searchMap.setZoom(14);
     return;
@@ -2393,7 +2407,7 @@ function initSearchMap(properties, total, totalWithCoords) {
   });
 
   // Update count badge
-  document.getElementById('mapPropertyCount').textContent =
+  document.getElementById('mapModalPropertyCount').textContent =
     totalWithCoords + '/' + total + ' BĐS trong khu vực';
 
   // Fit bounds

@@ -362,34 +362,42 @@
 
       </div><!-- end listView -->
 
-      <!-- MAP VIEW (real Google Maps) -->
-      <div id="mapView" style="display:none;" class="role-sale role-bds_admin role-sale_admin role-admin">
-        <div style="position:relative;">
-          <!-- Map canvas -->
-          <div id="searchMapCanvas" style="height:calc(100vh - 220px);width:100%;"></div>
-
-          <!-- My Location button -->
-          <button id="myLocationBtn" onclick="goToMyLocation()" style="position:absolute;top:12px;left:12px;background:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:pointer;display:flex;align-items:center;gap:5px;z-index:5;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Vị trí của tôi
-          </button>
-
-          <!-- Property count badge -->
-          <div id="mapPropertyCount" style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#fff;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:600;color:var(--text-secondary);box-shadow:0 2px 8px rgba(0,0,0,0.12);z-index:5;"></div>
-
-          <!-- Loading overlay -->
-          <div id="mapLoading" style="position:absolute;inset:0;background:rgba(255,255,255,0.7);display:none;align-items:center;justify-content:center;z-index:10;">
-            <div class="spinner" style="width:32px;height:32px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
-          </div>
-        </div>
-
-        <!-- Map bottom card (hidden by default) -->
-        <div class="map-bottom-card" id="mapBottomCard" style="display:none;">
-          <div class="mbc-handle"></div>
-          <div id="mapBottomCardContent"></div>
-        </div>
-      </div><!-- end mapView -->
-
     </div><!-- end stateResults -->
+
+    <!-- FULL SCREEN MAP MODAL -->
+    <div id="searchMapModal" style="display:none;position:fixed;inset:0;z-index:500;flex-direction:column;background:#fff;">
+
+      <!-- Header -->
+      <div style="height:52px;display:flex;align-items:center;padding:0 12px;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff;">
+        <button onclick="closeSearchMapModal()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:none;background:var(--bg-secondary);border-radius:50%;cursor:pointer;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <div style="flex:1;font-size:15px;font-weight:600;color:var(--text-primary);">Bản đồ BĐS</div>
+        <div id="mapModalPropertyCount" style="font-size:11px;font-weight:600;color:var(--text-secondary);background:var(--bg-secondary);padding:4px 10px;border-radius:12px;"></div>
+      </div>
+
+      <!-- Map canvas -->
+      <div style="position:relative;flex:1;overflow:hidden;">
+        <div id="searchMapCanvas" style="height:100%;width:100%;"></div>
+
+        <!-- My Location button -->
+        <button id="myLocationBtn" onclick="goToMyLocation()" style="position:absolute;top:12px;left:12px;background:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:pointer;display:flex;align-items:center;gap:5px;z-index:5;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Vị trí của tôi
+        </button>
+
+        <!-- Loading overlay -->
+        <div id="mapLoading" style="position:absolute;inset:0;background:rgba(255,255,255,0.7);display:none;align-items:center;justify-content:center;z-index:10;">
+          <div class="spinner" style="width:32px;height:32px;border:3px solid var(--border);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
+        </div>
+      </div>
+
+      <!-- Bottom card -->
+      <div id="mapBottomCard" style="display:none;position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:16px 16px 0 0;padding:16px;box-shadow:0 -4px 20px rgba(0,0,0,0.12);z-index:10;">
+        <div style="width:32px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 12px;"></div>
+        <div id="mapBottomCardContent"></div>
+      </div>
+
+    </div><!-- end searchMapModal -->
 
     <!-- ========== LEAD TAB CONTENT ========== -->
     <div id="leadTabContent" style="display:none;">
