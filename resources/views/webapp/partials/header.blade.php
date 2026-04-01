@@ -92,6 +92,12 @@
     </div>
     Hỗ trợ & FAQ
   </button>
+  <button class="user-menu-item" onclick="closeUserMenu();openSubpage('referral')" style="color:var(--purple);">
+    <div class="user-menu-item-icon" style="background:#f3eeff;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="5" y="5" width="3" height="3" fill="var(--purple)" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="var(--purple)" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="var(--purple)" stroke="none"/><path d="M14 14h3v3"/><path d="M20 14v.01"/><path d="M14 20h3"/><path d="M20 17v3"/></svg>
+    </div>
+    Mạng lưới thổ địa
+  </button>
   <div class="user-menu-divider"></div>
   <button class="user-menu-item user-menu-item-danger" onclick="if(confirm('Bạn có chắc muốn đăng xuất?')) window.location.href='/webapp/logout'">
     <div class="user-menu-item-icon" style="background:var(--danger-light);">
