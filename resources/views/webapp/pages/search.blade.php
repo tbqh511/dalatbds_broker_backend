@@ -369,8 +369,8 @@
 
       <!-- Header -->
       <div style="height:52px;display:flex;align-items:center;padding:0 12px;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff;">
-        <button onclick="closeSearchMapModal()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:none;background:var(--bg-secondary);border-radius:50%;cursor:pointer;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <button onclick="closeSearchMapModal()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:none;background:var(--primary);border-radius:50%;cursor:pointer;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </button>
         <div style="flex:1;font-size:15px;font-weight:600;color:var(--text-primary);">Bản đồ BĐS</div>
         <div id="mapModalPropertyCount" style="font-size:11px;font-weight:600;color:var(--text-secondary);background:var(--bg-secondary);padding:4px 10px;border-radius:12px;"></div>
@@ -380,9 +380,14 @@
       <div style="position:relative;flex:1;overflow:hidden;">
         <div id="searchMapCanvas" style="height:100%;width:100%;"></div>
 
-        <!-- My Location button -->
-        <button id="myLocationBtn" onclick="goToMyLocation()" style="position:absolute;top:12px;left:12px;background:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:pointer;display:flex;align-items:center;gap:5px;z-index:5;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Vị trí của tôi
+        <!-- Layer toggle button (top-right) -->
+        <button id="mapLayerBtn" onclick="toggleMapLayer()" title="Chuyển layer bản đồ" style="position:absolute;top:12px;right:12px;width:36px;height:36px;background:#fff;border:none;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        </button>
+
+        <!-- My Location button (bottom-right) -->
+        <button id="myLocationBtn" onclick="goToMyLocation()" style="position:absolute;bottom:16px;right:12px;width:40px;height:40px;background:#fff;border:none;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         </button>
 
         <!-- Loading overlay -->

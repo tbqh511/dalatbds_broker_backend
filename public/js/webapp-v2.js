@@ -2248,6 +2248,9 @@ window.switchView = function(view){
       loadSearchMap();
     } else if(searchMap) {
       google.maps.event.trigger(searchMap, 'resize');
+      if(activeSearchMarkerIdx === -1 && searchMapMarkers.length > 0) {
+        selectSearchMarker(0, searchMapMarkers[0]._pinEl || null);
+      }
     }
   } else {
     document.getElementById('listView').style.display = 'block';
@@ -2259,6 +2262,18 @@ window.closeSearchMapModal = function() {
   document.body.style.overflow = '';
   document.getElementById('viewMap').classList.remove('active');
   document.getElementById('viewList').classList.add('active');
+};
+
+let searchMapIsSatellite = false;
+window.toggleMapLayer = function() {
+  if(!searchMap) return;
+  searchMapIsSatellite = !searchMapIsSatellite;
+  searchMap.setMapTypeId(searchMapIsSatellite ? 'hybrid' : 'roadmap');
+  const btn = document.getElementById('mapLayerBtn');
+  if(btn) {
+    btn.style.background = searchMapIsSatellite ? 'var(--primary)' : '#fff';
+    btn.querySelector('svg').setAttribute('stroke', searchMapIsSatellite ? '#fff' : 'currentColor');
+  }
 };
 
 function buildCurrentSearchParams() {
@@ -2410,11 +2425,16 @@ function initSearchMap(properties, total, totalWithCoords) {
   document.getElementById('mapModalPropertyCount').textContent =
     totalWithCoords + '/' + total + ' BĐS trong khu vực';
 
-  // Fit bounds
+  // Fit bounds then auto-select first property
   if(!bounds.isEmpty()) {
     searchMap.fitBounds(bounds, { top: 60, bottom: 100, left: 20, right: 20 });
     google.maps.event.addListenerOnce(searchMap, 'bounds_changed', function() {
       if(this.getZoom() > 16) this.setZoom(16);
+    });
+    google.maps.event.addListenerOnce(searchMap, 'idle', function() {
+      if(searchMapMarkers.length > 0) {
+        selectSearchMarker(0, searchMapMarkers[0]._pinEl || null);
+      }
     });
   }
 }
@@ -2465,9 +2485,9 @@ function renderMapBottomCard(p) {
       '</div>' +
     '</div>' +
     '<div style="display:flex;gap:8px;margin-top:12px;">' +
-      '<button style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);" onclick="hideMapBottomCard(); openDetail({id:' + p.id + '})">Xem chi tiết</button>' +
-      '<button style="flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" onclick="event.stopPropagation();careForProperty(' + p.id + ',\'' + escHtml(p.title).replace(/'/g, "\\'") + '\')">' +
-        '<span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Chăm</span>' +
+      '<button style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);" onclick="hideMapBottomCard()">Quay lại</button>' +
+      '<button style="flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--primary);" onclick="closeSearchMapModal(); openDetail({id:' + p.id + '})">' +
+        'Xem chi tiết' +
       '</button>' +
     '</div>';
 
