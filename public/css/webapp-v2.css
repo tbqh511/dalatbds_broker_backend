@@ -1328,13 +1328,24 @@ img {
 }
 
 /* ============ PAGE: HOẠT ĐỘNG ============ */
+.notif-tabs-bar {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 .notif-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 0 16px;
+  padding: 0 4px 0 16px;
+  flex: 1;
+  min-width: 0;
 }
 
 .notif-tabs::-webkit-scrollbar {

@@ -23,10 +23,18 @@ class WebAppNotificationController extends Controller
     {
         $customer = Auth::guard('webapp')->user();
 
-        $category = $request->input('category');
-        $validCategories = ['lead', 'deal', 'booking', 'commission', 'property', 'admin', 'system'];
-        if ($category && !in_array($category, $validCategories)) {
-            $category = null;
+        $validCategories = ['lead', 'deal', 'booking', 'commission', 'property', 'admin', 'system', 'referral'];
+
+        // Support multi-category: ?categories=lead,deal,commission or single ?category=lead
+        $categories = [];
+        if ($request->has('categories')) {
+            $requested = array_map('trim', explode(',', $request->input('categories', '')));
+            $categories = array_values(array_intersect($requested, $validCategories));
+        } elseif ($request->has('category')) {
+            $cat = $request->input('category');
+            if (in_array($cat, $validCategories)) {
+                $categories = [$cat];
+            }
         }
 
         $perPage = min((int) $request->input('per_page', 15), 50);
@@ -34,7 +42,7 @@ class WebAppNotificationController extends Controller
 
         $paginator = $this->notifService->getNotifications(
             $customer->id,
-            $category,
+            $categories,
             $perPage,
             $unreadOnly
         );

@@ -1,13 +1,20 @@
   <div class="page" id="page-activity" x-data="activityApp()" x-init="init()">
 
-    <div class="notif-tabs">
-      <template x-for="tab in tabs" :key="tab.key">
-        <button class="ntab"
-          :class="{ 'active': activeTab === tab.key }"
-          x-show="!tab.adminOnly || isAdminRole"
-          @click="switchTab(tab.key)"
-          x-text="tab.label"></button>
-      </template>
+    <div class="notif-tabs-bar">
+      <div class="notif-tabs">
+        <template x-for="tab in tabs" :key="tab.key">
+          <button class="ntab"
+            :class="{ 'active': activeTab === tab.key }"
+            @click="switchTab(tab.key)"
+            x-text="tab.label"></button>
+        </template>
+      </div>
+      <button x-cloak x-show="hasUnread"
+        @click="markAllRead()"
+        :disabled="markingAll"
+        class="notif-mark-all-btn"
+        style="flex-shrink:0;font-size:12px;color:var(--primary);background:none;border:none;padding:6px 4px 6px 8px;cursor:pointer;white-space:nowrap;"
+        x-text="markingAll ? 'Đang xử lý...' : 'Đọc tất cả'"></button>
     </div>
 
     <!-- Loading -->

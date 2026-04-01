@@ -6211,7 +6211,9 @@ var _NP_ICONS = {
   dollar: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
   handshake: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   'alert-triangle': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-  activity: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'
+  activity: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  gift: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>',
+  star: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
 };
 
 var _NP_TYPE_SUBPAGE = {
@@ -6405,7 +6407,8 @@ window.activityApp = function() {
     eye: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
     phone: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
     'check-circle': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-    gift: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>'
+    gift: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>',
+    star: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
   };
 
   // Action button configs per notification type
@@ -6460,7 +6463,7 @@ window.activityApp = function() {
     ]
   };
 
-  // Navigation mapping
+  // Navigation mapping: type → subpage to open on tap
   var TYPE_SUBPAGE = {
     lead_assigned: 'leads', lead_followup: 'leads', lead_created: 'leads',
     booking_reminder: 'bookings', booking_result: 'bookings', booking_changed: 'bookings',
@@ -6470,33 +6473,56 @@ window.activityApp = function() {
     referral_new_signup: 'referral'
   };
 
+  // Tab definitions: key → { label, categories[] (null = no filter) }
+  // categories: null = all, array = whereIn filter sent as ?categories=a,b or ?category=a
+  var TAB_DEFS = {
+    all:         { label: 'Tất cả',    categories: null },
+    property:    { label: 'BĐS',       categories: ['property'] },
+    referral:    { label: 'Khách',     categories: ['referral', 'system'] },
+    transaction: { label: 'Giao dịch', categories: ['lead', 'deal', 'commission', 'booking'] },
+    approvebds:  { label: 'BĐS Duyệt', categories: ['admin'] }
+  };
+
+  // Role → ordered list of tab keys
+  var ROLE_TABS = {
+    guest:      ['all'],
+    broker:     ['all', 'property', 'referral'],
+    sale:       ['all', 'transaction'],
+    sale_admin: ['all', 'transaction'],
+    bds_admin:  ['all', 'property', 'approvebds'],
+    admin:      ['all', 'property', 'transaction', 'approvebds', 'referral']
+  };
+
   return {
-    tabs: [
-      { key: 'all', label: 'Tất cả', adminOnly: false },
-      { key: 'lead', label: 'Lead', adminOnly: false },
-      { key: 'deal', label: 'Deal', adminOnly: false },
-      { key: 'booking', label: 'Lịch hẹn', adminOnly: false },
-      { key: 'commission', label: 'Hoa hồng', adminOnly: false },
-      { key: 'admin', label: 'Duyệt BĐS', adminOnly: true }
-    ],
+    tabs: [],
     activeTab: 'all',
     notifications: [],
     loading: false,
+    markingAll: false,
     currentPage: 1,
     lastPage: 1,
-    isAdminRole: false,
 
     get hasMore() { return this.currentPage < this.lastPage; },
+    get hasUnread() {
+      for (var i = 0; i < this.notifications.length; i++) {
+        if (this.notifications[i].is_unread) return true;
+      }
+      return false;
+    },
 
     init: function() {
       var self = this;
       var cfg = window.WEBAPP_CONFIG || {};
       var role = cfg.customerRole || 'guest';
-      this.isAdminRole = ['admin', 'bds_admin', 'sale_admin'].indexOf(role) !== -1;
-      this.fetchNotifications();
-      this.updateBadge();
 
-      // Refresh khi chuyển sang tab Hoạt động
+      // Build tab list for this role
+      var keys = ROLE_TABS[role] || ROLE_TABS['broker'];
+      self.tabs = keys.map(function(k) { return { key: k, label: TAB_DEFS[k].label }; });
+
+      self.fetchNotifications();
+      self.updateBadge();
+
+      // Refresh when switching to Hoạt động page
       window.addEventListener('webapp:page-changed', function(e) {
         if (e.detail && e.detail.page === 'activity') {
           self.currentPage = 1;
@@ -6514,13 +6540,20 @@ window.activityApp = function() {
       this.fetchNotifications();
     },
 
+    // Build query-string category params for the active tab
+    _categoryParams: function() {
+      var tabDef = TAB_DEFS[this.activeTab];
+      if (!tabDef || !tabDef.categories) return '';
+      if (tabDef.categories.length === 1) return '&category=' + tabDef.categories[0];
+      return '&categories=' + tabDef.categories.join(',');
+    },
+
     fetchNotifications: function() {
       var self = this;
       self.loading = true;
       var cfg = window.WEBAPP_CONFIG || {};
       var url = (cfg.routes && cfg.routes.notificationsJson) || '/webapp/api/notifications';
-      var params = 'page=' + self.currentPage;
-      if (self.activeTab !== 'all') params += '&category=' + self.activeTab;
+      var params = 'page=' + self.currentPage + self._categoryParams();
 
       fetch(url + '?' + params, {
         headers: {
@@ -6552,7 +6585,6 @@ window.activityApp = function() {
     },
 
     openDetail: function(notif) {
-      // Mark as read
       if (notif.is_unread) {
         var cfg = window.WEBAPP_CONFIG || {};
         fetch('/webapp/api/notifications/' + notif.id + '/read', {
@@ -6566,11 +6598,48 @@ window.activityApp = function() {
         notif.is_unread = false;
         this.updateBadge();
       }
-      // Navigate to relevant subpage
       var subpage = TYPE_SUBPAGE[notif.type];
       if (subpage && typeof openSubpage === 'function') {
         openSubpage(subpage);
       }
+    },
+
+    markAllRead: function() {
+      var self = this;
+      if (self.markingAll || !self.hasUnread) return;
+      self.markingAll = true;
+      var cfg = window.WEBAPP_CONFIG || {};
+      var url = (cfg.routes && cfg.routes.notificationsReadAll) || '/webapp/api/notifications/read-all';
+
+      // Pass categories of current tab so only visible items are marked
+      var body = {};
+      var tabDef = TAB_DEFS[self.activeTab];
+      if (tabDef && tabDef.categories && tabDef.categories.length === 1) {
+        body.category = tabDef.categories[0];
+      }
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': cfg.csrfToken || '',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(body)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(json) {
+        if (json.success) {
+          // Mark all currently loaded items as read
+          for (var i = 0; i < self.notifications.length; i++) {
+            self.notifications[i].is_unread = false;
+          }
+          self.updateBadge();
+        }
+        self.markingAll = false;
+      })
+      .catch(function() { self.markingAll = false; });
     },
 
     getActions: function(notif) {
