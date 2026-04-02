@@ -3003,6 +3003,38 @@ class TelegramWebAppController extends Controller
 
             $notificationService->sendToGroup('public_channel', $message);
 
+            // Telegram DM to the broker who submitted the listing
+            if ($customer->telegram_id && $notificationService->shouldNotify($customer, 'property', 'status', 'telegram')) {
+                $brokerMessage = "📬 *TIN ĐĂNG ĐÃ GỬI ĐI*\n";
+                $brokerMessage .= "────────────────\n";
+                $brokerMessage .= "🏠 " . $this->escapeTelegramText($property->title) . "\n";
+                $brokerMessage .= "📌 Loại tin: {$type}\n";
+                $brokerMessage .= "💰 Giá: {$price} VNĐ\n";
+                $brokerMessage .= "⏳ Trạng thái: *Chờ duyệt*\n";
+                $brokerMessage .= "📝 Tin sẽ hiển thị công khai sau khi admin duyệt\\.\n";
+                $brokerMessage .= "🔗 [Xem tin của bạn]({$propertyUrl})";
+                $notificationService->sendToCustomer($customer, $brokerMessage);
+            }
+
+            // In-app notification to the broker
+            if ($notificationService->shouldNotify($customer, 'property', 'status', 'in_app')) {
+                $editUrl = route('webapp.edit_listing', ['id' => $property->id]);
+                app(InAppNotificationService::class)->notify($customer, 'property_submitted', 'property', 'status', [
+                    'title' => 'Đăng tin thành công — Chờ duyệt',
+                    'body'  => $this->escapeTelegramText($property->title) . ' — ' . $type . ', ' . $price . ' VNĐ',
+                    'notifiable_type' => Property::class,
+                    'notifiable_id'   => $property->id,
+                    'actor_id'        => $customer->id,
+                    'data'            => [
+                        'property_id'   => $property->id,
+                        'title'         => $property->title,
+                        'status'        => 0,
+                        'status_label'  => 'Chờ duyệt',
+                        'property_url'  => $editUrl,
+                    ],
+                ]);
+            }
+
             // In-app notification to bds_admin + admin
             $admins = Customer::whereIn('role', ['bds_admin', 'admin'])->get();
             app(InAppNotificationService::class)->notifyMany($admins, 'property_pending', 'admin', 'status', [

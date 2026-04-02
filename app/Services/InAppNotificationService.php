@@ -139,6 +139,10 @@ class InAppNotificationService
                 'icon_bg' => 'var(--warning-light)',
                 'icon'    => 'refresh',
             ],
+            'property_submitted' => [
+                'icon_bg' => 'var(--primary-light)',
+                'icon'    => 'clock',
+            ],
             'property_approved' => [
                 'icon_bg' => 'var(--success-light)',
                 'icon'    => 'check',

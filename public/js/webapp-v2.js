@@ -6219,7 +6219,7 @@ var _NP_ICONS = {
 var _NP_TYPE_SUBPAGE = {
   lead_assigned:'leads', lead_followup:'leads', lead_created:'leads',
   booking_reminder:'bookings', booking_result:'bookings', booking_changed:'bookings',
-  property_approved:'mybds', property_rejected:'mybds', property_pending:'approvebds',
+  property_submitted:'mybds', property_approved:'mybds', property_rejected:'mybds', property_pending:'approvebds',
   commission_status:'commissions', commission_completed:'commissions',
   deal_created:'deals', deal_stuck:'deals', deal_status:'deals',
   referral_new_signup:'referral'
@@ -6433,6 +6433,9 @@ window.activityApp = function() {
     booking_changed: [
       { label: 'Xem chi tiết', primary: true, icon: 'clipboard', subpage: 'bookings' }
     ],
+    property_submitted: [
+      { label: 'Xem tin đăng', primary: true, icon: 'eye', action: 'open_url' }
+    ],
     property_approved: [
       { label: 'Xem tin', primary: true, icon: 'eye', subpage: 'mybds' }
     ],
@@ -6467,7 +6470,7 @@ window.activityApp = function() {
   var TYPE_SUBPAGE = {
     lead_assigned: 'leads', lead_followup: 'leads', lead_created: 'leads',
     booking_reminder: 'bookings', booking_result: 'bookings', booking_changed: 'bookings',
-    property_approved: 'mybds', property_rejected: 'mybds', property_pending: 'approvebds',
+    property_submitted: 'mybds', property_approved: 'mybds', property_rejected: 'mybds', property_pending: 'approvebds',
     commission_status: 'commissions', commission_completed: 'commissions',
     deal_created: 'deals', deal_stuck: 'deals', deal_status: 'deals',
     referral_new_signup: 'referral'
@@ -6662,6 +6665,15 @@ window.activityApp = function() {
     },
 
     handleAction: function(action, notif) {
+      if (action._action === 'open_url') {
+        var url = notif.data && notif.data.property_url;
+        if (url) {
+          window.location.href = url;
+        } else {
+          if (typeof openSubpage === 'function') openSubpage('mybds');
+        }
+        return;
+      }
       if (action._action === 'call') {
         var phone = notif.data && notif.data.customer_phone;
         if (phone) {
