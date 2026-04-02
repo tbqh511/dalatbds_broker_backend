@@ -767,9 +767,9 @@
         <div class="w-full p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 flex justify-center shrink-0">
             <div class="w-full flex justify-between gap-3">
                 <!-- Nút Quay lại -->
-                <button type="button" x-show="step > 1" @click="prevStep" 
-                    class="flex-1 bg-gray-100 text-gray-600 px-4. py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
-                    Quay lại
+                <button type="button" x-show="step > 1" @click="prevStep"
+                    class="w-10 h-10 bg-primary rounded-full shadow-md flex items-center justify-center text-white active:scale-95 transition-transform">
+                    <i class="fas fa-chevron-left"></i>
                 </button>
                 
                 <!-- Nút Tiếp tục -->

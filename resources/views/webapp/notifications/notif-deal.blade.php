@@ -93,7 +93,7 @@
       <div style="height:16px;"></div>
     </div>
     <div class="nd-action-bar">
-      <button class="nd-action-btn nd-btn-outline" onclick="closeNotifDetail('nd-deal')">← Quay lại</button>
+      <button style="width:40px;height:40px;background:var(--primary,#3270FC);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 8px rgba(50,112,252,0.25);flex-shrink:0;cursor:pointer;border:none;" onclick="closeNotifDetail('nd-deal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
       <button class="nd-action-btn nd-btn-primary" onclick="openSubpage('kpiteam');closeNotifDetail('nd-deal')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Xem KPI Team</span></button>
     </div>
   </div><!-- nd-deal -->

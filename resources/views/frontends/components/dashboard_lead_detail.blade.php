@@ -34,8 +34,8 @@
                         </span>
                     </h5>
                     <div class="lead-header-actions">
-                        <a href="{{ route('webapp.leads') }}" class="btn-sm color-btn-light" style="margin-right:8px">
-                            <i class="fal fa-arrow-left"></i> Quay lại
+                        <a href="{{ route('webapp.leads') }}" style="margin-right:8px;width:36px;height:36px;background:var(--primary,#3270FC);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 8px rgba(50,112,252,0.25);flex-shrink:0;text-decoration:none;">
+                            <i class="fal fa-chevron-left" style="font-size:14px;"></i>
                         </a>
                         @if($isOwner || $isSaleAdmin)
                         <a href="{{ route('webapp.leads.edit', $lead->id) }}" class="btn-sm color-bg">

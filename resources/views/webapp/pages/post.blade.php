@@ -111,7 +111,7 @@
       </div>
 
       <div class="form-bottom">
-        <button class="btn-outline">← Quay lại</button>
+        <button style="width:40px;height:40px;background:var(--primary,#3270FC);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 8px rgba(50,112,252,0.25);flex-shrink:0;cursor:pointer;border:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <button class="btn-primary">Tiếp theo →</button>
       </div>
     </div>

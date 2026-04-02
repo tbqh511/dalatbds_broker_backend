@@ -78,8 +78,8 @@
         <div class="sticky top-0 z-49 bg-white/95 backdrop-blur-md border-b border-gray-100 px-6 py-5 shadow-sm">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="history.back()" class="text-gray-600 hover:text-primary transition-colors">
-                        <i class="fas fa-arrow-left text-lg"></i>
+                    <button type="button" onclick="history.back()" class="w-10 h-10 bg-primary rounded-full shadow-md flex items-center justify-center text-white active:scale-95 transition-transform">
+                        <i class="fas fa-chevron-left"></i>
                     </button>
                     <h1 class="text-xl font-bold text-gray-800">Thông tin khách hàng</h1>
                 </div>
@@ -457,8 +457,8 @@
             <div class="w-full max-w-md flex justify-between gap-3">
                 <!-- Nút Quay lại -->
                 <button type="button" onclick="history.back()"
-                    class="flex-1 bg-gray-100 text-gray-600 px-4 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
-                    Quay lại
+                    class="w-10 h-10 bg-primary rounded-full shadow-md flex items-center justify-center text-white active:scale-95 transition-transform">
+                    <i class="fas fa-chevron-left"></i>
                 </button>
                 <!-- Nút Lưu -->
                 <button type="button" @click="submitForm" :disabled="loading || !isFormValid"

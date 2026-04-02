@@ -7726,9 +7726,11 @@ textarea.form-row-value {
 }
 
 .crm-secondary-btn--primary {
-  color: var(--primary);
-  border-color: var(--primary-light);
-  background: var(--primary-light);
+  color: #fff;
+  border-color: var(--primary);
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(50, 112, 252, 0.25);
 }
 
 /* Guest CTA bar */

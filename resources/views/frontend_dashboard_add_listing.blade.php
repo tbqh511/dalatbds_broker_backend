@@ -2040,8 +2040,8 @@ build. --}}
             <div class="w-full max-w-md flex justify-between gap-3">
                 <!-- Nút Quay lại -->
                 <button type="button" x-show="step >= 1" @click="step === 1 ? goToDashboardHome() : prevStep()"
-                    class="flex-1 bg-gray-100 text-gray-600 px-4. py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
-                    Quay lại
+                    class="w-10 h-10 bg-primary rounded-full shadow-md flex items-center justify-center text-white active:scale-95 transition-transform">
+                    <i class="fas fa-chevron-left"></i>
                 </button>
 
                 <!-- Nút Tiếp tục -->
@@ -2111,8 +2111,8 @@ build. --}}
 
                 <div class="flex gap-3">
                     <button type="button" @click="showMapPicker = false"
-                        class="flex-1 bg-gray-100 text-gray-600 px-4 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
-                        Quay lại
+                        class="w-10 h-10 bg-primary rounded-full shadow-md flex items-center justify-center text-white active:scale-95 transition-transform">
+                        <i class="fas fa-chevron-left"></i>
                     </button>
 
                     <button @click="confirmMapLocation" :disabled="!pickerLat || isMapDragging || !formData.street"

@@ -199,11 +199,21 @@
     history.replaceState(null, '', _cleanUrl.pathname + (_cleanUrl.search || '') + (_cleanUrl.hash || ''));
   }
 
-  // ─── ĐÃ CÓ SESSION → KHÔNG LÀM GÌ CẢ ────────────────────────────────
-  // Nếu server đã render page với customerId, auth đã được xác minh server-side
-  // (HMAC-SHA256 của initData). Không cần cross-check Telegram ID phía JS nữa.
+  // ─── ĐÃ CÓ SESSION → kiểm tra có phải account mới không ────────────────
   var hasSession = !!cfg.customerId;
   if (hasSession) {
+    // Phát hiện account switch: so sánh Telegram ID hiện tại với session
+    // Nếu user switch account trong Telegram mà không logout webapp → force re-auth
+    if (tg && tg.initData && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      var currentTgId = String(tg.initDataUnsafe.user.id);
+      var sessionTgId = String(cfg.telegram_id || '');
+      if (currentTgId && sessionTgId && currentTgId !== sessionTgId) {
+        // initDataUnsafe chỉ dùng để phát hiện switch (không dùng để auth)
+        // Xác thực thực sự vẫn là HMAC-SHA256 server-side tại POST /webapp/auth
+        submitAuthForm(0);
+        return;
+      }
+    }
     sessionStorage.removeItem('_auth_submit');
     sessionStorage.removeItem('_auth_loop');
     removeAuthOverlay();
