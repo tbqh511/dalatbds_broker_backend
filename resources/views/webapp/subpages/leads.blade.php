@@ -1,7 +1,7 @@
 <!-- ========== SUBPAGE: LEAD CỦA TÔI ========== -->
 <div class="subpage" id="subpage-leads">
   <div class="sp-header">
-    <button class="sp-back" onclick="closeSubpage('leads')">←</button>
+    <button class="sp-back" onclick="closeSubpage('leads')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="sp-title">
       <span style="display:inline-flex;align-items:center;gap:5px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>

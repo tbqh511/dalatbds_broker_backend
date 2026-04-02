@@ -5,7 +5,7 @@
 <!-- ========== SUBPAGE: HỖ TRỢ & FAQ ========== -->
 <div class="subpage" id="subpage-support">
   <div class="sp-header">
-    <button class="sp-back" onclick="closeSubpage('support')">←</button>
+    <button class="sp-back" onclick="closeSubpage('support')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Hỗ trợ & FAQ</span></div>
   </div>
 

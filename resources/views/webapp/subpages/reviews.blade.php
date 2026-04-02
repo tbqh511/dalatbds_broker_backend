@@ -1,7 +1,7 @@
 <!-- ========== SUBPAGE: ĐÁNH GIÁ CỦA TÔI ========== -->
 <div class="subpage" id="subpage-reviews">
   <div class="sp-header">
-    <button class="sp-back" onclick="closeSubpage('reviews')">←</button>
+    <button class="sp-back" onclick="closeSubpage('reviews')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Đánh giá của tôi</span></div>
     <div class="sp-actions"></div>
   </div>

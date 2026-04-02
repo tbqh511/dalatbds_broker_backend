@@ -1,7 +1,7 @@
 <!-- ========== SUBPAGE: KPI & TEAM ========== -->
 <div class="subpage" id="subpage-kpiteam">
   <div class="sp-header">
-    <button class="sp-back" onclick="closeSubpage('kpiteam')">←</button>
+    <button class="sp-back" onclick="closeSubpage('kpiteam')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="sp-title">
       <span style="display:inline-flex;align-items:center;gap:5px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>

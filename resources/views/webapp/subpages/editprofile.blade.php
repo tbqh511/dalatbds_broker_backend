@@ -16,7 +16,7 @@
   <!-- ========== SUBPAGE: CHỈNH SỬA HỒ SƠ ========== -->
   <div class="subpage" id="subpage-editprofile">
     <div class="sp-header">
-      <button class="sp-back" onclick="closeSubpage('editprofile')">←</button>
+      <button class="sp-back" onclick="closeSubpage('editprofile')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><line x1="7" y1="8" x2="7.01" y2="8"/><line x1="11" y1="8" x2="17" y2="8"/><line x1="7" y1="11" x2="7.01" y2="11"/><line x1="11" y1="11" x2="17" y2="11"/></svg> Chỉnh sửa hồ sơ</span></div>
     </div>
 

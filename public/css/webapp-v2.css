@@ -8427,14 +8427,19 @@ textarea.form-row-value {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--bg-secondary);
+  background: var(--primary);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(50, 112, 252, 0.25);
   flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.sp-back:active {
+  opacity: 0.85;
 }
 
 .sp-title {

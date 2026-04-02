@@ -1,7 +1,7 @@
 <!-- ========== SUBPAGE: BĐS CỦA TÔI ========== -->
 <div class="subpage" id="subpage-mybds">
   <div class="sp-header">
-    <button class="sp-back" onclick="closeSubpage('mybds')">←</button>
+    <button class="sp-back" onclick="closeSubpage('mybds')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="sp-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg> BĐS của tôi</span></div>
     <div class="sp-actions">
       <button class="sp-action-btn" onclick="openSheet()" title="Đăng tin mới">＋</button>
