@@ -72,7 +72,7 @@
   </div><!-- end sp-scroll -->
 
   <!-- Sort / Filter bottom sheet -->
-  <div id="mybdsFilterSheet" style="display:none;position:fixed;inset:0;z-index:9999;" onclick="mybdsCloseFilterSheet()">
+  <div id="mybdsFilterSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.45);" onclick="mybdsCloseFilterSheet()">
     <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:18px 18px 0 0;padding:16px 0 32px;" onclick="event.stopPropagation()">
       <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
       <div style="font-size:13px;font-weight:700;color:var(--text-primary);padding:0 16px 12px;">Sắp xếp theo</div>

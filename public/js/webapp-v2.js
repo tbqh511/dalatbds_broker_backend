@@ -4381,11 +4381,14 @@ function setElText(id, val) {
 }
 
 function mybdsBuildCard(p, maxViews, maxFav) {
+  const isRejected = p.status === 2 && p.rejection_reason;
   const statusInfo = p.status === 1
-    ? { cls: 'status-active',   label: '● Đang hiển thị' }
+    ? { cls: 'status-active',    label: '● Đang hiển thị' }
     : p.status === 0
       ? { cls: 'status-pending', label: '⏳ Chờ duyệt' }
-      : { cls: 'status-hidden',  label: '⊘ Đã ẩn' };
+      : isRejected
+        ? { cls: 'status-rejected', label: '✕ Bị từ chối' }
+        : { cls: 'status-hidden',   label: '⊘ Đã ẩn' };
 
   const imgStyle = p.title_image
     ? `background:url('${escHtml(p.title_image)}') center/cover no-repeat;`
@@ -4440,6 +4443,15 @@ function mybdsBuildCard(p, maxViews, maxFav) {
       </div>`
     : '';
 
+  // Rejected notice banner
+  const rejectedBanner = isRejected
+    ? `<div style="padding:10px 13px;background:#fef2f2;border-top:1px solid #fecaca;">
+        <div style="font-size:11px;font-weight:700;color:var(--danger);">❌ Lý do từ chối: ${escHtml(p.rejection_reason)}</div>
+        ${p.rejection_note ? `<div style="font-size:10px;color:#b91c1c;margin-top:3px;">${escHtml(p.rejection_note)}</div>` : ''}
+        <div style="font-size:10px;color:#b91c1c;margin-top:4px;">💡 Vui lòng chỉnh sửa và gửi lại để được duyệt.</div>
+      </div>`
+    : '';
+
   // Action buttons per status
   const svgEye      = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
   const svgEdit     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
@@ -4463,8 +4475,14 @@ function mybdsBuildCard(p, maxViews, maxFav) {
     quickBtns = `
       <div class="mybds-qbtn" onclick="window.location.href='${escHtml(editUrl)}'" title="Chỉnh sửa">${svgEdit}</div>
       <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
+  } else if (isRejected) {
+    // Rejected by admin: edit + resubmit + delete
+    quickBtns = `
+      <div class="mybds-qbtn" onclick="window.location.href='${escHtml(editUrl)}'" title="Chỉnh sửa">${svgEdit}</div>
+      <button style="padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;" onclick="mybdsResubmit(${p.id})">↩ Gửi lại</button>
+      <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
   } else {
-    // Hidden: show again, delete
+    // Hidden by broker: show again, delete
     quickBtns = `
       <button style="padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;" onclick="mybdsToggleStatus(${p.id}, 2)">Hiển thị lại</button>
       <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
@@ -4475,7 +4493,9 @@ function mybdsBuildCard(p, maxViews, maxFav) {
     ? `Đăng ${escHtml(p.created_at)}`
     : p.status === 0
       ? `Gửi ${escHtml(p.created_at)}`
-      : `Ẩn từ ${escHtml(p.created_at)}`;
+      : isRejected
+        ? `Bị từ chối: ${escHtml(p.created_at)}`
+        : `Ẩn từ ${escHtml(p.created_at)}`;
 
   const cardOpacity = p.status === 2 ? 'opacity:0.75;' : '';
 
@@ -4496,6 +4516,7 @@ function mybdsBuildCard(p, maxViews, maxFav) {
     </div>
     ${perfBars}
     ${pendingBanner}
+    ${rejectedBanner}
     <div class="mybds-footer">
       <div class="mybds-analytics">
         <div class="mybds-analytic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${footerLabel}</div>
@@ -4586,6 +4607,31 @@ window.mybdsWithdraw = function(id) {
         loadMyBds(true);
       } else {
         showToast(res.message || 'Lỗi rút tin');
+      }
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+};
+
+window.mybdsResubmit = function(id) {
+  if (!confirm('Xác nhận gửi lại tin đăng này để Admin xem xét duyệt?')) return;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if (!csrf) { showToast('Lỗi cấu hình'); return; }
+  fetch('/webapp/listings/' + id + '/resubmit', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        showToast('↩ Đã gửi lại — Admin sẽ xem xét trong 24h');
+        mybdsLoaded = false;
+        loadMyBds(true);
+      } else {
+        showToast(data.message || 'Có lỗi xảy ra');
       }
     })
     .catch(function() { showToast('Lỗi kết nối'); });

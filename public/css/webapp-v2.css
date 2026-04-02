@@ -8458,13 +8458,19 @@ textarea.form-row-value {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--bg-secondary);
+  background: var(--primary);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(50, 112, 252, 0.25);
+  transition: opacity 0.2s;
+}
+.sp-action-btn:active {
+  opacity: 0.85;
 }
 
 /* sub-page scroll */
@@ -8779,6 +8785,12 @@ textarea.form-row-value {
 .status-expired {
   background: var(--danger-light);
   color: var(--danger);
+}
+
+.status-rejected {
+  background: #fef2f2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
 }
 
 /* performance mini chart */

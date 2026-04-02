@@ -273,6 +273,8 @@ class TelegramWebAppController extends Controller
                     'favourite_count'  => (int) $p->favourite_count,
                     'created_at'       => $p->created_at ? $p->created_at->format('d/m/Y') : '',
                     'title_image'      => $p->title_image,
+                    'rejection_reason' => $p->rejection_reason,
+                    'rejection_note'   => $p->rejection_note,
                 ];
             });
 
@@ -1688,6 +1690,45 @@ class TelegramWebAppController extends Controller
             return response()->json(['success' => true, 'status' => $newStatus, 'message' => 'Cập nhật trạng thái thành công.']);
         }
         catch (\Exception $e) {
+            Log::error($e);
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    public function resubmitProperty($id)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $property = Property::where('id', $id)
+                ->where('added_by', $customer->id)
+                ->where('status', 2)
+                ->whereNotNull('rejection_reason')
+                ->first();
+
+            if (!$property) {
+                return response()->json(['success' => false, 'message' => 'Tin đăng không hợp lệ hoặc không ở trạng thái bị từ chối.'], 422);
+            }
+
+            $property->status = 0;
+            $property->save();
+
+            try {
+                $title = $property->title ?? 'BĐS #' . $property->id;
+                $name  = $customer->name ?? 'Broker';
+                app(\App\Services\NotificationService::class)->sendToGroup(
+                    'bds_admin',
+                    "🔄 *BĐS GỬI LẠI DUYỆT*\n────────────────\n🏠 {$title}\n👤 Broker: {$name}\n💡 Đã bổ sung và gửi lại."
+                );
+            } catch (\Exception $e) {
+                Log::warning('resubmitProperty: notify failed', ['error' => $e->getMessage()]);
+            }
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
             Log::error($e);
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
         }
