@@ -4053,8 +4053,8 @@ class TelegramWebAppController extends Controller
         $monthStart = $now->copy()->startOfMonth();
         $monthEnd   = $now->copy()->endOfMonth();
 
-        // Direct referrals
-        $referrals = Customer::where('referred_by', $customer->id)->get();
+        // Direct referrals — sorted by most recent join first
+        $referrals = Customer::where('referred_by', $customer->id)->orderByDesc('created_at')->get();
         $referralIds = $referrals->pluck('id')->toArray();
 
         // Active: referrals who have commission deals this month

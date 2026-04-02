@@ -261,6 +261,21 @@ class TelegramBotController extends Controller
                     $customer->save();
                 }
 
+                // Gán người giới thiệu từ cache nếu chưa có
+                $cacheKey = "pending_referral:{$telegramId}";
+                $refCode = \Cache::pull($cacheKey);
+                if (!empty($refCode) && empty($customer->referred_by)) {
+                    if (str_starts_with($refCode, 'ref_')) {
+                        $refCode = substr($refCode, 4);
+                    }
+                    $referrer = Customer::where('referral_code', $refCode)->first();
+                    if ($referrer && $referrer->id !== $customer->id) {
+                        $customer->referred_by = $referrer->id;
+                        $customer->save();
+                        \Log::info("Referral assigned via Bot contact: Customer #{$customer->id} referred by #{$referrer->id} (code: {$refCode})");
+                    }
+                }
+
                 Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => "🎉 Chào mừng bạn gia nhập đội ngũ môi giới DalatBDS!\n\nSố điện thoại đã được xác nhận thành công. Từ giờ bạn có thể đăng tin, quản lý khách hàng và theo dõi hoa hồng ngay trên ứng dụng.\n\nChúc bạn nhiều giao dịch thành công! 💪🏡",
@@ -275,10 +290,14 @@ class TelegramBotController extends Controller
             $telegramId = $message['from']['id'] ?? null;
             $customer = Customer::where('telegram_id', $telegramId)->first();
 
-            // Store referral code if any (e.g. /start 12345)
+            // Store referral code if any (e.g. /start ref_DLBDS-XXXXX)
             $parts = explode(' ', $text);
             if (count($parts) > 1 && $telegramId) {
-                \Cache::put("pending_referral:{$telegramId}", $parts[1], now()->addHours(24));
+                $refCode = $parts[1];
+                if (str_starts_with($refCode, 'ref_')) {
+                    $refCode = substr($refCode, 4);
+                }
+                \Cache::put("pending_referral:{$telegramId}", $refCode, now()->addHours(24));
             }
 
             if (!$customer || empty($customer->mobile)) {
