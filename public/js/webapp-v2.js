@@ -3747,6 +3747,7 @@ window.guestShareContact = function(){
             ['_token',   cfg.csrfToken || (document.querySelector('meta[name="csrf-token"]') || {getAttribute: function(){return '';}}).getAttribute('content')],
             ['initData', tg.initData || ''],
             ['retry',    '0'],
+            ['referral_code', sessionStorage.getItem('referral_code') || ''],
           ].forEach(function(pair) {
             var inp = document.createElement('input');
             inp.type = 'hidden'; inp.name = pair[0]; inp.value = pair[1] || '';
