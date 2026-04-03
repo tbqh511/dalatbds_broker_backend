@@ -4382,6 +4382,7 @@ class TelegramWebAppController extends Controller
                     $customer->referred_by = $referrer->id;
                     $customer->save();
                     \Log::info("Referral assigned via authRedirect: Customer #{$customer->id} referred by #{$referrer->id}");
+                    $this->sendReferralNotification($referrer, $customer);
                 }
             }
 
@@ -4409,6 +4410,42 @@ class TelegramWebAppController extends Controller
         }
 
         return redirect('/webapp?login_status=guest&retry=' . $retry);
+    }
+
+    private function sendReferralNotification(\App\Models\Customer $referrer, \App\Models\Customer $newUser): void
+    {
+        try {
+            $notifService = app(\App\Services\NotificationService::class);
+            $inAppService = app(\App\Services\InAppNotificationService::class);
+
+            // 1. Telegram message
+            if ($referrer->telegram_id && $notifService->shouldNotify($referrer, 'referral', 'new_signup', 'telegram')) {
+                $message = \App\Services\Telegram\TelegramMessageTemplates::referralNewSignup($referrer, $newUser);
+                $notifService->sendToCustomer($referrer, $message);
+            }
+
+            // 2. In-app notification
+            $inAppService->notify(
+                $referrer,
+                'referral_new_signup',
+                'referral',
+                'new_signup',
+                [
+                    'title' => 'Có người đăng ký qua mã giới thiệu của bạn!',
+                    'body'  => ($newUser->name ?? 'Thành viên mới') . ' vừa tham gia Đà Lạt BĐS qua link của bạn.',
+                    'notifiable_type' => \App\Models\Customer::class,
+                    'notifiable_id'   => $newUser->id,
+                    'actor_id'        => $newUser->id,
+                    'data'  => [
+                        'referred_id'   => $newUser->id,
+                        'referred_name' => $newUser->name ?? '',
+                        'referral_code' => $referrer->referral_code,
+                    ],
+                ]
+            );
+        } catch (\Exception $e) {
+            \Log::error("Referral notification failed (authRedirect): " . $e->getMessage());
+        }
     }
 
     /**

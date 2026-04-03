@@ -199,6 +199,77 @@ class TelegramBotController extends Controller
         );
     }
 
+    private function sendReferralNotification(Customer $referrer, Customer $newUser): void
+    {
+        try {
+            $inAppService = app(\App\Services\InAppNotificationService::class);
+
+            // 1. Telegram message
+            if ($referrer->telegram_id && $this->notificationService->shouldNotify($referrer, 'referral', 'new_signup', 'telegram')) {
+                $message = \App\Services\Telegram\TelegramMessageTemplates::referralNewSignup($referrer, $newUser);
+                $this->notificationService->sendToCustomer($referrer, $message);
+            }
+
+            // 2. In-app notification
+            $inAppService->notify(
+                $referrer,
+                'referral_new_signup',
+                'referral',
+                'new_signup',
+                [
+                    'title' => 'Có người đăng ký qua mã giới thiệu của bạn!',
+                    'body'  => ($newUser->name ?? 'Thành viên mới') . ' vừa tham gia Đà Lạt BĐS qua link của bạn.',
+                    'notifiable_type' => Customer::class,
+                    'notifiable_id'   => $newUser->id,
+                    'actor_id'        => $newUser->id,
+                    'data'  => [
+                        'referred_id'   => $newUser->id,
+                        'referred_name' => $newUser->name ?? '',
+                        'referral_code' => $referrer->referral_code,
+                    ],
+                ]
+            );
+        } catch (\Exception $e) {
+            \Log::error("Referral notification failed (Bot contact): " . $e->getMessage());
+        }
+    }
+
+    private function sendWelcomeNotification(Customer $customer): void
+    {
+        try {
+            $firstName = explode(' ', trim($customer->name ?? ''))[0] ?: 'bạn';
+            $firstName = mb_convert_case($firstName, MB_CASE_TITLE, 'UTF-8');
+
+            $welcomeMessages = [
+                [
+                    'title' => "Chào mừng {$firstName} gia nhập Đà Lạt BĐS!",
+                    'body'  => 'Hành trình của bạn bắt đầu từ hôm nay. Mỗi giao dịch thành công đều khởi nguồn từ một bước đầu tiên dũng cảm như bước bạn vừa làm!',
+                ],
+                [
+                    'title' => "Tuyệt vời {$firstName}, bạn đã sẵn sàng!",
+                    'body'  => 'Đà Lạt BĐS luôn đồng hành cùng bạn. Hãy bắt đầu bằng việc đăng tin BĐS đầu tiên hoặc thêm khách hàng tiềm năng vào danh sách lead nhé!',
+                ],
+                [
+                    'title' => "Chào {$firstName}, chào mừng đến với đội ngũ!",
+                    'body'  => 'Bạn đã gia nhập cộng đồng môi giới BĐS Đà Lạt. Mỗi ngày là một cơ hội mới — hãy tận dụng từng khoảnh khắc và kết quả sẽ đến đúng lúc!',
+                ],
+            ];
+
+            $picked = $welcomeMessages[($customer->id ?? 0) % count($welcomeMessages)];
+
+            \App\Models\InAppNotification::create([
+                'customer_id' => $customer->id,
+                'type'        => 'welcome_ebroker',
+                'category'    => 'system',
+                'title'       => $picked['title'],
+                'body'        => $picked['body'],
+                'data'        => ['action' => 'onboard'],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Welcome notification failed for customer #{$customer->id}: " . $e->getMessage());
+        }
+    }
+
     private function escape(?string $text): string
     {
         return str_replace(['*', '_', '`', '['], ['\*', '\_', '\`', '\['], $text ?? '');
@@ -273,7 +344,13 @@ class TelegramBotController extends Controller
                         $customer->referred_by = $referrer->id;
                         $customer->save();
                         \Log::info("Referral assigned via Bot contact: Customer #{$customer->id} referred by #{$referrer->id} (code: {$refCode})");
+                        $this->sendReferralNotification($referrer, $customer);
                     }
+                }
+
+                // Gửi welcome in-app notification (chỉ nếu chưa có welcome trước đó)
+                if (!\App\Models\InAppNotification::where('customer_id', $customer->id)->where('type', 'welcome_ebroker')->exists()) {
+                    $this->sendWelcomeNotification($customer);
                 }
 
                 Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
