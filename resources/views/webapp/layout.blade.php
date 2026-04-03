@@ -167,6 +167,34 @@
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=places,marker"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pusher-js@8.3.0/dist/web/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
+@if($customer->id ?? null)
+<script>
+  (function() {
+    var echoConfig = {
+      broadcaster: 'pusher',
+      key: @json(config('broadcasting.connections.pusher.key')),
+      cluster: @json(env('PUSHER_APP_CLUSTER', 'mt1')),
+      forceTLS: @json(config('broadcasting.connections.pusher.options.useTLS', false)),
+      disableStats: true,
+      authEndpoint: '/broadcasting/auth',
+      auth: { headers: { 'X-CSRF-TOKEN': window.WEBAPP_CONFIG.csrfToken } },
+    };
+
+    // Self-hosted websockets (laravel-websockets): cần wsHost + enabledTransports
+    var pusherHost = @json(env('PUSHER_HOST'));
+    if (pusherHost) {
+      echoConfig.wsHost = pusherHost;
+      echoConfig.wsPort = @json((int) env('PUSHER_PORT', 6001));
+      echoConfig.wssPort = @json((int) env('PUSHER_PORT', 6001));
+      echoConfig.enabledTransports = ['ws', 'wss'];
+    }
+
+    window.Echo = new Echo(echoConfig);
+  })();
+</script>
+@endif
 <script src="{{ asset('js/webapp-v2.js') }}?v={{ filemtime(public_path('js/webapp-v2.js')) }}"></script>
 {{-- Telegram auto-login: runs after webapp-v2.js so deep link handler has already set referral_code in sessionStorage --}}
 <script>

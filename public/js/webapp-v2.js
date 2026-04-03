@@ -6433,6 +6433,26 @@ document.addEventListener('webapp:badge-update', function(e) {
 
 }); // end DOMContentLoaded
 
+// ============ REAL-TIME NOTIFICATIONS VIA WEBSOCKET ============
+(function initRealtimeNotifications() {
+  var cfg = window.WEBAPP_CONFIG || {};
+  if (!cfg.customerId || !window.Echo) return;
+
+  window.Echo.private('customer.' + cfg.customerId)
+    .listen('.notification.new', function(data) {
+      // Update badge counts immediately
+      var count = data.unread_count || 0;
+      document.dispatchEvent(new CustomEvent('webapp:badge-update', {
+        detail: { count: count }
+      }));
+
+      // Dispatch for activityApp to prepend the new notification
+      document.dispatchEvent(new CustomEvent('webapp:new-notification', {
+        detail: { notification: data.notification }
+      }));
+    });
+})();
+
 // ============ ACTIVITY PAGE (IN-APP NOTIFICATIONS) ============
 // Defined outside DOMContentLoaded so Alpine.js can find it during initialization
 window.activityApp = function() {
@@ -6578,6 +6598,32 @@ window.activityApp = function() {
           self.notifications = [];
           self.fetchNotifications();
           self.updateBadge();
+        }
+      });
+
+      // Listen for real-time new notifications via WebSocket
+      document.addEventListener('webapp:new-notification', function(e) {
+        var notif = e.detail && e.detail.notification;
+        if (!notif) return;
+
+        // type_config is already included from server payload
+        if (!notif.type_config) {
+          notif.type_config = { icon_bg: 'var(--primary-light)', icon: 'bell' };
+        }
+
+        // Check if notification belongs to the current tab filter
+        var tabDef = TAB_DEFS[self.activeTab];
+        var shouldShow = !tabDef.categories || tabDef.categories.indexOf(notif.category) !== -1;
+
+        if (shouldShow) {
+          // Avoid duplicates
+          var exists = false;
+          for (var i = 0; i < self.notifications.length; i++) {
+            if (self.notifications[i].id === notif.id) { exists = true; break; }
+          }
+          if (!exists) {
+            self.notifications.unshift(notif);
+          }
         }
       });
     },

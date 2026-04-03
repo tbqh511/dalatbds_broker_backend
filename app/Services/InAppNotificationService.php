@@ -25,7 +25,7 @@ class InAppNotificationService
             return null;
         }
 
-        return InAppNotification::create([
+        $notification = InAppNotification::create([
             'customer_id'     => $recipient->id,
             'type'            => $type,
             'category'        => $category,
@@ -36,6 +36,12 @@ class InAppNotificationService
             'notifiable_id'   => $payload['notifiable_id'] ?? null,
             'actor_id'        => $payload['actor_id'] ?? null,
         ]);
+
+        // Broadcast real-time via WebSocket
+        $unreadCount = $this->unreadCount($recipient->id);
+        event(new \App\Events\NewInAppNotification($notification, $unreadCount));
+
+        return $notification;
     }
 
     /**
