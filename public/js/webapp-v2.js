@@ -3074,7 +3074,11 @@ function populateFull(d){
       || (cfg.customerId && d.addedBy && String(cfg.customerId) === String(d.addedBy));
     if(canSeeCommission){
       const el = document.getElementById('specCommission');
-      if(el) el.textContent = d.commissionRate + '%' + (d.commission ? ' (' + formatVND(d.commission) + ')' : '');
+      if(el){
+        const isRentProp = d.transactionType === 'rent' || d.property_type == 1;
+        const commLabel = isRentProp ? d.commissionRate + ' tháng' : d.commissionRate + '%';
+        el.textContent = commLabel + (d.commission ? ' (' + formatVND(d.commission) + ')' : '');
+      }
       showHideEl('specCommissionItem',true);
     } else {
       showHideEl('specCommissionItem',false);

@@ -802,10 +802,18 @@ class TelegramWebAppController extends Controller
             }
         }
 
-        // Commission rate
-        $commissionRate = 2;
-        if ($property->price > 0 && $property->commission > 0) {
-            $commissionRate = round(($property->commission / $property->price) * 100, 1);
+        // Commission rate — for rent: stored as price × months, so reverse = months; for sale: percentage
+        if ($property->property_type == 1) { // rent
+            $commissionRate = 1;
+            if ($property->price > 0 && $property->commission > 0) {
+                $months = round($property->commission / $property->price);
+                $commissionRate = max($months, 1);
+            }
+        } else { // sale
+            $commissionRate = 2;
+            if ($property->price > 0 && $property->commission > 0) {
+                $commissionRate = round(($property->commission / $property->price) * 100, 1);
+            }
         }
 
         // Host info — only for broker+
