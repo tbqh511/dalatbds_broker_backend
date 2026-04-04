@@ -2347,7 +2347,7 @@ class TelegramWebAppController extends Controller
 
             return response()->json([
                 'success' => true,
-                'redirect_url' => route('webapp.add_listing_success', ['slug' => $slug])
+                'redirect_url' => route('webapp.add_listing_success', ['slug' => $slug, 'property_id' => $property->id])
             ]);
 
         }
@@ -2364,7 +2364,8 @@ class TelegramWebAppController extends Controller
     public function addListingSuccess(Request $request)
     {
         $slug = $request->input('slug');
-        return view('frontend_dashboard_add_listing_success', compact('slug'));
+        $propertyId = $request->input('property_id');
+        return view('frontend_dashboard_add_listing_success', compact('slug', 'propertyId'));
     }
 
     public function editListing(Request $request, $id)

@@ -1,36 +1,37 @@
-@extends('frontends.master')
+@extends('webapp.layout-form')
 
 @section('title', 'Đăng tin thành công - Đà Lạt BDS')
 
 @push('styles')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        body {
+            background-color: #F5F7FB;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
         .success-page-wrap {
-            min-height: 60vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #F5F7FB;
-            padding: 40px 0;
+            padding: 20px;
         }
         .success-card {
             background: #fff;
             border-radius: 24px;
-            padding: 50px 40px;
+            padding: 50px 30px 40px;
             box-shadow: 0 15px 50px rgba(0,0,0,0.05);
             text-align: center;
-            max-width: 600px;
+            max-width: 420px;
             width: 100%;
             margin: 0 auto;
-            position: relative;
-            overflow: hidden;
         }
-        
-        /* Icon Image Animation */
         .success-image-wrap {
             width: 120px;
             height: 120px;
             margin: 0 auto 30px;
-            position: relative;
         }
         .success-image-wrap img {
             width: 100%;
@@ -38,53 +39,37 @@
             object-fit: contain;
             animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-
         .success-card h1 {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 800;
             color: #1f2937;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
+            margin-bottom: 12px;
         }
-        
-        /* Centered Description */
         .success-description {
-            font-size: 16px;
+            font-size: 15px;
             color: #6b7280;
             line-height: 1.6;
-            margin-bottom: 40px;
-            max-width: 480px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-bottom: 36px;
         }
-
-        /* Button Grid Layout */
-        .action-buttons-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Row 1: 2 buttons */
-            gap: 16px;
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             width: 100%;
         }
-        
-        /* Row 2: Full width button */
-        .action-buttons-grid .btn-full-width {
-            grid-column: span 2;
-        }
-
         .btn-action {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 16px 20px;
+            padding: 14px 20px;
             border-radius: 14px;
             font-weight: 700;
             font-size: 15px;
             transition: all 0.2s ease;
             text-decoration: none !important;
             border: 2px solid transparent;
+            cursor: pointer;
         }
-        
-        /* Button Styles */
         .btn-primary-custom {
             background-color: #3270FC;
             color: #fff;
@@ -93,10 +78,8 @@
         .btn-primary-custom:hover {
             background-color: #1c5bca;
             color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(50, 112, 252, 0.35);
+            transform: translateY(-1px);
         }
-        
         .btn-secondary-custom {
             background-color: #fff;
             color: #3270FC;
@@ -106,9 +89,7 @@
             border-color: #3270FC;
             background-color: #f0f5ff;
             color: #3270FC;
-            transform: translateY(-2px);
         }
-        
         .btn-ghost-custom {
             background-color: #f9fafb;
             color: #6b7280;
@@ -119,78 +100,65 @@
             color: #374151;
             border-color: #e5e7eb;
         }
-        
+        .back-home-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 24px;
+            color: #9ca3af;
+            font-size: 14px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .back-home-link:hover {
+            color: #3270FC;
+        }
         @keyframes bounceIn {
             0% { transform: scale(0.3); opacity: 0; }
             50% { transform: scale(1.05); opacity: 1; }
             70% { transform: scale(0.9); }
             100% { transform: scale(1); }
         }
-
-        /* Mobile Adjustments */
-        @media (max-width: 500px) {
-            .success-card {
-                padding: 30px 20px;
-                border-radius: 0;
-                box-shadow: none;
-                background: transparent;
-            }
-            .success-page-wrap {
-                background: #fff;
-                align-items: flex-start;
-            }
-            .action-buttons-grid {
-                grid-template-columns: 1fr; /* Stack buttons on mobile */
-            }
-            .action-buttons-grid .btn-full-width {
-                grid-column: span 1;
-            }
-        }
     </style>
 @endpush
 
 @section('content')
 <div class="success-page-wrap">
-    <div class="container">
-        <div class="success-card">
-            <!-- Emoticon Image -->
-            <div class="success-image-wrap">
-                <!-- Using a party popper or success illustration -->
-                <img src="https://cdn-icons-png.flaticon.com/512/7518/7518748.png" alt="Success">
-            </div>
-            
-            <h1>Đăng tin thành công!</h1>
-            
-            <div class="success-description">
-                Tin của bạn đang chờ duyệt.<br>
-                Chúng tôi sẽ thông báo sau khi hiển thị.
-            </div>
-            
-            <div class="action-buttons-grid">
-                <!-- Row 1: 2 Buttons -->
-                @if(isset($slug) && $slug)
-                    <a href="{{ route('bds.show', $slug) }}" class="btn-action btn-primary-custom">
-                        <i class="fa-solid fa-eye mr-2"></i> Xem tin vừa đăng
-                    </a>
-                @else
-                    <!-- Fallback if no slug (should rarely happen) -->
-                     <a href="{{ route('webapp.listings') }}" class="btn-action btn-primary-custom">
-                        <i class="fa-solid fa-list-check mr-2"></i> Danh sách tin
-                    </a>
-                @endif
-                
-                <a href="{{ route('webapp.add_listing') }}" class="btn-action btn-secondary-custom">
-                    <i class="fa-solid fa-plus mr-2"></i> Đăng tin khác
-                </a>
-                
-                <!-- Row 2: 1 Button (Full Width) -->
-                <a href="{{ route('webapp.listings') }}" class="btn-action btn-ghost-custom btn-full-width">
-                    <i class="fa-solid fa-list-check mr-2"></i> Quản lý tin đăng
-                </a>
-            </div>
-
-            <!-- Removed "Back to Home" link as requested -->
+    <div class="success-card">
+        <div class="success-image-wrap">
+            <img src="https://cdn-icons-png.flaticon.com/512/7518/7518748.png" alt="Success">
         </div>
+
+        <h1>Đăng tin thành công!</h1>
+
+        <div class="success-description">
+            Tin của bạn đang chờ duyệt.<br>
+            Chúng tôi sẽ thông báo sau khi hiển thị.
+        </div>
+
+        <div class="action-buttons">
+            @if(isset($slug) && $slug)
+                <a href="{{ route('bds.show', $slug) }}" class="btn-action btn-primary-custom">
+                    <i class="fa-solid fa-eye" style="margin-right: 8px;"></i> Xem tin vừa đăng
+                </a>
+            @elseif(isset($propertyId) && $propertyId)
+                <a href="{{ route('property.showid', ['id' => $propertyId]) }}" class="btn-action btn-primary-custom">
+                    <i class="fa-solid fa-eye" style="margin-right: 8px;"></i> Xem tin vừa đăng
+                </a>
+            @endif
+
+            <a href="{{ route('webapp.add_listing') }}" class="btn-action btn-secondary-custom">
+                <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Đăng tin khác
+            </a>
+
+            <a href="/webapp#mybds" class="btn-action btn-ghost-custom">
+                <i class="fa-solid fa-list-check" style="margin-right: 8px;"></i> Quản lý tin đăng
+            </a>
+        </div>
+
+        <a href="/webapp" class="back-home-link">
+            <i class="fa-solid fa-arrow-left"></i> Về trang chủ WebApp
+        </a>
     </div>
 </div>
 @endsection
