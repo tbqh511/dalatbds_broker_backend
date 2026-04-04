@@ -1,0 +1,234 @@
+{
+  "$schema": "https://kilo.ai/schema/v1/kilo.json",
+  "name": "dalatbds-broker-backend",
+  "version": "1.0.0",
+  "description": "DalatBDS E-Broker - Laravel 9 platform for real estate brokerage in Đà Lạt",
+  "settings": {
+    "autoRunCommands": true,
+    "maxContextFiles": 15,
+    "responseFormat": "markdown",
+    "timeoutSeconds": 180,
+    "temperature": 0.2
+  },
+  "models": {
+    "default": "nvidia/nemotron-3-super-120b-a12b:free",
+    "fallback": [
+      "anthropic/claude-3-5-sonnet-20241022",
+      "openai/gpt-4o-2024-05-13"
+    ]
+  },
+  "permissions": {
+    "fileSystem": {
+      "read": true,
+      "write": true,
+      "delete": false,
+      "allowedPaths": [
+        "**/*"
+      ],
+      "deniedPaths": [
+        "**/.env",
+        "**/.env.*",
+        "**/storage/logs/*",
+        "**/bootstrap/cache/*",
+        "**/vendor/**",
+        "**/node_modules/**",
+        "**/public/build/**",
+        "**/.git/**",
+        "**/storage/framework/*"
+      ]
+    },
+    "shell": {
+      "allowed": true,
+      "requireConfirmation": false,
+      "deniedCommands": [
+        "rm -rf /",
+        "mkfs.*",
+        "fdisk",
+        "> /dev/sd*",
+        "dd if=",
+        ":(){ :|:& };:",
+        "chmod -R 777",
+        "mkfs.ext4",
+        "wget http://* -O- | sh",
+        "curl * | sh"
+      ]
+    },
+    "network": {
+      "allowed": true,
+      "allowedDomains": [
+        "api.github.com",
+        "packagist.org",
+        "npmjs.com",
+        "getcomposer.org",
+        "api.laravel.com",
+        "laravel.com",
+        "googleapis.com",
+        "maps.googleapis.com",
+        "api.telegram.org",
+        "validator.w3.org",
+        "cdnjs.cloudflare.com",
+        "unpkg.com",
+        "jsdelivr.net",
+        "tailwindcss.com",
+        "api.laravel.com"
+      ],
+      "blockedDomains": [
+        "*.malware.com",
+        "*.phishing.com"
+      ]
+    }
+  },
+  "agents": {
+    "laravel-expert": {
+      "description": "Laravel specialist for backend development",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "systemPrompt": "Bạn là một chuyên gia Laravel với kinh nghiệm sâu về PHP 8+, Eloquent ORM, Blade templating, và Laravel ecosystem. Bạn hiểu rõ cấu trúc dự án DalatBDS E-Broker bao gồm frontend công khai, admin backend, và Telegram WebApp. Ưu tiên sử dụng Laravel Pint để format code, chạy tests với php artisan test, và tuân thủ PSR-12 coding standards.",
+      "tools": ["read", "write", "edit", "glob", "grep", "bash"],
+      "temperature": 0.2
+    },
+    "webapp-specialist": {
+      "description": "Expert in Telegram WebApp and frontend development",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "systemPrompt": "Bạn là chuyên gia về Telegram Mini App (WebApp) với kinh nghiệm về Alpine.js, TomSelect, Axios, và Tailwind CSS. Bạn hiểu rõ cấu trúc WebApp trong DalatBDS E-Broker, bao gồm middleware xác thực, role-based access control, và các component UI như webapp-v2.js. Bạn có thể làm việc với các file Blade trong resources/views/frontend_dashboard_*.blade.php và public/js/webapp-v2.js.",
+      "tools": ["read", "write", "edit", "glob", "grep", "bash"],
+      "temperature": 0.3
+    },
+    "api-developer": {
+      "description": "API developer specialized in Laravel REST APIs",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "systemPrompt": "Bạn là nhà phát triển API chuyên biệt trong Laravel, hiểu rõ sự khác biệt giữa ApiController monolithic và các controller chuyên biệt trong namespace Api/. Bạn biết khi thêm API endpoint mới nên tạo controller riêng trong app/Http/Controllers/Api/, và tất cả route ghi dữ liệu đều cần middleware jwt.verify. Bạn hiểu rõ mô hình CRM: CrmLead → convert → CrmDeal → CrmDealProduct → CrmDealProductBooking.",
+      "tools": ["read", "write", "edit", "glob", "grep", "bash"],
+      "temperature": 0.2
+    },
+    "database-expert": {
+      "description": "Database specialist for Eloquent ORM and migrations",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "systemPrompt": "Bạn là chuyên gia về cơ sở dữ liệu và Eloquent ORM trong Laravel. Bạn hiểu rõ các mối quan hệ trong mô hình CRM của DalatBDS E-Broker: CrmLead, CrmDeal, CrmDealProduct, CrmDealProductBooking, CrmDealCommission, CrmHost. Bạn biết cách viết migrations hiệu quả, tạo indexes phù hợp, và tối ưu hóa truy vấn cơ sở dữ liệu.",
+      "tools": ["read", "write", "edit", "glob", "grep", "bash"],
+      "temperature": 0.1
+    },
+    "testing-expert": {
+      "description": "Testing specialist for PHPUnit and Laravel testing",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "systemPrompt": "Bạn là chuyên gia về kiểm thử trong Laravel với kinh nghiệm về PHPUnit và Laravel testing utilities. Bạn biết cách viết unit tests, feature tests, và tests cho API endpoints. Bạn hiểu rõ cách sử dụng Laravel's testing helpers như RefreshDatabase, WithoutMiddleware, và các assertion methods.",
+      "tools": ["read", "write", "edit", "glob", "grep", "bash"],
+      "temperature": 0.2
+    }
+  },
+  "commands": {
+    "analyze": {
+      "description": "Phân tích cấu trúc và mã nguồn dự án",
+      "agent": "laravel-expert",
+      "tools": ["glob", "read", "grep"],
+      "autoSubmit": true
+    },
+    "feature": {
+      "description": "Phát triển tính năng mới theo yêu cầu",
+      "agent": "laravel-expert",
+      "tools": ["read", "write", "edit", "bash"],
+      "autoSubmit": false
+    },
+    "debug": {
+      "description": "Chẩn đoán và sửa lỗi",
+      "agent": "laravel-expert",
+      "tools": ["read", "write", "edit", "glob", "grep", "bash"],
+      "autoSubmit": false
+    },
+    "test": {
+      "description": "Chạy tests và kiểm thử",
+      "agent": "testing-expert",
+      "tools": ["bash"],
+      "autoSubmit": true,
+      "validation": {
+        "commands": [
+          "php artisan test",
+          "./vendor/bin/phpunit"
+        ]
+      }
+    },
+    "format": {
+      "description": "Format code theo chuẩn dự án",
+      "agent": "laravel-expert",
+      "tools": ["bash"],
+      "autoSubmit": true,
+      "validation": {
+        "commands": [
+          "./vendor/bin/pint"
+        ]
+      }
+    },
+    "migrate": {
+      "description": "Chạy database migrations",
+      "agent": "database-expert",
+      "tools": ["bash"],
+      "autoSubmit": true,
+      "validation": {
+        "commands": [
+          "php artisan migrate:status",
+          "php artisan migrate",
+          "php artisan migrate:status"
+        ]
+      }
+    },
+    "rollback": {
+      "description": "Hoàn tác database migrations",
+      "agent": "database-expert",
+      "tools": ["bash"],
+      "autoSubmit": false,
+      "validation": {
+        "commands": [
+          "php artisan migrate:rollback",
+          "php artisan migrate:status"
+        ]
+      }
+    },
+    "fresh": {
+      "description": "Tiến hành migration mới (xóa toàn bộ dữ liệu)",
+      "agent": "database-expert",
+      "tools": ["bash"],
+      "autoSubmit": false,
+      "validation": {
+        "commands": [
+          "php artisan migrate:fresh",
+          "php artisan migrate:status"
+        ]
+      }
+    },
+    "seed": {
+      "description": "Chạy database seeders",
+      "agent": "database-expert",
+      "tools": ["bash"],
+      "autoSubmit": false,
+      "validation": {
+        "commands": [
+          "php artisan db:seed",
+          "php artisan db:seed --class=*"
+        ]
+      }
+    },
+    "webapp": {
+      "description": "Làm việc với Telegram WebApp",
+      "agent": "webapp-specialist",
+      "tools": ["read", "write", "edit", "glob", "grep"],
+      "autoSubmit": false
+    },
+    "api": {
+      "description": "Phát triển và sửa chữa API endpoints",
+      "agent": "api-developer",
+      "tools": ["read", "write", "edit", "glob", "grep"],
+      "autoSubmit": false
+    },
+    "security": {
+      "description": "Kiểm tra và nâng cao bảo mật ứng dụng",
+      "agent": "laravel-expert",
+      "tools": ["read", "write", "edit", "glob", "grep", "bash"],
+      "autoSubmit": false
+    },
+    "performance": {
+      "description": "Tối ưu hóa hiệu suất ứng dụng",
+      "agent": "laravel-expert",
+      "tools": ["read", "write", "edit", "glob", "grep", "bash"],
+      "autoSubmit": false
+    }
+  }
+}
