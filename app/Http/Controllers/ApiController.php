@@ -2933,18 +2933,34 @@ class ApiController extends Controller
 
         $telegramId = $telegramUserData['id'];
 
-        // Tìm Customer theo telegram_id
-        $customer = Customer::where('telegram_id', $telegramId)->first();
+        // Tìm Customer theo telegram_id — ưu tiên account mới nhất (ID cao nhất)
+        // để tránh trường hợp duplicate telegram_id trỏ vào account cũ
+        $customer = Customer::where('telegram_id', $telegramId)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        // Log cảnh báo nếu có duplicate telegram_id
+        $duplicateCount = Customer::where('telegram_id', $telegramId)->count();
+        if ($duplicateCount > 1) {
+            \Log::warning("Duplicate telegram_id detected: {$telegramId} found on {$duplicateCount} customers. Using latest: #{$customer->id}");
+        }
 
         // Nếu không tìm thấy, kiểm tra session hiện tại có customer chưa có telegram_id
         if (!$customer) {
             $sessionCustomer = Auth::guard('webapp')->user();
             if ($sessionCustomer && empty($sessionCustomer->telegram_id)) {
-                // Liên kết telegram_id với customer hiện tại trong session
-                $sessionCustomer->telegram_id = $telegramId;
-                $sessionCustomer->save();
-                $customer = $sessionCustomer;
-                \Log::info("Linked telegram_id {$telegramId} to session Customer #{$customer->id}");
+                // Đảm bảo telegram_id này chưa thuộc customer khác trước khi link
+                $alreadyLinked = Customer::where('telegram_id', $telegramId)
+                    ->where('id', '!=', $sessionCustomer->id)
+                    ->exists();
+                if (!$alreadyLinked) {
+                    $sessionCustomer->telegram_id = $telegramId;
+                    $sessionCustomer->save();
+                    $customer = $sessionCustomer;
+                    \Log::info("Linked telegram_id {$telegramId} to session Customer #{$customer->id}");
+                } else {
+                    \Log::warning("Refused to link telegram_id {$telegramId} to session Customer #{$sessionCustomer->id}: already linked to another customer");
+                }
             }
         }
 
