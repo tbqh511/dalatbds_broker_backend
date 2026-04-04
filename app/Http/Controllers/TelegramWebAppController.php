@@ -61,6 +61,9 @@ class TelegramWebAppController extends Controller
             'leads_count' => 0,
             'deals_count' => 0,
             'pending_count' => 0,
+            'my_pending_count' => 0,
+            'my_hidden_count' => 0,
+            'my_total_count' => 0,
             'commission_total_fmt' => '0 đ',
             'commission_received_trieu' => 0,
             'commission_pending_trieu' => 0,
@@ -108,6 +111,11 @@ class TelegramWebAppController extends Controller
             $stats['deals_count'] = CrmDeal::whereHas('lead', function ($q) use ($customer) {
                 $q->where('sale_id', $customer->id);
             })->count();
+
+            // My pending/hidden properties (for profile "BĐS của tôi" — per-user)
+            $stats['my_pending_count'] = Property::where('added_by', $customer->id)->where('status', 0)->count();
+            $stats['my_hidden_count'] = Property::where('added_by', $customer->id)->where('status', 2)->count();
+            $stats['my_total_count'] = $stats['properties_count'] + $stats['my_pending_count'] + $stats['my_hidden_count'];
 
             // Pending properties awaiting approval (for bds_admin/admin)
             $stats['pending_count'] = Property::where('status', 0)->count();
@@ -2051,8 +2059,9 @@ class TelegramWebAppController extends Controller
         $directions = ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'];
 
         $commissionRates = [1, 1.5, 2, 2.5, 3];
+        $commissionMonths = [1, 2, 3, 4, 5];
 
-        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities', 'legalTypes', 'directions', 'commissionRates'));
+        return view('frontend_dashboard_add_listing', compact('propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters', 'facilities', 'legalTypes', 'directions', 'commissionRates', 'commissionMonths'));
     }
 
     public function submitForm(Request $request)
@@ -2203,7 +2212,12 @@ class TelegramWebAppController extends Controller
 
             // Commission
             $commissionRate = $request->input('commissionRate', 0);
-            $property->commission = ($property->price * ($commissionRate / 100));
+            $commissionType = $request->input('commissionType', 'percent');
+            if ($commissionType === 'months') {
+                $property->commission = $property->price * $commissionRate;
+            } else {
+                $property->commission = ($property->price * ($commissionRate / 100));
+            }
 
             // Slug
             $slug = Str::slug($title) . '-' . time();
@@ -2398,11 +2412,17 @@ class TelegramWebAppController extends Controller
             'latitude' => $property->latitude,
             'longitude' => $property->longitude,
             'commissionRate' => 2, // default
+            'commissionMonths' => 1, // default for rent
         ];
 
         // Calculate commission rate from stored commission
         if ($property->price > 0 && $property->commission > 0) {
-            $editData['commissionRate'] = round(($property->commission / $property->price) * 100, 1);
+            if ($property->property_type == 1) { // rent — commission stored as price × months
+                $months = round($property->commission / $property->price);
+                $editData['commissionMonths'] = max($months, 1); // fallback for legacy data
+            } else {
+                $editData['commissionRate'] = round(($property->commission / $property->price) * 100, 1);
+            }
         }
 
         // Contact info from host
@@ -2537,10 +2557,11 @@ class TelegramWebAppController extends Controller
 
         $directions = ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'];
         $commissionRates = [1, 1.5, 2, 2.5, 3];
+        $commissionMonths = [1, 2, 3, 4, 5];
 
         return view('frontend_dashboard_add_listing', compact(
             'propertyTypes', 'wards', 'streets', 'parameters', 'assignParameters',
-            'facilities', 'legalTypes', 'directions', 'commissionRates', 'editProperty'
+            'facilities', 'legalTypes', 'directions', 'commissionRates', 'commissionMonths', 'editProperty'
         ));
     }
 
@@ -2673,7 +2694,12 @@ class TelegramWebAppController extends Controller
             $property->ward_code = $wardId;
 
             $commissionRate = $request->input('commissionRate', 0);
-            $property->commission = ($property->price * ($commissionRate / 100));
+            $commissionType = $request->input('commissionType', 'percent');
+            if ($commissionType === 'months') {
+                $property->commission = $property->price * $commissionRate;
+            } else {
+                $property->commission = ($property->price * ($commissionRate / 100));
+            }
 
             if ($request->has('latitude'))
                 $property->latitude = $request->input('latitude');

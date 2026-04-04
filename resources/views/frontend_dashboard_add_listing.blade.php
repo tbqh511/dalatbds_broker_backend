@@ -137,6 +137,7 @@ build. --}}
             isTypeExpandedStep3: false,
             isWardExpanded: true,
             isLegalExpanded: true,
+            isCommissionExpanded: true,
 
             // EDIT MODE
             isEditMode: false,
@@ -152,6 +153,7 @@ build. --}}
                 contact: { gender: '1', name: '', phone: '', note: '' },
                 area: '',
                 commissionRate: 2,
+                commissionMonths: 1,
                 legal: '',
                 description: '',
                 floors: 1,
@@ -260,6 +262,7 @@ build. --}}
             assignParameters: @json($assignParameters),
             directions: @json($directions),
             commissionRates: @json($commissionRates),
+            commissionMonthsList: @json($commissionMonths),
             locationText: 'Chưa xác định vị trí',
             formattedPrice: '',
             priceInWords: '',
@@ -362,6 +365,8 @@ build. --}}
                 this.formData.houseNumber = data.houseNumber || '';
                 this.formData.description = data.description || '';
                 this.formData.commissionRate = data.commissionRate || 2;
+                this.formData.commissionMonths = data.commissionMonths || 1;
+                this.isCommissionExpanded = false;
 
                 // Contact
                 if (data.contact) {
@@ -533,6 +538,14 @@ build. --}}
             selectWard(id) { this.formData.ward = id; this.isWardExpanded = false; },
             getSelectedLegal() { return this.legalTypes.find(l => l.value === this.formData.legal) || { name: 'Chọn loại giấy tờ', icon: 'fa-file' }; },
             selectLegal(value) { this.formData.legal = value; this.isLegalExpanded = false; },
+            selectCommissionRate(rate) { this.formData.commissionRate = rate; this.isCommissionExpanded = false; },
+            selectCommissionMonths(months) { this.formData.commissionMonths = months; this.isCommissionExpanded = false; },
+            getSelectedCommissionLabel() {
+                if (this.formData.transactionType === 'rent') {
+                    return this.formData.commissionMonths + ' tháng';
+                }
+                return this.formData.commissionRate + '%';
+            },
             toggleAmenity(id) { if (id in this.formData.amenities) { let temp = { ...this.formData.amenities }; delete temp[id]; this.formData.amenities = temp; } else { this.formData.amenities = { ...this.formData.amenities, [id]: '' }; } },
             isAmenitySelected(id) { return id in this.formData.amenities; },
             getAmenityIcon(am) {
@@ -555,7 +568,7 @@ build. --}}
             getAmenityName(id) { const am = this.amenitiesList.find(a => a.id == id); return am ? am.name : id; },
             handlePriceInput(e) { let value = e.target.value.replace(/[^0-9]/g, ''); if (!value) value = '0'; this.price = parseInt(value); this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.price); this.priceInWords = this.readMoney(this.price); },
             addZeros() { this.price = this.price * 1000; this.formattedPrice = new Intl.NumberFormat('vi-VN').format(this.price); this.priceInWords = this.readMoney(this.price); },
-            calculateCommission() { if (!this.price) return '0 VNĐ'; const commission = this.price * (this.formData.commissionRate / 100); return this.readMoney(commission); },
+            calculateCommission() { if (!this.price) return '0 VNĐ'; let commission; if (this.formData.transactionType === 'rent') { commission = this.price * this.formData.commissionMonths; } else { commission = this.price * (this.formData.commissionRate / 100); } return this.readMoney(commission); },
             calculatePricePerM2() { if (!this.price || !this.formData.area) return '0'; const perM2 = this.price / this.formData.area; if (perM2 >= 1000000) { return (perM2 / 1000000).toFixed(1) + ' Triệu'; } return new Intl.NumberFormat('vi-VN').format(perM2); },
             getCurrentLocation() { this.locationText = "Đang lấy vị trí..."; setTimeout(() => { this.locationText = "📍 Đã ghim: " + (this.formData.street ? this.getStreetName(this.formData.street) : "Vị trí hiện tại của bạn"); }, 1000); },
             // --- MAP PICKER STATE ---
@@ -823,8 +836,15 @@ build. --}}
             updateMapLocation() { if (this.formData.street && this.formData.houseNumber) { const streetName = this.getStreetName(this.formData.street); this.locationText = `📍 Đã ghim: ${this.formData.houseNumber}, ${streetName}`; } },
 
             calculateCommission() {
-                if (!this.formData.price || !this.formData.commissionRate) return '0 VNĐ';
-                const commission = (this.formData.price * this.formData.commissionRate) / 100;
+                if (!this.formData.price) return '0 VNĐ';
+                let commission;
+                if (this.formData.transactionType === 'rent') {
+                    if (!this.formData.commissionMonths) return '0 VNĐ';
+                    commission = this.formData.price * this.formData.commissionMonths;
+                } else {
+                    if (!this.formData.commissionRate) return '0 VNĐ';
+                    commission = (this.formData.price * this.formData.commissionRate) / 100;
+                }
                 return this.formatCurrency(commission);
             },
 
@@ -952,7 +972,7 @@ build. --}}
                 const submitBtn = document.querySelector('button[x-show="step === 4"]');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Đang xử lý...';
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang xử lý...';
 
                 try {
                     const fd = new FormData();
@@ -964,7 +984,13 @@ build. --}}
                     fd.append('price', this.formData.price);
                     fd.append('rentduration', this.formData.rentduration);
                     fd.append('area', this.formData.area);
-                    fd.append('commissionRate', this.formData.commissionRate);
+                    if (this.formData.transactionType === 'rent') {
+                        fd.append('commissionRate', this.formData.commissionMonths);
+                        fd.append('commissionType', 'months');
+                    } else {
+                        fd.append('commissionRate', this.formData.commissionRate);
+                        fd.append('commissionType', 'percent');
+                    }
                     fd.append('description', this.formData.description || '');
 
                     fd.append('contact', JSON.stringify(this.formData.contact));
@@ -1241,12 +1267,12 @@ build. --}}
                     x-transition:enter-end="opacity-100 translate-y-0">
                     {{-- <label class="block text-sm font-bold text-gray-800 mb-3">Hình thức giao dịch</label> --}}
                     <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
-                        <button type="button" @click="formData.transactionType = 'sale'"
+                        <button type="button" @click="formData.transactionType = 'sale'; isCommissionExpanded = true; formData.commissionRate = 2;"
                             :class="formData.transactionType === 'sale' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
                             class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
                             <i class="fa-solid fa-tag mr-2"></i> Cần Bán
                         </button>
-                        <button type="button" @click="formData.transactionType = 'rent'"
+                        <button type="button" @click="formData.transactionType = 'rent'; isCommissionExpanded = true; formData.commissionMonths = 1;"
                             :class="formData.transactionType === 'rent' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
                             class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
                             <i class="fa-solid fa-key mr-2"></i> Cho Thuê
@@ -1578,21 +1604,63 @@ build. --}}
                         <span class="font-bold text-success"><span x-text="calculatePricePerM2()"></span> / m²</span>
                     </div>
                 </div>
-                <!-- Hoa hồng (Màu Primary) -->
+                <!-- Hoa hồng -->
                 <div class="mb-6" x-show="formData.legal && formData.price && formData.area"
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4"
                     x-transition:enter-end="opacity-100 translate-y-0">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Mức hoa hồng (%)</label>
-                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                        <template x-for="rate in commissionRates">
-                            <button type="button" @click="formData.commissionRate = rate"
-                                :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
-                                class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[60px]">
-                                <span x-text="rate + '%'"></span>
-                            </button>
-                        </template>
+                    <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                        <span x-text="formData.transactionType === 'rent' ? 'Mức hoa hồng (tháng)' : 'Mức hoa hồng (%)'"></span>
+                        <button type="button" x-show="!isCommissionExpanded" @click="isCommissionExpanded = true"
+                            class="text-xs font-normal text-primary hover:underline">
+                            Thay đổi
+                        </button>
+                    </label>
+
+                    <!-- STATE 1: DANH SÁCH MỞ RỘNG -->
+                    <div x-show="isCommissionExpanded" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                        <!-- Bán: chọn % -->
+                        <div x-show="formData.transactionType !== 'rent'" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                            <template x-for="rate in commissionRates">
+                                <button type="button" @click="selectCommissionRate(rate)"
+                                    :class="formData.commissionRate === rate ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
+                                    class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[60px]">
+                                    <span x-text="rate + '%'"></span>
+                                </button>
+                            </template>
+                        </div>
+                        <!-- Thuê: chọn tháng -->
+                        <div x-show="formData.transactionType === 'rent'" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                            <template x-for="m in commissionMonthsList">
+                                <button type="button" @click="selectCommissionMonths(m)"
+                                    :class="formData.commissionMonths === m ? 'bg-primary text-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 text-gray-600'"
+                                    class="flex-shrink-0 px-4 py-2 border rounded-lg text-sm font-bold transition-all min-w-[70px]">
+                                    <span x-text="m + ' tháng'"></span>
+                                </button>
+                            </template>
+                        </div>
                     </div>
+
+                    <!-- STATE 2: ĐÃ CHỌN (Thu gọn) -->
+                    <div x-show="!isCommissionExpanded" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0">
+                        <div @click="isCommissionExpanded = true"
+                            class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-percent text-lg"></i>
+                                </div>
+                                <div class="flex flex-col text-left">
+                                    <span class="text-xs text-blue-100 font-medium">Đã chọn:</span>
+                                    <span class="font-bold text-lg leading-tight" x-text="getSelectedCommissionLabel()"></span>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
+                        </div>
+                    </div>
+
                     <div
                         class="mt-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between items-center">
                         <span>Nhận về:</span>
@@ -1600,7 +1668,7 @@ build. --}}
                     </div>
                 </div>
                 <!-- Mô tả -->
-                <div class="mb-6" x-show="formData.legal && formData.price && formData.area && formData.commissionRate"
+                <div class="mb-6" x-show="formData.legal && formData.price && formData.area && (formData.transactionType === 'rent' ? formData.commissionMonths : formData.commissionRate)"
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4"
                     x-transition:enter-end="opacity-100 translate-y-0">
@@ -1610,7 +1678,7 @@ build. --}}
                 </div>
                 <!-- Upload Ảnh -->
                 <div class="space-y-4"
-                    x-show="formData.legal && formData.price && formData.area && formData.commissionRate"
+                    x-show="formData.legal && formData.price && formData.area && (formData.transactionType === 'rent' ? formData.commissionMonths : formData.commissionRate)"
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4"
                     x-transition:enter-end="opacity-100 translate-y-0">

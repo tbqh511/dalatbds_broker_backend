@@ -37,7 +37,7 @@
   <!-- Profile stats -->
   <div class="profile-stats">
     <div class="ps-item">
-      <div class="ps-val">{{ $stats['properties_count'] ?? 0 }}</div>
+      <div class="ps-val">{{ $stats['my_total_count'] ?? 0 }}</div>
       <div class="ps-lbl">Tin BĐS</div>
     </div>
     <div class="ps-item">
@@ -58,9 +58,9 @@
       <div class="menu-item-icon" style="background:var(--primary-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
       <div class="menu-item-body">
         <div class="menu-item-title">BĐS của tôi</div>
-        <div class="menu-item-sub">{{ $stats['properties_count'] ?? 0 }} tin · {{ $stats['pending_count'] ?? 0 }} chờ duyệt</div>
+        <div class="menu-item-sub">{{ $stats['my_total_count'] ?? 0 }} tin · {{ $stats['my_pending_count'] ?? 0 }} chờ duyệt</div>
       </div>
-      <div class="menu-item-right">@if(($stats['pending_count'] ?? 0) > 0)<span class="badge badge-amber">{{ $stats['pending_count'] }} pending</span> @endif ›</div>
+      <div class="menu-item-right">@if(($stats['my_pending_count'] ?? 0) > 0)<span class="badge badge-amber">{{ $stats['my_pending_count'] }} chờ duyệt</span> @endif ›</div>
     </div>
     <div class="menu-item" onclick="openSubpage('mycustomers')">
       <div class="menu-item-icon" style="background:var(--teal-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
