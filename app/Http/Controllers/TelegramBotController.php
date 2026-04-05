@@ -296,8 +296,12 @@ class TelegramBotController extends Controller
                 if (str_starts_with($phoneNumber, '+')) {
                     $phoneNumber = substr($phoneNumber, 1);
                 }
+                // Normalize Vietnamese phone: Telegram sends 84xxxxxxxxx, DB stores 0xxxxxxxxx
+                if (preg_match('/^84(\d{9})$/', $phoneNumber, $m)) {
+                    $phoneNumber = '0' . $m[1];
+                }
 
-                $customer = Customer::where('telegram_id', $telegramId)->first();
+                $customer = Customer::where('telegram_id', $telegramId)->orderBy('id', 'desc')->first();
 
                 // Fallback: match by phone if telegram_id doesn't match (e.g. user has 2 accounts)
                 if (!$customer) {

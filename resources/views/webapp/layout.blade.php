@@ -105,6 +105,7 @@
     customerRole: @json(isset($customer) ? $customer->getEffectiveRole() : 'guest'),
     customerName: @json($customer->name ?? 'Khách'),
     customerId: @json($customer->id ?? null),
+    telegram_id: @json($customer->telegram_id ?? null),
     csrfToken: @json(csrf_token()),
     mapsKey: @json(config('services.google_maps.place_api_key')),
     likedPropertyIds: @json($likedIds ?? []),

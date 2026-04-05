@@ -4594,7 +4594,7 @@ class TelegramWebAppController extends Controller
         }
 
         $telegramId = $telegramUserData['id'];
-        $customer = \App\Models\Customer::where('telegram_id', $telegramId)->first();
+        $customer = \App\Models\Customer::where('telegram_id', $telegramId)->orderBy('id', 'desc')->first();
 
         if ($customer) {
             // Gán referrer nếu user chưa có referred_by và có referral_code
