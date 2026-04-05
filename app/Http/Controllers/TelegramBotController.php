@@ -367,6 +367,9 @@ class TelegramBotController extends Controller
             $telegramId = $message['from']['id'] ?? null;
             $customer = Customer::where('telegram_id', $telegramId)->first();
 
+            // DEBUG: log exact IDs to diagnose DM "chat not found" issue
+            Log::info("TelegramBot /start: chat_id={$chatId}, from_id={$telegramId}, customer_id=" . ($customer->id ?? 'NULL'));
+
             // Mark bot as started — enables DM notifications from the app
             if ($customer && !$customer->telegram_bot_started) {
                 $customer->telegram_bot_started = true;
