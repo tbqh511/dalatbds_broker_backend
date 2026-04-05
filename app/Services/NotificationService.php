@@ -75,7 +75,7 @@ class NotificationService
         }
 
         try {
-            $response = Http::retry(3, 100)->post($this->apiUrl, [
+            $response = Http::retry(3, 100, null, false)->post($this->apiUrl, [
                 'chat_id'      => $chatId,
                 'text'         => $message,
                 'parse_mode'   => 'Markdown',
@@ -89,7 +89,7 @@ class NotificationService
 
             Log::error("NotificationService: Failed to send keyboard message to {$chatId}. Response: " . $response->body());
             return null;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("NotificationService: Exception sending keyboard message to {$chatId}. Error: " . $e->getMessage());
             return null;
         }
@@ -195,14 +195,14 @@ class NotificationService
                 unset($payload['parse_mode']);
             }
 
-            // Retry 3 times with 100ms delay
-            $response = Http::retry(3, 100)->post($this->apiUrl, $payload);
+            // Retry 3 times with 100ms delay; $throw=false so 4xx returns response instead of throwing
+            $response = Http::retry(3, 100, null, false)->post($this->apiUrl, $payload);
 
             if ($response->successful()) {
                 Log::info("NotificationService: Message sent to {$chatId}.");
                 return true;
             } else {
-                Log::error("NotificationService: Failed to send to {$chatId}. Response: " . $response->body());
+                Log::error("NotificationService: Failed to send to {$chatId}. Status: {$response->status()}. Response: " . $response->body());
                 return false;
             }
         } catch (\Throwable $e) {
