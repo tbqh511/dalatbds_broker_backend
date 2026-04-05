@@ -3122,15 +3122,15 @@ class TelegramWebAppController extends Controller
 
             $notificationService->sendToGroup('public_channel', $message);
 
-            // Telegram DM to the broker who submitted the listing
-            if ($customer->telegram_id && $notificationService->shouldNotify($customer, 'property', 'status', 'telegram')) {
+            // Telegram DM to the broker who submitted the listing (transactional — always send)
+            if ($customer->telegram_id) {
                 $brokerMessage = "📬 *TIN ĐĂNG ĐÃ GỬI ĐI*\n";
                 $brokerMessage .= "────────────────\n";
                 $brokerMessage .= '🏠 '.$this->escapeTelegramText($property->title)."\n";
                 $brokerMessage .= "📌 Loại tin: {$type}\n";
                 $brokerMessage .= "💰 Giá: {$price} VNĐ\n";
                 $brokerMessage .= "⏳ Trạng thái: *Chờ duyệt*\n";
-                $brokerMessage .= "📝 Tin sẽ hiển thị công khai sau khi admin duyệt\\.\n";
+                $brokerMessage .= "📝 Tin sẽ hiển thị công khai sau khi admin duyệt.\n";
                 $brokerMessage .= "🔗 [Xem tin của bạn]({$propertyUrl})";
                 $notificationService->sendToCustomer($customer, $brokerMessage);
             }
