@@ -183,11 +183,16 @@ class NotificationService
             $payload = [
                 'chat_id' => $chatId,
                 'text' => $message,
-                'parse_mode' => 'Markdown', // Or 'MarkdownV2' if templates use it
+                'parse_mode' => 'Markdown',
             ];
 
             if (!empty($options)) {
                 $payload = array_merge($payload, $options);
+            }
+
+            // Remove parse_mode if explicitly set to empty string
+            if (isset($payload['parse_mode']) && $payload['parse_mode'] === '') {
+                unset($payload['parse_mode']);
             }
 
             // Retry 3 times with 100ms delay
@@ -201,7 +206,7 @@ class NotificationService
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error("NotificationService: Exception sending to {$chatId}. Error: " . $e->getMessage());
+            Log::error("NotificationService: Exception sending to {$chatId}. Error: " . $e->getMessage() . " | Body: " . ($response->body() ?? 'N/A'));
             return false;
         }
     }

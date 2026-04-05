@@ -3125,15 +3125,16 @@ class TelegramWebAppController extends Controller
             // Telegram DM to the broker who submitted the listing (transactional — always send)
             Log::info("notifyNewListingToTelegram: customer_id={$customer->id}, telegram_id=" . ($customer->telegram_id ?? 'NULL'));
             if ($customer->telegram_id) {
-                $brokerMessage = "📬 *TIN ĐĂNG ĐÃ GỬI ĐI*\n";
+                // Plain text — no parse_mode to avoid Markdown errors from property title special chars
+                $brokerMessage = "📬 TIN ĐĂNG ĐÃ GỬI ĐI\n";
                 $brokerMessage .= "────────────────\n";
-                $brokerMessage .= '🏠 '.$this->escapeTelegramText($property->title)."\n";
+                $brokerMessage .= "🏠 {$property->title}\n";
                 $brokerMessage .= "📌 Loại tin: {$type}\n";
                 $brokerMessage .= "💰 Giá: {$price} VNĐ\n";
-                $brokerMessage .= "⏳ Trạng thái: *Chờ duyệt*\n";
+                $brokerMessage .= "⏳ Trạng thái: Chờ duyệt\n";
                 $brokerMessage .= "📝 Tin sẽ hiển thị công khai sau khi admin duyệt.\n";
-                $brokerMessage .= "🔗 [Xem tin của bạn]({$propertyUrl})";
-                $notificationService->sendToCustomer($customer, $brokerMessage);
+                $brokerMessage .= "🔗 Xem tin: {$propertyUrl}";
+                $notificationService->sendToCustomer($customer, $brokerMessage, ['parse_mode' => '']);
             }
 
             // In-app notification to the broker
