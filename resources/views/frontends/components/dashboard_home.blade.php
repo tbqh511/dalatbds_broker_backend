@@ -55,17 +55,26 @@
             </div>
             <div class="clearfix"></div>
 
-            @php $webappCustomer = Auth::guard('webapp')->user(); @endphp
-            @if($webappCustomer && $webappCustomer->telegram_id && !$webappCustomer->telegram_bot_started)
+            @php
+                $webappCustomer = Auth::guard('webapp')->user();
+                $showBotBanner = $webappCustomer && !$webappCustomer->telegram_bot_started;
+                if ($showBotBanner) {
+                    $botLinkToken = 'link_' . \Illuminate\Support\Str::random(32);
+                    \Illuminate\Support\Facades\Cache::put("bot_link_token:{$botLinkToken}", $webappCustomer->id, now()->addHours(24));
+                    $botUsername  = config('services.telegram.bot_username', 'dalatbds_telegram_bot');
+                    $botStartUrl  = "https://t.me/{$botUsername}?start={$botLinkToken}";
+                }
+            @endphp
+            @if($showBotBanner)
             <div class="alert" style="background:#fff8e1;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin-top:16px;display:flex;align-items:center;gap:14px;">
                 <span style="font-size:24px;">🔔</span>
                 <div style="flex:1;">
                     <strong>Bật thông báo Telegram</strong><br>
-                    <span style="font-size:13px;color:#555;">Nhắn <strong>/start</strong> vào bot để nhận thông báo khi đăng tin thành công, được giao lead, v.v.</span>
+                    <span style="font-size:13px;color:#555;">Nhấn nút bên phải để nhận thông báo khi đăng tin thành công, được giao lead, v.v.</span>
                 </div>
-                <a href="https://t.me/{{ config('services.telegram.bot_username', 'dalatbds_telegram_bot') }}?start=enable_notifications"
+                <a href="{{ $botStartUrl }}"
                    target="_blank"
-                   onclick="if(window.Telegram&&window.Telegram.WebApp){window.Telegram.WebApp.openLink(this.href);return false;}"
+                   onclick="if(window.Telegram&&window.Telegram.WebApp){window.Telegram.WebApp.openTelegramLink(this.href);return false;}"
                    style="background:#ffc107;color:#333;font-weight:600;padding:8px 16px;border-radius:6px;text-decoration:none;white-space:nowrap;font-size:13px;">
                     Bật ngay
                 </a>

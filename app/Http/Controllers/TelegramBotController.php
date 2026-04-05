@@ -298,6 +298,19 @@ class TelegramBotController extends Controller
                 }
 
                 $customer = Customer::where('telegram_id', $telegramId)->first();
+
+                // Fallback: match by phone if telegram_id doesn't match (e.g. user has 2 accounts)
+                if (!$customer) {
+                    $customer = Customer::where('mobile', $phoneNumber)
+                        ->orWhere('contact', $phoneNumber)
+                        ->first();
+                    if ($customer) {
+                        Log::info("TelegramBot contact: phone match found customer #{$customer->id}, updating telegram_id from [{$customer->telegram_id}] to [{$telegramId}]");
+                        $customer->telegram_id = $telegramId;
+                        $customer->telegram_bot_started = true;
+                    }
+                }
+
                 if (!$customer) {
                     $fullName = trim($firstName . ' ' . $lastName);
                     if (empty($fullName)) {
@@ -310,6 +323,7 @@ class TelegramBotController extends Controller
                         'mobile' => $phoneNumber,
                         'contact' => $phoneNumber,
                         'telegram_id' => $telegramId,
+                        'telegram_bot_started' => true,
                         'role' => 'broker',
                     ]);
                 } else {
@@ -365,10 +379,37 @@ class TelegramBotController extends Controller
         // Request phone number if text is /start
         if (str_starts_with($text, '/start')) {
             $telegramId = $message['from']['id'] ?? null;
-            $customer = Customer::where('telegram_id', $telegramId)->first();
+            $parts      = explode(' ', $text);
+            $startParam = $parts[1] ?? null;
 
-            // DEBUG: log exact IDs to diagnose DM "chat not found" issue
-            Log::info("TelegramBot /start: chat_id={$chatId}, from_id={$telegramId}, customer_id=" . ($customer->id ?? 'NULL'));
+            // Handle /start link_{token} — broker clicked "Bật thông báo" in WebApp
+            if ($startParam && str_starts_with($startParam, 'link_')) {
+                $token_cache_key = "bot_link_token:{$startParam}";
+                $customerId = \Cache::pull($token_cache_key);
+
+                if ($customerId && $telegramId) {
+                    $customer = Customer::find($customerId);
+                    if ($customer) {
+                        $oldId = $customer->telegram_id;
+                        $customer->telegram_id = $telegramId;
+                        $customer->telegram_bot_started = true;
+                        $customer->save();
+                        Log::info("TelegramBot link: customer #{$customer->id} telegram_id updated [{$oldId}] → [{$telegramId}]");
+
+                        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                            'chat_id'      => $chatId,
+                            'text'         => "Thông báo Telegram đã được bật thành công!\n\nBạn sẽ nhận tin nhắn trực tiếp từ bot khi đăng tin, được giao lead và các cập nhật quan trọng.",
+                            'reply_markup' => ['remove_keyboard' => true],
+                        ]);
+                        return;
+                    }
+                }
+
+                // Token expired or invalid — fall through to normal /start flow
+                Log::warning("TelegramBot link: invalid or expired token [{$startParam}] from from_id={$telegramId}");
+            }
+
+            $customer = Customer::where('telegram_id', $telegramId)->first();
 
             // Mark bot as started — enables DM notifications from the app
             if ($customer && !$customer->telegram_bot_started) {
@@ -377,13 +418,12 @@ class TelegramBotController extends Controller
             }
 
             // Store referral code if any (e.g. /start ref_DLBDS-XXXXX)
-            $parts = explode(' ', $text);
-            if (count($parts) > 1 && $telegramId) {
-                $refCode = $parts[1];
-                if (str_starts_with($refCode, 'ref_')) {
-                    $refCode = substr($refCode, 4);
-                }
+            if ($startParam && str_starts_with($startParam, 'ref_') && $telegramId) {
+                $refCode = substr($startParam, 4);
                 \Cache::put("pending_referral:{$telegramId}", $refCode, now()->addHours(24));
+            } elseif ($startParam && !str_starts_with($startParam, 'link_') && $telegramId) {
+                // Legacy: raw referral code without ref_ prefix
+                \Cache::put("pending_referral:{$telegramId}", $startParam, now()->addHours(24));
             }
 
             if (!$customer || empty($customer->mobile)) {
