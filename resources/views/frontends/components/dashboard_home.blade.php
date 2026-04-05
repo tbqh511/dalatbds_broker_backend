@@ -55,6 +55,23 @@
             </div>
             <div class="clearfix"></div>
 
+            @php $webappCustomer = Auth::guard('webapp')->user(); @endphp
+            @if($webappCustomer && $webappCustomer->telegram_id && !$webappCustomer->telegram_bot_started)
+            <div class="alert" style="background:#fff8e1;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin-top:16px;display:flex;align-items:center;gap:14px;">
+                <span style="font-size:24px;">🔔</span>
+                <div style="flex:1;">
+                    <strong>Bật thông báo Telegram</strong><br>
+                    <span style="font-size:13px;color:#555;">Nhắn <strong>/start</strong> vào bot để nhận thông báo khi đăng tin thành công, được giao lead, v.v.</span>
+                </div>
+                <a href="https://t.me/{{ config('services.telegram.bot_username', 'dalatbds_telegram_bot') }}?start=enable_notifications"
+                   target="_blank"
+                   onclick="if(window.Telegram&&window.Telegram.WebApp){window.Telegram.WebApp.openLink(this.href);return false;}"
+                   style="background:#ffc107;color:#333;font-weight:600;padding:8px 16px;border-radius:6px;text-decoration:none;white-space:nowrap;font-size:13px;">
+                    Bật ngay
+                </a>
+            </div>
+            @endif
+
             <!-- FEED SECTION START -->
             <div class="dashboard-title fl-wrap"
                 style="margin-top: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">

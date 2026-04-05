@@ -24,6 +24,7 @@ class Customer extends Authenticatable implements JWTSubject
         'firebase_id',
         'mobile',
         'telegram_id',
+        'telegram_bot_started',
         'profile',
         'address',
         'bio',
@@ -48,6 +49,7 @@ class Customer extends Authenticatable implements JWTSubject
 
     protected $casts = [
         'notification_settings' => 'array',
+        'telegram_bot_started'  => 'boolean',
     ];
 
     public const DEFAULT_NOTIFICATION_SETTINGS = [

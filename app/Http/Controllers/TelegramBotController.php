@@ -367,6 +367,12 @@ class TelegramBotController extends Controller
             $telegramId = $message['from']['id'] ?? null;
             $customer = Customer::where('telegram_id', $telegramId)->first();
 
+            // Mark bot as started — enables DM notifications from the app
+            if ($customer && !$customer->telegram_bot_started) {
+                $customer->telegram_bot_started = true;
+                $customer->save();
+            }
+
             // Store referral code if any (e.g. /start ref_DLBDS-XXXXX)
             $parts = explode(' ', $text);
             if (count($parts) > 1 && $telegramId) {
