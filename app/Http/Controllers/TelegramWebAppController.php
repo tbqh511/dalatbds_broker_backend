@@ -3123,6 +3123,7 @@ class TelegramWebAppController extends Controller
             $notificationService->sendToGroup('public_channel', $message);
 
             // Telegram DM to the broker who submitted the listing (transactional — always send)
+            Log::info("notifyNewListingToTelegram: customer_id={$customer->id}, telegram_id=" . ($customer->telegram_id ?? 'NULL'));
             if ($customer->telegram_id) {
                 $brokerMessage = "📬 *TIN ĐĂNG ĐÃ GỬI ĐI*\n";
                 $brokerMessage .= "────────────────\n";
