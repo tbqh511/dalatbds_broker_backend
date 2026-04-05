@@ -233,7 +233,7 @@ class DealApiController extends Controller
 
         // Notify sale (find Customer by telegram_id matching the User)
         if ($sale && $sale->telegram_id) {
-            $saleCustomer = Customer::where('telegram_id', $sale->telegram_id)->first();
+            $saleCustomer = Customer::where('telegram_id', (string) $sale->telegram_id)->first();
             if ($saleCustomer) {
                 $inApp->notify($saleCustomer, 'deal_created', 'deal', 'status', [
                     'title' => 'Deal mới được tạo',

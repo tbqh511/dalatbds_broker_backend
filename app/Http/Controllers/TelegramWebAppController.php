@@ -4187,7 +4187,7 @@ class TelegramWebAppController extends Controller
 
             // In-app notification — find Customer matching the User's telegram_id
             if ($commission->sale && $commission->sale->telegram_id) {
-                $saleCustomer = Customer::where('telegram_id', $commission->sale->telegram_id)->first();
+                $saleCustomer = Customer::where('telegram_id', (string) $commission->sale->telegram_id)->first();
                 if ($saleCustomer) {
                     app(InAppNotificationService::class)->notify($saleCustomer, 'commission_status', 'commission', 'status', [
                         'title' => 'Hoa hồng đã được duyệt',
@@ -4252,7 +4252,7 @@ class TelegramWebAppController extends Controller
 
             // In-app notification
             if ($commission->sale && $commission->sale->telegram_id) {
-                $saleCustomer = Customer::where('telegram_id', $commission->sale->telegram_id)->first();
+                $saleCustomer = Customer::where('telegram_id', (string) $commission->sale->telegram_id)->first();
                 $notifType = $newStatus === CommissionStatus::COMPLETED ? 'commission_completed' : 'commission_status';
                 $title = $newStatus === CommissionStatus::COMPLETED
                     ? 'Hoa hồng đã hoàn tất!'
@@ -4602,7 +4602,7 @@ class TelegramWebAppController extends Controller
             'session_customer' => $request->session()->get(\Auth::guard('webapp')->getName()),
         ]);
 
-        $customer = \App\Models\Customer::where('telegram_id', $telegramId)->orderBy('id', 'desc')->first();
+        $customer = \App\Models\Customer::where('telegram_id', (string) $telegramId)->orderBy('id', 'desc')->first();
 
         \Log::info('[authRedirect] customer lookup result', [
             'telegram_id'    => $telegramId,

@@ -315,7 +315,7 @@ class TelegramBotController extends Controller
                     'normalized_phone' => $phoneNumber,
                 ]);
 
-                $customer = Customer::where('telegram_id', $telegramId)->orderBy('id', 'desc')->first();
+                $customer = Customer::where('telegram_id', (string) $telegramId)->orderBy('id', 'desc')->first();
 
                 Log::info('[BotContact] lookup by telegram_id', [
                     'telegram_id' => $telegramId,
@@ -451,7 +451,7 @@ class TelegramBotController extends Controller
                 Log::warning("TelegramBot link: invalid or expired token [{$startParam}] from from_id={$telegramId}");
             }
 
-            $customer = Customer::where('telegram_id', $telegramId)->first();
+            $customer = Customer::where('telegram_id', (string) $telegramId)->first();
 
             Log::info('[BotStart] /start lookup', [
                 'telegram_id' => $telegramId,

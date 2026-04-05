@@ -254,7 +254,7 @@ class ApiController extends Controller
         $referralCode = trim($request->input('referral_code', ''));
 
         // 3. Tìm user trong Database
-        $customer = Customer::where('telegram_id', $telegramId)->first();
+        $customer = Customer::where('telegram_id', (string) $telegramId)->first();
 
         // --- TRƯỜNG HỢP A: ĐÃ CÓ USER (NGƯỜI QUEN) ---
         if ($customer) {
@@ -2935,12 +2935,12 @@ class ApiController extends Controller
 
         // Tìm Customer theo telegram_id — ưu tiên account mới nhất (ID cao nhất)
         // để tránh trường hợp duplicate telegram_id trỏ vào account cũ
-        $customer = Customer::where('telegram_id', $telegramId)
+        $customer = Customer::where('telegram_id', (string) $telegramId)
             ->orderBy('id', 'desc')
             ->first();
 
         // Log cảnh báo nếu có duplicate telegram_id
-        $duplicateCount = Customer::where('telegram_id', $telegramId)->count();
+        $duplicateCount = Customer::where('telegram_id', (string) $telegramId)->count();
         if ($duplicateCount > 1) {
             \Log::warning("Duplicate telegram_id detected: {$telegramId} found on {$duplicateCount} customers. Using latest: #{$customer->id}");
         }
@@ -2950,7 +2950,7 @@ class ApiController extends Controller
             $sessionCustomer = Auth::guard('webapp')->user();
             if ($sessionCustomer && empty($sessionCustomer->telegram_id)) {
                 // Đảm bảo telegram_id này chưa thuộc customer khác trước khi link
-                $alreadyLinked = Customer::where('telegram_id', $telegramId)
+                $alreadyLinked = Customer::where('telegram_id', (string) $telegramId)
                     ->where('id', '!=', $sessionCustomer->id)
                     ->exists();
                 if (!$alreadyLinked) {

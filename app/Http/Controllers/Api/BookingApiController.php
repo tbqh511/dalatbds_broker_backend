@@ -260,7 +260,7 @@ class BookingApiController extends Controller
         // Notify sales (find Customer by User's telegram_id)
         foreach ($sales as $sale) {
             if ($sale && $sale->telegram_id) {
-                $saleCustomer = Customer::where('telegram_id', $sale->telegram_id)->first();
+                $saleCustomer = Customer::where('telegram_id', (string) $sale->telegram_id)->first();
                 if ($saleCustomer) {
                     $inApp->notify($saleCustomer, 'booking_reminder', 'booking', 'day_before', [
                         'title' => $notifTitle,

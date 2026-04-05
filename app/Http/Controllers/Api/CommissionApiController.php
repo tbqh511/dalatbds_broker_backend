@@ -253,7 +253,7 @@ class CommissionApiController extends Controller
 
         // In-app notification
         if ($sale && $sale->telegram_id) {
-            $saleCustomer = Customer::where('telegram_id', $sale->telegram_id)->first();
+            $saleCustomer = Customer::where('telegram_id', (string) $sale->telegram_id)->first();
             if ($saleCustomer) {
                 $notifType = $type === 'created' ? 'commission_status' : 'commission_status';
                 app(InAppNotificationService::class)->notify($saleCustomer, $notifType, 'commission', 'status', [
