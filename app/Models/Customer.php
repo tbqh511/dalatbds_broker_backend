@@ -191,6 +191,22 @@ class Customer extends Authenticatable implements JWTSubject
         return 'broker';
     }
 
+    /**
+     * Format SĐT để hiển thị: 84918963878 → +84 918 963 878
+     */
+    public function getFormattedMobileAttribute(): string
+    {
+        $phone = $this->mobile ?? '';
+        if (preg_match('/^84(\d{3})(\d{3})(\d{3})$/', $phone, $m)) {
+            return "+84 {$m[1]} {$m[2]} {$m[3]}";
+        }
+        // Fallback cho format cũ 0xxx
+        if (preg_match('/^0(\d{3})(\d{3})(\d{3})$/', $phone, $m)) {
+            return "0{$m[1]} {$m[2]} {$m[3]}";
+        }
+        return $phone;
+    }
+
     // Kiểm tra role với hierarchy (admin có quyền của mọi role thấp hơn)
     public function hasRole(string ...$roles): bool
     {

@@ -4653,8 +4653,10 @@ class TelegramWebAppController extends Controller
         }
 
         \Log::warning('[authRedirect] no customer found, returning guest', [
-            'telegram_id' => $telegramId,
-            'retry'       => $retry,
+            'telegram_id'      => $telegramId,
+            'telegram_id_type' => gettype($telegramId),
+            'retry'            => $retry,
+            'total_with_tg_id' => \App\Models\Customer::whereNotNull('telegram_id')->count(),
         ]);
 
         return redirect('/webapp?login_status=guest&retry='.$retry);

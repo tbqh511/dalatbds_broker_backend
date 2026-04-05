@@ -303,9 +303,11 @@ class TelegramBotController extends Controller
                 if (str_starts_with($phoneNumber, '+')) {
                     $phoneNumber = substr($phoneNumber, 1);
                 }
-                // Normalize Vietnamese phone: Telegram sends 84xxxxxxxxx, DB stores 0xxxxxxxxx
-                if (preg_match('/^84(\d{9})$/', $phoneNumber, $m)) {
-                    $phoneNumber = '0' . $m[1];
+                // Chuẩn hóa: luôn lưu format quốc tế 84xxxxxxxxx
+                // Telegram gửi +84xxx → đã strip dấu + ở trên → giữ nguyên 84xxx
+                // Nếu dạng 0xxx → chuyển thành 84xxx
+                if (preg_match('/^0(\d{9})$/', $phoneNumber, $m)) {
+                    $phoneNumber = '84' . $m[1];
                 }
 
                 Log::info('[BotContact] phone after normalize', [
@@ -323,9 +325,12 @@ class TelegramBotController extends Controller
 
                 // Fallback: match by phone if telegram_id doesn't match (e.g. user has 2 accounts)
                 if (!$customer) {
-                    $customer = Customer::where('mobile', $phoneNumber)
-                        ->orWhere('contact', $phoneNumber)
-                        ->first();
+                    // Tìm cả format mới (84xxx) và format cũ (0xxx) để backward compatible
+                    $phoneVariants = [$phoneNumber];
+                    if (preg_match('/^84(\d{9})$/', $phoneNumber, $m)) {
+                        $phoneVariants[] = '0' . $m[1];
+                    }
+                    $customer = Customer::whereIn('mobile', $phoneVariants)->first();
                     Log::info('[BotContact] fallback lookup by phone', [
                         'phone'       => $phoneNumber,
                         'found'       => $customer ? true : false,
@@ -353,9 +358,7 @@ class TelegramBotController extends Controller
 
                     $customer = Customer::create([
                         'name' => $fullName,
-                        'full_name' => $fullName,
                         'mobile' => $phoneNumber,
-                        'contact' => $phoneNumber,
                         'telegram_id' => $telegramId,
                         'telegram_bot_started' => true,
                         'role' => 'broker',
@@ -364,14 +367,12 @@ class TelegramBotController extends Controller
                     Log::info('[BotContact] new customer created', ['customer_id' => $customer->id]);
                 } else {
                     $customer->mobile = $phoneNumber;
-                    $customer->contact = $phoneNumber;
 
                     // Cập nhật lại tên thật nếu user đang bị dính tên ẩn danh của Guest
                     if (empty($customer->name) || in_array($customer->name, ['Khách', 'Khách vãng lai', 'Thành viên mới'])) {
                         $fullName = trim($firstName . ' ' . $lastName);
                         if (!empty($fullName)) {
                             $customer->name = $fullName;
-                            $customer->full_name = $fullName;
                         }
                     }
 
