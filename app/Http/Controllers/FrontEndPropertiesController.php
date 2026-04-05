@@ -18,7 +18,7 @@ class FrontEndPropertiesController extends Controller
     /**
      * Display the detail of a property by its slug.
      */
-    public function show(string $slug)
+    public function show(Request $request, string $slug)
     {
         $categories = Category::orderBy('category')->get();
 
@@ -30,6 +30,46 @@ class FrontEndPropertiesController extends Controller
         // Fetch the property based on the slug
         $property = Property::where('slug', $slug)->firstOrFail();
         //dd($property);
+
+        // === Smart Deep Link: Redirect Telegram browser to Mini App ===
+        $userAgent = $request->userAgent() ?? '';
+
+        $crawlerPatterns = [
+            'TelegramBot',           // Telegram link preview bot (kiểm tra TRƯỚC)
+            'facebookexternalhit',
+            'Googlebot',
+            'bingbot',
+            'Twitterbot',
+            'LinkedInBot',
+            'WhatsApp',
+            'Slackbot',
+            'Discordbot',
+            'ia_archiver',
+            'AhrefsBot',
+            'SemrushBot',
+        ];
+
+        $isCrawler = false;
+        foreach ($crawlerPatterns as $pattern) {
+            if (stripos($userAgent, $pattern) !== false) {
+                $isCrawler = true;
+                break;
+            }
+        }
+
+        // Telegram in-app browser có "Telegram" trong UA nhưng không phải bot
+        $isTelegramBrowser = !$isCrawler && stripos($userAgent, 'Telegram') !== false;
+
+        if ($isTelegramBrowser) {
+            $deepLink = sprintf(
+                'https://t.me/%s/%s?startapp=property_%d',
+                config('services.telegram.bot_username'),
+                config('services.telegram.webapp_short_name'),
+                $property->id
+            );
+            return redirect($deepLink);
+        }
+        // === End Smart Deep Link ===
 
         // Set parameters for the product query
         $offset = 0;
@@ -85,12 +125,20 @@ class FrontEndPropertiesController extends Controller
         //dd(Property::where('added_by', '2')->get()->count());
 
         // Return the property detail view with the necessary data
+        $telegramDeepLink = sprintf(
+            'https://t.me/%s/%s?startapp=property_%d',
+            config('services.telegram.bot_username'),
+            config('services.telegram.webapp_short_name'),
+            $property->id
+        );
+
         return view('frontend_properties_detail', [
-            'property' => $property,
-            'relatedProducts' => $relatedProducts,
+            'property'            => $property,
+            'relatedProducts'     => $relatedProducts,
             'highlightedProducts' => $highlightedProducts,
-            'categories' => $categories,
-            'locationsWards' => $locationsWards,
+            'categories'          => $categories,
+            'locationsWards'      => $locationsWards,
+            'telegramDeepLink'    => $telegramDeepLink,
         ]);
     }
 

@@ -707,6 +707,27 @@
                     </div>
 
                     <!--box-widget end -->
+                    <!--box-widget: Telegram Deep Link CTA -->
+                    <div class="box-widget fl-wrap">
+                        <div class="box-widget-content fl-wrap" style="padding:16px">
+                            <a href="{{ $telegramDeepLink }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               style="display:flex;align-items:center;justify-content:center;gap:10px;
+                                      background:#2CA5E0;color:#fff;font-weight:600;font-size:14px;
+                                      padding:12px 16px;border-radius:10px;text-decoration:none;width:100%;
+                                      box-shadow:0 2px 8px rgba(44,165,224,0.4);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.36l-1.685 7.94c-.126.56-.46.7-.932.434l-2.57-1.893-1.24 1.194c-.137.137-.252.252-.517.252l.185-2.623 4.773-4.31c.208-.185-.045-.287-.32-.1L7.73 14.6 5.19 13.83c-.555-.174-.566-.555.116-.82l9.68-3.73c.463-.167.87.113.944.08z"/>
+                                </svg>
+                                Mở trong Telegram
+                            </a>
+                            <p style="font-size:11px;color:#888;text-align:center;margin:8px 0 0 0">
+                                Xem chi tiết BDS trong Telegram Mini App
+                            </p>
+                        </div>
+                    </div>
+                    <!--box-widget end -->
                     <!--box-widget-->
                     <div class="box-widget fl-wrap">
                         <div class="box-widget-title fl-wrap">Bất động sản Nổi bật</div>
