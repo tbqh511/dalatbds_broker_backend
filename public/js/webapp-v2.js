@@ -3751,10 +3751,11 @@ window.guestShareContact = function(){
           dialog.innerHTML = '<div style="text-align:center;padding:32px 16px;">'
             + '<div style="width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:var(--primary-color,#2563eb);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;"></div>'
             + '<p style="font-size:15px;color:#374151;margin:0;">Đang tạo tài khoản...</p>'
-            + '<p style="font-size:13px;color:#9ca3af;margin:8px 0 0;">Vui lòng chờ trong giây lát</p>'
+            + '<p style="font-size:13px;color:#9ca3af;margin:8px 0 0;">Vui lòng chờ khoảng 30 giây</p>'
             + '</div>';
         }
-        // Đợi 3 giây cho bot xử lý webhook rồi submit form POST tới /webapp/auth.
+        // Đợi 8 giây cho bot xử lý webhook rồi submit form POST tới /webapp/auth.
+        // Telegram webhook delivery có thể mất 5-20 giây → cần buffer đủ lớn.
         // Dùng form POST thay vì window.location.replace để session cookie được set
         // trong navigation response (tránh vấn đề iOS WKWebView không persist cookie XHR).
         setTimeout(function(){
@@ -3777,7 +3778,7 @@ window.guestShareContact = function(){
           // Đánh dấu user vừa share SĐT để auth handler biết cần retry (chờ bot webhook xử lý)
           try { sessionStorage.setItem('_phone_shared', '1'); } catch(e) {}
           form.submit();
-        }, 3000);
+        }, 8000);
       }
     });
   } else {

@@ -279,9 +279,10 @@
     var _phoneShared = false;
     try { _phoneShared = sessionStorage.getItem('_phone_shared') === '1'; } catch(e) {}
 
-    if (_phoneShared && _loginRetry < 2) {
-      // Vừa share SĐT → bot có thể chưa kịp xử lý webhook → retry sau 2.5 giây
-      setTimeout(function() { submitAuthForm(_loginRetry + 1); }, 2500);
+    if (_phoneShared && _loginRetry < 5) {
+      // Vừa share SĐT → bot có thể chưa kịp xử lý webhook → retry sau 4 giây
+      // Tổng window: 8s (initial) + 5×4s = 28s — đủ cho Telegram webhook delivery
+      setTimeout(function() { submitAuthForm(_loginRetry + 1); }, 4000);
     } else {
       // Lần đầu mở (chưa share SĐT) HOẶC hết retry → hiện guest dialog ngay
       sessionStorage.removeItem('_phone_shared');
