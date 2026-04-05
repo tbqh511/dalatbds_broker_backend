@@ -153,6 +153,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     // Property approval routes (bds_admin + admin)
     Route::middleware(['webapp.role:bds_admin,admin'])->group(function () {
         Route::get('/webapp/api/admin/properties', [TelegramWebAppController::class, 'adminPropertiesApi'])->name('webapp.admin.properties');
+        Route::get('/webapp/api/admin/properties/{id}', [TelegramWebAppController::class, 'adminPropertyDetail'])->name('webapp.admin.properties.detail');
         Route::post('/webapp/api/admin/properties/{id}/approve', [TelegramWebAppController::class, 'adminApproveProperty'])->name('webapp.admin.properties.approve');
         Route::post('/webapp/api/admin/properties/{id}/reject', [TelegramWebAppController::class, 'adminRejectProperty'])->name('webapp.admin.properties.reject');
     });

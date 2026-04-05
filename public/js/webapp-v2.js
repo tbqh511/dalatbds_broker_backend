@@ -669,6 +669,21 @@ function _renderAbdsCard(p) {
       + '</div>';
   }
 
+  var approverBadge = '';
+  if(p.status === 1 && p.approved_by_name) {
+    approverBadge = '<div style="padding:7px 13px;background:#f0fdf4;border-top:1px solid #bbf7d0;display:flex;align-items:center;gap:6px;">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      + '<span style="font-size:11px;color:#15803d;">Đã duyệt bởi <strong>' + escHtml(p.approved_by_name) + '</strong>'
+      + (p.approved_at_full ? ' · ' + escHtml(p.approved_at_full) : '')
+      + '</span></div>';
+  } else if(p.status === 2 && p.rejected_by_name) {
+    approverBadge = '<div style="padding:7px 13px;background:#fef2f2;border-top:1px solid #fecaca;display:flex;align-items:center;gap:6px;">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      + '<span style="font-size:11px;color:#b91c1c;">Từ chối bởi <strong>' + escHtml(p.rejected_by_name) + '</strong>'
+      + (p.rejected_at_full ? ' · ' + escHtml(p.rejected_at_full) : '')
+      + '</span></div>';
+  }
+
   var actionBtns = '';
   if(p.status === 0) {
     actionBtns =
@@ -705,6 +720,7 @@ function _renderAbdsCard(p) {
     + '<div class="abds-legal"><div class="abds-legal-title">Kiểm tra pháp lý</div>' + legalHtml + '</div>'
     + warningBanner
     + rejectedBanner
+    + approverBadge
     + '<div class="abds-actions">' + actionBtns + '</div>'
     + '</div>';
 }
@@ -6743,6 +6759,10 @@ window.activityApp = function() {
     },
 
     getActions: function(notif) {
+      // If a property_pending notification was already handled by another admin, hide action buttons
+      if (notif.type === 'property_pending' && notif.data && notif.data.handled_by_id) {
+        return [];
+      }
       var actions = TYPE_ACTIONS[notif.type] || [];
       var result = [];
       for (var i = 0; i < actions.length; i++) {
@@ -6759,6 +6779,13 @@ window.activityApp = function() {
         });
       }
       return result;
+    },
+
+    getHandledByLabel: function(notif) {
+      if (notif.type !== 'property_pending' || !notif.data) return '';
+      var d = notif.data;
+      if (!d.handled_by_id) return '';
+      return 'Đã xử lý bởi admin khác';
     },
 
     handleAction: function(action, notif) {

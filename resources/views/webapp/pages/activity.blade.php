@@ -47,6 +47,10 @@
                 @click="handleAction(action, notif)"
                 x-html="action.html"></button>
             </template>
+            <span x-show="notif.type === 'property_pending' && notif.data && notif.data.handled_by_id"
+              style="font-size:11px;color:var(--text-tertiary);padding:2px 0;">
+              Đã xử lý bởi admin khác
+            </span>
           </div>
           <div class="notif-time" x-text="notif.time_ago"></div>
         </div>

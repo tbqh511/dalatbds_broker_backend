@@ -41,7 +41,17 @@ class Property extends Model
         'longitude',
         'rejection_reason',
         'rejection_note',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
 
+    ];
+
+    protected $casts = [
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'category_id' => 'integer',
     ];
     protected $hidden = [
         'updated_at',
@@ -91,6 +101,16 @@ class Property extends Model
     public function agent()
     {
         return $this->hasOne(Customer::class, 'id', 'added_by')->select('name', 'profile', 'mobile');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(Customer::class, 'approved_by')->select('id', 'name', 'profile');
+    }
+
+    public function rejectedBy()
+    {
+        return $this->belongsTo(Customer::class, 'rejected_by')->select('id', 'name', 'profile');
     }
     //End HuyTBQ
 
@@ -457,7 +477,4 @@ class Property extends Model
         return $this->hasMany(PropertyImages::class, 'propertys_id');
     }
 
-    protected $casts = [
-        'category_id' => 'integer',
-    ];
 }

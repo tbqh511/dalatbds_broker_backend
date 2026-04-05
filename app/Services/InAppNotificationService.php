@@ -45,6 +45,46 @@ class InAppNotificationService
     }
 
     /**
+     * Create a notification directly, bypassing shouldNotify() checks.
+     * Use for system-level notifications (e.g. admin alerts) that must always be delivered.
+     */
+    public function notifyDirect(Customer $recipient, string $type, string $category, array $payload): InAppNotification
+    {
+        $notification = InAppNotification::create([
+            'customer_id'     => $recipient->id,
+            'type'            => $type,
+            'category'        => $category,
+            'title'           => $payload['title'],
+            'body'            => $payload['body'] ?? null,
+            'data'            => $payload['data'] ?? null,
+            'notifiable_type' => $payload['notifiable_type'] ?? null,
+            'notifiable_id'   => $payload['notifiable_id'] ?? null,
+            'actor_id'        => $payload['actor_id'] ?? null,
+        ]);
+
+        $unreadCount = $this->unreadCount($recipient->id);
+        event(new \App\Events\NewInAppNotification($notification, $unreadCount));
+
+        return $notification;
+    }
+
+    /**
+     * Mark all property_pending notifications for a given property as read (handled by another admin).
+     */
+    public function markPropertyHandled(int $propertyId, int $handledById): int
+    {
+        return InAppNotification::where('type', 'property_pending')
+            ->whereJsonContains('data->property_id', $propertyId)
+            ->whereNull('read_at')
+            ->update([
+                'read_at' => now(),
+                'data'    => \Illuminate\Support\Facades\DB::raw(
+                    "JSON_SET(data, '$.handled_by_id', {$handledById})"
+                ),
+            ]);
+    }
+
+    /**
      * Notify multiple customers.
      */
     public function notifyMany(Collection $recipients, string $type, string $category, string $settingsKey, array $payload): int

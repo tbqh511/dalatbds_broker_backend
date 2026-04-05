@@ -3156,9 +3156,10 @@ class TelegramWebAppController extends Controller
                 ]);
             }
 
-            // In-app notification to bds_admin + admin
-            $admins = Customer::whereIn('role', ['bds_admin', 'admin'])->get();
-            app(InAppNotificationService::class)->notifyMany($admins, 'property_pending', 'admin', 'status', [
+            // In-app notification to bds_admin + admin (bypass shouldNotify — always deliver)
+            $admins = Customer::whereIn('role', ['bds_admin', 'admin'])->where('isActive', 1)->get();
+            $notifService = app(InAppNotificationService::class);
+            $adminPayload = [
                 'title' => 'BĐS chờ duyệt: '.($property->title ?? 'BĐS'),
                 'body' => 'Broker '.($customer->name ?? 'N/A').' gửi lúc '.now()->format('H:i').' — '.$type.', '.$price.' VNĐ',
                 'notifiable_type' => Property::class,
@@ -3170,7 +3171,10 @@ class TelegramWebAppController extends Controller
                     'broker_name' => $customer->name ?? '',
                     'price' => $price,
                 ],
-            ]);
+            ];
+            foreach ($admins as $admin) {
+                $notifService->notifyDirect($admin, 'property_pending', 'admin', $adminPayload);
+            }
 
             // Telegram notification to BDS admin group
             try {
@@ -3773,7 +3777,7 @@ class TelegramWebAppController extends Controller
         ];
 
         // Build query per tab
-        $query = Property::with(['category', 'ward', 'street', 'agent']);
+        $query = Property::with(['category', 'ward', 'street', 'agent', 'approvedBy', 'rejectedBy']);
 
         if ($tab === 'approved_today') {
             $query->where('status', 1)->whereDate('updated_at', today())->orderByDesc('updated_at');
@@ -3831,8 +3835,16 @@ class TelegramWebAppController extends Controller
                 'broker_id' => $broker?->id,
                 'checks' => $checks,
                 'all_checks_pass' => ! in_array(false, $checks, true),
-                'rejection_reason' => $p->rejection_reason,
-                'rejection_note' => $p->rejection_note,
+                'rejection_reason'  => $p->rejection_reason,
+                'rejection_note'    => $p->rejection_note,
+                'approved_by_id'    => $p->approved_by,
+                'approved_by_name'  => $p->approvedBy?->name,
+                'approved_at_human' => $p->approved_at?->diffForHumans(),
+                'approved_at_full'  => $p->approved_at?->format('d/m/Y H:i'),
+                'rejected_by_id'    => $p->rejected_by,
+                'rejected_by_name'  => $p->rejectedBy?->name,
+                'rejected_at_human' => $p->rejected_at?->diffForHumans(),
+                'rejected_at_full'  => $p->rejected_at?->format('d/m/Y H:i'),
             ];
         });
 
@@ -3844,6 +3856,70 @@ class TelegramWebAppController extends Controller
         ]);
     }
 
+    public function adminPropertyDetail(int $id): JsonResponse
+    {
+        try {
+            $p = Property::with(['category', 'ward', 'street', 'agent', 'approvedBy', 'rejectedBy'])->findOrFail($id);
+
+            $ward = optional($p->ward)->name ?? '';
+            $street = optional($p->street)->street_name ?? '';
+            $legalImages = $p->legalimages ?? [];
+            $galleryImages = $p->gallery ?? [];
+
+            $checks = [
+                'has_legal_docs'    => count($legalImages) > 0,
+                'has_enough_photos' => count($galleryImages) >= 3,
+                'location_valid'    => ! empty($ward) && ! empty($street),
+                'price_reasonable'  => ! empty($p->price),
+            ];
+
+            $broker = $p->agent;
+            $brokerName = $broker?->name ?? 'Môi giới';
+            $words = preg_split('/\s+/', trim($brokerName));
+            $initials = mb_strtoupper(
+                mb_substr($words[0], 0, 1)
+                .(count($words) > 1 ? mb_substr(end($words), 0, 1) : '')
+            );
+
+            return response()->json([
+                'success' => true,
+                'property' => [
+                    'id'                => $p->id,
+                    'title'             => $p->title ?? '',
+                    'price'             => $p->price ?? '',
+                    'area'              => $p->area ? $p->area.' m²' : null,
+                    'category_name'     => $p->category?->category ?? 'BĐS',
+                    'property_type'     => $p->property_type,
+                    'ward'              => $ward,
+                    'street'            => $street,
+                    'title_image'       => $p->title_image ?: null,
+                    'created_at_diff'   => Carbon::parse($p->getRawOriginal('created_at'))->diffForHumans(),
+                    'created_at_fmt'    => Carbon::parse($p->getRawOriginal('created_at'))->format('d/m/Y H:i'),
+                    'status'            => (int) $p->status,
+                    'broker_name'       => $brokerName,
+                    'broker_initials'   => $initials ?: 'BK',
+                    'broker_id'         => $broker?->id,
+                    'checks'            => $checks,
+                    'all_checks_pass'   => ! in_array(false, $checks, true),
+                    'rejection_reason'  => $p->rejection_reason,
+                    'rejection_note'    => $p->rejection_note,
+                    'approved_by_id'    => $p->approved_by,
+                    'approved_by_name'  => $p->approvedBy?->name,
+                    'approved_at_human' => $p->approved_at?->diffForHumans(),
+                    'approved_at_full'  => $p->approved_at?->format('d/m/Y H:i'),
+                    'rejected_by_id'    => $p->rejected_by,
+                    'rejected_by_name'  => $p->rejectedBy?->name,
+                    'rejected_at_human' => $p->rejected_at?->diffForHumans(),
+                    'rejected_at_full'  => $p->rejected_at?->format('d/m/Y H:i'),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('adminPropertyDetail error: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy BĐS.'], 404);
+        }
+    }
+
     public function adminApproveProperty(int $id): JsonResponse
     {
         try {
@@ -3853,11 +3929,20 @@ class TelegramWebAppController extends Controller
                 return response()->json(['success' => false, 'message' => 'BĐS này không ở trạng thái chờ duyệt.'], 422);
             }
 
+            $approver = Auth::guard('webapp')->user();
+
             $property->update([
-                'status' => 1,
+                'status'           => 1,
+                'approved_by'      => $approver->id,
+                'approved_at'      => now(),
+                'rejected_by'      => null,
+                'rejected_at'      => null,
                 'rejection_reason' => null,
-                'rejection_note' => null,
+                'rejection_note'   => null,
             ]);
+
+            // Mark all property_pending notifications for this listing as handled
+            app(InAppNotificationService::class)->markPropertyHandled($property->id, $approver->id);
 
             $broker = $property->agent;
             if ($broker && $broker->telegram_id) {
@@ -3876,8 +3961,14 @@ class TelegramWebAppController extends Controller
                     'body' => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
                     'notifiable_type' => Property::class,
                     'notifiable_id' => $property->id,
-                    'actor_id' => Auth::guard('webapp')->id(),
-                    'data' => ['property_id' => $property->id, 'title' => $property->title],
+                    'actor_id' => $approver->id,
+                    'data' => [
+                        'property_id'     => $property->id,
+                        'title'           => $property->title,
+                        'approved_by_id'  => $approver->id,
+                        'approved_by_name'=> $approver->name,
+                        'approved_at'     => now()->format('d/m/Y H:i'),
+                    ],
                 ]);
             }
 
@@ -3907,12 +3998,20 @@ class TelegramWebAppController extends Controller
             }
 
             $note = trim($request->input('note', ''));
+            $rejecter = Auth::guard('webapp')->user();
 
             $property->update([
-                'status' => 2,
+                'status'           => 2,
+                'rejected_by'      => $rejecter->id,
+                'rejected_at'      => now(),
                 'rejection_reason' => $reason,
-                'rejection_note' => $note ?: null,
+                'rejection_note'   => $note ?: null,
+                'approved_by'      => null,
+                'approved_at'      => null,
             ]);
+
+            // Mark all property_pending notifications for this listing as handled
+            app(InAppNotificationService::class)->markPropertyHandled($property->id, $rejecter->id);
 
             $broker = $property->agent;
             if ($broker && $broker->telegram_id) {
@@ -3933,12 +4032,15 @@ class TelegramWebAppController extends Controller
                     'body' => ($property->title ?? 'BĐS').' — Lý do: '.$reason,
                     'notifiable_type' => Property::class,
                     'notifiable_id' => $property->id,
-                    'actor_id' => Auth::guard('webapp')->id(),
+                    'actor_id' => $rejecter->id,
                     'data' => [
-                        'property_id' => $property->id,
-                        'title' => $property->title,
-                        'reason' => $reason,
-                        'note' => $note ?: null,
+                        'property_id'      => $property->id,
+                        'title'            => $property->title,
+                        'reason'           => $reason,
+                        'note'             => $note ?: null,
+                        'rejected_by_id'   => $rejecter->id,
+                        'rejected_by_name' => $rejecter->name,
+                        'rejected_at'      => now()->format('d/m/Y H:i'),
                     ],
                 ]);
             }
