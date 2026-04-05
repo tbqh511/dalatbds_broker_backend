@@ -2231,7 +2231,7 @@ class TelegramWebAppController extends Controller
             $property->category_id = $categoryId;
             $property->package_id = 1; // Default
             $property->title = $title;
-            $property->description = $request->input('description');
+            $property->description = $request->input('description') ?? '';
             $property->address = $address;
             $property->client_address = $address;
             $property->property_type = $propertyType;
@@ -2728,7 +2728,7 @@ class TelegramWebAppController extends Controller
             // --- 2. UPDATE PROPERTY ---
             $property->category_id = $categoryId;
             $property->title = $title;
-            $property->description = $request->input('description');
+            $property->description = $request->input('description') ?? '';
             $property->address = $address;
             $property->client_address = $address;
             $property->property_type = $propertyType;
