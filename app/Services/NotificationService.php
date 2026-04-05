@@ -205,8 +205,8 @@ class NotificationService
                 Log::error("NotificationService: Failed to send to {$chatId}. Response: " . $response->body());
                 return false;
             }
-        } catch (\Exception $e) {
-            Log::error("NotificationService: Exception sending to {$chatId}. Error: " . $e->getMessage() . " | Body: " . ($response->body() ?? 'N/A'));
+        } catch (\Throwable $e) {
+            Log::error("NotificationService: Exception sending to {$chatId}. Error: " . $e->getMessage());
             return false;
         }
     }
