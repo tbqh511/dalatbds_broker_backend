@@ -230,15 +230,25 @@
 
   // ─── ĐÃ CÓ SESSION → kiểm tra có phải account mới không ────────────────
   var hasSession = !!cfg.customerId;
+  console.log('[WebApp Auth]', {
+    hasSession: hasSession,
+    customerId: cfg.customerId,
+    sessionTelegramId: cfg.telegram_id,
+    currentTgUser: tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null,
+    loginStatus: _loginStatus,
+    loginRetry: _loginRetry,
+  });
   if (hasSession) {
     // Phát hiện account switch: so sánh Telegram ID hiện tại với session
     // Nếu user switch account trong Telegram mà không logout webapp → force re-auth
     if (tg && tg.initData && tg.initDataUnsafe && tg.initDataUnsafe.user) {
       var currentTgId = String(tg.initDataUnsafe.user.id);
       var sessionTgId = String(cfg.telegram_id || '');
+      console.log('[WebApp Auth] account switch check', { currentTgId: currentTgId, sessionTgId: sessionTgId, mismatch: currentTgId !== sessionTgId });
       if (currentTgId && sessionTgId && currentTgId !== sessionTgId) {
         // initDataUnsafe chỉ dùng để phát hiện switch (không dùng để auth)
         // Xác thực thực sự vẫn là HMAC-SHA256 server-side tại POST /webapp/auth
+        console.log('[WebApp Auth] account switch detected → re-auth');
         submitAuthForm(0);
         return;
       }

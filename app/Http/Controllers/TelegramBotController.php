@@ -291,6 +291,13 @@ class TelegramBotController extends Controller
             $firstName = $message['from']['first_name'] ?? '';
             $lastName = $message['from']['last_name'] ?? '';
 
+            Log::info('[BotContact] received contact', [
+                'telegram_id'   => $telegramId,
+                'raw_phone'     => $phoneNumber,
+                'contact_user_id' => $message['contact']['user_id'] ?? null,
+                'from_username' => $message['from']['username'] ?? null,
+            ]);
+
             if ($telegramId && $phoneNumber) {
                 // Formatting phone number
                 if (str_starts_with($phoneNumber, '+')) {
@@ -301,13 +308,30 @@ class TelegramBotController extends Controller
                     $phoneNumber = '0' . $m[1];
                 }
 
+                Log::info('[BotContact] phone after normalize', [
+                    'telegram_id'      => $telegramId,
+                    'normalized_phone' => $phoneNumber,
+                ]);
+
                 $customer = Customer::where('telegram_id', $telegramId)->orderBy('id', 'desc')->first();
+
+                Log::info('[BotContact] lookup by telegram_id', [
+                    'telegram_id' => $telegramId,
+                    'found'       => $customer ? true : false,
+                    'customer_id' => $customer->id ?? null,
+                ]);
 
                 // Fallback: match by phone if telegram_id doesn't match (e.g. user has 2 accounts)
                 if (!$customer) {
                     $customer = Customer::where('mobile', $phoneNumber)
                         ->orWhere('contact', $phoneNumber)
                         ->first();
+                    Log::info('[BotContact] fallback lookup by phone', [
+                        'phone'       => $phoneNumber,
+                        'found'       => $customer ? true : false,
+                        'customer_id' => $customer->id ?? null,
+                        'customer_mobile' => $customer->mobile ?? null,
+                    ]);
                     if ($customer) {
                         Log::info("TelegramBot contact: phone match found customer #{$customer->id}, updating telegram_id from [{$customer->telegram_id}] to [{$telegramId}]");
                         $customer->telegram_id = $telegramId;
@@ -321,6 +345,12 @@ class TelegramBotController extends Controller
                         $fullName = 'Thành viên mới';
                     }
 
+                    Log::info('[BotContact] no existing customer found, creating new', [
+                        'telegram_id' => $telegramId,
+                        'phone'       => $phoneNumber,
+                        'name'        => $fullName,
+                    ]);
+
                     $customer = Customer::create([
                         'name' => $fullName,
                         'full_name' => $fullName,
@@ -330,6 +360,8 @@ class TelegramBotController extends Controller
                         'telegram_bot_started' => true,
                         'role' => 'broker',
                     ]);
+
+                    Log::info('[BotContact] new customer created', ['customer_id' => $customer->id]);
                 } else {
                     $customer->mobile = $phoneNumber;
                     $customer->contact = $phoneNumber;
@@ -348,6 +380,11 @@ class TelegramBotController extends Controller
                         $customer->role = 'broker';
                     }
                     $customer->save();
+                    Log::info('[BotContact] existing customer updated', [
+                        'customer_id'  => $customer->id,
+                        'telegram_id'  => $customer->telegram_id,
+                        'role'         => $customer->role,
+                    ]);
                 }
 
                 // Gán người giới thiệu từ cache nếu chưa có
@@ -414,6 +451,14 @@ class TelegramBotController extends Controller
             }
 
             $customer = Customer::where('telegram_id', $telegramId)->first();
+
+            Log::info('[BotStart] /start lookup', [
+                'telegram_id' => $telegramId,
+                'chat_id'     => $chatId,
+                'found'       => $customer ? true : false,
+                'customer_id' => $customer->id ?? null,
+                'has_phone'   => $customer ? !empty($customer->mobile) : null,
+            ]);
 
             // Mark bot as started — enables DM notifications from the app
             if ($customer && !$customer->telegram_bot_started) {

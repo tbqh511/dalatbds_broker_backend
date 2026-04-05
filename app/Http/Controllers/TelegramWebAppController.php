@@ -4594,7 +4594,23 @@ class TelegramWebAppController extends Controller
         }
 
         $telegramId = $telegramUserData['id'];
+        \Log::info('[authRedirect] lookup', [
+            'telegram_id' => $telegramId,
+            'tg_username'  => $telegramUserData['username'] ?? null,
+            'retry'        => $retry,
+            'session_id'   => $request->session()->getId(),
+            'session_customer' => $request->session()->get(\Auth::guard('webapp')->getName()),
+        ]);
+
         $customer = \App\Models\Customer::where('telegram_id', $telegramId)->orderBy('id', 'desc')->first();
+
+        \Log::info('[authRedirect] customer lookup result', [
+            'telegram_id'    => $telegramId,
+            'found'          => $customer ? true : false,
+            'customer_id'    => $customer->id ?? null,
+            'customer_role'  => $customer->role ?? null,
+            'customer_phone' => $customer->mobile ?? null,
+        ]);
 
         if ($customer) {
             // Gán referrer nếu user chưa có referred_by và có referral_code
@@ -4617,7 +4633,11 @@ class TelegramWebAppController extends Controller
             Auth::guard('webapp')->setUser($customer); // set in-memory cho request này
             $request->session()->put(Auth::guard('webapp')->getName(), $customer->id);
             $request->session()->save(); // flush để các request sau (refresh) cũng có session
-            \Log::info("WebApp authRedirect: customer #{$customer->id} (tg:{$telegramId}) authenticated, rendering index directly");
+            \Log::info('[authRedirect] session set, rendering index', [
+                'customer_id' => $customer->id,
+                'session_key' => \Auth::guard('webapp')->getName(),
+                'session_id'  => $request->session()->getId(),
+            ]);
             try {
                 return $this->index($request);
             } catch (\Throwable $e) {
@@ -4631,6 +4651,11 @@ class TelegramWebAppController extends Controller
         if (! empty($referralCode) && ! empty($telegramId)) {
             \Cache::put("pending_referral:{$telegramId}", $referralCode, now()->addHours(24));
         }
+
+        \Log::warning('[authRedirect] no customer found, returning guest', [
+            'telegram_id' => $telegramId,
+            'retry'       => $retry,
+        ]);
 
         return redirect('/webapp?login_status=guest&retry='.$retry);
     }
