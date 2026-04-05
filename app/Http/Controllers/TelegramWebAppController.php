@@ -3106,7 +3106,7 @@ class TelegramWebAppController extends Controller
             $price = number_format((float) $property->price, 0, ',', '.');
             $posterName = $customer->name ?? 'N/A';
             $posterPhone = $customer->mobile ?? $customer->phone ?? 'N/A';
-            $propertyUrl = route('property.showid', ['id' => $property->id]);
+            $propertyUrl = route('bds.show', $property->slug);
 
             $message = "🏠 *BĐS MỚI TỪ WEBAPP*\n";
             $message .= "----------------\n";

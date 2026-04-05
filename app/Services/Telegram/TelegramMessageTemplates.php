@@ -35,7 +35,7 @@ class TelegramMessageTemplates
                "📍 Địa chỉ: {$address}\n" .
                "💰 Giá: {$price}\n" .
                "👤 Người đăng: {$posterName}\n" .
-               "🔗 [Xem chi tiết](" . route('property.show', $property->id) . ")";
+               "🔗 [Xem chi tiết](" . route('bds.show', $property->slug) . ")";
     }
 
     /**
