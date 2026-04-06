@@ -111,7 +111,52 @@ setRole(currentRole, document.querySelector('.rbtn.active'));
 
 // ============ PROPERTY DETAIL ACTIONS ============
 window.approveProperty = function(){
-  showToast('Chức năng duyệt BĐS đang phát triển');
+  var propertyId = currentDetailPropId;
+  if(!propertyId) { showToast('Không tìm thấy BĐS'); return; }
+
+  var cfg = window.WEBAPP_CONFIG || {};
+  var url = cfg.routes && cfg.routes.adminPropertiesBase ? cfg.routes.adminPropertiesBase + propertyId + '/approve' : null;
+  var csrf = cfg.csrfToken;
+  if(!url || !csrf) { showToast('Lỗi cấu hình'); return; }
+
+  // Disable buttons during request
+  document.querySelectorAll('[data-for-role] .crm-primary-btn').forEach(function(b){ b.disabled = true; b.style.opacity = '0.5'; });
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({}),
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if(data.success) {
+      showToast('✓ Đã duyệt BĐS — Broker đã được thông báo');
+      // Update status badge on detail page
+      var sbadge = document.getElementById('detailStatusBadge');
+      if(sbadge) { sbadge.textContent = 'Đã duyệt'; sbadge.className = 'badge badge-green'; }
+      // Also remove from approval list if open
+      var card = document.getElementById('abds-' + propertyId);
+      if(card) {
+        card.style.transition = 'opacity .3s';
+        card.style.opacity = '0';
+        setTimeout(function(){ if(card.parentNode) card.parentNode.removeChild(card); }, 300);
+      }
+      _abdsUpdatePendingCount(data.pending_count);
+      // Increment today count locally
+      var todayEl = document.getElementById('abdsApprovedToday');
+      if(todayEl) todayEl.textContent = (parseInt(todayEl.textContent, 10) || 0) + 1;
+    } else {
+      showToast(data.message || 'Có lỗi xảy ra');
+    }
+  })
+  .catch(function(){ showToast('Lỗi kết nối'); })
+  .finally(function(){
+    document.querySelectorAll('[data-for-role] .crm-primary-btn').forEach(function(b){ b.disabled = false; b.style.opacity = ''; });
+  });
 };
 window.openAssignSaleModal = function(){
   showToast('Chức năng giao Sale đang phát triển');
@@ -3096,6 +3141,7 @@ let currentDetailPhone = null;  // host phone for callOwner
 let currentDetailPropId = null; // property id for logging
 let currentDetailTitle = null;  // property title for logging
 let currentDetailSlug = null;   // property slug for share links
+let currentDetailAddedBy = null; // broker id who posted the property
 
 // ---- gallery helpers ----
 function buildGallery(images){
@@ -3141,6 +3187,7 @@ function populateBasic(d){
   currentDetailPropId = d.id || null;
   currentDetailTitle  = d.title || null;
   currentDetailSlug   = d.slug || null;
+  currentDetailAddedBy = d.addedBy || null;
 
   setDetailText('detailTitle', d.title||'Chi tiết BĐS');
   setDetailText('detailPrice', d.price||'--');
@@ -3192,6 +3239,9 @@ function populateBasic(d){
 function populateFull(d){
   // basic fields again (fresher data)
   populateBasic(d);
+  // Update addedBy from full data (more reliable)
+  currentDetailAddedBy = d.addedBy || currentDetailAddedBy;
+  _updateOwnerEditButton();
 
   // ---- spec section ----
   const specGrid = document.getElementById('specGrid');
@@ -3527,6 +3577,22 @@ window.openBrokerRegisterSheet = function(){
 window.closeBrokerRegisterSheet = function(){
   const el = document.getElementById('brokerRegisterOverlay');
   if(el){ el.style.display='none'; }
+};
+
+// ---- Owner edit button visibility ----
+function _updateOwnerEditButton() {
+  var btn = document.getElementById('ownerEditBtn');
+  if(!btn) return;
+  var cfg = window.WEBAPP_CONFIG || {};
+  var isOwner = !!(cfg.customerId && currentDetailAddedBy && String(cfg.customerId) === String(currentDetailAddedBy));
+  btn.style.display = isOwner ? '' : 'none';
+}
+
+window.editCurrentProperty = function() {
+  if(!currentDetailPropId) return;
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var editUrl = cfg && cfg.editListingBase ? cfg.editListingBase + currentDetailPropId : '/webapp/edit-listing/' + currentDetailPropId;
+  window.location.href = editUrl;
 };
 
 // bookmark — works for both prop-card heart and detail page header button
@@ -6644,7 +6710,7 @@ window.activityApp = function() {
       { label: 'Xem chi tiết', primary: true, icon: 'clipboard', subpage: 'bookings' }
     ],
     property_submitted: [
-      { label: 'Xem tin đăng', primary: true, icon: 'eye', action: 'open_url' }
+      { label: 'Xem tin đăng', primary: true, icon: 'eye', action: 'view_property' }
     ],
     property_approved: [
       { label: 'Xem tin', primary: true, icon: 'eye', subpage: 'mybds' }
@@ -6912,6 +6978,15 @@ window.activityApp = function() {
     },
 
     handleAction: function(action, notif) {
+      if (action._action === 'view_property') {
+        var propId = notif.data && notif.data.property_id;
+        if (propId) {
+          openDetail({ id: propId });
+        } else {
+          if (typeof openSubpage === 'function') openSubpage('mybds');
+        }
+        return;
+      }
       if (action._action === 'open_url') {
         var url = notif.data && notif.data.property_url;
         if (url) {

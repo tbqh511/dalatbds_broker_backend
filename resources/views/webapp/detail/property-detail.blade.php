@@ -297,6 +297,14 @@
           <div class="owner-role" id="ownerRole">eBroker · Đà Lạt BĐS</div>
         </div>
         <div class="owner-actions">
+          {{-- Nút Edit — chỉ hiện nếu Broker là chủ tin đăng (JS kiểm tra quyền) --}}
+          <div class="owner-btn" id="ownerEditBtn" onclick="editCurrentProperty()" style="display:none;" title="Chỉnh sửa BĐS">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </div>
           <div class="owner-btn role-broker role-bds_admin role-sale role-sale_admin role-admin" onclick="callOwner()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
               stroke-linecap="round" stroke-linejoin="round">
