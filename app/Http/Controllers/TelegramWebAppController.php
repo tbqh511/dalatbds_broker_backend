@@ -3770,20 +3770,16 @@ class TelegramWebAppController extends Controller
         $tab = $request->input('tab', 'pending');
 
         // Stats (always across all properties)
-        $pendingCount = Property::where('status', 0)->count();
+        $pendingCount       = Property::where('status', 0)->count();
         $approvedTodayCount = Property::where('status', 1)->whereDate('updated_at', today())->count();
-        $totalApproved = Property::where('status', 1)->count();
-
-        $avgSeconds = Property::where('status', 1)
-            ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, created_at, updated_at)) as avg_sec')
-            ->value('avg_sec');
-        $avgHours = $avgSeconds ? round($avgSeconds / 3600, 1) : null;
+        $totalApproved      = Property::where('status', 1)->count();
+        $rejectedCount      = Property::where('status', 2)->count();
 
         $stats = [
-            'pending' => $pendingCount,
+            'pending'        => $pendingCount,
             'approved_today' => $approvedTodayCount,
             'total_approved' => $totalApproved,
-            'avg_hours' => $avgHours,
+            'rejected'       => $rejectedCount,
         ];
 
         // Build query per tab
@@ -3791,6 +3787,8 @@ class TelegramWebAppController extends Controller
 
         if ($tab === 'approved_today') {
             $query->where('status', 1)->whereDate('updated_at', today())->orderByDesc('updated_at');
+        } elseif ($tab === 'approved') {
+            $query->where('status', 1)->orderByDesc('updated_at');
         } elseif ($tab === 'rejected') {
             $query->where('status', 2)->orderByDesc('updated_at');
         } else {
