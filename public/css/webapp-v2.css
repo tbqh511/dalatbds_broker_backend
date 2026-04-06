@@ -8183,26 +8183,47 @@ textarea.form-row-value {
 
 /* toast */
 .toast {
-  position: absolute;
-  bottom: calc(var(--nav-h, 64px) + 16px);
+  position: fixed;
+  bottom: calc(var(--nav-h, 64px) + 20px);
   left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--text-primary);
+  transform: translateX(-50%) translateY(24px);
+  background: var(--primary);
   color: #fff;
-  padding: 9px 18px;
-  border-radius: 20px;
+  padding: 11px 20px;
+  border-radius: 14px;
   font-size: 13px;
   font-weight: 500;
+  line-height: 1.45;
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+  max-width: calc(100% - 48px);
+  width: max-content;
   opacity: 0;
   pointer-events: none;
-  transition: all 0.25s;
-  white-space: nowrap;
-  z-index: 500;
+  transition: opacity 0.25s, transform 0.3s cubic-bezier(.21,1.02,.73,1);
+  box-shadow: 0 4px 20px rgba(50,112,252,0.30);
+  z-index: 9999;
 }
 
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+.toast.toast-success {
+  background: var(--success);
+  box-shadow: 0 4px 20px rgba(5,150,105,0.30);
+}
+
+.toast.toast-error {
+  background: var(--danger);
+  box-shadow: 0 4px 20px rgba(220,38,38,0.28);
+}
+
+.toast.toast-warn {
+  background: #d97706;
+  box-shadow: 0 4px 20px rgba(217,119,6,0.28);
 }
 
 /* ============ SLIDE-IN SUB-PAGES (BĐS của tôi / Khách của tôi) ============ */

@@ -872,7 +872,7 @@ window.selectRejectReason = function(el) {
 
 window.submitReject = function() {
   var selected = document.querySelector('.rs-reason.selected');
-  if(!selected) { showToast('Vui lòng chọn lý do từ chối'); return; }
+  if(!selected) { showToast('Vui lòng chọn lý do từ chối', 'warn'); return; }
 
   var reason = selected.getAttribute('data-reason') || '';
   var note = (document.getElementById('rsNoteText') ? document.getElementById('rsNoteText').value : '').trim();
@@ -881,7 +881,7 @@ window.submitReject = function() {
   var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
   var url = cfg && cfg.adminPropertiesBase ? cfg.adminPropertiesBase + currentRejectId + '/reject' : null;
   var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
-  if(!url || !csrf) { showToast('Lỗi cấu hình'); return; }
+  if(!url || !csrf) { showToast('Lỗi cấu hình', 'error'); return; }
 
   var submitBtn = document.querySelector('#rejectSheet .rs-submit');
   if(submitBtn) submitBtn.disabled = true;
@@ -907,14 +907,14 @@ window.submitReject = function() {
           setTimeout(function() { if(card.parentNode) card.parentNode.removeChild(card); }, 300);
         }
         _abdsUpdatePendingCount(data.pending_count);
-        showToast('✕ Đã từ chối — Broker đã được thông báo');
+        showToast('✕ Đã từ chối\nBroker đã được thông báo', 'error');
       } else {
-        showToast(data.message || 'Có lỗi xảy ra');
+        showToast(data.message || 'Có lỗi xảy ra', 'error');
       }
     })
     .catch(function() {
       if(submitBtn) submitBtn.disabled = false;
-      showToast('Lỗi kết nối');
+      showToast('Lỗi kết nối', 'error');
     });
 };
 
@@ -922,7 +922,7 @@ window.approveAbds = function(propertyId, name) {
   var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
   var url = cfg && cfg.adminPropertiesBase ? cfg.adminPropertiesBase + propertyId + '/approve' : null;
   var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
-  if(!url || !csrf) { showToast('Lỗi cấu hình'); return; }
+  if(!url || !csrf) { showToast('Lỗi cấu hình', 'error'); return; }
 
   fetch(url, {
     method: 'POST',
@@ -946,17 +946,17 @@ window.approveAbds = function(propertyId, name) {
         // Increment today count locally
         var todayEl = document.getElementById('abdsApprovedToday');
         if(todayEl) todayEl.textContent = (parseInt(todayEl.textContent, 10) || 0) + 1;
-        showToast('✓ Đã duyệt: ' + (name || 'BĐS') + ' — Broker đã được thông báo');
+        showToast('✓ Đã duyệt: ' + (name || 'BĐS') + '\nBroker đã được thông báo', 'success');
 
         // Mock: Telegram notification (handled by backend)
         _mockSendTelegramApproval(propertyId, name);
         // Mock: Activity log (handled by backend InAppNotificationService)
         _mockLogActivity(propertyId, name);
       } else {
-        showToast(data.message || 'Có lỗi xảy ra');
+        showToast(data.message || 'Có lỗi xảy ra', 'error');
       }
     })
-    .catch(function() { showToast('Lỗi kết nối'); });
+    .catch(function() { showToast('Lỗi kết nối', 'error'); });
 };
 
 function _abdsUpdatePendingCount(count) {
@@ -3894,14 +3894,15 @@ window.confirmBooking = function(){
   showToast('✓ Lịch hẹn đã được tạo!');
 };
 
-// toast
+// toast — showToast(msg, type?) where type: 'success' | 'error' | 'warn' | undefined (primary)
 let toastTimer;
-window.showToast = function(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
+window.showToast = function(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' toast-' + type : '');
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 };
 
 // prop-cards: handled via inline onclick + data-prop attribute
