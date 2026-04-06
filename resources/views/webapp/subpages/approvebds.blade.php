@@ -12,17 +12,11 @@
     <div class="ah-label">HÀNG CHỜ DUYỆT — OPERATOR</div>
     <div class="ah-main"><span id="abdsHeroMain">— BĐS chờ xem xét</span></div>
     <div class="ah-grid">
-      <div class="ah-stat"><div class="ah-stat-val" id="abdsPendingCount">—</div><div class="ah-stat-lbl">Chờ duyệt</div></div>
-      <div class="ah-stat"><div class="ah-stat-val" id="abdsApprovedToday">—</div><div class="ah-stat-lbl">Hôm nay</div></div>
-      <div class="ah-stat"><div class="ah-stat-val" id="abdsTotalApproved">—</div><div class="ah-stat-lbl">Đã duyệt</div></div>
+      <div class="ah-stat ah-stat--clickable ah-stat--active" data-tab="pending" onclick="switchAbdsStatTab('pending',this)"><div class="ah-stat-val" id="abdsPendingCount">—</div><div class="ah-stat-lbl">Chờ duyệt</div></div>
+      <div class="ah-stat ah-stat--clickable" data-tab="approved_today" onclick="switchAbdsStatTab('approved_today',this)"><div class="ah-stat-val" id="abdsApprovedToday">—</div><div class="ah-stat-lbl">Hôm nay</div></div>
+      <div class="ah-stat ah-stat--clickable" data-tab="rejected" onclick="switchAbdsStatTab('rejected',this)"><div class="ah-stat-val" id="abdsTotalApproved">—</div><div class="ah-stat-lbl">Đã duyệt</div></div>
       <div class="ah-stat"><div class="ah-stat-val" id="abdsAvgTime">—</div><div class="ah-stat-lbl">TB xử lý</div></div>
     </div>
-  </div>
-
-  <div class="sp-tabs" id="abdsTabBar">
-    <button class="sp-tab active" data-tab="pending" onclick="switchAbdsTab('pending',this)">Chờ duyệt (<span class="abds-tab-count-pending">—</span>)</button>
-    <button class="sp-tab" data-tab="approved_today" onclick="switchAbdsTab('approved_today',this)">Đã duyệt hôm nay</button>
-    <button class="sp-tab" data-tab="rejected" onclick="switchAbdsTab('rejected',this)">Từ chối</button>
   </div>
 
   <div class="sp-scroll" style="padding-bottom:16px;">
@@ -66,5 +60,3 @@
     </div>
   </div>
 </div><!-- end subpage-approvebds -->
-
-

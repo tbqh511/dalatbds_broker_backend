@@ -3787,7 +3787,7 @@ class TelegramWebAppController extends Controller
         ];
 
         // Build query per tab
-        $query = Property::with(['category', 'ward', 'street', 'agent', 'approvedBy', 'rejectedBy']);
+        $query = Property::with(['category', 'ward', 'street', 'agent', 'host', 'approvedBy', 'rejectedBy']);
 
         if ($tab === 'approved_today') {
             $query->where('status', 1)->whereDate('updated_at', today())->orderByDesc('updated_at');
@@ -3847,6 +3847,8 @@ class TelegramWebAppController extends Controller
                 'broker_id' => $broker?->id,
                 'broker_phone' => $broker?->mobile ?? '',
                 'commission_raw' => (float) $p->getRawOriginal('commission'),
+                'host_name'      => $p->host?->name ?? null,
+                'host_contact'   => $p->host?->contact ?? null,
                 'checks' => $checks,
                 'all_checks_pass' => ! in_array(false, $checks, true),
                 'rejection_reason'  => $p->rejection_reason,

@@ -5989,6 +5989,23 @@ textarea.form-row-value {
   line-height: 1.2;
 }
 
+/* Clickable stat tabs */
+.ah-stat--clickable {
+  cursor: pointer;
+  transition: all .18s;
+  border: 2px solid transparent;
+}
+
+.ah-stat--clickable:active {
+  transform: scale(.96);
+}
+
+.ah-stat--active {
+  background: rgba(255, 255, 255, .28);
+  border-color: rgba(255, 255, 255, .7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+}
+
 /* ---- Approve BDS card ---- */
 .abds-card {
   background: var(--bg-card);
@@ -5997,6 +6014,92 @@ textarea.form-row-value {
   margin: 10px 14px 0;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+}
+
+/* Thumbnail + Header row */
+.abds-thumb-header {
+  display: flex;
+  gap: 0;
+}
+
+.abds-thumb {
+  width: 96px;
+  min-height: 96px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.abds-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.abds-thumb-placeholder {
+  font-size: 32px;
+  color: var(--text-tertiary);
+  opacity: .4;
+}
+
+.abds-header-content {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* CRM Host Info */
+.abds-host-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  background: #f0f4ff;
+  border-top: 1px solid var(--border-light);
+}
+
+.abds-host-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.abds-host-detail {
+  flex: 1;
+  min-width: 0;
+}
+
+.abds-host-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.abds-host-contact {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
+}
+
+.abds-host-contact:active {
+  opacity: .7;
 }
 
 .abds-img {
@@ -6365,8 +6468,8 @@ textarea.form-row-value {
   align-items: center;
   justify-content: space-between;
   padding: 8px 13px;
-  background: #f0fdfa;
-  border-bottom: 1px solid #ccfbf1;
+  background: var(--primary-light);
+  border-bottom: 1px solid #dbeafe;
 }
 
 .abds-comm-label {
@@ -6380,7 +6483,7 @@ textarea.form-row-value {
 .abds-comm-val {
   font-size: 14px;
   font-weight: 800;
-  color: #0d9488;
+  color: var(--primary);
 }
 
 /* reject reason sheet */

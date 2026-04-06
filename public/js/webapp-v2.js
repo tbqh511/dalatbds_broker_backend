@@ -591,10 +591,19 @@ function formatPriceToVNText(price) {
 var currentRejectId = null;
 var abdsCurrentTab = 'pending';
 
+// Stat blocks as tabs
+window.switchAbdsStatTab = function(tab, statEl) {
+  abdsCurrentTab = tab;
+  document.querySelectorAll('.admin-hero .ah-stat--clickable').forEach(function(s) {
+    s.classList.remove('ah-stat--active');
+  });
+  if(statEl) statEl.classList.add('ah-stat--active');
+  loadApprovalBds(true);
+};
+
+// Keep old function for backward compat
 window.switchAbdsTab = function(tab, btn) {
   abdsCurrentTab = tab;
-  document.querySelectorAll('#abdsTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
-  if(btn) btn.classList.add('active');
   loadApprovalBds(true);
 };
 
@@ -632,8 +641,10 @@ window.loadApprovalBds = function(reset) {
       if(elTotal) elTotal.textContent = s.total_approved || 0;
       var elAvg = document.getElementById('abdsAvgTime');
       if(elAvg) elAvg.textContent = s.avg_hours ? s.avg_hours + 'h' : '—';
-      document.querySelectorAll('.abds-tab-count-pending').forEach(function(el) {
-        el.textContent = s.pending || 0;
+
+      // Highlight active stat tab
+      document.querySelectorAll('.admin-hero .ah-stat--clickable').forEach(function(s) {
+        s.classList.toggle('ah-stat--active', s.getAttribute('data-tab') === abdsCurrentTab);
       });
 
       var props = data.properties || [];
@@ -655,8 +666,46 @@ window.loadApprovalBds = function(reset) {
 };
 
 function _renderAbdsCard(p) {
+  // === BLOCK A: Thumbnail + Header ===
+  var imgUrl = p.title_image || '';
+  var thumbHtml = imgUrl
+    ? '<div class="abds-thumb"><img src="' + escHtml(imgUrl) + '" alt="" loading="lazy"></div>'
+    : '<div class="abds-thumb"><div class="abds-thumb-placeholder">🏠</div></div>';
+
+  var typeBadge = p.property_type === 1 ? 'Cho thuê' : 'Bán';
+  var typeCls = p.property_type === 1 ? 'rent' : 'sell';
+
+  var addr = '';
+  if(p.street) addr += p.street;
+  if(p.ward) addr += (addr ? ', ' : '') + p.ward;
+  if(addr) addr += ', TP.Đà Lạt';
+
+  var headerContent = '<div class="abds-header-content">'
+    + '<div class="abds-prop-header">'
+    + '<span class="abds-type-badge ' + typeCls + '">' + typeBadge + '</span>'
+    + '<span class="abds-category">' + escHtml(p.category_name || 'BĐS') + '</span>'
+    + '</div>'
+    + '<div class="abds-title">' + escHtml(p.title || '') + '</div>'
+    + (addr ? '<div class="abds-addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escHtml(addr) + '</div>' : '')
+    + '</div>';
+
+  var blockA = '<div class="abds-thumb-header">' + thumbHtml + headerContent + '</div>';
+
+  // === BLOCK B: Price & Area ===
+  var priceText = formatPriceToVNText(p.price_raw);
+  var block3Items = '';
+  block3Items += '<div class="abds-pa-item abds-pa-price"><div class="abds-pa-label">Giá</div><div class="abds-pa-val price">' + escHtml(priceText) + '</div></div>';
+  if(p.area) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Diện tích</div><div class="abds-pa-val">' + escHtml(p.area) + '</div></div>';
+  if(p.direction) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Hướng</div><div class="abds-pa-val">' + escHtml(p.direction) + '</div></div>';
+  if(p.number_room) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Phòng ngủ</div><div class="abds-pa-val">' + escHtml(String(p.number_room)) + ' PN</div></div>';
+  var blockB = '<div class="abds-block abds-block-pa"><div class="abds-pa-grid">' + block3Items + '</div></div>';
+
+  // === BLOCK C: Legal Check (with Host contact confirmation on top) ===
+  var hasHostContact = !!(p.host_name || p.host_contact);
+
   var checks = p.checks || {};
   var legalItems = [
+    { key: 'has_host_contact',  yes: 'Thông tin liên hệ chủ nhà — Đã nhập', no: 'Thông tin liên hệ chủ nhà — Chưa nhập', val: hasHostContact },
     { key: 'has_legal_docs',    yes: 'Sổ đỏ / GCNQSD — Đã upload',  no: 'Sổ đỏ / GCNQSD — Chưa upload' },
     { key: 'has_enough_photos', yes: 'Ảnh thực tế đầy đủ (≥3 ảnh)', no: 'Ảnh chưa đủ — Cần thêm' },
     { key: 'location_valid',    yes: 'Vị trí / địa chỉ đầy đủ',     no: 'Vị trí / địa chỉ thiếu thông tin' },
@@ -664,7 +713,7 @@ function _renderAbdsCard(p) {
   ];
   var legalHtml = '';
   legalItems.forEach(function(item) {
-    var pass = !!checks[item.key];
+    var pass = item.val !== undefined ? !!item.val : !!checks[item.key];
     var dotCls = pass ? 'yes' : 'no';
     var dotIcon = pass ? '✓' : '✕';
     var txt = pass ? item.yes : item.no;
@@ -673,6 +722,9 @@ function _renderAbdsCard(p) {
       + '<span class="abds-legal-text"' + style + '>' + escHtml(txt) + '</span></div>';
   });
 
+  var blockC = '<div class="abds-legal"><div class="abds-legal-title">Kiểm tra pháp lý</div>' + legalHtml + '</div>';
+
+  // === Warning / Rejected / Approver banners ===
   var warningBanner = '';
   if(!p.all_checks_pass && p.status === 0) {
     warningBanner = '<div style="padding:8px 13px;background:var(--danger-light);border-top:1px solid #fca5a5;display:flex;gap:8px;align-items:center;">'
@@ -703,47 +755,7 @@ function _renderAbdsCard(p) {
       + '</span></div>';
   }
 
-  // === BLOCK 1: Broker Contact ===
-  var brokerPhone = p.broker_phone || '';
-  var phoneLink = brokerPhone ? '<a href="tel:' + escHtml(brokerPhone) + '" class="abds-broker-phone" onclick="event.stopPropagation()">'
-    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
-    + ' ' + escHtml(brokerPhone) + '</a>' : '';
-  var block1 = '<div class="abds-block abds-block-broker">'
-    + '<div class="abds-broker-avatar">' + escHtml(p.broker_initials || 'BK') + '</div>'
-    + '<div class="abds-broker-info">'
-    + '<div class="abds-broker-name">' + escHtml(p.broker_name || '') + ' <span class="abds-broker-tag">eBroker</span></div>'
-    + (phoneLink ? '<div class="abds-broker-contact">' + phoneLink + '</div>' : '')
-    + '</div>'
-    + '<span class="abds-broker-time">' + escHtml(p.created_at_fmt || '') + '</span>'
-    + '</div>';
-
-  // === BLOCK 2: Property Info ===
-  var addr = '';
-  if(p.street) addr += p.street;
-  if(p.ward) addr += (addr ? ', ' : '') + p.ward;
-  if(addr) addr += ', TP.Đà Lạt';
-  var typeBadge = p.property_type === 1 ? 'Cho thuê' : 'Bán';
-  var typeCls = p.property_type === 1 ? 'rent' : 'sell';
-
-  var block2 = '<div class="abds-block abds-block-prop">'
-    + '<div class="abds-prop-header">'
-    + '<span class="abds-type-badge ' + typeCls + '">' + typeBadge + '</span>'
-    + '<span class="abds-category">' + escHtml(p.category_name || 'BĐS') + '</span>'
-    + '</div>'
-    + '<div class="abds-title">' + escHtml(p.title || '') + '</div>'
-    + (addr ? '<div class="abds-addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escHtml(addr) + '</div>' : '')
-    + '</div>';
-
-  // === BLOCK 3: Price & Area ===
-  var priceText = formatPriceToVNText(p.price_raw);
-  var block3Items = '';
-  block3Items += '<div class="abds-pa-item abds-pa-price"><div class="abds-pa-label">Giá</div><div class="abds-pa-val price">' + escHtml(priceText) + '</div></div>';
-  if(p.area) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Diện tích</div><div class="abds-pa-val">' + escHtml(p.area) + '</div></div>';
-  if(p.direction) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Hướng</div><div class="abds-pa-val">' + escHtml(p.direction) + '</div></div>';
-  if(p.number_room) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Phòng ngủ</div><div class="abds-pa-val">' + escHtml(String(p.number_room)) + ' PN</div></div>';
-  var block3 = '<div class="abds-block abds-block-pa"><div class="abds-pa-grid">' + block3Items + '</div></div>';
-
-  // === BLOCK 4: Commission + Actions ===
+  // === BLOCK D: Commission (primary color) ===
   var commText = formatPriceToVNText(p.commission_raw);
   var commBlock = '';
   if(p.commission_raw && p.commission_raw > 0) {
@@ -753,6 +765,21 @@ function _renderAbdsCard(p) {
       + '</div>';
   }
 
+  // === BLOCK E: Broker Info (moved to bottom) ===
+  var brokerPhone = p.broker_phone || '';
+  var phoneLink = brokerPhone ? '<a href="tel:' + escHtml(brokerPhone) + '" class="abds-broker-phone" onclick="event.stopPropagation()">'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
+    + ' ' + escHtml(brokerPhone) + '</a>' : '';
+  var blockE = '<div class="abds-block abds-block-broker">'
+    + '<div class="abds-broker-avatar">' + escHtml(p.broker_initials || 'BK') + '</div>'
+    + '<div class="abds-broker-info">'
+    + '<div class="abds-broker-name">' + escHtml(p.broker_name || '') + ' <span class="abds-broker-tag">eBroker</span></div>'
+    + (phoneLink ? '<div class="abds-broker-contact">' + phoneLink + '</div>' : '')
+    + '</div>'
+    + '<span class="abds-broker-time">' + escHtml(p.created_at_fmt || '') + '</span>'
+    + '</div>';
+
+  // === BLOCK F: Actions ===
   var viewBtn = '<button class="abds-btn view" onclick="openDetail({id:' + p.id + '})"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Xem</span></button>';
   var actionBtns = '';
   if(p.status === 0) {
@@ -763,20 +790,24 @@ function _renderAbdsCard(p) {
     actionBtns = viewBtn;
   }
 
-  var block4 = '<div class="abds-block abds-block-actions">'
+  var blockF = '<div class="abds-block abds-block-actions">'
     + commBlock
     + '<div class="abds-actions">' + actionBtns + '</div>'
     + '</div>';
 
+  // === Assemble card: A → B → C → banners → D+F (with broker E before actions) ===
   return '<div class="abds-card" id="abds-' + p.id + '">'
-    + block1
-    + block2
-    + block3
-    + '<div class="abds-legal"><div class="abds-legal-title">Kiểm tra pháp lý</div>' + legalHtml + '</div>'
+    + blockA
+    + blockB
+    + blockC
     + warningBanner
     + rejectedBanner
     + approverBadge
-    + block4
+    + '<div class="abds-block abds-block-actions">'
+    + commBlock
+    + blockE
+    + '<div class="abds-actions">' + actionBtns + '</div>'
+    + '</div>'
     + '</div>';
 }
 
@@ -870,6 +901,11 @@ window.approveAbds = function(propertyId, name) {
         var todayEl = document.getElementById('abdsApprovedToday');
         if(todayEl) todayEl.textContent = (parseInt(todayEl.textContent, 10) || 0) + 1;
         showToast('✓ Đã duyệt: ' + (name || 'BĐS') + ' — Broker đã được thông báo');
+
+        // Mock: Telegram notification (handled by backend)
+        _mockSendTelegramApproval(propertyId, name);
+        // Mock: Activity log (handled by backend InAppNotificationService)
+        _mockLogActivity(propertyId, name);
       } else {
         showToast(data.message || 'Có lỗi xảy ra');
       }
@@ -881,14 +917,27 @@ function _abdsUpdatePendingCount(count) {
   if(count === undefined) return;
   var el = document.getElementById('abdsPendingCount');
   if(el) el.textContent = count;
-  document.querySelectorAll('.abds-tab-count-pending').forEach(function(e) { e.textContent = count; });
   var heroMain = document.getElementById('abdsHeroMain');
   if(heroMain) heroMain.textContent = count + ' BĐS chờ xem xét';
+}
+
+// === Mock functions for future expansion ===
+function _mockSendTelegramApproval(propertyId, propertyName) {
+  // Backend already sends Telegram notification to broker.
+  // This mock is placeholder for additional Telegram channels (e.g., group chat notification).
+  console.log('[Mock Telegram] 🎉 BĐS "' + (propertyName || propertyId) + '" đã được duyệt → Thông báo Broker.');
+}
+
+function _mockLogActivity(propertyId, propertyName) {
+  // Backend already logs via InAppNotificationService.
+  // This mock is placeholder for client-side activity feed append.
+  console.log('[Mock Activity] 🎉 BĐS "' + (propertyName || propertyId) + '" của bạn đã được admin duyệt thành công!');
 }
 
 document.getElementById('rejectSheet')?.addEventListener('click', function(e) {
   if(e.target === this) this.classList.remove('open');
 });
+
 document.getElementById('acommHoldSheet')?.addEventListener('click', function(e) {
   if(e.target === this) this.classList.remove('open');
 });
