@@ -52,6 +52,7 @@ class Property extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'category_id' => 'integer',
+        'status'      => 'integer',
     ];
     protected $hidden = [
         'updated_at',
