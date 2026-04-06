@@ -757,9 +757,17 @@ class TelegramWebAppController extends Controller
     {
         $customer = Auth::guard('webapp')->user();
 
-        $property = Property::with([
+        $query = Property::with([
             'category', 'ward', 'street', 'parameters', 'assignfacilities.outdoorfacilities', 'host',
-        ])->where('status', 1)->find($id);
+        ]);
+
+        // Admin and BĐS Admin can view properties of any status (including pending approval)
+        $adminRoles = ['admin', 'bds_admin'];
+        if (! $customer || ! in_array($customer->role, $adminRoles)) {
+            $query->where('status', 1);
+        }
+
+        $property = $query->find($id);
 
         if (! $property) {
             return response()->json(['error' => 'Not found'], 404);
@@ -908,6 +916,8 @@ class TelegramWebAppController extends Controller
             'broker' => $broker,
             'addedBy' => $property->added_by,
             'slug' => $property->slug,
+            'status' => (int) $property->status,
+            'property_type' => $property->property_type,
             'similar' => $similar,
         ]);
     }

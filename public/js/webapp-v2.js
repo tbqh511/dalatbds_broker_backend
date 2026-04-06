@@ -3114,6 +3114,24 @@ function populateBasic(d){
     tbadge.style.color = isRent ? '#b45309' : '#15803d';
   }
 
+  // status badge (approval status)
+  const sbadge = document.getElementById('detailStatusBadge');
+  if(sbadge){
+    if(d.status === 0){
+      sbadge.textContent = 'Chờ duyệt';
+      sbadge.style.background = 'rgba(234,179,8,0.15)';
+      sbadge.style.color = '#b45309';
+    } else if(d.status === 2){
+      sbadge.textContent = 'Từ chối';
+      sbadge.style.background = 'rgba(239,68,68,0.15)';
+      sbadge.style.color = '#dc2626';
+    } else {
+      sbadge.textContent = 'Còn hàng';
+      sbadge.style.background = 'rgba(245,158,11,0.15)';
+      sbadge.style.color = '#b45309';
+    }
+  }
+
   // show/hide direction & room boxes
   showHideEl('detailDirectionBox', !!(d.direction && d.direction !== '—'));
   showHideEl('detailRoomBox', !!(d.room && d.room !== '—'));
