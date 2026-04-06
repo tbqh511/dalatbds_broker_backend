@@ -682,8 +682,8 @@
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast">✓ Đã lưu bookmark</div>
+<!-- TOAST (id renamed to avoid conflict with global #toast in partials/toast.blade.php) -->
+<div class="toast" id="detail-toast">✓ Đã lưu bookmark</div>
 
 <!-- FULL SCREEN MAP MODAL -->
 <div id="fullMapModal" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;">
