@@ -6215,6 +6215,174 @@ textarea.form-row-value {
   color: var(--primary-dark);
 }
 
+/* ---- Approve BDS card — Block styles ---- */
+.abds-block {
+  border-top: 1px solid var(--border-light);
+}
+
+.abds-block:first-child {
+  border-top: none;
+}
+
+/* Block 1: Broker Contact */
+.abds-block-broker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 13px;
+  background: var(--bg-secondary);
+}
+
+.abds-block-broker .abds-broker-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 12px;
+}
+
+.abds-broker-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.abds-block-broker .abds-broker-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.abds-broker-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.abds-broker-contact {
+  margin-top: 2px;
+}
+
+.abds-broker-phone {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.abds-broker-phone:active {
+  opacity: .7;
+}
+
+/* Block 2: Property Info */
+.abds-block-prop {
+  padding: 11px 13px 10px;
+}
+
+.abds-prop-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.abds-type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.abds-type-badge.sell {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.abds-type-badge.rent {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.abds-category {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Block 3: Price & Area */
+.abds-block-pa {
+  padding: 10px 13px;
+  background: var(--bg-secondary);
+}
+
+.abds-pa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.abds-pa-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.abds-pa-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.abds-pa-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.abds-pa-val.price {
+  color: var(--primary);
+  font-size: 15px;
+}
+
+/* Block 4: Commission + Actions */
+.abds-block-actions {
+  border-top: 1px solid var(--border-light);
+}
+
+.abds-commission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 13px;
+  background: #f0fdfa;
+  border-bottom: 1px solid #ccfbf1;
+}
+
+.abds-comm-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+}
+
+.abds-comm-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0d9488;
+}
+
 /* reject reason sheet */
 .reject-sheet {
   position: fixed;

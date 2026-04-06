@@ -568,6 +568,25 @@ window.toggleFaq = function(questionEl){
   }
 };
 
+// ============ HELPER: FORMAT GIÁ TIỀN SANG CHỮ VN ============
+function formatPriceToVNText(price) {
+  if (!price || price <= 0) return 'Thỏa thuận';
+  var ty = 1000000000;
+  var trieu = 1000000;
+  if (price >= ty) {
+    var soTy = Math.floor(price / ty);
+    var duTrieu = Math.round((price % ty) / (100 * trieu)); // 100 triệu = 0.1 tỷ
+    if (duTrieu === 0) return soTy + ' tỷ';
+    if (duTrieu === 10) return (soTy + 1) + ' tỷ';
+    return soTy + ' tỷ ' + duTrieu;
+  }
+  if (price >= trieu) {
+    var soTrieu = Math.round(price / trieu);
+    return soTrieu + ' triệu';
+  }
+  return new Intl.NumberFormat('vi-VN').format(price) + ' ₫';
+}
+
 // ============ ADMIN — DUYỆT BĐS ============
 var currentRejectId = null;
 var abdsCurrentTab = 'pending';
@@ -684,44 +703,80 @@ function _renderAbdsCard(p) {
       + '</span></div>';
   }
 
-  var actionBtns = '';
-  if(p.status === 0) {
-    actionBtns =
-      '<button class="abds-btn view" onclick="showToast(\'Xem chi tiết BĐS #' + p.id + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Xem</span></button>'
-      + '<button class="abds-btn reject" onclick="openRejectSheet(' + p.id + ')">✕ Từ chối</button>'
-      + '<button class="abds-btn approve" onclick="approveAbds(' + p.id + ',\'' + escHtml(p.title).replace(/'/g, "\\'") + '\')">✓ Duyệt</button>';
-  } else {
-    actionBtns =
-      '<button class="abds-btn view" onclick="showToast(\'Xem chi tiết BĐS #' + p.id + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Xem</span></button>';
-  }
+  // === BLOCK 1: Broker Contact ===
+  var brokerPhone = p.broker_phone || '';
+  var phoneLink = brokerPhone ? '<a href="tel:' + escHtml(brokerPhone) + '" class="abds-broker-phone" onclick="event.stopPropagation()">'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
+    + ' ' + escHtml(brokerPhone) + '</a>' : '';
+  var block1 = '<div class="abds-block abds-block-broker">'
+    + '<div class="abds-broker-avatar">' + escHtml(p.broker_initials || 'BK') + '</div>'
+    + '<div class="abds-broker-info">'
+    + '<div class="abds-broker-name">' + escHtml(p.broker_name || '') + ' <span class="abds-broker-tag">eBroker</span></div>'
+    + (phoneLink ? '<div class="abds-broker-contact">' + phoneLink + '</div>' : '')
+    + '</div>'
+    + '<span class="abds-broker-time">' + escHtml(p.created_at_fmt || '') + '</span>'
+    + '</div>';
 
+  // === BLOCK 2: Property Info ===
   var addr = '';
   if(p.street) addr += p.street;
   if(p.ward) addr += (addr ? ', ' : '') + p.ward;
   if(addr) addr += ', TP.Đà Lạt';
+  var typeBadge = p.property_type === 1 ? 'Cho thuê' : 'Bán';
+  var typeCls = p.property_type === 1 ? 'rent' : 'sell';
 
-  var specs = '';
-  if(p.area) specs += '<div class="abds-spec"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>' + escHtml(p.area) + '</div>';
-  if(p.number_room) specs += '<div class="abds-spec"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>' + escHtml(String(p.number_room)) + ' PN</div>';
-  if(p.direction) specs += '<div class="abds-spec"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>' + escHtml(p.direction) + '</div>';
+  var block2 = '<div class="abds-block abds-block-prop">'
+    + '<div class="abds-prop-header">'
+    + '<span class="abds-type-badge ' + typeCls + '">' + typeBadge + '</span>'
+    + '<span class="abds-category">' + escHtml(p.category_name || 'BĐS') + '</span>'
+    + '</div>'
+    + '<div class="abds-title">' + escHtml(p.title || '') + '</div>'
+    + (addr ? '<div class="abds-addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escHtml(addr) + '</div>' : '')
+    + '</div>';
+
+  // === BLOCK 3: Price & Area ===
+  var priceText = formatPriceToVNText(p.price_raw);
+  var block3Items = '';
+  block3Items += '<div class="abds-pa-item abds-pa-price"><div class="abds-pa-label">Giá</div><div class="abds-pa-val price">' + escHtml(priceText) + '</div></div>';
+  if(p.area) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Diện tích</div><div class="abds-pa-val">' + escHtml(p.area) + '</div></div>';
+  if(p.direction) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Hướng</div><div class="abds-pa-val">' + escHtml(p.direction) + '</div></div>';
+  if(p.number_room) block3Items += '<div class="abds-pa-item"><div class="abds-pa-label">Phòng ngủ</div><div class="abds-pa-val">' + escHtml(String(p.number_room)) + ' PN</div></div>';
+  var block3 = '<div class="abds-block abds-block-pa"><div class="abds-pa-grid">' + block3Items + '</div></div>';
+
+  // === BLOCK 4: Commission + Actions ===
+  var commText = formatPriceToVNText(p.commission_raw);
+  var commBlock = '';
+  if(p.commission_raw && p.commission_raw > 0) {
+    commBlock = '<div class="abds-commission-row">'
+      + '<div class="abds-comm-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Hoa hồng</div>'
+      + '<div class="abds-comm-val">' + escHtml(commText) + '</div>'
+      + '</div>';
+  }
+
+  var viewBtn = '<button class="abds-btn view" onclick="openDetail({id:' + p.id + '})"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Xem</span></button>';
+  var actionBtns = '';
+  if(p.status === 0) {
+    actionBtns = viewBtn
+      + '<button class="abds-btn reject" onclick="openRejectSheet(' + p.id + ')">✕ Từ chối</button>'
+      + '<button class="abds-btn approve" onclick="approveAbds(' + p.id + ',\'' + escHtml(p.title).replace(/'/g, "\\'") + '\')">✓ Duyệt</button>';
+  } else {
+    actionBtns = viewBtn;
+  }
+
+  var block4 = '<div class="abds-block abds-block-actions">'
+    + commBlock
+    + '<div class="abds-actions">' + actionBtns + '</div>'
+    + '</div>';
 
   return '<div class="abds-card" id="abds-' + p.id + '">'
-    + '<div class="abds-body">'
-    + '<div class="abds-title">' + escHtml(p.title || '') + '</div>'
-    + (addr ? '<div class="abds-addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escHtml(addr) + '</div>' : '')
-    + (specs ? '<div class="abds-specs">' + specs + '</div>' : '')
-    + (p.price ? '<div style="font-size:13px;font-weight:700;color:var(--primary);padding:4px 0 2px;">' + escHtml(String(p.price)) + '</div>' : '')
-    + '</div>'
-    + '<div class="abds-broker">'
-    + '<div class="abds-broker-avatar">' + escHtml(p.broker_initials || 'BK') + '</div>'
-    + '<span class="abds-broker-name">' + escHtml(p.broker_name || '') + ' · eBroker</span>'
-    + '<span class="abds-broker-time">' + escHtml(p.created_at_fmt || '') + '</span>'
-    + '</div>'
+    + block1
+    + block2
+    + block3
     + '<div class="abds-legal"><div class="abds-legal-title">Kiểm tra pháp lý</div>' + legalHtml + '</div>'
     + warningBanner
     + rejectedBanner
     + approverBadge
-    + '<div class="abds-actions">' + actionBtns + '</div>'
+    + block4
     + '</div>';
 }
 

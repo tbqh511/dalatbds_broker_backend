@@ -8,7 +8,7 @@
     </div>
   </div>
 
-  <div class="admin-hero red-grad">
+  <div class="admin-hero blue-grad">
     <div class="ah-label">HÀNG CHỜ DUYỆT — OPERATOR</div>
     <div class="ah-main"><span id="abdsHeroMain">— BĐS chờ xem xét</span></div>
     <div class="ah-grid">
