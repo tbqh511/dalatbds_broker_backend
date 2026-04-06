@@ -828,9 +828,10 @@ function _renderAbdsCard(p) {
   var viewBtn = '<button class="abds-btn view" onclick="openDetail({id:' + p.id + '})"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Xem</span></button>';
   var actionBtns = '';
   if(p.status === 0) {
+    var safeTitle = (p.title || 'BĐS').replace(/['"\\\r\n]/g, ' ');
     actionBtns = viewBtn
-      + '<button class="abds-btn reject" onclick="openRejectSheet(' + p.id + ')">✕ Từ chối</button>'
-      + '<button class="abds-btn approve" onclick="approveAbds(' + p.id + ',\'' + escHtml(p.title).replace(/'/g, "\\'") + '\')">✓ Duyệt</button>';
+      + '<button class="abds-btn reject" onclick="event.stopPropagation(); openRejectSheet(' + p.id + ')">✕ Từ chối</button>'
+      + '<button class="abds-btn approve" onclick="event.stopPropagation(); approveAbds(' + p.id + ', \'' + safeTitle + '\')">✓ Duyệt</button>';
   } else {
     actionBtns = viewBtn;
   }
