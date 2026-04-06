@@ -639,8 +639,8 @@ window.loadApprovalBds = function(reset) {
       if(elToday) elToday.textContent = s.approved_today || 0;
       var elTotal = document.getElementById('abdsTotalApproved');
       if(elTotal) elTotal.textContent = s.total_approved || 0;
-      var elAvg = document.getElementById('abdsAvgTime');
-      if(elAvg) elAvg.textContent = s.avg_hours ? s.avg_hours + 'h' : '—';
+      var elRejected = document.getElementById('abdsRejectedCount');
+      if(elRejected) elRejected.textContent = s.rejected || 0;
 
       // Highlight active stat tab
       document.querySelectorAll('.admin-hero .ah-stat--clickable').forEach(function(s) {
