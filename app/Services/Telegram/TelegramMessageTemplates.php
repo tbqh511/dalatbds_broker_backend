@@ -273,6 +273,21 @@ class TelegramMessageTemplates
     }
 
     /**
+     * BĐS được duyệt — gửi cho broker cá nhân
+     */
+    public static function propertyApproved(Property $property): string
+    {
+        $title = self::escape($property->title ?? 'BĐS');
+        $url   = url('/bds/' . ($property->slug ?? $property->id));
+
+        return "✅ *TIN BĐS ĐÃ ĐƯỢC DUYỆT*\n"
+            . "────────────────\n"
+            . "🏠 {$title}\n"
+            . "🎉 Tin của bạn đã được đăng lên hệ thống\\!\n"
+            . "👉 [Xem tin đăng]({$url})";
+    }
+
+    /**
      * Helper to escape special characters for MarkdownV2
      * Characters to escape: _ * [ ] ( ) ~ ` > # + - = | { } . !
      */

@@ -3960,28 +3960,27 @@ class TelegramWebAppController extends Controller
 
             $broker = $property->agent;
             if ($broker && $broker->telegram_id) {
-                $title = $property->title ?? 'BĐS';
-                $message = "✅ *TIN BĐS ĐÃ ĐƯỢC DUYỆT*\n"
-                    ."────────────────\n"
-                    ."🏠 {$title}\n"
-                    .'🎉 Tin của bạn đã được đăng lên hệ thống!';
-                app(NotificationService::class)->sendToCustomer($broker, $message);
+                app(NotificationService::class)->sendToCustomer(
+                    $broker,
+                    TelegramMessageTemplates::propertyApproved($property)
+                );
             }
 
-            // In-app notification to broker
+            // In-app notification to broker — dùng notifyDirect để luôn gửi, bỏ qua preference check
             if ($broker) {
-                app(InAppNotificationService::class)->notify($broker, 'property_approved', 'property', 'status', [
+                app(InAppNotificationService::class)->notifyDirect($broker, 'property_approved', 'property', [
                     'title' => 'BĐS của bạn đã được duyệt!',
-                    'body' => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
+                    'body'  => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
                     'notifiable_type' => Property::class,
-                    'notifiable_id' => $property->id,
-                    'actor_id' => $approver->id,
+                    'notifiable_id'   => $property->id,
+                    'actor_id'        => $approver->id,
                     'data' => [
-                        'property_id'     => $property->id,
-                        'title'           => $property->title,
-                        'approved_by_id'  => $approver->id,
-                        'approved_by_name'=> $approver->name,
-                        'approved_at'     => now()->format('d/m/Y H:i'),
+                        'property_id'      => $property->id,
+                        'title'            => $property->title,
+                        'slug'             => $property->slug,
+                        'approved_by_id'   => $approver->id,
+                        'approved_by_name' => $approver->name,
+                        'approved_at'      => now()->format('d/m/Y H:i'),
                     ],
                 ]);
             }
