@@ -758,7 +758,7 @@ class TelegramWebAppController extends Controller
         $customer = Auth::guard('webapp')->user();
 
         $query = Property::with([
-            'category', 'ward', 'street', 'parameters', 'assignfacilities.outdoorfacilities', 'host',
+            'category', 'ward', 'street', 'parameters', 'assignfacilities.outdoorfacilities', 'host', 'propery_image',
         ]);
 
         // Admin and BĐS Admin can view properties of any status (including pending approval)
