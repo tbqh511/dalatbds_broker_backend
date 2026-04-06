@@ -707,7 +707,7 @@ function _renderAbdsCard(p) {
   var legalItems = [
     { key: 'has_host_contact',  yes: 'Thông tin liên hệ chủ nhà — Đã nhập', no: 'Thông tin liên hệ chủ nhà — Chưa nhập', val: hasHostContact },
     { key: 'has_legal_docs',    yes: 'Sổ đỏ / GCNQSD — Đã upload',  no: 'Sổ đỏ / GCNQSD — Chưa upload' },
-    { key: 'has_enough_photos', yes: 'Ảnh thực tế đầy đủ (≥3 ảnh)', no: 'Ảnh chưa đủ — Cần thêm' },
+    { key: 'has_enough_photos', yes: 'Ảnh thực tế — Đã có ảnh', no: 'Ảnh chưa có — Cần thêm ít nhất 1 ảnh' },
     { key: 'location_valid',    yes: 'Vị trí / địa chỉ đầy đủ',     no: 'Vị trí / địa chỉ thiếu thông tin' },
     { key: 'price_reasonable',  yes: 'Giá đã nhập',                  no: 'Chưa nhập giá' },
   ];

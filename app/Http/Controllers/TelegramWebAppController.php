@@ -3807,7 +3807,7 @@ class TelegramWebAppController extends Controller
 
             $checks = [
                 'has_legal_docs' => count($legalImages) > 0,
-                'has_enough_photos' => count($galleryImages) >= 3,
+                'has_enough_photos' => count($galleryImages) >= 1,
                 'location_valid' => ! empty($ward) && ! empty($street),
                 'price_reasonable' => ! empty($p->price),
             ];
@@ -3882,7 +3882,7 @@ class TelegramWebAppController extends Controller
 
             $checks = [
                 'has_legal_docs'    => count($legalImages) > 0,
-                'has_enough_photos' => count($galleryImages) >= 3,
+                'has_enough_photos' => count($galleryImages) >= 1,
                 'location_valid'    => ! empty($ward) && ! empty($street),
                 'price_reasonable'  => ! empty($p->price),
             ];
