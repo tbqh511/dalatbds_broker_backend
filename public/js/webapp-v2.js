@@ -635,10 +635,23 @@ function formatPriceToVNText(price) {
 // ============ ADMIN — DUYỆT BĐS ============
 var currentRejectId = null;
 var abdsCurrentTab = 'pending';
+// Bộ lọc cho tab "Đã duyệt" — reset khi chuyển sang tab khác
+var _abdsFilters = { property_type: '', price_range: '', ward_id: '' };
 
 // Stat blocks as tabs
 window.switchAbdsStatTab = function(tab, statEl) {
   abdsCurrentTab = tab;
+  // Reset filters khi chuyển tab
+  _abdsFilters = { property_type: '', price_range: '', ward_id: '' };
+  // Reset chip active state về chip đầu tiên trong mỗi hàng filter
+  document.querySelectorAll('#abdsApprovedFilterBar .filter-bar').forEach(function(row) {
+    row.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('active'); });
+    var first = row.querySelector('.chip');
+    if (first) first.classList.add('active');
+  });
+  // Hiện/ẩn filter bar tuỳ tab
+  var fb = document.getElementById('abdsApprovedFilterBar');
+  if (fb) fb.style.display = (tab === 'approved') ? 'block' : 'none';
   document.querySelectorAll('.admin-hero .ah-stat--clickable').forEach(function(s) {
     s.classList.remove('ah-stat--active');
   });
@@ -656,6 +669,12 @@ window.loadApprovalBds = function(reset) {
   var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
   if(!cfg || !cfg.adminPropertiesJson) return;
   var url = cfg.adminPropertiesJson + '?tab=' + encodeURIComponent(abdsCurrentTab);
+  // Append filter params khi ở tab "Đã duyệt"
+  if (abdsCurrentTab === 'approved') {
+    if (_abdsFilters.property_type !== '') url += '&property_type=' + encodeURIComponent(_abdsFilters.property_type);
+    if (_abdsFilters.price_range)          url += '&price_range='   + encodeURIComponent(_abdsFilters.price_range);
+    if (_abdsFilters.ward_id)              url += '&ward_id='       + encodeURIComponent(_abdsFilters.ward_id);
+  }
   var container = document.getElementById('abdsListContainer');
   if(!container) return;
 
@@ -841,7 +860,31 @@ function _renderAbdsCard(p) {
       + '<button class="abds-btn reject" onclick="event.stopPropagation(); openRejectSheet(' + p.id + ')">✕ Từ chối</button>'
       + '<button class="abds-btn approve" onclick="event.stopPropagation(); approveAbds(' + p.id + ', \'' + safeTitle + '\')">✓ Duyệt</button>';
   } else {
-    actionBtns = viewBtn;
+    // Tab "Đã duyệt" / "Từ chối": admin có thêm nút Liên hệ và Ẩn BĐS
+    var isAdmin = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.customerRole === 'admin';
+    if (p.status === 1 && isAdmin) {
+      var sH  = (p.host_name    || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      var sHp = (p.host_contact || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      var sBn = (p.broker_name  || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      var sBp = (p.broker_phone || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      var sT  = (p.title || 'BĐS').replace(/['"\\\r\n]/g, ' ');
+      actionBtns = viewBtn
+        // Nút Liên hệ — hiện thông tin host + broker trong bottom sheet
+        + '<button class="abds-btn" onclick="event.stopPropagation();adminAbdsContact(\''
+        + sH + '\',\'' + sHp + '\',\'' + sBn + '\',\'' + sBp + '\')">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+        + '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>'
+        + '</svg> Liên hệ</button>'
+        // Nút Ẩn BĐS — mở confirm sheet trước khi thực hiện
+        + '<button class="abds-btn reject" onclick="event.stopPropagation();adminAbdsHideConfirm(' + p.id + ',\'' + sT + '\')">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+        + '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>'
+        + '<path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>'
+        + '<line x1="1" y1="1" x2="23" y2="23"/>'
+        + '</svg> Ẩn</button>';
+    } else {
+      actionBtns = viewBtn;
+    }
   }
 
   var blockF = '<div class="abds-block abds-block-actions">'
