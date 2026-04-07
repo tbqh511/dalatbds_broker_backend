@@ -342,9 +342,24 @@ window.openSubpage = function(id){
     loadKpiTeamData();
   }
   if(id === 'approvebds') {
-    abdsCurrentTab = 'pending';
+    var urlParams = new URLSearchParams(window.location.search);
+    var urlTab = urlParams.get('tab');
+    var urlSearchId = urlParams.get('search_id');
+
+    abdsCurrentTab = (urlTab === 'pending' || urlTab === 'approved' || urlTab === 'rejected' || urlTab === 'hidden') ? urlTab : 'pending';
+
+    var searchEl = document.getElementById('abdsApprovedSearch');
+    if (window._approvebdsSearchId || urlSearchId) {
+      abdsCurrentSearch = window._approvebdsSearchId || urlSearchId;
+      if (searchEl) searchEl.value = abdsCurrentSearch;
+      window._approvebdsSearchId = null;
+    } else {
+      abdsCurrentSearch = '';
+      if (searchEl) searchEl.value = '';
+    }
+
     document.querySelectorAll('#abdsTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
-    var abdsDefaultTab = document.querySelector('#abdsTabBar [data-tab="pending"]');
+    var abdsDefaultTab = document.querySelector('#abdsTabBar [data-tab="' + abdsCurrentTab + '"]');
     if(abdsDefaultTab) abdsDefaultTab.classList.add('active');
     loadApprovalBds(true);
   }
@@ -6710,7 +6725,8 @@ function loadNotifPanel(tab) {
       var iconName = (n.type_config && n.type_config.icon) ? n.type_config.icon : 'bell';
       var iconSvg = _NP_ICONS[iconName] || _NP_ICONS['bell'];
       var unreadClass = n.is_unread ? ' unread' : '';
-      html += '<div class="np-item' + unreadClass + '" onclick="notifPanelClick(' + n.id + ',\'' + _esc(n.type) + '\')">';
+      var dataStr = n.data ? encodeURIComponent(JSON.stringify(n.data)) : '';
+      html += '<div class="np-item' + unreadClass + '" onclick="notifPanelClick(' + n.id + ',\'' + _esc(n.type) + '\', \'' + dataStr + '\')">';
       html += '<div class="np-icon" style="background:' + iconBg + ';">' + iconSvg + '</div>';
       html += '<div class="np-body">';
       html += '<div class="np-title">' + _esc(n.title) + '</div>';
@@ -6727,7 +6743,7 @@ function loadNotifPanel(tab) {
   });
 }
 
-window.notifPanelClick = function(id, type) {
+window.notifPanelClick = function(id, type, dataStr) {
   var cfg = window.WEBAPP_CONFIG || {};
   fetch('/webapp/api/notifications/' + id + '/read', {
     method: 'POST',
@@ -6738,6 +6754,28 @@ window.notifPanelClick = function(id, type) {
     }
   });
   closeAllPanels();
+
+  var nData = {};
+  if (dataStr) {
+    try { nData = JSON.parse(decodeURIComponent(dataStr)); } catch(e) {}
+  }
+
+  // 1. Link to property detail
+  if ((type === 'property_approved' || type === 'property_submitted') && nData.property_id) {
+    if (typeof window.openDetail === 'function') {
+      window.openDetail({ id: nData.property_id });
+      return;
+    }
+  } 
+  // 2. Link to approvebds with query parameters
+  else if (type === 'property_pending' && nData.property_id) {
+    // Update URL as requested
+    window.history.pushState(null, '', '?search_id=' + nData.property_id + '&tab=pending');
+    window._approvebdsSearchId = nData.property_id;
+    if (typeof openSubpage === 'function') openSubpage('approvebds');
+    return;
+  }
+
   var subpage = _NP_TYPE_SUBPAGE[type];
   if (subpage && typeof openSubpage === 'function') {
     openSubpage(subpage);
@@ -7058,6 +7096,20 @@ window.activityApp = function() {
         notif.is_unread = false;
         this.updateBadge();
       }
+
+      // Consistent behavior with dropdown for activity page clicks
+      if ((notif.type === 'property_approved' || notif.type === 'property_submitted') && notif.data && notif.data.property_id) {
+        if (typeof window.openDetail === 'function') {
+          window.openDetail({ id: notif.data.property_id });
+          return;
+        }
+      } else if (notif.type === 'property_pending' && notif.data && notif.data.property_id) {
+        window.history.pushState(null, '', '?search_id=' + notif.data.property_id + '&tab=pending');
+        window._approvebdsSearchId = notif.data.property_id;
+        if (typeof openSubpage === 'function') openSubpage('approvebds');
+        return;
+      }
+
       var subpage = TYPE_SUBPAGE[notif.type];
       if (subpage && typeof openSubpage === 'function') {
         openSubpage(subpage);

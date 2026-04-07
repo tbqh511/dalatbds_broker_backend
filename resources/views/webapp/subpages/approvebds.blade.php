@@ -401,4 +401,19 @@ function _escModalText(s) {
     .replace(/'/g, '&#39;');
 }
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    var params = new URLSearchParams(window.location.search);
+    var searchId = params.get('search_id');
+    var tab = params.get('tab');
+    if (searchId || tab === 'pending') {
+      if (typeof openSubpage === 'function') {
+        openSubpage('approvebds');
+      }
+    }
+  }, 300); // Wait for app initialization (auth loop, etc.)
+});
+</script>
 @endif
