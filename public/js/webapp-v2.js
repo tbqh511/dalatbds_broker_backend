@@ -5175,11 +5175,63 @@ function mycustBuildCard(lead) {
   };
   var si = statusMap[lead.status] || statusMap['new'];
 
+  var leadTypeLabel = lead.lead_type === 'buy' ? 'Cần mua' : 'Cần thuê';
+
+  // Lead flow stepper
+  var stepByStatus = { 'new': 1, 'contacted': 2, 'converted': 4, 'lost': 5, 'bad-contact': 2 };
+  var activeStep   = stepByStatus[lead.status] || 1;
+  var isLost       = lead.status === 'lost' || lead.status === 'bad-contact';
+
+  function lfDot(n) {
+    if (!isLost && n < activeStep) return '<div class="lf-dot done">✓</div>';
+    if (n === activeStep)          return '<div class="lf-dot active">' + n + '</div>';
+    return '<div class="lf-dot">' + n + '</div>';
+  }
+  function lfLbl(n, txt) {
+    if (!isLost && n < activeStep) return '<div class="lf-label done">' + txt + '</div>';
+    if (n === activeStep)          return '<div class="lf-label active">' + txt + '</div>';
+    return '<div class="lf-label">' + txt + '</div>';
+  }
+  function lfLine(afterN) {
+    return (!isLost && afterN < activeStep)
+      ? '<div class="lf-line done"></div>'
+      : '<div class="lf-line"></div>';
+  }
+
+  var leadFlow = '<div class="lead-flow">'
+    + '<div class="lf-step">' + lfDot(1) + lfLbl(1, 'Lead mới') + '</div>' + lfLine(1)
+    + '<div class="lf-step">' + lfDot(2) + lfLbl(2, 'Đã liên hệ') + '</div>' + lfLine(2)
+    + '<div class="lf-step">' + lfDot(3) + lfLbl(3, 'Tạo Deal') + '</div>' + lfLine(3)
+    + '<div class="lf-step">' + lfDot(4) + lfLbl(4, 'Chăm sóc') + '</div>' + lfLine(4)
+    + '<div class="lf-step">' + lfDot(5) + lfLbl(5, 'Chốt') + '</div>'
+    + '</div>';
+
   // Phone
   var phoneRaw = (lead.customer_phone || '').replace(/\D/g, '');
   var phoneHref = phoneRaw
     ? 'href="tel:' + escHtml(lead.customer_phone) + '"'
     : 'onclick="showToast(\'Không có số điện thoại\')"';
+
+  // Body rows
+  var bodyHtml = '<div class="cust-row"><span class="cust-row-label">Nhu cầu</span><span class="cust-row-val">' + leadTypeLabel + '</span></div>';
+  if (lead.categories && lead.categories.length) {
+    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Loại BĐS</span><span class="cust-row-val">' + escHtml(lead.categories.join(', ')) + '</span></div>';
+  }
+  if (lead.budget) {
+    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Ngân sách</span><span class="cust-row-val" style="color:var(--success);font-weight:600;">' + escHtml(lead.budget) + '</span></div>';
+  }
+  if (lead.wards && lead.wards.length) {
+    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Khu vực</span><span class="cust-row-val">' + escHtml(lead.wards.join(', ')) + '</span></div>';
+  }
+
+  // Tags
+  var tagsHtml = '';
+  (lead.categories || []).slice(0, 3).forEach(function(c) {
+    tagsHtml += '<span class="cust-tag">' + escHtml(c) + '</span>';
+  });
+  (lead.wards || []).slice(0, 2).forEach(function(w) {
+    tagsHtml += '<span class="cust-tag" style="background:var(--bg-secondary);">' + escHtml(w) + '</span>';
+  });
 
   // Detail panel content
   var detailPanelId = 'mycust-detail-' + lead.id;
@@ -5207,22 +5259,31 @@ function mycustBuildCard(lead) {
     }
   }
 
-  var svgPhone = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var svgCalendar = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  var svgPhone    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
 
   return '<div class="cust-card">'
-    + '<div class="cust-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
-    +   '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
-    +     '<div class="cust-avatar" style="background:var(--primary);flex-shrink:0;">' + escHtml(initials) + '</div>'
-    +     '<div class="cust-info">'
-    +       '<div class="cust-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(lead.customer_name) + '</div>'
-    +       '<div class="cust-meta" style="font-size:13px;color:var(--text-muted);">' + escHtml(lead.customer_phone) + '</div>'
+    + '<div class="cust-header">'
+    +   '<div class="cust-avatar" style="background:var(--primary);">' + escHtml(initials) + '</div>'
+    +   '<div class="cust-info">'
+    +     '<div class="cust-name">' + escHtml(lead.customer_name) + '</div>'
+    +     '<div class="cust-meta">'
+    +       '<span>' + escHtml(lead.customer_phone) + '</span>'
+    +       '<span style="color:var(--text-tertiary);">· ' + escHtml(lead.created_diff) + '</span>'
     +     '</div>'
     +   '</div>'
     +   '<div class="cust-status-badge"><span class="badge ' + si.cls + '">' + si.label + '</span></div>'
     + '</div>'
-    + '<div class="cust-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;">'
-    +   '<a class="cust-btn" title="Gọi" ' + phoneHref + ' style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--primary);font-size:13px;">' + svgPhone + '</a>'
-    +   '<div class="cust-btn primary" onclick="toggleCustDetail(\'' + detailPanelId + '\')" style="flex:1;padding:8px 12px;border-radius:6px;background:var(--primary);color:#fff;border:none;font-size:13px;cursor:pointer;text-align:center;">▼ Chi tiết</div>'
+    + '<div class="cust-body">' + bodyHtml
+    +   (tagsHtml ? '<div class="cust-tags">' + tagsHtml + '</div>' : '')
+    + '</div>'
+    + leadFlow
+    + '<div class="cust-footer">'
+    +   '<div class="cust-date">' + svgCalendar + ' Nhận ' + escHtml(lead.created_at) + '</div>'
+    +   '<div class="cust-actions">'
+    +     '<a class="cust-btn" title="Gọi" ' + phoneHref + '>' + svgPhone + '</a>'
+    +     '<div class="cust-btn primary" onclick="toggleCustDetail(\'' + detailPanelId + '\')">▼ Chi tiết</div>'
+    +   '</div>'
     + '</div>'
     + '<div class="cust-detail-panel" id="' + detailPanelId + '">' + detailContent + '</div>'
     + '</div>';
@@ -6145,87 +6206,81 @@ function renderUserCard(u, tab) {
 
   if (tab === 'pending') {
     return '<div class="user-card" id="uc-' + u.id + '">'
-      + '<div class="uc-head">'
+      + '<div class="uc-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+      + '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
       + avatar
       + '<div class="uc-info">'
-      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
-      + '<div class="uc-meta">'
-      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
-      + (u.email ? '<span>✉ ' + escHtml(u.email) + '</span>' : '')
-      + '<span style="color:var(--warning);font-weight:600;">' + escHtml(u.created_at_human) + '</span>'
+      + '<div class="uc-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta" style="font-size:13px;color:var(--text-muted);">'
+      + (u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : ''))
       + '</div></div>'
+      + '</div>'
       + '<span class="badge badge-amber">⏳ Chờ duyệt</span>'
       + '</div>'
-      + '<div class="uc-body">'
-      + '<div class="uc-row"><span class="uc-label">Xin đăng ký</span><span class="uc-value">eBroker</span></div>'
-      + '<div class="uc-row"><span class="uc-label">BĐS đã đăng</span><span class="uc-value">' + u.property_count + ' tin</span></div>'
-      + '</div>'
-      + '<div class="uc-actions">'
-      + '<button class="uc-btn reject" onclick="rejectUser(' + u.id + ',\'' + escHtml(u.name) + '\')">✕ Từ chối</button>'
-      + '<button class="uc-btn warn" onclick="approveTempUser(' + u.id + ',\'' + escHtml(u.name) + '\')">⏳ Duyệt tạm</button>'
-      + '<button class="uc-btn" style="background:var(--primary);color:#fff;" onclick="approveUser(' + u.id + ',\'' + escHtml(u.name) + '\')">✓ Duyệt</button>'
-      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" title="Phân quyền"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Phân quyền</span></button>'
+      + '<div class="uc-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">'
+      + '<button class="uc-btn reject" onclick="rejectUser(' + u.id + ',\'' + escHtml(u.name) + '\')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--danger);font-size:12px;cursor:pointer;">✕ Từ chối</button>'
+      + '<button class="uc-btn warn" onclick="approveTempUser(' + u.id + ',\'' + escHtml(u.name) + '\')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--warning);color:#fff;font-size:12px;cursor:pointer;">⏳ Duyệt tạm</button>'
+      + '<button class="uc-btn" onclick="approveUser(' + u.id + ',\'' + escHtml(u.name) + '\')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;background:var(--primary);color:#fff;border:none;font-size:12px;cursor:pointer;">✓ Duyệt</button>'
       + '</div>'
       + '</div>';
   }
 
   if (tab === 'broker') {
     return '<div class="user-card" id="uc-' + u.id + '">'
-      + '<div class="uc-head">'
+      + '<div class="uc-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+      + '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
       + avatar
       + '<div class="uc-info">'
-      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
-      + '<div class="uc-meta">'
-      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
-      + (u.email ? '<span>✉ ' + escHtml(u.email) + '</span>' : '')
+      + '<div class="uc-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta" style="font-size:13px;color:var(--text-muted);">'
+      + (u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : ''))
       + '</div></div>'
+      + '</div>'
       + roleBadge
       + '</div>'
-      + '<div class="uc-stats">'
-      + '<div class="uc-stat"><div class="uc-stat-val">' + u.property_count + '</div><div class="uc-stat-lbl">BĐS đăng</div></div>'
-      + '</div>'
-      + '<div class="uc-actions">'
-      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Khoá</span></button>'
-      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Phân quyền</span></button>'
+      + '<div class="uc-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;">'
+      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--danger);font-size:12px;cursor:pointer;">🔒 Khoá</button>'
+      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--primary);font-size:12px;cursor:pointer;">👤 Phân quyền</button>'
       + '</div>'
       + '</div>';
   }
 
   if (tab === 'sale') {
     return '<div class="user-card" id="uc-' + u.id + '">'
-      + '<div class="uc-head">'
+      + '<div class="uc-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+      + '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
       + avatar
       + '<div class="uc-info">'
-      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
-      + '<div class="uc-meta">'
-      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
-      + (u.email ? '<span>✉ ' + escHtml(u.email) + '</span>' : '')
+      + '<div class="uc-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta" style="font-size:13px;color:var(--text-muted);">'
+      + (u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : ''))
       + '</div></div>'
+      + '</div>'
       + roleBadge
       + '</div>'
-      + '<div class="uc-actions">'
-      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Khoá</span></button>'
-      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Phân quyền</span></button>'
+      + '<div class="uc-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;">'
+      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--danger);font-size:12px;cursor:pointer;">🔒 Khoá</button>'
+      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--primary);font-size:12px;cursor:pointer;">👤 Phân quyền</button>'
       + '</div>'
       + '</div>';
   }
 
   if (tab === 'locked') {
     return '<div class="user-card" id="uc-' + u.id + '" style="opacity:.8;border-color:var(--danger);">'
-      + '<div class="uc-head">'
+      + '<div class="uc-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+      + '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
       + '<div class="uc-avatar" style="background:#6b7280;">' + initials + '</div>'
       + '<div class="uc-info">'
-      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
-      + '<div class="uc-meta">'
-      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
-      + '<span style="color:var(--danger);font-weight:600;display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Bị khoá</span>'
+      + '<div class="uc-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta" style="font-size:13px;color:var(--danger);">'
+      + (u.mobile ? escHtml(u.mobile) : '')
       + '</div></div>'
-      + '<span class="badge badge-red"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Khoá</span>'
       + '</div>'
-      + '<div class="uc-actions">'
-      + '<button class="uc-btn approve" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Mở khoá</span></button>'
-      + '<button class="uc-btn danger" onclick="deleteUserConfirm(' + u.id + ',\'' + escHtml(u.name) + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Xoá</span></button>'
-      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Phân quyền</span></button>'
+      + '<span class="badge badge-red">🔒 Khoá</span>'
+      + '</div>'
+      + '<div class="uc-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">'
+      + '<button class="uc-btn approve" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;background:var(--success);color:#fff;border:none;font-size:12px;cursor:pointer;">🔓 Mở khoá</button>'
+      + '<button class="uc-btn danger" onclick="deleteUserConfirm(' + u.id + ',\'' + escHtml(u.name) + '\')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;background:var(--danger);color:#fff;border:none;font-size:12px;cursor:pointer;">🗑 Xoá</button>'
       + '</div>'
       + '</div>';
   }
