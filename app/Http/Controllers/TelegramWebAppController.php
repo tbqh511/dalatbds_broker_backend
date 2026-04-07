@@ -3820,12 +3820,17 @@ class TelegramWebAppController extends Controller
             ];
 
             $broker = $p->agent;
-            $brokerName = $broker?->name ?? 'Môi giới';
+            $brokerName = $broker?->name ?? 'Môi giới ẩn danh';
             $words = preg_split('/\s+/', trim($brokerName));
             $initials = mb_strtoupper(
                 mb_substr($words[0], 0, 1)
                 .(count($words) > 1 ? mb_substr(end($words), 0, 1) : '')
             );
+
+            $brokerAvatar = null;
+            if ($broker && $broker->getRawOriginal('profile')) {
+                $brokerAvatar = url('images' . config('global.USER_IMG_PATH') . $broker->getRawOriginal('profile'));
+            }
 
             $createdAt = Carbon::parse($p->getRawOriginal('created_at'));
 
@@ -3849,6 +3854,7 @@ class TelegramWebAppController extends Controller
                 'legal' => $p->legal,
                 'broker_name' => $brokerName,
                 'broker_initials' => $initials ?: 'BK',
+                'broker_avatar' => $brokerAvatar,
                 'broker_id' => $broker?->id,
                 'broker_phone' => $broker?->mobile ?? '',
                 'commission_raw' => (float) $p->getRawOriginal('commission'),
@@ -3895,12 +3901,17 @@ class TelegramWebAppController extends Controller
             ];
 
             $broker = $p->agent;
-            $brokerName = $broker?->name ?? 'Môi giới';
+            $brokerName = $broker?->name ?? 'Môi giới ẩn danh';
             $words = preg_split('/\s+/', trim($brokerName));
             $initials = mb_strtoupper(
                 mb_substr($words[0], 0, 1)
                 .(count($words) > 1 ? mb_substr(end($words), 0, 1) : '')
             );
+
+            $brokerAvatar = null;
+            if ($broker && $broker->getRawOriginal('profile')) {
+                $brokerAvatar = url('images' . config('global.USER_IMG_PATH') . $broker->getRawOriginal('profile'));
+            }
 
             return response()->json([
                 'success' => true,
@@ -3919,6 +3930,7 @@ class TelegramWebAppController extends Controller
                     'status'            => (int) $p->status,
                     'broker_name'       => $brokerName,
                     'broker_initials'   => $initials ?: 'BK',
+                    'broker_avatar'     => $brokerAvatar,
                     'broker_id'         => $broker?->id,
                     'checks'            => $checks,
                     'all_checks_pass'   => ! in_array(false, $checks, true),

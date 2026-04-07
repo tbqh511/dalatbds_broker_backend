@@ -815,10 +815,20 @@ function _renderAbdsCard(p) {
   var phoneLink = brokerPhone ? '<a href="tel:' + escHtml(brokerPhone) + '" class="abds-broker-phone" onclick="event.stopPropagation()">'
     + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
     + ' ' + escHtml(brokerPhone) + '</a>' : '';
+
+  var avatarHtml = '';
+  if (p.broker_avatar) {
+    avatarHtml = '<img src="' + escHtml(p.broker_avatar) + '" alt="' + escHtml(p.broker_name || '') + '" ' +
+      'onerror="this.onerror=null; this.outerHTML=\'' + escHtml(p.broker_initials || 'BK') + '\'" ' +
+      'style="width:100%; height:100%; object-fit:cover; border-radius:50%;">';
+  } else {
+    avatarHtml = escHtml(p.broker_initials || 'BK');
+  }
+
   var blockE = '<div class="abds-block abds-block-broker">'
-    + '<div class="abds-broker-avatar">' + escHtml(p.broker_initials || 'BK') + '</div>'
+    + '<div class="abds-broker-avatar">' + avatarHtml + '</div>'
     + '<div class="abds-broker-info">'
-    + '<div class="abds-broker-name">' + escHtml(p.broker_name || '') + ' <span class="abds-broker-tag">eBroker</span></div>'
+    + '<div class="abds-broker-name">' + escHtml(p.broker_name || 'Môi giới ẩn danh') + ' <span class="abds-broker-tag">eBroker</span></div>'
     + (phoneLink ? '<div class="abds-broker-contact">' + phoneLink + '</div>' : '')
     + '</div>'
     + '<span class="abds-broker-time">' + escHtml(p.created_at_fmt || '') + '</span>'
