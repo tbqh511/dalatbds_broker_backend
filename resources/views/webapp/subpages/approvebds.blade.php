@@ -31,13 +31,13 @@
   ])
 
   <!-- Status tabs -->
-  <div class="sp-tabs">
-    <button class="sp-tab active" id="abdsTabPending"  onclick="switchAbdsStatTab('pending',this)">Chờ duyệt</button>
+  <div class="sp-tabs" id="abdsTabBar">
+    <button class="sp-tab active" data-tab="pending"  id="abdsTabPending"  onclick="switchAbdsStatTab('pending',this)">Chờ duyệt</button>
     @if(isset($customer) && $customer->role === 'admin')
-    <button class="sp-tab"        id="abdsTabApproved" onclick="switchAbdsStatTab('approved',this)">Đã duyệt</button>
-    <button class="sp-tab"        id="abdsTabHidden"   onclick="switchAbdsStatTab('hidden',this)">Đã ẩn</button>
+    <button class="sp-tab"        data-tab="approved" id="abdsTabApproved" onclick="switchAbdsStatTab('approved',this)">Đã duyệt</button>
+    <button class="sp-tab"        data-tab="hidden"   id="abdsTabHidden"   onclick="switchAbdsStatTab('hidden',this)">Đã ẩn</button>
     @endif
-    <button class="sp-tab"        id="abdsTabRejected" onclick="switchAbdsStatTab('rejected',this)">Từ chối</button>
+    <button class="sp-tab"        data-tab="rejected" id="abdsTabRejected" onclick="switchAbdsStatTab('rejected',this)">Từ chối</button>
   </div>
 
   <div class="sp-scroll" style="padding-bottom:16px;">

@@ -647,10 +647,17 @@ if(typeof window._abdsCardData === 'undefined') {
 // Stat blocks as tabs
 window.switchAbdsStatTab = function(tab, statEl) {
   abdsCurrentTab = tab;
-  document.querySelectorAll('.admin-hero .ah-stat--clickable').forEach(function(s) {
-    s.classList.remove('ah-stat--active');
-  });
-  if(statEl) statEl.classList.add('ah-stat--active');
+  // Hỗ trợ cả class cũ và mới
+  if(statEl) {
+    var container = statEl.closest('#abdsTabBar') || statEl.closest('.admin-hero');
+    if(container) {
+      container.querySelectorAll('.sp-tab, .ah-stat--clickable').forEach(function(s) {
+        s.classList.remove('active', 'ah-stat--active');
+      });
+    }
+    statEl.classList.add('active'); // Cho UI mới
+    statEl.classList.add('ah-stat--active'); // Fallback cũ
+  }
 
   // Hiển thị/ẩn filter bar: chỉ xuất hiện khi đang ở tab "approved" hoặc "hidden"
   var filterBar = document.getElementById('abdsApprovedFilter');
