@@ -101,7 +101,7 @@ class Property extends Model
     //HuyTBQ: Add function for customer
     public function agent()
     {
-        return $this->hasOne(Customer::class, 'id', 'added_by')->select('name', 'profile', 'mobile');
+        return $this->hasOne(Customer::class, 'id', 'added_by')->select('id', 'name', 'profile', 'mobile');
     }
 
     public function approvedBy()

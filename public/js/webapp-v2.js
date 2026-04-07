@@ -828,7 +828,7 @@ function _renderAbdsCard(p) {
   var blockE = '<div class="abds-block abds-block-broker">'
     + '<div class="abds-broker-avatar">' + avatarHtml + '</div>'
     + '<div class="abds-broker-info">'
-    + '<div class="abds-broker-name">' + escHtml(p.broker_name || 'Môi giới ẩn danh') + ' <span class="abds-broker-tag">eBroker</span></div>'
+    + '<div class="abds-broker-name">' + escHtml(p.broker_name || 'Môi giới') + ' <span class="abds-broker-tag">eBroker</span></div>'
     + (phoneLink ? '<div class="abds-broker-contact">' + phoneLink + '</div>' : '')
     + '</div>'
     + '<span class="abds-broker-time">' + escHtml(p.created_at_fmt || '') + '</span>'

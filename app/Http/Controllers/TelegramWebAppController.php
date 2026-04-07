@@ -3820,7 +3820,7 @@ class TelegramWebAppController extends Controller
             ];
 
             $broker = $p->agent;
-            $brokerName = $broker?->name ?? 'Môi giới ẩn danh';
+            $brokerName = $broker?->name ?? '';
             $words = preg_split('/\s+/', trim($brokerName));
             $initials = mb_strtoupper(
                 mb_substr($words[0], 0, 1)
@@ -3901,7 +3901,7 @@ class TelegramWebAppController extends Controller
             ];
 
             $broker = $p->agent;
-            $brokerName = $broker?->name ?? 'Môi giới ẩn danh';
+            $brokerName = $broker?->name ?? '';
             $words = preg_split('/\s+/', trim($brokerName));
             $initials = mb_strtoupper(
                 mb_substr($words[0], 0, 1)
