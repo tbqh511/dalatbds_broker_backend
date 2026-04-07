@@ -6207,6 +6207,9 @@ function renderUserCard(u, tab) {
   var roleBadge = getRoleBadge(u.role);
   var initials = u.initials || u.name.slice(0, 2).toUpperCase();
   var avatar = '<div class="uc-avatar" style="background:' + u.avatar_color + ';">' + initials + '</div>';
+  var threeDotAction = '<button onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" style="background:none;border:none;padding:5px;margin-left:4px;color:var(--text-tertiary);" title="Phân quyền">'
+                     + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>'
+                     + '</button>';
 
   if (tab === 'pending') {
     return '<div class="user-card" id="uc-' + u.id + '">'
@@ -6219,7 +6222,10 @@ function renderUserCard(u, tab) {
       + (u.email ? '<span>✉ ' + escHtml(u.email) + '</span>' : '')
       + '<span style="color:var(--warning);font-weight:600;">' + escHtml(u.created_at_human) + '</span>'
       + '</div></div>'
+      + '<div style="margin-left:auto;display:flex;align-items:center;">'
       + '<span class="badge badge-amber">⏳ Chờ duyệt</span>'
+      + threeDotAction
+      + '</div>'
       + '</div>'
       + '<div class="uc-body">'
       + '<div class="uc-row"><span class="uc-label">Xin đăng ký</span><span class="uc-value">eBroker</span></div>'
@@ -6242,14 +6248,16 @@ function renderUserCard(u, tab) {
       + '<div class="uc-meta">'
       + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
       + '</div></div>'
+      + '<div style="margin-left:auto;display:flex;align-items:center;">'
       + roleBadge
+      + threeDotAction
+      + '</div>'
       + '</div>'
       + '<div class="uc-stats">'
       + '<div class="uc-stat"><div class="uc-stat-val">' + u.property_count + '</div><div class="uc-stat-lbl">BĐS đăng</div></div>'
       + '</div>'
       + '<div class="uc-actions">'
       + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Khoá</span></button>'
-      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Phân quyền</span></button>'
       + '</div>'
       + '</div>';
   }
@@ -6263,11 +6271,13 @@ function renderUserCard(u, tab) {
       + '<div class="uc-meta">'
       + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
       + '</div></div>'
+      + '<div style="margin-left:auto;display:flex;align-items:center;">'
       + roleBadge
+      + threeDotAction
+      + '</div>'
       + '</div>'
       + '<div class="uc-actions">'
       + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Khoá</span></button>'
-      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Phân quyền</span></button>'
       + '</div>'
       + '</div>';
   }
@@ -6282,7 +6292,10 @@ function renderUserCard(u, tab) {
       + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
       + '<span style="color:var(--danger);font-weight:600;display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Bị khoá</span>'
       + '</div></div>'
+      + '<div style="margin-left:auto;display:flex;align-items:center;">'
       + '<span class="badge badge-red"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Khoá</span>'
+      + threeDotAction
+      + '</div>'
       + '</div>'
       + '<div class="uc-actions">'
       + '<button class="uc-btn approve" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Mở khoá</span></button>'
