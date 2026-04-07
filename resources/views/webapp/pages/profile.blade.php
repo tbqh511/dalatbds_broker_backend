@@ -107,23 +107,7 @@
       </div>
       <div class="menu-item-right">›</div>
     </div>
-    <!-- Commission quick view -->
-    <div style="margin:0 16px 12px;">
-      <div class="commission-total">
-        <div class="commission-label">TỔNG HOA HỒNG DỰ KIẾN</div>
-        <div class="commission-amount">{{ $stats['commission_total_fmt'] ?? '0 đ' }}</div>
-        <div class="commission-breakdown">
-          <div class="commission-sub">
-            <div class="commission-sub-label">Đã nhận</div>
-            <div class="commission-sub-val">{{ $stats['commission_received_trieu'] ?? 0 }} tr</div>
-          </div>
-          <div class="commission-sub">
-            <div class="commission-sub-label">Đang chờ</div>
-            <div class="commission-sub-val">{{ $stats['commission_pending_trieu'] ?? 0 }} tr</div>
-          </div>
-        </div>
-      </div>
-    </div>
+
   </div>
 
   <!-- BĐS Admin section -->
