@@ -40,38 +40,6 @@
       </div>
     </div>
 
-    {{-- Chips lọc loại BĐS --}}
-    <div class="filter-bar" style="padding:0 12px 4px;gap:6px;">
-      <div class="chip active abds-cat-chip" data-filter="category" data-value="" onclick="abdsChipSelect(this,'abds-cat-chip')">Tất cả loại</div>
-      @foreach(\App\Models\Category::where('status',1)->orderBy('order')->get() as $cat)
-      <div class="chip abds-cat-chip" data-filter="category" data-value="{{ $cat->category }}" onclick="abdsChipSelect(this,'abds-cat-chip')">{{ $cat->category }}</div>
-      @endforeach
-    </div>
-
-    {{-- Chips lọc giá --}}
-    <div class="filter-bar" style="padding:0 12px 4px;gap:6px;">
-      <div class="chip active abds-price-chip" data-filter="price" data-value="" onclick="abdsChipSelect(this,'abds-price-chip')">Tất cả giá</div>
-      <div class="chip abds-price-chip" data-filter="price" data-value="lt1" onclick="abdsChipSelect(this,'abds-price-chip')">Dưới 1 tỷ</div>
-      <div class="chip abds-price-chip" data-filter="price" data-value="1-2" onclick="abdsChipSelect(this,'abds-price-chip')">1–2 tỷ</div>
-      <div class="chip abds-price-chip" data-filter="price" data-value="2-3" onclick="abdsChipSelect(this,'abds-price-chip')">2–3 tỷ</div>
-      <div class="chip abds-price-chip" data-filter="price" data-value="3-5" onclick="abdsChipSelect(this,'abds-price-chip')">3–5 tỷ</div>
-      <div class="chip abds-price-chip" data-filter="price" data-value="5-10" onclick="abdsChipSelect(this,'abds-price-chip')">5–10 tỷ</div>
-      <div class="chip abds-price-chip" data-filter="price" data-value="gt10" onclick="abdsChipSelect(this,'abds-price-chip')">Trên 10 tỷ</div>
-    </div>
-
-    {{-- Chips lọc phường/xã --}}
-    <div class="filter-bar" style="padding:0 12px 8px;gap:6px;">
-      <div class="chip active abds-ward-chip" data-filter="ward" data-value="" onclick="abdsChipSelect(this,'abds-ward-chip')">Tất cả khu vực</div>
-      @php
-        $abdsWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))
-          ->orderByRaw("FIELD(code,'24796','24790','24778','24769','24811')")
-          ->get();
-      @endphp
-      @foreach($abdsWards as $w)
-      <div class="chip abds-ward-chip" data-filter="ward" data-value="{{ trim($w->full_name) }}" onclick="abdsChipSelect(this,'abds-ward-chip')">{{ trim($w->full_name) }}</div>
-      @endforeach
-    </div>
-
   </div>
   @endif
 
