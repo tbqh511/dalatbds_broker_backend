@@ -156,6 +156,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
         Route::get('/webapp/api/admin/properties/{id}', [TelegramWebAppController::class, 'adminPropertyDetail'])->name('webapp.admin.properties.detail');
         Route::post('/webapp/api/admin/properties/{id}/approve', [TelegramWebAppController::class, 'adminApproveProperty'])->name('webapp.admin.properties.approve');
         Route::post('/webapp/api/admin/properties/{id}/reject', [TelegramWebAppController::class, 'adminRejectProperty'])->name('webapp.admin.properties.reject');
+        Route::post('/webapp/api/admin/properties/{id}/hide', [TelegramWebAppController::class, 'adminHideProperty'])->name('webapp.admin.properties.hide');
     });
     // Commission approval routes (admin only)
     Route::middleware(['webapp.role:admin'])->group(function () {

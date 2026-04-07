@@ -3852,6 +3852,7 @@ class TelegramWebAppController extends Controller
                 'direction' => $p->direction,
                 'number_room' => $p->number_room,
                 'legal' => $p->legal,
+                'slug' => $p->slug ?? null,
                 'broker_name' => $brokerName,
                 'broker_initials' => $initials ?: 'BK',
                 'broker_avatar' => $brokerAvatar,
@@ -4104,6 +4105,40 @@ class TelegramWebAppController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('adminRejectProperty error: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    /**
+     * Ẩn BĐS đã duyệt: đặt lại trạng thái về chờ duyệt (status=0).
+     * Chỉ áp dụng cho BĐS đang ở trạng thái đã duyệt (status=1).
+     */
+    public function adminHideProperty(int $id): JsonResponse
+    {
+        try {
+            $property = Property::findOrFail($id);
+
+            if ($property->status !== 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'BĐS này không ở trạng thái đã duyệt.',
+                ], 422);
+            }
+
+            $property->update([
+                'status'      => 0,
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+
+            return response()->json([
+                'success'       => true,
+                'message'       => 'BĐS đã được ẩn thành công.',
+                'total_approved' => Property::where('status', 1)->count(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('adminHideProperty error: '.$e->getMessage());
 
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
         }

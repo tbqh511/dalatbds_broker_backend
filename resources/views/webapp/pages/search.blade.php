@@ -37,7 +37,7 @@
     <div class="search-sticky">
       <div class="search-bar-row">
         <button onclick="document.getElementById('stateDiscovery').style.display === 'none' ? resetSearch(event, true) : goTo('home')" class="search-back-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="search-box-main" onclick="activateSearch()" style="flex:1;display:flex;align-items:center;position:relative;">
           <span class="srch-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -148,7 +148,7 @@
       <div class="result-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-bottom:12px;">
         <div style="display:flex;align-items:center;gap:8px;width:100%;">
           <button onclick="resetSearch(event, true)" class="search-back-btn" style="margin-right:0;flex-shrink:0;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           
           <div class="result-meta" style="flex:1;min-width:0;margin-bottom:0;">

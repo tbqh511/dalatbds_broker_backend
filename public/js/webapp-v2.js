@@ -634,7 +634,12 @@ function formatPriceToVNText(price) {
 
 // ============ ADMIN — DUYỆT BĐS ============
 var currentRejectId = null;
-var abdsCurrentTab = 'pending';
+var abdsCurrentTab  = 'pending';
+
+// Cache dữ liệu card để filter client-side (được dùng bởi approvebds.blade.php)
+if(typeof window._abdsCardData === 'undefined') {
+  window._abdsCardData = {};
+}
 
 // Stat blocks as tabs
 window.switchAbdsStatTab = function(tab, statEl) {
@@ -643,6 +648,16 @@ window.switchAbdsStatTab = function(tab, statEl) {
     s.classList.remove('ah-stat--active');
   });
   if(statEl) statEl.classList.add('ah-stat--active');
+
+  // Hiển thị/ẩn filter bar: chỉ xuất hiện khi đang ở tab "approved"
+  var filterBar = document.getElementById('abdsApprovedFilter');
+  if(filterBar) filterBar.style.display = (tab === 'approved') ? 'block' : 'none';
+
+  // Reset bộ lọc khi rời khỏi tab "approved"
+  if(tab !== 'approved' && typeof _abdsResetApprovedFilter === 'function') {
+    _abdsResetApprovedFilter();
+  }
+
   loadApprovalBds(true);
 };
 
@@ -699,9 +714,15 @@ window.loadApprovalBds = function(reset) {
           + '<div style="font-size:14px;">Không có BĐS nào</div></div>';
         return;
       }
+      // Reset cache card data trước khi render batch mới
+      window._abdsCardData = {};
       var html = '';
       props.forEach(function(p) { html += _renderAbdsCard(p); });
       container.innerHTML = html;
+      // Áp dụng filter nếu đang ở tab "approved"
+      if(abdsCurrentTab === 'approved' && typeof abdsApprovedFilterApply === 'function') {
+        abdsApprovedFilterApply();
+      }
     })
     .catch(function() {
       container.innerHTML =
@@ -711,6 +732,20 @@ window.loadApprovalBds = function(reset) {
 };
 
 function _renderAbdsCard(p) {
+  // Lưu dữ liệu card vào cache để filter client-side (tab "Đã duyệt")
+  window._abdsCardData[p.id] = {
+    title:        (p.title       || '').toLowerCase(),
+    broker:       (p.broker_name || '').toLowerCase(),
+    addr:         ((p.street || '') + ' ' + (p.ward || '')).toLowerCase(),
+    category:     p.category_name  || '',
+    price:        p.price_raw      || 0,
+    ward:         p.ward           || '',
+    broker_name:  p.broker_name    || '',
+    broker_phone: p.broker_phone   || '',
+    host_name:    p.host_name      || '',
+    host_contact: p.host_contact   || '',
+  };
+
   // === BLOCK A: Thumbnail + Header ===
   var imgUrl = p.title_image || '';
   var thumbHtml = imgUrl
@@ -836,10 +871,34 @@ function _renderAbdsCard(p) {
   var viewBtn = '<button class="abds-btn view" onclick="openDetail({id:' + p.id + '})"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Xem</span></button>';
   var actionBtns = '';
   if(p.status === 0) {
+    // --- Tab "Chờ duyệt": nút Từ chối + Duyệt ---
     var safeTitle = (p.title || 'BĐS').replace(/['"\\\r\n]/g, ' ');
     actionBtns = viewBtn
       + '<button class="abds-btn reject" onclick="event.stopPropagation(); openRejectSheet(' + p.id + ')">✕ Từ chối</button>'
       + '<button class="abds-btn approve" onclick="event.stopPropagation(); approveAbds(' + p.id + ', \'' + safeTitle + '\')">✓ Duyệt</button>';
+  } else if(abdsCurrentTab === 'approved') {
+    // --- Tab "Đã duyệt" (Admin only): Xem trang công khai + Ẩn BĐS + Đối tượng liên quan ---
+    var safeTitleApproved = (p.title || 'BĐS').replace(/['"\\\r\n]/g, ' ');
+
+    // Nút "Xem chi tiết" — mở trang BĐS công khai trong tab mới
+    var detailUrl = '/property/' + p.id;
+    if(p.slug) detailUrl = '/bat-dong-san/' + p.slug;
+    actionBtns = viewBtn
+      + '<a href="' + detailUrl + '" target="_blank" class="abds-btn"'
+      + ' style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;"'
+      + ' onclick="event.stopPropagation();">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+      + ' Trang</a>'
+      // Nút "Ẩn BĐS" — xác nhận và gọi API ẩn
+      + '<button class="abds-btn reject"'
+      + ' onclick="event.stopPropagation();hideAbds(' + p.id + ',\'' + safeTitleApproved + '\')">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+      + ' Ẩn</button>'
+      // Nút "Đối tượng liên quan" — mở modal broker/chủ nhà
+      + '<button class="abds-btn" style="background:var(--primary-light,#eff6ff);color:var(--primary);border:none;"'
+      + ' onclick="event.stopPropagation();openAbdsRelatedModal(' + p.id + ')">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+      + ' Liên quan</button>';
   } else {
     actionBtns = viewBtn;
   }
