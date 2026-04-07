@@ -243,6 +243,80 @@ class TelegramWebAppController extends Controller
                 });
             }
 
+            // Advanced Filters
+            $type = $request->input('property_type');
+            if ($type !== null && $type !== '') {
+                if ($type === 'rent') $query->where('propertys.property_type', 1);
+                elseif ($type === 'sale') $query->where('propertys.property_type', 0);
+                else $query->where('propertys.property_type', (int) $type);
+            }
+
+            $categoryName = $request->input('categoryName');
+            if (!empty($categoryName)) {
+                $query->whereHas('category', function ($cq) use ($categoryName) {
+                    $cq->where('category', $categoryName);
+                });
+            }
+
+            $priceLabel = $request->input('price');
+            if ($priceLabel) {
+                if ($priceLabel === 'Dưới 1 tỷ') $query->where('propertys.price', '<', 1000000000);
+                elseif ($priceLabel === '1–2 tỷ') $query->whereBetween('propertys.price', [1000000000, 2000000000]);
+                elseif ($priceLabel === '2–3 tỷ') $query->whereBetween('propertys.price', [2000000000, 3000000000]);
+                elseif ($priceLabel === '3–5 tỷ') $query->whereBetween('propertys.price', [3000000000, 5000000000]);
+                elseif ($priceLabel === '5–7 tỷ') $query->whereBetween('propertys.price', [5000000000, 7000000000]);
+                elseif ($priceLabel === '7–10 tỷ') $query->whereBetween('propertys.price', [7000000000, 10000000000]);
+                elseif ($priceLabel === 'Trên 10 tỷ') $query->where('propertys.price', '>', 10000000000);
+            }
+
+            $areaRange = $request->input('area');
+            if ($areaRange) {
+                $areaParamId = (int) config('global.area');
+                if ($areaRange === '1000+') {
+                    $query->whereHas('parameters', function ($pq) use ($areaParamId) {
+                        $pq->where('parameters.id', $areaParamId)
+                            ->whereRaw('CAST(assign_parameters.value AS DECIMAL(10,2)) >= 1000');
+                    });
+                } else {
+                    $parts = explode('-', $areaRange);
+                    if (count($parts) === 2) {
+                        $min = (float) $parts[0];
+                        $max = (float) $parts[1];
+                        $query->whereHas('parameters', function ($pq) use ($areaParamId, $min, $max) {
+                            $pq->where('parameters.id', $areaParamId)
+                                ->whereRaw('CAST(assign_parameters.value AS DECIMAL(10,2)) >= ?', [$min])
+                                ->whereRaw('CAST(assign_parameters.value AS DECIMAL(10,2)) <= ?', [$max]);
+                        });
+                    }
+                }
+            }
+
+            $direction = $request->input('direction');
+            if ($direction) {
+                $dirParamId = (int) config('global.direction');
+                $query->whereHas('parameters', function ($pq) use ($dirParamId, $direction) {
+                    $pq->where('parameters.id', $dirParamId)
+                        ->where('assign_parameters.value', $direction);
+                });
+            }
+
+            $legal = $request->input('legal');
+            if ($legal) {
+                $legalParamId = (int) config('global.legal');
+                $query->whereHas('parameters', function ($pq) use ($legalParamId, $legal) {
+                    $pq->where('parameters.id', $legalParamId)
+                        ->where('assign_parameters.value', 'LIKE', '%'.$legal.'%');
+                });
+            }
+
+            $location = $request->input('location');
+            if ($location) {
+                $trimmedLocation = trim($location);
+                $query->whereHas('ward', function ($wq) use ($trimmedLocation) {
+                    $wq->whereRaw('TRIM(full_name) = ?', [$trimmedLocation]);
+                });
+            }
+
             // Sort
             switch ($sort) {
                 case 'oldest':

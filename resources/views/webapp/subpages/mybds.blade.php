@@ -35,7 +35,7 @@
       <span style="display:inline-flex;align-items:center;color:var(--text-tertiary);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg></span>
       <input type="text" id="mybdsSearchInput" placeholder="Tìm theo tiêu đề, địa chỉ..." oninput="mybdsOnSearchInput(this.value)">
     </div>
-    <button class="sp-filter-btn" onclick="mybdsToggleFilterSheet()">
+    <button class="sp-filter-btn" onclick="openFilterSheet('mybdsAdvancedFilter')">
       <span style="display:inline-flex;align-items:center;gap:4px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M16.24 7.76a6 6 0 0 1 0 8.49M4.93 4.93a10 10 0 0 0 0 14.14M7.76 7.76a6 6 0 0 0 0 8.49"/></svg>
         Lọc
@@ -83,4 +83,10 @@
       <button class="mybds-sort-opt" id="mybdsSortPriceDesc"onclick="mybdsSortSelect('price_desc')"style="display:flex;align-items:center;width:100%;padding:12px 16px;background:none;border:none;font-size:13px;color:var(--text-secondary);cursor:pointer;gap:10px;">  Giá giảm dần</button>
     </div>
   </div>
+
+  <!-- Advanced filter -->
+  @include('webapp.partials.property-filter', [
+      'id' => 'mybdsAdvancedFilter',
+      'onApply' => 'applyFilterSheet(\'mybdsAdvancedFilter\')'
+  ])
 </div><!-- end subpage-mybds -->

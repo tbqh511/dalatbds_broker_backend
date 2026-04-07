@@ -2962,65 +2962,90 @@ window.filterLeadByStatus = function(chip) {
 
 // ============ FILTER SHEET ============
 let currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+let mybdsCurrentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
 
-window.openFilterSheet = function(){
-  document.getElementById('filterOverlay').classList.add('open');
-  document.getElementById('filterSheet').classList.add('open');
+window.openFilterSheet = function(id = 'filterSheet'){
+  const overlay = document.getElementById(id + 'Overlay');
+  if (overlay) overlay.classList.add('open');
+  const sheet = document.getElementById(id);
+  if (sheet) sheet.classList.add('open');
 };
 
-window.closeFilterSheet = function(){
-  document.getElementById('filterOverlay').classList.remove('open');
-  document.getElementById('filterSheet').classList.remove('open');
+window.closeAdvancedFilter = function(id = 'filterSheet'){
+  const overlay = document.getElementById(id + 'Overlay');
+  if (overlay) overlay.classList.remove('open');
+  const sheet = document.getElementById(id);
+  if (sheet) sheet.classList.remove('open');
 };
 
+window.closeFilterSheet = function(){ // Mặc định cho search cũ nếu còn gọi
+  closeAdvancedFilter('filterSheet');
+};
+
+// Cho chip cũ trong file search nều chưa apply dùng chung partial (an toàn)
 window.selectFilterChip = function(chip){
+  selectAdvancedFilterChip(chip);
+};
+
+window.selectAdvancedFilterChip = function(chip){
   const filterGroup = chip.dataset.filter;
   const siblings = chip.parentElement.querySelectorAll('.fs-chip[data-filter="'+filterGroup+'"]');
   siblings.forEach(c => c.classList.remove('active'));
   chip.classList.add('active');
 };
 
-window.resetFilterSheet = function(){
-  document.querySelectorAll('.fs-chip').forEach(c => {
+window.resetAdvancedFilter = function(id = 'filterSheet'){
+  document.querySelectorAll('#' + id + ' .fs-chip').forEach(c => {
       c.classList.remove('active');
       if(c.dataset.value === '') c.classList.add('active');
   });
-  currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+  if(id === 'mybdsAdvancedFilter') {
+    mybdsCurrentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+  } else {
+    currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+  }
 };
 
-window.applyFilterSheet = function(){
-  // Collect selected values
-  currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
-  document.querySelectorAll('.fs-chip.active').forEach(c => {
+window.resetFilterSheet = function(){ // Legacy cho search cũ
+  resetAdvancedFilter('filterSheet');
+};
+
+window.applyFilterSheet = function(id = 'filterSheet'){
+  let filters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'', location:'' };
+  document.querySelectorAll('#' + id + ' .fs-chip.active').forEach(c => {
       if(c.dataset.value) {
-          currentFilters[c.dataset.filter] = c.dataset.value;
+          filters[c.dataset.filter] = c.dataset.value;
       }
   });
 
-  // Update active filter chips in results
-  clearFilters(true);
-  Object.entries(currentFilters).forEach(([key, val]) => {
-      if(val) {
-          const labels = {
-              property_type: val === '0' ? 'Bán' : 'Cho thuê',
-              categoryName: val,
-              price: val,
-              area: val.includes('+') ? 'Trên 1000m²' : val.replace('-','–') + 'm²',
-              direction: val,
-              legal: val
-          };
-          addActiveFilter(labels[key] || val);
-      }
-  });
+  if(id === 'mybdsAdvancedFilter') {
+    mybdsCurrentFilters = filters;
+    closeAdvancedFilter(id);
+    loadMyBds(true);
+  } else {
+    currentFilters = filters;
+    clearFilters(true);
+    Object.entries(currentFilters).forEach(([key, val]) => {
+        if(val) {
+            const labels = {
+                property_type: val === '0' ? 'Bán' : 'Cho thuê',
+                categoryName: val,
+                price: val,
+                area: val.includes('+') ? 'Trên 1000m²' : val.replace('-','–') + 'm²',
+                direction: val,
+                legal: val,
+                location: val
+            };
+            addActiveFilter(labels[key] || val);
+        }
+    });
 
-  // Sync quick-chip rows with filter sheet selections
-  syncQuickChipRows();
+    syncQuickChipRows();
+    closeAdvancedFilter(id);
 
-  closeFilterSheet();
-
-  // Re-search with filters
-  let q = document.getElementById('searchInput').value || '';
-  doSearch(q);
+    let q = document.getElementById('searchInput').value || '';
+    doSearch(q);
+  }
 };
 
 // ============ SORT SHEET ============
@@ -4631,6 +4656,13 @@ function loadMyBds(force) {
     search: mybdsCurrentSearch,
     sort:   mybdsCurrentSort,
   });
+
+  // Append advanced filters
+  if (typeof mybdsCurrentFilters !== 'undefined') {
+    Object.entries(mybdsCurrentFilters).forEach(([key, val]) => {
+      if (val) params.append(key, val);
+    });
+  }
 
   fetch(url + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(r => r.json())

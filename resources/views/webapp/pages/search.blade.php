@@ -430,113 +430,11 @@
 
   </div><!-- end page-search -->
 
-  <!-- ========== FILTER SHEET ========== -->
-  <div class="filter-overlay" id="filterOverlay" onclick="closeFilterSheet()"></div>
-  <div class="filter-sheet" id="filterSheet">
-    <div class="sheet-handle"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px 12px;">
-      <div style="font-size:16px;font-weight:700;color:var(--text-primary);">Bộ lọc nâng cao</div>
-      <button onclick="resetFilterSheet()" style="font-size:12px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:600;">Đặt lại</button>
-    </div>
-
-    <div class="filter-sheet-body">
-      <!-- Loại giao dịch -->
-      <div class="fs-section">
-        <div class="fs-label">Loại giao dịch</div>
-        <div class="fs-chips">
-          <div class="fs-chip active" data-filter="property_type" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
-          <div class="fs-chip" data-filter="property_type" data-value="0" onclick="selectFilterChip(this)">Bán</div>
-          <div class="fs-chip" data-filter="property_type" data-value="1" onclick="selectFilterChip(this)">Cho thuê</div>
-        </div>
-      </div>
-
-      <!-- Loại BĐS — lấy từ DB -->
-      <div class="fs-section">
-        <div class="fs-label">Loại BĐS</div>
-        <div class="fs-chips">
-          <div class="fs-chip active" data-filter="categoryName" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
-          @foreach($categories as $cat)
-          <div class="fs-chip" data-filter="categoryName" data-value="{{ $cat->category }}" onclick="selectFilterChip(this)">{{ $cat->category }}</div>
-          @endforeach
-        </div>
-      </div>
-
-      <!-- Khoảng giá -->
-      <div class="fs-section">
-        <div class="fs-label">Khoảng giá</div>
-        <div class="fs-chips">
-          <div class="fs-chip active" data-filter="price" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
-          <div class="fs-chip" data-filter="price" data-value="Dưới 1 tỷ" onclick="selectFilterChip(this)">Dưới 1 tỷ</div>
-          <div class="fs-chip" data-filter="price" data-value="1–2 tỷ" onclick="selectFilterChip(this)">1–2 tỷ</div>
-          <div class="fs-chip" data-filter="price" data-value="2–3 tỷ" onclick="selectFilterChip(this)">2–3 tỷ</div>
-          <div class="fs-chip" data-filter="price" data-value="3–5 tỷ" onclick="selectFilterChip(this)">3–5 tỷ</div>
-          <div class="fs-chip" data-filter="price" data-value="5–7 tỷ" onclick="selectFilterChip(this)">5–7 tỷ</div>
-          <div class="fs-chip" data-filter="price" data-value="7–10 tỷ" onclick="selectFilterChip(this)">7–10 tỷ</div>
-          <div class="fs-chip" data-filter="price" data-value="Trên 10 tỷ" onclick="selectFilterChip(this)">Trên 10 tỷ</div>
-        </div>
-      </div>
-
-      <!-- Khu vực -->
-      <div class="fs-section">
-        <div class="fs-label">Khu vực</div>
-        <div class="fs-chips">
-          <div class="fs-chip active" data-filter="location" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
-          @php
-            $hotWards = \App\Models\LocationsWard::where('district_code', config('location.district_code'))->get();
-          @endphp
-          @foreach($hotWards as $w)
-          <div class="fs-chip" data-filter="location" data-value="{{ $w->full_name }}" onclick="selectFilterChip(this)">{{ $w->full_name }}</div>
-          @endforeach
-        </div>
-      </div>
-
-      <!-- Diện tích -->
-      <div class="fs-section">
-        <div class="fs-label">Diện tích</div>
-        <div class="fs-chips">
-          <div class="fs-chip active" data-filter="area" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
-          <div class="fs-chip" data-filter="area" data-value="0-100" onclick="selectFilterChip(this)">Dưới 100m²</div>
-          <div class="fs-chip" data-filter="area" data-value="100-200" onclick="selectFilterChip(this)">100–200m²</div>
-          <div class="fs-chip" data-filter="area" data-value="200-500" onclick="selectFilterChip(this)">200–500m²</div>
-          <div class="fs-chip" data-filter="area" data-value="500-1000" onclick="selectFilterChip(this)">500–1000m²</div>
-          <div class="fs-chip" data-filter="area" data-value="1000+" onclick="selectFilterChip(this)">Trên 1000m²</div>
-        </div>
-      </div>
-
-      <!-- Hướng -->
-      <div class="fs-section">
-        <div class="fs-label">Hướng</div>
-        <div class="fs-chips">
-          <div class="fs-chip active" data-filter="direction" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
-          <div class="fs-chip" data-filter="direction" data-value="Đông" onclick="selectFilterChip(this)">Đông</div>
-          <div class="fs-chip" data-filter="direction" data-value="Tây" onclick="selectFilterChip(this)">Tây</div>
-          <div class="fs-chip" data-filter="direction" data-value="Nam" onclick="selectFilterChip(this)">Nam</div>
-          <div class="fs-chip" data-filter="direction" data-value="Bắc" onclick="selectFilterChip(this)">Bắc</div>
-          <div class="fs-chip" data-filter="direction" data-value="Đông Nam" onclick="selectFilterChip(this)">ĐN</div>
-          <div class="fs-chip" data-filter="direction" data-value="Đông Bắc" onclick="selectFilterChip(this)">ĐB</div>
-          <div class="fs-chip" data-filter="direction" data-value="Tây Nam" onclick="selectFilterChip(this)">TN</div>
-          <div class="fs-chip" data-filter="direction" data-value="Tây Bắc" onclick="selectFilterChip(this)">TB</div>
-        </div>
-      </div>
-
-      <!-- Pháp lý -->
-      <div class="fs-section">
-        <div class="fs-label">Pháp lý</div>
-        <div class="fs-chips">
-          <div class="fs-chip active" data-filter="legal" data-value="" onclick="selectFilterChip(this)">Tất cả</div>
-          <div class="fs-chip" data-filter="legal" data-value="Sổ đỏ" onclick="selectFilterChip(this)">Sổ đỏ</div>
-          <div class="fs-chip" data-filter="legal" data-value="Sổ hồng" onclick="selectFilterChip(this)">Sổ hồng</div>
-          <div class="fs-chip" data-filter="legal" data-value="Giấy tay" onclick="selectFilterChip(this)">Giấy tay</div>
-          <div class="fs-chip" data-filter="legal" data-value="Hợp đồng" onclick="selectFilterChip(this)">Hợp đồng</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="fs-footer">
-      <button class="fs-btn-reset" onclick="resetFilterSheet()">Đặt lại</button>
-      <button class="fs-btn-apply" onclick="applyFilterSheet()">Xem kết quả</button>
-    </div>
-  </div>
+  <!-- ========== FILTER SHEET MODULE ========== -->
+  @include('webapp.partials.property-filter', [
+      'id' => 'filterSheet',
+      'onApply' => 'applyFilterSheet(\'filterSheet\')'
+  ])
 
   <!-- ========== SORT SHEET ========== -->
   <div class="sort-overlay" id="sortOverlay" onclick="closeSortSheet()"></div>
