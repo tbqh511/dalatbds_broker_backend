@@ -3800,6 +3800,12 @@ class TelegramWebAppController extends Controller
     public function adminChangeUserRole(Request $request, int $id)
     {
         $me = Auth::guard('webapp')->user();
+
+        // BẢO MẬT: Chỉ bds_admin hoặc Super Admin mới được thay đổi role
+        if (! $me->hasRole('admin', 'bds_admin')) {
+            return response()->json(['success' => false, 'message' => 'Bạn không có quyền thực hiện hành động này.'], 403);
+        }
+
         if ($me->id === $id) {
             return response()->json(['success' => false, 'message' => 'Không thể đổi role của chính mình.'], 422);
         }

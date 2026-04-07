@@ -156,18 +156,19 @@ class Customer extends Authenticatable implements JWTSubject
         return $this->hasMany(Usertokens::class, 'customer_id');
     }
     // Danh sách role hợp lệ của webapp
-    public const VALID_ROLES = ['broker', 'bds_admin', 'sale', 'sale_admin', 'admin'];
+    public const VALID_ROLES = ['customer', 'guest', 'broker', 'bds_admin', 'sale', 'sale_admin', 'admin'];
 
     // Hierarchy: mỗi role kế thừa quyền của các role thấp hơn (đồng bộ với webapp-v2.js)
     public static function roleHierarchy(): array
     {
         return [
             'guest'      => ['guest'],
-            'broker'     => ['guest', 'broker'],
-            'bds_admin'  => ['guest', 'broker', 'bds_admin'],
-            'sale'       => ['guest', 'broker', 'sale'],
-            'sale_admin' => ['guest', 'broker', 'sale', 'sale_admin'],
-            'admin'      => ['guest', 'broker', 'bds_admin', 'sale', 'sale_admin', 'admin'],
+            'customer'   => ['guest', 'customer'],
+            'broker'     => ['guest', 'customer', 'broker'],
+            'bds_admin'  => ['guest', 'customer', 'broker', 'bds_admin'],
+            'sale'       => ['guest', 'customer', 'broker', 'sale'],
+            'sale_admin' => ['guest', 'customer', 'broker', 'sale', 'sale_admin'],
+            'admin'      => ['guest', 'customer', 'broker', 'bds_admin', 'sale', 'sale_admin', 'admin'],
         ];
     }
 

@@ -70,9 +70,9 @@
           <span class="rs-reason-icon">📋</span>
           <span class="rs-reason-text">Sale Admin — Quản lý đội Sale</span>
         </div>
-        <div class="rs-reason" onclick="changeUserRole('guest')">
+        <div class="rs-reason" onclick="changeUserRole('customer')">
           <span class="rs-reason-icon">👤</span>
-          <span class="rs-reason-text">Guest — Hạ cấp về tài khoản cơ bản</span>
+          <span class="rs-reason-text">Khách hàng — Hạ cấp về tài khoản cơ bản</span>
         </div>
       </div>
       <button class="rs-submit" style="background:var(--bg-secondary);color:var(--text-secondary);" onclick="document.getElementById('userRoleSheet').style.display='none'">Huỷ</button>
