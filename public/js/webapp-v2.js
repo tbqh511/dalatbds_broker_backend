@@ -344,19 +344,14 @@ window.openSubpage = function(id){
   if(id === 'approvebds') {
     var urlParams = new URLSearchParams(window.location.search);
     var urlTab = urlParams.get('tab');
-    var urlSearchId = urlParams.get('search_id');
 
     abdsCurrentTab = (urlTab === 'pending' || urlTab === 'approved' || urlTab === 'rejected' || urlTab === 'hidden') ? urlTab : 'pending';
 
     var searchEl = document.getElementById('abdsApprovedSearch');
-    if (window._approvebdsSearchId || urlSearchId) {
-      abdsCurrentSearch = window._approvebdsSearchId || urlSearchId;
-      if (searchEl) searchEl.value = abdsCurrentSearch;
-      window._approvebdsSearchId = null;
-    } else {
-      abdsCurrentSearch = '';
-      if (searchEl) searchEl.value = '';
-    }
+    // DO NOT load ref_slug into the backend search query string
+    abdsCurrentSearch = '';
+    if (searchEl) searchEl.value = '';
+    window._approvebdsSearchId = null;
 
     document.querySelectorAll('#abdsTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
     var abdsDefaultTab = document.querySelector('#abdsTabBar [data-tab="' + abdsCurrentTab + '"]');
@@ -6815,9 +6810,8 @@ window.notifPanelClick = function(id, type, dataStr) {
   } 
   // 2. Link to approvebds with query parameters
   else if (type === 'property_pending' && nData.property_id) {
-    // Update URL as requested
-    window.history.pushState(null, '', '?search_id=' + nData.property_id + '&tab=pending');
-    window._approvebdsSearchId = nData.property_id;
+    var refVal = nData.slug || nData.property_id;
+    window.history.pushState(null, '', '?ref_slug=' + refVal + '&tab=pending');
     if (typeof openSubpage === 'function') openSubpage('approvebds');
     return;
   }
@@ -7152,7 +7146,6 @@ window.activityApp = function() {
       } else if (notif.type === 'property_pending' && notif.data && notif.data.property_id) {
         var refVal = notif.data.slug || notif.data.property_id;
         window.history.pushState(null, '', '?ref_slug=' + refVal + '&tab=pending');
-        window._approvebdsSearchId = refVal;
         if (typeof openSubpage === 'function') openSubpage('approvebds');
         return;
       }
