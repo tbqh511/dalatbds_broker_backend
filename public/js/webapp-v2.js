@@ -5139,10 +5139,6 @@ function loadMyCustomers(force) {
       if (!res.success) { emptyEl.style.display = ''; return; }
 
       const counts = res.counts || {};
-      setElText('mycustCountNew',    counts.new    ?? 0);
-      setElText('mycustCountCare',   counts.care   ?? 0);
-      setElText('mycustCountDeal',   counts.deal   ?? 0);
-      setElText('mycustCountClosed', counts.closed ?? 0);
 
       setElText('mycustTabAll',       'Tất cả ('     + (counts.all     ?? 0) + ')');
       setElText('mycustTabNew',       'Lead mới ('   + (counts.new     ?? 0) + ')');
@@ -5179,63 +5175,11 @@ function mycustBuildCard(lead) {
   };
   var si = statusMap[lead.status] || statusMap['new'];
 
-  var leadTypeLabel = lead.lead_type === 'buy' ? 'Cần mua' : 'Cần thuê';
-
-  // Lead flow stepper
-  var stepByStatus = { 'new': 1, 'contacted': 2, 'converted': 4, 'lost': 5, 'bad-contact': 2 };
-  var activeStep   = stepByStatus[lead.status] || 1;
-  var isLost       = lead.status === 'lost' || lead.status === 'bad-contact';
-
-  function lfDot(n) {
-    if (!isLost && n < activeStep) return '<div class="lf-dot done">✓</div>';
-    if (n === activeStep)          return '<div class="lf-dot active">' + n + '</div>';
-    return '<div class="lf-dot">' + n + '</div>';
-  }
-  function lfLbl(n, txt) {
-    if (!isLost && n < activeStep) return '<div class="lf-label done">' + txt + '</div>';
-    if (n === activeStep)          return '<div class="lf-label active">' + txt + '</div>';
-    return '<div class="lf-label">' + txt + '</div>';
-  }
-  function lfLine(afterN) {
-    return (!isLost && afterN < activeStep)
-      ? '<div class="lf-line done"></div>'
-      : '<div class="lf-line"></div>';
-  }
-
-  var leadFlow = '<div class="lead-flow">'
-    + '<div class="lf-step">' + lfDot(1) + lfLbl(1, 'Lead mới') + '</div>' + lfLine(1)
-    + '<div class="lf-step">' + lfDot(2) + lfLbl(2, 'Đã liên hệ') + '</div>' + lfLine(2)
-    + '<div class="lf-step">' + lfDot(3) + lfLbl(3, 'Tạo Deal') + '</div>' + lfLine(3)
-    + '<div class="lf-step">' + lfDot(4) + lfLbl(4, 'Chăm sóc') + '</div>' + lfLine(4)
-    + '<div class="lf-step">' + lfDot(5) + lfLbl(5, 'Chốt') + '</div>'
-    + '</div>';
-
   // Phone
   var phoneRaw = (lead.customer_phone || '').replace(/\D/g, '');
   var phoneHref = phoneRaw
     ? 'href="tel:' + escHtml(lead.customer_phone) + '"'
     : 'onclick="showToast(\'Không có số điện thoại\')"';
-
-  // Body rows
-  var bodyHtml = '<div class="cust-row"><span class="cust-row-label">Nhu cầu</span><span class="cust-row-val">' + leadTypeLabel + '</span></div>';
-  if (lead.categories && lead.categories.length) {
-    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Loại BĐS</span><span class="cust-row-val">' + escHtml(lead.categories.join(', ')) + '</span></div>';
-  }
-  if (lead.budget) {
-    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Ngân sách</span><span class="cust-row-val" style="color:var(--success);font-weight:600;">' + escHtml(lead.budget) + '</span></div>';
-  }
-  if (lead.wards && lead.wards.length) {
-    bodyHtml += '<div class="cust-row"><span class="cust-row-label">Khu vực</span><span class="cust-row-val">' + escHtml(lead.wards.join(', ')) + '</span></div>';
-  }
-
-  // Tags
-  var tagsHtml = '';
-  (lead.categories || []).slice(0, 3).forEach(function(c) {
-    tagsHtml += '<span class="cust-tag">' + escHtml(c) + '</span>';
-  });
-  (lead.wards || []).slice(0, 2).forEach(function(w) {
-    tagsHtml += '<span class="cust-tag" style="background:var(--bg-secondary);">' + escHtml(w) + '</span>';
-  });
 
   // Detail panel content
   var detailPanelId = 'mycust-detail-' + lead.id;
@@ -5263,31 +5207,22 @@ function mycustBuildCard(lead) {
     }
   }
 
-  var svgCalendar = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
-  var svgPhone    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var svgPhone = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
 
   return '<div class="cust-card">'
-    + '<div class="cust-header">'
-    +   '<div class="cust-avatar" style="background:var(--primary);">' + escHtml(initials) + '</div>'
-    +   '<div class="cust-info">'
-    +     '<div class="cust-name">' + escHtml(lead.customer_name) + '</div>'
-    +     '<div class="cust-meta">'
-    +       '<span>' + escHtml(lead.customer_phone) + '</span>'
-    +       '<span style="color:var(--text-tertiary);">· ' + escHtml(lead.created_diff) + '</span>'
+    + '<div class="cust-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+    +   '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
+    +     '<div class="cust-avatar" style="background:var(--primary);flex-shrink:0;">' + escHtml(initials) + '</div>'
+    +     '<div class="cust-info">'
+    +       '<div class="cust-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(lead.customer_name) + '</div>'
+    +       '<div class="cust-meta" style="font-size:13px;color:var(--text-muted);">' + escHtml(lead.customer_phone) + '</div>'
     +     '</div>'
     +   '</div>'
     +   '<div class="cust-status-badge"><span class="badge ' + si.cls + '">' + si.label + '</span></div>'
     + '</div>'
-    + '<div class="cust-body">' + bodyHtml
-    +   (tagsHtml ? '<div class="cust-tags">' + tagsHtml + '</div>' : '')
-    + '</div>'
-    + leadFlow
-    + '<div class="cust-footer">'
-    +   '<div class="cust-date">' + svgCalendar + ' Nhận ' + escHtml(lead.created_at) + '</div>'
-    +   '<div class="cust-actions">'
-    +     '<a class="cust-btn" title="Gọi" ' + phoneHref + '>' + svgPhone + '</a>'
-    +     '<div class="cust-btn primary" onclick="toggleCustDetail(\'' + detailPanelId + '\')">▼ Chi tiết</div>'
-    +   '</div>'
+    + '<div class="cust-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;">'
+    +   '<a class="cust-btn" title="Gọi" ' + phoneHref + ' style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--primary);font-size:13px;">' + svgPhone + '</a>'
+    +   '<div class="cust-btn primary" onclick="toggleCustDetail(\'' + detailPanelId + '\')" style="flex:1;padding:8px 12px;border-radius:6px;background:var(--primary);color:#fff;border:none;font-size:13px;cursor:pointer;text-align:center;">▼ Chi tiết</div>'
     + '</div>'
     + '<div class="cust-detail-panel" id="' + detailPanelId + '">' + detailContent + '</div>'
     + '</div>';

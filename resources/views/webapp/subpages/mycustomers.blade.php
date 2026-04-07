@@ -34,13 +34,18 @@
   </div>
 
   <!-- Search bar -->
-  <div class="sp-searchbar">
-    <div class="sp-search-input">
+  <div class="sp-searchbar d-flex justify-content-between align-items-center mb-3">
+    <div class="sp-search-input flex-grow-1 mr-2">
       <span style="display:inline-flex;align-items:center;color:var(--text-tertiary);">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </span>
       <input type="text" id="mycustSearchInput" placeholder="Tên, số điện thoại..." oninput="mycustOnSearchInput(this.value)">
     </div>
+    <button class="sp-filter-btn" style="margin-left: 10px;" onclick="openFilterSheet('filterSheet')">
+      <span style="display:inline-flex;align-items:center;gap:4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </span> Lọc
+    </button>
   </div>
 
   <!-- Status tabs — labels populated by JS -->
