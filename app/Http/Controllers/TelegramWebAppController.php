@@ -3869,18 +3869,28 @@ class TelegramWebAppController extends Controller
         // Build query per tab
         $query = Property::with(['category', 'ward', 'street', 'agent', 'host', 'approvedBy', 'rejectedBy']);
 
-        if ($tab === 'approved_today') {
-            $query->where('status', 1)->whereDate('updated_at', today())->orderByDesc('updated_at');
-        } elseif ($tab === 'approved') {
-            $query->where('status', 1)->orderByDesc('updated_at');
-        } elseif ($tab === 'rejected') {
-            $query->where('status', 2)->orderByDesc('updated_at');
-        } elseif ($tab === 'hidden') {
-            // status=3: BĐS đã bị ẩn bởi admin — không hiển thị công khai
-            $query->where('status', 3)->orderByDesc('updated_at');
+        $refSlug = $request->input('ref_slug');
+
+        if (!empty($refSlug)) {
+            // Khi có ref_slug, chúng ta sẽ bắt đích danh BĐS đó bất kể tab hiện tại là gì
+            $query->where(function ($q) use ($refSlug) {
+                $q->where('slug', $refSlug)
+                  ->orWhere('id', $refSlug);
+            });
         } else {
-            // pending (default): chỉ lấy status=0 (chờ duyệt từ broker)
-            $query->where('status', 0)->orderBy('created_at', 'asc');
+            if ($tab === 'approved_today') {
+                $query->where('status', 1)->whereDate('updated_at', today())->orderByDesc('updated_at');
+            } elseif ($tab === 'approved') {
+                $query->where('status', 1)->orderByDesc('updated_at');
+            } elseif ($tab === 'rejected') {
+                $query->where('status', 2)->orderByDesc('updated_at');
+            } elseif ($tab === 'hidden') {
+                // status=3: BĐS đã bị ẩn bởi admin — không hiển thị công khai
+                $query->where('status', 3)->orderByDesc('updated_at');
+            } else {
+                // pending (default): chỉ lấy status=0 (chờ duyệt từ broker)
+                $query->where('status', 0)->orderBy('created_at', 'asc');
+            }
         }
 
         // Search filter

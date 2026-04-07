@@ -701,6 +701,13 @@ window.loadApprovalBds = function(reset) {
   
   var params = new URLSearchParams();
   params.append('tab', abdsCurrentTab);
+  
+  var sp = new URLSearchParams(window.location.search);
+  var refSlugUrl = sp.get('ref_slug');
+  if(refSlugUrl) {
+    params.append('ref_slug', refSlugUrl);
+  }
+
   if(abdsCurrentSearch) params.append('search', abdsCurrentSearch);
   if(abdsCurrentFilters) {
     Object.keys(abdsCurrentFilters).forEach(key => {
@@ -1128,11 +1135,7 @@ window.clearAbdsSlugFilter = function() {
   var newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
   window.history.replaceState(null, '', newUrl);
   
-  var cards = document.querySelectorAll('#abdsListContainer .abds-card');
-  cards.forEach(function(card) {
-    card.style.display = '';
-    card.style.border = '';
-  });
+  loadApprovalBds(true);
 };
 
 // === Mock functions for future expansion ===
