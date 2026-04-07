@@ -14,9 +14,10 @@
     <div class="ah-grid">
       <div class="ah-stat ah-stat--clickable ah-stat--active" data-tab="pending" onclick="switchAbdsStatTab('pending',this)"><div class="ah-stat-val" id="abdsPendingCount">—</div><div class="ah-stat-lbl">Chờ duyệt</div></div>
       <div class="ah-stat ah-stat--clickable" data-tab="approved_today" onclick="switchAbdsStatTab('approved_today',this)"><div class="ah-stat-val" id="abdsApprovedToday">—</div><div class="ah-stat-lbl">Hôm nay</div></div>
-      {{-- Tab "Đã duyệt" — CHỈ DÀNH CHO ADMIN --}}
+      {{-- Tab "Đã duyệt" và "Đã ẩn" — CHỈ DÀNH CHO ADMIN --}}
       @if(isset($customer) && $customer->role === 'admin')
       <div class="ah-stat ah-stat--clickable" data-tab="approved" onclick="switchAbdsStatTab('approved',this)"><div class="ah-stat-val" id="abdsTotalApproved">—</div><div class="ah-stat-lbl">Đã duyệt</div></div>
+      <div class="ah-stat ah-stat--clickable" data-tab="hidden" onclick="switchAbdsStatTab('hidden',this)"><div class="ah-stat-val" id="abdsHiddenCount">—</div><div class="ah-stat-lbl">Đã ẩn</div></div>
       @endif
       <div class="ah-stat ah-stat--clickable" data-tab="rejected" onclick="switchAbdsStatTab('rejected',this)"><div class="ah-stat-val" id="abdsRejectedCount">—</div><div class="ah-stat-lbl">Từ chối</div></div>
     </div>
@@ -231,7 +232,31 @@ function _abdsResetApprovedFilter() {
 }
 
 /**
- * Ẩn BĐS đã duyệt: hiện confirm dialog, gọi API PATCH để set status=0.
+ * Hàm nội bộ: xoá card khỏi DOM với hiệu ứng fade và cập nhật stat counters.
+ * @param {number} id           - ID của BĐS vừa bị tác động
+ * @param {object} data         - JSON response từ server (có total_approved, total_hidden)
+ */
+function _abdsRemoveCardAndUpdateStats(id, data) {
+  var card = document.getElementById('abds-' + id);
+  if(card) {
+    card.style.transition = 'opacity .3s, transform .3s';
+    card.style.opacity    = '0';
+    card.style.transform  = 'translateX(20px)';
+    setTimeout(function() { if(card.parentNode) card.parentNode.removeChild(card); }, 300);
+  }
+  // Cập nhật cả hai stat: Đã duyệt + Đã ẩn
+  if(typeof data.total_approved !== 'undefined') {
+    var totalEl = document.getElementById('abdsTotalApproved');
+    if(totalEl) totalEl.textContent = data.total_approved;
+  }
+  if(typeof data.total_hidden !== 'undefined') {
+    var hiddenEl = document.getElementById('abdsHiddenCount');
+    if(hiddenEl) hiddenEl.textContent = data.total_hidden;
+  }
+}
+
+/**
+ * Ẩn BĐS đã duyệt (status=1 → status=3).
  * @param {number} id     - ID của BĐS
  * @param {string} title  - Tên BĐS để hiển thị trong confirm
  */
@@ -255,18 +280,44 @@ window.hideAbds = function(id, title) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if(data.success) {
-        // Xoá card khỏi DOM với hiệu ứng fade
-        var card = document.getElementById('abds-' + id);
-        if(card) {
-          card.style.transition = 'opacity .3s, transform .3s';
-          card.style.opacity    = '0';
-          card.style.transform  = 'translateX(20px)';
-          setTimeout(function() { if(card.parentNode) card.parentNode.removeChild(card); }, 300);
-        }
-        // Giảm số đếm "Đã duyệt" trên stat hero
-        var totalEl = document.getElementById('abdsTotalApproved');
-        if(totalEl) totalEl.textContent = Math.max(0, (parseInt(totalEl.textContent, 10) || 1) - 1);
+        _abdsRemoveCardAndUpdateStats(id, data);
         if(typeof showToast === 'function') showToast('BĐS đã được ẩn thành công', 'success');
+      } else {
+        if(typeof showToast === 'function') showToast(data.message || 'Có lỗi xảy ra', 'error');
+      }
+    })
+    .catch(function() {
+      if(typeof showToast === 'function') showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
+    });
+};
+
+/**
+ * Khôi phục BĐS đã ẩn (status=3 → status=1) về trạng thái đã duyệt.
+ * @param {number} id     - ID của BĐS
+ * @param {string} title  - Tên BĐS để hiển thị trong confirm
+ */
+window.restoreAbds = function(id, title) {
+  if(!confirm('Khôi phục BĐS này về trạng thái "Đã duyệt"?\n\n"' + (title || 'BĐS') + '"')) return;
+
+  var cfg  = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var url  = cfg && cfg.adminPropertiesBase ? cfg.adminPropertiesBase + id + '/restore' : null;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  if(!url || !csrf) { if(typeof showToast === 'function') showToast('Lỗi cấu hình', 'error'); return; }
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify({}),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if(data.success) {
+        _abdsRemoveCardAndUpdateStats(id, data);
+        if(typeof showToast === 'function') showToast('BĐS đã được khôi phục thành công', 'success');
       } else {
         if(typeof showToast === 'function') showToast(data.message || 'Có lỗi xảy ra', 'error');
       }

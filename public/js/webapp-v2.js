@@ -649,12 +649,12 @@ window.switchAbdsStatTab = function(tab, statEl) {
   });
   if(statEl) statEl.classList.add('ah-stat--active');
 
-  // Hiển thị/ẩn filter bar: chỉ xuất hiện khi đang ở tab "approved"
+  // Hiển thị/ẩn filter bar: chỉ xuất hiện khi đang ở tab "approved" hoặc "hidden"
   var filterBar = document.getElementById('abdsApprovedFilter');
-  if(filterBar) filterBar.style.display = (tab === 'approved') ? 'block' : 'none';
+  if(filterBar) filterBar.style.display = (tab === 'approved' || tab === 'hidden') ? 'block' : 'none';
 
-  // Reset bộ lọc khi rời khỏi tab "approved"
-  if(tab !== 'approved' && typeof _abdsResetApprovedFilter === 'function') {
+  // Reset bộ lọc khi rời khỏi cả hai tab có filter
+  if(tab !== 'approved' && tab !== 'hidden' && typeof _abdsResetApprovedFilter === 'function') {
     _abdsResetApprovedFilter();
   }
 
@@ -690,7 +690,7 @@ window.loadApprovalBds = function(reset) {
         return;
       }
       var s = data.stats || {};
-      // Update hero stats
+      // Cập nhật các chỉ số thống kê trên hero
       var heroMain = document.getElementById('abdsHeroMain');
       if(heroMain) heroMain.textContent = (s.pending || 0) + ' BĐS chờ xem xét';
       var elPending = document.getElementById('abdsPendingCount');
@@ -701,6 +701,9 @@ window.loadApprovalBds = function(reset) {
       if(elTotal) elTotal.textContent = s.total_approved || 0;
       var elRejected = document.getElementById('abdsRejectedCount');
       if(elRejected) elRejected.textContent = s.rejected || 0;
+      // Cập nhật số BĐS đã ẩn (status=3)
+      var elHidden = document.getElementById('abdsHiddenCount');
+      if(elHidden) elHidden.textContent = s.hidden || 0;
 
       // Highlight active stat tab
       document.querySelectorAll('.admin-hero .ah-stat--clickable').forEach(function(s) {
@@ -719,8 +722,8 @@ window.loadApprovalBds = function(reset) {
       var html = '';
       props.forEach(function(p) { html += _renderAbdsCard(p); });
       container.innerHTML = html;
-      // Áp dụng filter nếu đang ở tab "approved"
-      if(abdsCurrentTab === 'approved' && typeof abdsApprovedFilterApply === 'function') {
+      // Áp dụng filter nếu đang ở tab có thanh tìm kiếm (approved / hidden)
+      if((abdsCurrentTab === 'approved' || abdsCurrentTab === 'hidden') && typeof abdsApprovedFilterApply === 'function') {
         abdsApprovedFilterApply();
       }
     })
@@ -895,6 +898,20 @@ function _renderAbdsCard(p) {
       + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
       + ' Ẩn</button>'
       // Nút "Đối tượng liên quan" — mở modal broker/chủ nhà
+      + '<button class="abds-btn" style="background:var(--primary-light,#eff6ff);color:var(--primary);border:none;"'
+      + ' onclick="event.stopPropagation();openAbdsRelatedModal(' + p.id + ')">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+      + ' Liên quan</button>';
+  } else if(abdsCurrentTab === 'hidden') {
+    // --- Tab "Đã ẩn" (Admin only): Xem + Khôi phục về đã duyệt + Đối tượng liên quan ---
+    var safeTitleHidden = (p.title || 'BĐS').replace(/['"\\\r\n]/g, ' ');
+    actionBtns = viewBtn
+      // Nút "Khôi phục" — đưa BĐS về trạng thái đã duyệt (status=1)
+      + '<button class="abds-btn approve"'
+      + ' onclick="event.stopPropagation();restoreAbds(' + p.id + ',\'' + safeTitleHidden + '\')">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>'
+      + ' Khôi phục</button>'
+      // Nút "Đối tượng liên quan"
       + '<button class="abds-btn" style="background:var(--primary-light,#eff6ff);color:var(--primary);border:none;"'
       + ' onclick="event.stopPropagation();openAbdsRelatedModal(' + p.id + ')">'
       + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'

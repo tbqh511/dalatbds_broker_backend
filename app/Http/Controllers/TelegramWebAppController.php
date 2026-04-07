@@ -3781,12 +3781,14 @@ class TelegramWebAppController extends Controller
         $approvedTodayCount = Property::where('status', 1)->whereDate('updated_at', today())->count();
         $totalApproved      = Property::where('status', 1)->count();
         $rejectedCount      = Property::where('status', 2)->count();
+        $hiddenCount        = Property::where('status', 3)->count();
 
         $stats = [
             'pending'        => $pendingCount,
             'approved_today' => $approvedTodayCount,
             'total_approved' => $totalApproved,
             'rejected'       => $rejectedCount,
+            'hidden'         => $hiddenCount,
         ];
 
         // Build query per tab
@@ -3798,8 +3800,11 @@ class TelegramWebAppController extends Controller
             $query->where('status', 1)->orderByDesc('updated_at');
         } elseif ($tab === 'rejected') {
             $query->where('status', 2)->orderByDesc('updated_at');
+        } elseif ($tab === 'hidden') {
+            // status=3: BĐS đã bị ẩn bởi admin — không hiển thị công khai
+            $query->where('status', 3)->orderByDesc('updated_at');
         } else {
-            // pending (default)
+            // pending (default): chỉ lấy status=0 (chờ duyệt từ broker)
             $query->where('status', 0)->orderBy('created_at', 'asc');
         }
 
@@ -4126,19 +4131,49 @@ class TelegramWebAppController extends Controller
                 ], 422);
             }
 
-            $property->update([
-                'status'      => 0,
-                'approved_by' => null,
-                'approved_at' => null,
-            ]);
+            // status=3: trạng thái "Đã ẩn" — tách biệt hẳn khỏi status=0 (chờ duyệt)
+            $property->update(['status' => 3]);
 
             return response()->json([
-                'success'       => true,
-                'message'       => 'BĐS đã được ẩn thành công.',
+                'success'        => true,
+                'message'        => 'BĐS đã được ẩn thành công.',
                 'total_approved' => Property::where('status', 1)->count(),
+                'total_hidden'   => Property::where('status', 3)->count(),
             ]);
         } catch (\Exception $e) {
             Log::error('adminHideProperty error: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    /**
+     * Khôi phục BĐS đã ẩn (status=3) về trạng thái đã duyệt (status=1).
+     * Chỉ dành cho admin.
+     */
+    public function adminRestoreProperty(int $id): JsonResponse
+    {
+        try {
+            $property = Property::findOrFail($id);
+
+            if ($property->status !== 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'BĐS này không ở trạng thái đã ẩn.',
+                ], 422);
+            }
+
+            // Khôi phục về trạng thái đã duyệt
+            $property->update(['status' => 1]);
+
+            return response()->json([
+                'success'        => true,
+                'message'        => 'BĐS đã được khôi phục thành công.',
+                'total_approved' => Property::where('status', 1)->count(),
+                'total_hidden'   => Property::where('status', 3)->count(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('adminRestoreProperty error: '.$e->getMessage());
 
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
         }
