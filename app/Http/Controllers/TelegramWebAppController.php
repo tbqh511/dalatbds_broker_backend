@@ -3795,24 +3795,7 @@ class TelegramWebAppController extends Controller
         if ($tab === 'approved_today') {
             $query->where('status', 1)->whereDate('updated_at', today())->orderByDesc('updated_at');
         } elseif ($tab === 'approved') {
-            $query->where('status', 1);
-            // Bộ lọc cho tab "Đã duyệt" (chỉ áp dụng khi tab này active)
-            if ($request->filled('property_type')) {
-                $query->where('property_type', (int) $request->input('property_type'));
-            }
-            if ($request->filled('price_range')) {
-                [$prMin, $prMax] = self::parsePriceRange($request->input('price_range'));
-                if ($prMin !== null) {
-                    $query->where('price', '>=', $prMin);
-                }
-                if ($prMax !== null) {
-                    $query->where('price', '<=', $prMax);
-                }
-            }
-            if ($request->filled('ward_id')) {
-                $query->where('ward_id', $request->input('ward_id'));
-            }
-            $query->orderByDesc('updated_at');
+            $query->where('status', 1)->orderByDesc('updated_at');
         } elseif ($tab === 'rejected') {
             $query->where('status', 2)->orderByDesc('updated_at');
         } else {
@@ -4124,63 +4107,6 @@ class TelegramWebAppController extends Controller
 
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
         }
-    }
-
-    public function adminHideProperty(int $id): JsonResponse
-    {
-        try {
-            $property = Property::with('agent')->findOrFail($id);
-
-            // Chỉ ẩn được BĐS đang ở trạng thái đã duyệt (status=1)
-            if ($property->status !== 1) {
-                return response()->json(['success' => false, 'message' => 'BĐS không ở trạng thái đã duyệt.'], 422);
-            }
-
-            $property->update([
-                'status'      => 0, // Chuyển về pending (ẩn khỏi public, chờ duyệt lại)
-                'approved_by' => null,
-                'approved_at' => null,
-            ]);
-
-            // Thông báo cho broker qua Telegram (nếu có)
-            $broker = $property->agent;
-            if ($broker && $broker->telegram_id) {
-                $title = $property->title ?? 'BĐS';
-                $message = "⚠️ *TIN BĐS ĐÃ BỊ TẠM ẨN*\n"
-                    ."────────────────\n"
-                    ."🏠 {$title}\n"
-                    .'💡 Admin đã tạm ẩn tin này. Vui lòng liên hệ Admin để biết thêm chi tiết.';
-                app(NotificationService::class)->sendToCustomer($broker, $message);
-            }
-
-            return response()->json([
-                'success'       => true,
-                'message'       => 'Đã ẩn BĐS — chuyển về hàng chờ duyệt.',
-                'total_approved' => Property::where('status', 1)->count(),
-                'pending_count'  => Property::where('status', 0)->count(),
-            ]);
-        } catch (\Exception $e) {
-            Log::error('adminHideProperty error: '.$e->getMessage());
-
-            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
-        }
-    }
-
-    /**
-     * Chuyển chuỗi price_range thành cặp [min, max] (VNĐ).
-     * Dùng để lọc BĐS theo khoảng giá trong tab "Đã duyệt".
-     */
-    private static function parsePriceRange(string $range): array
-    {
-        return match ($range) {
-            'under1b' => [null, 1_000_000_000],
-            '1to2b'   => [1_000_000_000, 2_000_000_000],
-            '2to3b'   => [2_000_000_000, 3_000_000_000],
-            '3to5b'   => [3_000_000_000, 5_000_000_000],
-            '5to10b'  => [5_000_000_000, 10_000_000_000],
-            'over10b' => [10_000_000_000, null],
-            default   => [null, null],
-        };
     }
 
     // ─── Admin Commission Approval API ───────────────────────────────────────
