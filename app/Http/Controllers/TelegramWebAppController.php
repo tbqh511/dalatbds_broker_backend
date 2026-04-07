@@ -1790,6 +1790,13 @@ class TelegramWebAppController extends Controller
     public function apiGetBookings(Request $request)
     {
         $customer = Auth::guard('webapp')->user();
+        if (! $customer) {
+            return response()->json([
+                'success' => true,
+                'bookings' => [],
+                'stats' => ['today' => 0, 'this_week' => 0, 'needs_update' => 0, 'this_month' => 0],
+            ]);
+        }
 
         $bookings = CrmDealProductBooking::whereHas('crmDealProduct.deal.lead', function ($q) use ($customer) {
             $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
@@ -3966,23 +3973,44 @@ class TelegramWebAppController extends Controller
                 );
             }
 
-            // In-app notification to broker — dùng notifyDirect để luôn gửi, bỏ qua preference check
+            // Update existing property_submitted notification instead of creating new one (avoid spam)
             if ($broker) {
-                app(InAppNotificationService::class)->notifyDirect($broker, 'property_approved', 'property', [
-                    'title' => 'BĐS của bạn đã được duyệt!',
+                $inApp = app(InAppNotificationService::class);
+                $updated = $inApp->updatePropertyNotification($property->id, $broker->id, [
+                    'title' => 'Đăng tin thành công — Đã duyệt',
                     'body'  => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
-                    'notifiable_type' => Property::class,
-                    'notifiable_id'   => $property->id,
-                    'actor_id'        => $approver->id,
-                    'data' => [
-                        'property_id'      => $property->id,
-                        'title'            => $property->title,
-                        'slug'             => $property->slug,
+                    'type'  => 'property_approved',
+                    'data'  => [
+                        'status'           => 1,
+                        'status_label'     => 'Đã duyệt',
                         'approved_by_id'   => $approver->id,
                         'approved_by_name' => $approver->name,
                         'approved_at'      => now()->format('d/m/Y H:i'),
+                        'property_url'     => url('/bat-dong-san/' . $property->slug),
                     ],
                 ]);
+
+                // Fallback: nếu không tìm thấy record cũ, tạo mới
+                if (!$updated) {
+                    $inApp->notifyDirect($broker, 'property_approved', 'property', [
+                        'title' => 'Đăng tin thành công — Đã duyệt',
+                        'body'  => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
+                        'notifiable_type' => Property::class,
+                        'notifiable_id'   => $property->id,
+                        'actor_id'        => $approver->id,
+                        'data' => [
+                            'property_id'      => $property->id,
+                            'title'            => $property->title,
+                            'slug'             => $property->slug,
+                            'status'           => 1,
+                            'status_label'     => 'Đã duyệt',
+                            'approved_by_id'   => $approver->id,
+                            'approved_by_name' => $approver->name,
+                            'approved_at'      => now()->format('d/m/Y H:i'),
+                            'property_url'     => url('/bat-dong-san/' . $property->slug),
+                        ],
+                    ]);
+                }
             }
 
             return response()->json([

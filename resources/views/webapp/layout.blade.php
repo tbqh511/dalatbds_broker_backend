@@ -52,7 +52,9 @@
   {{-- Detail page (slide-in overlay) --}}
   @include('webapp.detail.property-detail')
 
-  {{-- Subpages (slide-in overlays) --}}
+  {{-- Subpages (slide-in overlays) — chỉ render khi đã xác thực để tránh Alpine.js
+       gọi API trong lúc auth retry loop (user chưa đăng nhập, $customer = null) --}}
+  @if($customer)
   @include('webapp.subpages.mybds')
   @include('webapp.subpages.mycustomers')
   @include('webapp.subpages.leads')
@@ -73,6 +75,7 @@
   @include('webapp.subpages.activitylog')
   @include('webapp.subpages.likedbds')
   @include('webapp.subpages.reviews')
+  @endif
 
   {{-- GUEST DIALOG — no-account prompt --}}
   <div class="guest-dialog-overlay" id="guestDialogOverlay">
@@ -283,6 +286,11 @@
     if (_phoneShared && _loginRetry < 5) {
       // Vừa share SĐT → bot có thể chưa kịp xử lý webhook → retry sau 4 giây
       // Tổng window: 8s (initial) + 5×4s = 28s — đủ cho Telegram webhook delivery
+      var _ov = document.getElementById('auth-loading-overlay');
+      if (_ov) {
+        var _ovP = _ov.querySelector('p');
+        if (_ovP) _ovP.textContent = 'Đang tạo tài khoản... (' + (_loginRetry + 1) + '/5)';
+      }
       setTimeout(function() { submitAuthForm(_loginRetry + 1); }, 4000);
     } else {
       // Lần đầu mở (chưa share SĐT) HOẶC hết retry → hiện guest dialog ngay

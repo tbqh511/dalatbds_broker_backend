@@ -85,6 +85,37 @@ class InAppNotificationService
     }
 
     /**
+     * Update the existing property_submitted notification when property is approved/rejected.
+     * Instead of creating a new record, update the old one to avoid spam.
+     */
+    public function updatePropertyNotification(int $propertyId, int $brokerId, array $updateData): bool
+    {
+        $notification = InAppNotification::where('customer_id', $brokerId)
+            ->where('type', 'property_submitted')
+            ->whereJsonContains('data->property_id', $propertyId)
+            ->latest()
+            ->first();
+
+        if (!$notification) {
+            return false;
+        }
+
+        $notification->update([
+            'title'   => $updateData['title'],
+            'body'    => $updateData['body'] ?? $notification->body,
+            'type'    => $updateData['type'] ?? $notification->type,
+            'read_at' => null, // Reset read status to show as unread again
+            'data'    => array_merge($notification->data ?? [], $updateData['data'] ?? []),
+        ]);
+
+        // Broadcast lại để client nhận real-time update
+        $unreadCount = $this->unreadCount($brokerId);
+        event(new \App\Events\NewInAppNotification($notification->fresh(), $unreadCount));
+
+        return true;
+    }
+
+    /**
      * Notify multiple customers.
      */
     public function notifyMany(Collection $recipients, string $type, string $category, string $settingsKey, array $payload): int

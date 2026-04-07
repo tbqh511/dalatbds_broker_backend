@@ -6715,7 +6715,7 @@ window.activityApp = function() {
       { label: 'Xem tin đăng', primary: true, icon: 'eye', action: 'view_property' }
     ],
     property_approved: [
-      { label: 'Xem tin', primary: true, icon: 'eye', subpage: 'mybds' }
+      { label: 'Xem tin đăng', primary: true, icon: 'eye', action: 'open_url' }
     ],
     property_rejected: [
       { label: 'Xem tin', primary: true, icon: 'eye', subpage: 'mybds' }
@@ -6828,12 +6828,15 @@ window.activityApp = function() {
         var shouldShow = !tabDef.categories || tabDef.categories.indexOf(notif.category) !== -1;
 
         if (shouldShow) {
-          // Avoid duplicates
-          var exists = false;
+          // Check if this notification already exists (updated in-place)
+          var existingIndex = -1;
           for (var i = 0; i < self.notifications.length; i++) {
-            if (self.notifications[i].id === notif.id) { exists = true; break; }
+            if (self.notifications[i].id === notif.id) { existingIndex = i; break; }
           }
-          if (!exists) {
+          if (existingIndex >= 0) {
+            // Replace in-place (notification was updated, not new)
+            self.notifications.splice(existingIndex, 1, notif);
+          } else {
             self.notifications.unshift(notif);
           }
         }
