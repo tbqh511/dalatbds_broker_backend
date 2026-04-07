@@ -6204,44 +6204,98 @@ window.loadUsers = function(reset) {
 };
 
 function renderUserCard(u, tab) {
+  var roleBadge = getRoleBadge(u.role);
   var initials = u.initials || u.name.slice(0, 2).toUpperCase();
-  // Avatar component
-  var avatarStyles = 'width:45px; height:45px; background-color:' + (u.avatar_color || '#3b82f6') + '; flex-shrink:0; border-radius:50%;';
-  var avatar = '<div class="d-flex align-items-center justify-content-center text-white fw-bold" style="' + avatarStyles + '">' + escHtml(initials) + '</div>';
-  
-  // Cột Trái (Avatar + Text)
-  var leftCol = '<div class="d-flex align-items-center gap-3">'
-              + avatar
-              + '<div class="d-flex flex-column">'
-              + '<span class="fw-bold mb-0 text-dark" style="font-size:15px;">' + escHtml(u.name) + '</span>'
-              + (u.mobile ? '<small class="text-muted mb-0">' + escHtml(u.mobile) + '</small>' : '')
-              + '</div>'
-              + '</div>';
+  var avatar = '<div class="uc-avatar" style="background:' + (u.avatar_color || '#3b82f6') + ';">' + initials + '</div>';
 
-  var threeDotAction = '<button onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" style="background:none;border:none;padding:6px;color:var(--text-tertiary);" title="Phân quyền">'
-                     + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>'
-                     + '</button>';
-
-  // Cột Phải: Hành động tùy theo tab
-  var actions = '';
   if (tab === 'pending') {
-    actions = '<button class="btn btn-sm btn-light text-danger me-1" style="padding:4px 8px; font-size:12px;" onclick="rejectUser(' + u.id + ',\'' + escHtml(u.name) + '\')">✕</button>'
-            + '<button class="btn btn-sm btn-primary" style="padding:4px 8px; font-size:12px;" onclick="approveUser(' + u.id + ',\'' + escHtml(u.name) + '\')">✓ Duyệt</button>'
-            + threeDotAction;
-  } else if (tab === 'broker' || tab === 'sale') {
-    actions = '<button class="btn btn-sm btn-light text-danger me-1" style="padding:4px 8px; font-size:12px;" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')">Khoá</button>'
-            + threeDotAction;
-  } else if (tab === 'locked') {
-    actions = '<button class="btn btn-sm btn-light text-success me-1" style="padding:4px 8px; font-size:12px;" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')">Mở khoá</button>'
-            + '<button class="btn btn-sm btn-danger me-1" style="padding:4px 8px; font-size:12px;" onclick="deleteUserConfirm(' + u.id + ',\'' + escHtml(u.name) + '\')">Xoá</button>'
-            + threeDotAction;
+    return '<div class="user-card" id="uc-' + u.id + '">'
+      + '<div class="uc-head">'
+      + avatar
+      + '<div class="uc-info">'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta">'
+      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
+      + (u.email ? '<span>✉ ' + escHtml(u.email) + '</span>' : '')
+      + '<span style="color:var(--warning);font-weight:600;">' + escHtml(u.created_at_human) + '</span>'
+      + '</div></div>'
+      + '<span class="badge badge-amber">⏳ Chờ duyệt</span>'
+      + '</div>'
+      + '<div class="uc-body">'
+      + '<div class="uc-row"><span class="uc-label">Xin đăng ký</span><span class="uc-value">eBroker</span></div>'
+      + '<div class="uc-row"><span class="uc-label">BĐS đã đăng</span><span class="uc-value">' + u.property_count + ' tin</span></div>'
+      + '</div>'
+      + '<div class="uc-actions">'
+      + '<button class="uc-btn reject" onclick="rejectUser(' + u.id + ',\'' + escHtml(u.name) + '\')">✕ Từ chối</button>'
+      + '<button class="uc-btn warn" onclick="approveTempUser(' + u.id + ',\'' + escHtml(u.name) + '\')">⏳ Duyệt tạm</button>'
+      + '<button class="uc-btn" style="background:var(--primary);color:#fff;" onclick="approveUser(' + u.id + ',\'' + escHtml(u.name) + '\')">✓ Duyệt</button>'
+      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" title="Phân quyền"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Phân quyền</span></button>'
+      + '</div>'
+      + '</div>';
   }
 
-  // Wrapper flexbox
-  return '<div class="d-flex align-items-center justify-content-between border-bottom py-3" id="uc-' + u.id + '">'
-       + leftCol
-       + '<div class="d-flex align-items-center">' + actions + '</div>'
-       + '</div>';
+  if (tab === 'broker') {
+    return '<div class="user-card" id="uc-' + u.id + '">'
+      + '<div class="uc-head">'
+      + avatar
+      + '<div class="uc-info">'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta">'
+      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
+      + (u.email ? '<span>✉ ' + escHtml(u.email) + '</span>' : '')
+      + '</div></div>'
+      + roleBadge
+      + '</div>'
+      + '<div class="uc-stats">'
+      + '<div class="uc-stat"><div class="uc-stat-val">' + u.property_count + '</div><div class="uc-stat-lbl">BĐS đăng</div></div>'
+      + '</div>'
+      + '<div class="uc-actions">'
+      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Khoá</span></button>'
+      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Phân quyền</span></button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  if (tab === 'sale') {
+    return '<div class="user-card" id="uc-' + u.id + '">'
+      + '<div class="uc-head">'
+      + avatar
+      + '<div class="uc-info">'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta">'
+      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
+      + (u.email ? '<span>✉ ' + escHtml(u.email) + '</span>' : '')
+      + '</div></div>'
+      + roleBadge
+      + '</div>'
+      + '<div class="uc-actions">'
+      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Khoá</span></button>'
+      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Phân quyền</span></button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  if (tab === 'locked') {
+    return '<div class="user-card" id="uc-' + u.id + '" style="opacity:.8;border-color:var(--danger);">'
+      + '<div class="uc-head">'
+      + '<div class="uc-avatar" style="background:#6b7280;">' + initials + '</div>'
+      + '<div class="uc-info">'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-meta">'
+      + (u.mobile ? '<span>📞 ' + escHtml(u.mobile) + '</span>' : '')
+      + '<span style="color:var(--danger);font-weight:600;display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Bị khoá</span>'
+      + '</div></div>'
+      + '<span class="badge badge-red"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Khoá</span>'
+      + '</div>'
+      + '<div class="uc-actions">'
+      + '<button class="uc-btn approve" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Mở khoá</span></button>'
+      + '<button class="uc-btn danger" onclick="deleteUserConfirm(' + u.id + ',\'' + escHtml(u.name) + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Xoá</span></button>'
+      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')"><span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Phân quyền</span></button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  return '';
 }
 
 function getRoleBadge(role) {

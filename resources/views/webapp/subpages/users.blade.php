@@ -8,7 +8,16 @@
       </div>
     </div>
 
-
+    <div class="admin-hero blue-grad">
+      <div class="ah-label">NGƯỜI DÙNG HỆ THỐNG</div>
+      <div class="ah-main"><span id="usersActiveCount">—</span> tài khoản active</div>
+      <div class="ah-grid">
+        <div class="ah-stat"><div class="ah-stat-val" style="color:#fde68a;" id="usersPendingCount">—</div><div class="ah-stat-lbl">Chờ duyệt</div></div>
+        <div class="ah-stat"><div class="ah-stat-val" id="usersBrokerCount">—</div><div class="ah-stat-lbl">eBroker</div></div>
+        <div class="ah-stat"><div class="ah-stat-val" id="usersSaleCount">—</div><div class="ah-stat-lbl">Sale</div></div>
+        <div class="ah-stat"><div class="ah-stat-val" id="usersLockedCount">—</div><div class="ah-stat-lbl">Bị khoá</div></div>
+      </div>
+    </div>
 
     <div class="sp-searchbar" style="padding:10px 14px;">
       <div class="sp-search-input">
