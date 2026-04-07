@@ -10,27 +10,12 @@
       </div>
     </div>
 
-    <!-- Minimalist Status Bar: Thay thế banner anh hùng bằng inline stats -->
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-size:12px;">
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <div style="font-weight:600;font-size:16px;color:var(--text-primary);" id="usersActiveCount">—</div>
-          <div style="color:var(--text-tertiary);font-size:11px;">Active</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <div style="font-weight:600;font-size:16px;color:var(--primary);" id="usersPendingCount">—</div>
-          <div style="color:var(--text-tertiary);font-size:11px;">Chờ duyệt</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <div style="font-weight:600;font-size:16px;color:var(--text-primary);" id="usersBrokerCount">—</div>
-          <div style="color:var(--text-tertiary);font-size:11px;">eBroker</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <div style="font-weight:600;font-size:16px;color:var(--text-primary);" id="usersLockedCount">—</div>
-          <div style="color:var(--text-tertiary);font-size:11px;">Khoá</div>
-        </div>
-      </div>
-    </div>
+    <!-- Minimalist Status Bar: HIDDEN -->
+    <!-- Stats are still updated via JS but not displayed -->
+    <div id="usersActiveCount" style="display:none;">—</div>
+    <div id="usersPendingCount" style="display:none;">—</div>
+    <div id="usersBrokerCount" style="display:none;">—</div>
+    <div id="usersLockedCount" style="display:none;">—</div>
 
     <!-- Search Bar: Thiết kế phẳng, tối giản -->
     <div class="sp-searchbar" style="padding:12px 16px;border-bottom:1px solid var(--border);">
