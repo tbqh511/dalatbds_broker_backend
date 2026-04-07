@@ -8,39 +8,37 @@
     </div>
   </div>
 
-  <div class="admin-hero blue-grad">
-    <div class="ah-main"><span id="abdsHeroMain">— BĐS chờ xem xét</span></div>
-    <div class="ah-grid">
-      <div class="ah-stat ah-stat--clickable ah-stat--active" data-tab="pending" onclick="switchAbdsStatTab('pending',this)"><div class="ah-stat-val" id="abdsPendingCount">—</div><div class="ah-stat-lbl">Chờ duyệt</div></div>
-      {{-- Tab "Đã duyệt" và "Đã ẩn" — CHỈ DÀNH CHO ADMIN --}}
-      @if(isset($customer) && $customer->role === 'admin')
-      <div class="ah-stat ah-stat--clickable" data-tab="approved" onclick="switchAbdsStatTab('approved',this)"><div class="ah-stat-val" id="abdsTotalApproved">—</div><div class="ah-stat-lbl">Đã duyệt</div></div>
-      <div class="ah-stat ah-stat--clickable" data-tab="hidden" onclick="switchAbdsStatTab('hidden',this)"><div class="ah-stat-val" id="abdsHiddenCount">—</div><div class="ah-stat-lbl">Đã ẩn</div></div>
-      @endif
-      <div class="ah-stat ah-stat--clickable" data-tab="rejected" onclick="switchAbdsStatTab('rejected',this)"><div class="ah-stat-val" id="abdsRejectedCount">—</div><div class="ah-stat-lbl">Từ chối</div></div>
-    </div>
+  @php
+      $adminStats = [];
+      if(isset($customer) && $customer->role === 'admin') {
+          $adminStats = [
+              ['id' => 'abdsTotalApproved', 'color' => 'var(--success)', 'label' => 'Đã duyệt'],
+              ['id' => 'abdsHiddenCount', 'color' => 'var(--text-tertiary)', 'label' => 'Đã ẩn'],
+          ];
+      }
+      $statsArray = array_merge([
+          ['id' => 'abdsPendingCount', 'color' => 'var(--warning)', 'label' => 'Chờ duyệt']
+      ], $adminStats, [
+          ['id' => 'abdsRejectedCount', 'color' => 'var(--error, #ef4444)', 'label' => 'Từ chối']
+      ]);
+  @endphp
+  @include('webapp.partials.stats-header', [
+      'stats' => $statsArray,
+      'searchInputId' => 'abdsApprovedSearch',
+      'searchPlaceholder' => 'Tìm BĐS, địa chỉ, môi giới...',
+      'onSearchInput' => 'abdsOnSearchInput',
+      'filterSheetId' => 'abdsAdvancedFilter'
+  ])
+
+  <!-- Status tabs -->
+  <div class="sp-tabs">
+    <button class="sp-tab active" id="abdsTabPending"  onclick="switchAbdsStatTab('pending',this)">Chờ duyệt</button>
+    @if(isset($customer) && $customer->role === 'admin')
+    <button class="sp-tab"        id="abdsTabApproved" onclick="switchAbdsStatTab('approved',this)">Đã duyệt</button>
+    <button class="sp-tab"        id="abdsTabHidden"   onclick="switchAbdsStatTab('hidden',this)">Đã ẩn</button>
+    @endif
+    <button class="sp-tab"        id="abdsTabRejected" onclick="switchAbdsStatTab('rejected',this)">Từ chối</button>
   </div>
-
-  {{-- ===== FILTER BAR CHO TAB "ĐÃ DUYỆT" — CHỈ ADMIN ===== --}}
-  @if(isset($customer) && $customer->role === 'admin')
-  <div id="abdsApprovedFilter" style="display:none;background:var(--bg-primary,#fff);border-bottom:1px solid var(--border,#e5e7eb);">
-
-    {{-- Thanh tìm kiếm --}}
-    <div style="padding:10px 12px 6px;display:flex;align-items:center;gap:8px;">
-      <div style="flex:1;display:flex;align-items:center;gap:8px;background:var(--bg-secondary,#f3f4f6);border-radius:10px;padding:7px 12px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-tertiary);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="abdsApprovedSearch" type="text" placeholder="Tìm BĐS, địa chỉ, môi giới..."
-          style="border:none;background:none;outline:none;flex:1;font-size:13px;color:var(--text-primary);"
-          oninput="abdsApprovedFilterApply()" />
-        <button onclick="document.getElementById('abdsApprovedSearch').value='';abdsApprovedFilterApply();"
-          style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:0;line-height:1;flex-shrink:0;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-    </div>
-
-  </div>
-  @endif
 
   <div class="sp-scroll" style="padding-bottom:16px;">
     <div id="abdsListContainer"></div>
@@ -115,6 +113,11 @@
       <button class="rs-submit" onclick="submitReject()">Gửi yêu cầu bổ sung → Broker</button>
     </div>
   </div>
+  <!-- Advanced filter -->
+  @include('webapp.partials.property-filter', [
+      'id' => 'abdsAdvancedFilter',
+      'onApply' => 'applyFilterSheet(\'abdsAdvancedFilter\')'
+  ])
 </div><!-- end subpage-approvebds -->
 
 @if(isset($customer) && $customer->role === 'admin')

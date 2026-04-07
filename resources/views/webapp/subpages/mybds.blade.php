@@ -9,39 +9,18 @@
     </div>
   </div>
 
-  <!-- Summary strip -->
-  <div class="sp-summary">
-    <div class="sp-sum-item">
-      <div class="sp-sum-val" id="mybdsCountActive" style="color:var(--success);">—</div>
-      <div class="sp-sum-lbl">Đang hiển thị</div>
-    </div>
-    <div class="sp-sum-item">
-      <div class="sp-sum-val" id="mybdsCountPending" style="color:var(--warning);">—</div>
-      <div class="sp-sum-lbl">Chờ duyệt</div>
-    </div>
-    <div class="sp-sum-item">
-      <div class="sp-sum-val" id="mybdsCountHidden" style="color:var(--text-tertiary);">—</div>
-      <div class="sp-sum-lbl">Đã ẩn</div>
-    </div>
-    <div class="sp-sum-item">
-      <div class="sp-sum-val" id="mybdsTotalViews">—</div>
-      <div class="sp-sum-lbl">Tổng lượt xem</div>
-    </div>
-  </div>
-
-  <!-- Search bar -->
-  <div class="sp-searchbar">
-    <div class="sp-search-input">
-      <span style="display:inline-flex;align-items:center;color:var(--text-tertiary);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg></span>
-      <input type="text" id="mybdsSearchInput" placeholder="Tìm theo tiêu đề, địa chỉ..." oninput="mybdsOnSearchInput(this.value)">
-    </div>
-    <button class="sp-filter-btn" onclick="openFilterSheet('mybdsAdvancedFilter')">
-      <span style="display:inline-flex;align-items:center;gap:4px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M16.24 7.76a6 6 0 0 1 0 8.49M4.93 4.93a10 10 0 0 0 0 14.14M7.76 7.76a6 6 0 0 0 0 8.49"/></svg>
-        Lọc
-      </span>
-    </button>
-  </div>
+  @include('webapp.partials.stats-header', [
+      'stats' => [
+          ['id' => 'mybdsCountActive', 'color' => 'var(--success)', 'label' => 'Đang hiển thị'],
+          ['id' => 'mybdsCountPending', 'color' => 'var(--warning)', 'label' => 'Chờ duyệt'],
+          ['id' => 'mybdsCountHidden', 'color' => 'var(--text-tertiary)', 'label' => 'Đã ẩn'],
+          ['id' => 'mybdsTotalViews', 'color' => 'var(--text-primary)', 'label' => 'Tổng lượt xem']
+      ],
+      'searchInputId' => 'mybdsSearchInput',
+      'searchPlaceholder' => 'Tìm theo tiêu đề, địa chỉ...',
+      'onSearchInput' => 'mybdsOnSearchInput',
+      'filterSheetId' => 'mybdsAdvancedFilter'
+  ])
 
   <!-- Status tabs -->
   <div class="sp-tabs">

@@ -635,6 +635,9 @@ function formatPriceToVNText(price) {
 // ============ ADMIN — DUYỆT BĐS ============
 var currentRejectId = null;
 var abdsCurrentTab  = 'pending';
+var abdsCurrentFilters = {};
+var abdsCurrentSearch = '';
+var abdsSearchTimer = null;
 
 // Cache dữ liệu card để filter client-side (được dùng bởi approvebds.blade.php)
 if(typeof window._abdsCardData === 'undefined') {
@@ -667,10 +670,28 @@ window.switchAbdsTab = function(tab, btn) {
   loadApprovalBds(true);
 };
 
+window.abdsOnSearchInput = function(val) {
+  clearTimeout(abdsSearchTimer);
+  abdsSearchTimer = setTimeout(function() {
+    abdsCurrentSearch = val.trim();
+    loadApprovalBds(true);
+  }, 400);
+};
+
 window.loadApprovalBds = function(reset) {
   var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
   if(!cfg || !cfg.adminPropertiesJson) return;
-  var url = cfg.adminPropertiesJson + '?tab=' + encodeURIComponent(abdsCurrentTab);
+  
+  var params = new URLSearchParams();
+  params.append('tab', abdsCurrentTab);
+  if(abdsCurrentSearch) params.append('search', abdsCurrentSearch);
+  if(abdsCurrentFilters) {
+    Object.keys(abdsCurrentFilters).forEach(key => {
+      if(abdsCurrentFilters[key]) params.append(key, abdsCurrentFilters[key]);
+    });
+  }
+
+  var url = cfg.adminPropertiesJson + '?' + params.toString();
   var container = document.getElementById('abdsListContainer');
   if(!container) return;
 
@@ -3001,6 +3022,8 @@ window.resetAdvancedFilter = function(id = 'filterSheet'){
   });
   if(id === 'mybdsAdvancedFilter') {
     mybdsCurrentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
+  } else if(id === 'abdsAdvancedFilter') {
+    abdsCurrentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
   } else {
     currentFilters = { property_type:'', categoryName:'', price:'', area:'', direction:'', legal:'' };
   }
@@ -3022,6 +3045,10 @@ window.applyFilterSheet = function(id = 'filterSheet'){
     mybdsCurrentFilters = filters;
     closeAdvancedFilter(id);
     loadMyBds(true);
+  } else if(id === 'abdsAdvancedFilter') {
+    abdsCurrentFilters = filters;
+    closeAdvancedFilter(id);
+    loadApprovalBds(true);
   } else {
     currentFilters = filters;
     clearFilters(true);
