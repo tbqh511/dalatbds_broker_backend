@@ -6205,14 +6205,18 @@ window.loadUsers = function(reset) {
 
 function renderUserCard(u, tab) {
   var initials = u.initials || u.name.slice(0, 2).toUpperCase();
-  // Cột Trái: Avatar
-  var avatar = '<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-3" style="width:45px; height:45px; background-color:' + (u.avatar_color || '#3b82f6') + '; flex-shrink:0;">' + escHtml(initials) + '</div>';
+  // Avatar component
+  var avatarStyles = 'width:45px; height:45px; background-color:' + (u.avatar_color || '#3b82f6') + '; flex-shrink:0; border-radius:50%;';
+  var avatar = '<div class="d-flex align-items-center justify-content-center text-white fw-bold" style="' + avatarStyles + '">' + escHtml(initials) + '</div>';
   
-  // Cột Giữa: Tên và SĐT
-  var userInfo = '<div class="flex-grow-1" style="min-width:0;">'
-               + '<div class="fw-bold text-truncate" style="font-size:15px; color:var(--text-primary);">' + escHtml(u.name) + '</div>'
-               + (u.mobile ? '<div class="text-muted small">' + escHtml(u.mobile) + '</div>' : '')
-               + '</div>';
+  // Cột Trái (Avatar + Text)
+  var leftCol = '<div class="d-flex align-items-center gap-3">'
+              + avatar
+              + '<div class="d-flex flex-column">'
+              + '<span class="fw-bold mb-0 text-dark" style="font-size:15px;">' + escHtml(u.name) + '</span>'
+              + (u.mobile ? '<small class="text-muted mb-0">' + escHtml(u.mobile) + '</small>' : '')
+              + '</div>'
+              + '</div>';
 
   var threeDotAction = '<button onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" style="background:none;border:none;padding:6px;color:var(--text-tertiary);" title="Phân quyền">'
                      + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>'
@@ -6234,10 +6238,9 @@ function renderUserCard(u, tab) {
   }
 
   // Wrapper flexbox
-  return '<div class="d-flex align-items-center py-2 border-bottom" id="uc-' + u.id + '">'
-       + avatar
-       + userInfo
-       + '<div class="d-flex align-items-center ms-auto">' + actions + '</div>'
+  return '<div class="d-flex align-items-center justify-content-between border-bottom py-3" id="uc-' + u.id + '">'
+       + leftCol
+       + '<div class="d-flex align-items-center">' + actions + '</div>'
        + '</div>';
 }
 
