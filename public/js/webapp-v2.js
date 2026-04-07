@@ -7111,6 +7111,15 @@ window.activityApp = function() {
       var result = [];
       for (var i = 0; i < actions.length; i++) {
         var a = actions[i];
+
+        // Safe check for property link
+        if (a.action === 'open_url' && (!notif.data || !notif.data.property_url)) {
+          continue; // Ẩn nút xem tin nếu không có URL hợp lệ
+        }
+        if (a.action === 'view_property' && (!notif.data || !notif.data.property_id)) {
+          continue; // Ẩn nút nếu không có ID
+        }
+
         var iconHtml = a.icon && ICON_SVGS[a.icon] ? ICON_SVGS[a.icon] + ' ' : '';
         result.push({
           label: a.label,

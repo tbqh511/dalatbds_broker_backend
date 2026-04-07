@@ -4161,7 +4161,7 @@ class TelegramWebAppController extends Controller
                         'approved_by_id'   => $approver->id,
                         'approved_by_name' => $approver->name,
                         'approved_at'      => now()->format('d/m/Y H:i'),
-                        'property_url'     => url('/bat-dong-san/' . $property->slug),
+                        'property_url'     => route('bds.show', ['slug' => $property->slug]),
                     ],
                 ]);
 
@@ -4182,7 +4182,7 @@ class TelegramWebAppController extends Controller
                             'approved_by_id'   => $approver->id,
                             'approved_by_name' => $approver->name,
                             'approved_at'      => now()->format('d/m/Y H:i'),
-                            'property_url'     => url('/bat-dong-san/' . $property->slug),
+                            'property_url'     => route('bds.show', ['slug' => $property->slug]),
                         ],
                     ]);
                 }
