@@ -765,6 +765,37 @@ window.loadApprovalBds = function(reset) {
       var html = '';
       props.forEach(function(p) { html += _renderAbdsCard(p); });
       container.innerHTML = html;
+
+      // Auto-filter for ref_slug from URL
+      var sp = new URLSearchParams(window.location.search);
+      var refSlug = sp.get('ref_slug');
+      if(refSlug) {
+        var cardsInContainer = container.querySelectorAll('.abds-card');
+        cardsInContainer.forEach(function(card) {
+          if(card.getAttribute('data-slug') !== refSlug && card.getAttribute('id') !== 'abds-' + refSlug) {
+            card.style.display = 'none';
+          } else {
+            card.style.display = '';
+            card.style.border = '2px solid var(--primary)';
+          }
+        });
+        
+        var notice = document.createElement('div');
+        notice.id = 'abdsSlugFilterNotice';
+        notice.style.padding = '12px 16px';
+        notice.style.background = 'var(--primary-light)';
+        notice.style.color = 'var(--primary-dark)';
+        notice.style.borderRadius = '8px';
+        notice.style.marginBottom = '16px';
+        notice.style.fontSize = '14px';
+        notice.style.display = 'flex';
+        notice.style.justifyContent = 'space-between';
+        notice.style.alignItems = 'center';
+        notice.innerHTML = '<span>Đang lọc xem 1 BĐS từ thông báo.</span>' +
+          '<button onclick="window.clearAbdsSlugFilter()" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;">[Xem tất cả]</button>';
+        container.insertBefore(notice, container.firstChild);
+      }
+
       // Áp dụng filter nếu đang ở tab có thanh tìm kiếm (approved / hidden)
       if((abdsCurrentTab === 'approved' || abdsCurrentTab === 'hidden') && typeof abdsApprovedFilterApply === 'function') {
         abdsApprovedFilterApply();
@@ -969,7 +1000,7 @@ function _renderAbdsCard(p) {
     + '</div>';
 
   // === Assemble card: A → B → C → banners → D+F (with broker E before actions) ===
-  return '<div class="abds-card" id="abds-' + p.id + '">'
+  return '<div class="abds-card" id="abds-' + p.id + '" data-slug="' + escHtml(p.slug || '') + '">'
     + blockA
     + blockB
     + blockC
@@ -1093,6 +1124,21 @@ function _abdsUpdatePendingCount(count) {
   var heroMain = document.getElementById('abdsHeroMain');
   if(heroMain) heroMain.textContent = count + ' BĐS chờ xem xét';
 }
+
+window.clearAbdsSlugFilter = function() {
+  var notice = document.getElementById('abdsSlugFilterNotice');
+  if(notice) notice.remove();
+  var params = new URLSearchParams(window.location.search);
+  params.delete('ref_slug');
+  var newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+  window.history.replaceState(null, '', newUrl);
+  
+  var cards = document.querySelectorAll('#abdsListContainer .abds-card');
+  cards.forEach(function(card) {
+    card.style.display = '';
+    card.style.border = '';
+  });
+};
 
 // === Mock functions for future expansion ===
 function _mockSendTelegramApproval(propertyId, propertyName) {
@@ -7104,8 +7150,9 @@ window.activityApp = function() {
           return;
         }
       } else if (notif.type === 'property_pending' && notif.data && notif.data.property_id) {
-        window.history.pushState(null, '', '?search_id=' + notif.data.property_id + '&tab=pending');
-        window._approvebdsSearchId = notif.data.property_id;
+        var refVal = notif.data.slug || notif.data.property_id;
+        window.history.pushState(null, '', '?ref_slug=' + refVal + '&tab=pending');
+        window._approvebdsSearchId = refVal;
         if (typeof openSubpage === 'function') openSubpage('approvebds');
         return;
       }

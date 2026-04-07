@@ -406,9 +406,9 @@ function _escModalText(s) {
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {
     var params = new URLSearchParams(window.location.search);
-    var searchId = params.get('search_id');
+    var refSlug = params.get('ref_slug');
     var tab = params.get('tab');
-    if (searchId || tab === 'pending') {
+    if (refSlug || tab === 'pending') {
       if (typeof openSubpage === 'function') {
         openSubpage('approvebds');
       }

@@ -3258,6 +3258,7 @@ class TelegramWebAppController extends Controller
                 'actor_id' => $customer->id,
                 'data' => [
                     'property_id' => $property->id,
+                    'slug' => $property->slug,
                     'title' => $property->title,
                     'broker_name' => $customer->name ?? '',
                     'price' => $price,
