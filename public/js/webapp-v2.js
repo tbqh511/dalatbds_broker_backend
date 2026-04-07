@@ -6865,7 +6865,7 @@ window.activityApp = function() {
       { label: 'Xem tin đăng', primary: true, icon: 'eye', action: 'view_property' }
     ],
     property_approved: [
-      { label: 'Xem tin đăng', primary: true, icon: 'eye', action: 'open_url' }
+      { label: 'Xem tin đăng', primary: true, icon: 'eye', action: 'view_property' }
     ],
     property_rejected: [
       { label: 'Xem tin', primary: true, icon: 'eye', subpage: 'mybds' }
