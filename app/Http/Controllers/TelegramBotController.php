@@ -339,7 +339,7 @@ class TelegramBotController extends Controller
                     ]);
                     if ($customer) {
                         Log::info("TelegramBot contact: phone match found customer #{$customer->id}, updating telegram_id from [{$customer->telegram_id}] to [{$telegramId}]");
-                        $customer->telegram_id = $telegramId;
+                        $customer->telegram_id = (string) $telegramId;
                         $customer->telegram_bot_started = true;
                     }
                 }
@@ -359,7 +359,7 @@ class TelegramBotController extends Controller
                     $customer = Customer::create([
                         'name' => $fullName,
                         'mobile' => $phoneNumber,
-                        'telegram_id' => $telegramId,
+                        'telegram_id' => (string) $telegramId,
                         'telegram_bot_started' => true,
                         'role' => 'broker',
                     ]);
@@ -433,7 +433,7 @@ class TelegramBotController extends Controller
                     $customer = Customer::find($customerId);
                     if ($customer) {
                         $oldId = $customer->telegram_id;
-                        $customer->telegram_id = $telegramId;
+                        $customer->telegram_id = (string) $telegramId;
                         $customer->telegram_bot_started = true;
                         $customer->save();
                         Log::info("TelegramBot link: customer #{$customer->id} telegram_id updated [{$oldId}] → [{$telegramId}]");

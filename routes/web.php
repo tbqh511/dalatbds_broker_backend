@@ -222,7 +222,7 @@ Route::get('/ref/{code}', [TelegramWebAppController::class, 'referralLanding'])-
 Route::get('/share/p/{id}', [TelegramWebAppController::class, 'propertyShareRedirect'])->name('property.share.redirect');
 
 //property controller
-Route::get('/property/{id}', [FrontEndPropertiesController::class , 'getPropertyById'])->name('property.showid');
+Route::get('/property/{id}', [FrontEndPropertiesController::class , 'getPropertyById'])->name('property.showid')->where('id', '[0-9]+');
 Route::get('/bds/{slug}', [FrontEndPropertiesController::class , 'show'])->name('bds.show');
 Route::get('/autocomplete/street', [FrontEndPropertiesController::class , 'autocompleteStreet'])->name('autocomplete.street');
 
