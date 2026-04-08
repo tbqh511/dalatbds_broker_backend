@@ -3716,11 +3716,15 @@ class TelegramWebAppController extends Controller
         if ($tab === 'pending') {
             $query->where('isActive', 1)->whereNotIn('role', $approvedRoles);
         } elseif ($tab === 'broker') {
-            $query->where('isActive', 1)->whereIn('role', ['broker', 'bds_admin']);
+            $query->where('role', 'broker');
         } elseif ($tab === 'sale') {
-            $query->where('isActive', 1)->whereIn('role', ['sale', 'sale_admin']);
-        } elseif ($tab === 'locked') {
-            $query->where('isActive', 0);
+            $query->where('role', 'sale');
+        } elseif ($tab === 'sale_admin') {
+            $query->where('role', 'sale_admin');
+        } elseif ($tab === 'bds_admin') {
+            $query->where('role', 'bds_admin');
+        } elseif ($tab === 'admin') {
+            $query->where('role', 'admin');
         }
 
         if ($search !== '') {
@@ -3761,13 +3765,14 @@ class TelegramWebAppController extends Controller
             ];
         });
 
-        // Stats counts
+        // Stats counts — 6 tabs
         $stats = [
-            'active' => Customer::where('isActive', 1)->count(),
-            'pending' => Customer::where('isActive', 1)->whereNotIn('role', $approvedRoles)->count(),
-            'broker' => Customer::where('isActive', 1)->whereIn('role', ['broker', 'bds_admin'])->count(),
-            'sale' => Customer::where('isActive', 1)->whereIn('role', ['sale', 'sale_admin'])->count(),
-            'locked' => Customer::where('isActive', 0)->count(),
+            'pending'    => Customer::where('isActive', 1)->whereNotIn('role', $approvedRoles)->count(),
+            'broker'     => Customer::where('role', 'broker')->count(),
+            'sale'       => Customer::where('role', 'sale')->count(),
+            'sale_admin' => Customer::where('role', 'sale_admin')->count(),
+            'bds_admin'  => Customer::where('role', 'bds_admin')->count(),
+            'admin'      => Customer::where('role', 'admin')->count(),
         ];
 
         return response()->json(['stats' => $stats, 'users' => $mappedUsers]);

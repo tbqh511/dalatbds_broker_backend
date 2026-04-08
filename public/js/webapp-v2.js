@@ -6147,27 +6147,23 @@ window.loadUsers = function(reset) {
   fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      // Update hero stats
+      // Update hidden stat elements
       var s = data.stats || {};
-      var activeEl = document.getElementById('usersActiveCount');
-      if (activeEl) activeEl.textContent = s.active || 0;
-      var pendingEl = document.getElementById('usersPendingCount');
-      if (pendingEl) pendingEl.textContent = s.pending || 0;
-      var brokerEl = document.getElementById('usersBrokerCount');
-      if (brokerEl) brokerEl.textContent = s.broker || 0;
-      var saleEl = document.getElementById('usersSaleCount');
-      if (saleEl) saleEl.textContent = s.sale || 0;
-      var lockedEl = document.getElementById('usersLockedCount');
-      if (lockedEl) lockedEl.textContent = s.locked || 0;
+      var statMap = { pending:'usersPendingCount', broker:'usersBrokerCount', sale:'usersSaleCount', sale_admin:'usersSaleAdminCount', bds_admin:'usersBdsAdminCount', admin:'usersAdminCount' };
+      Object.keys(statMap).forEach(function(key) { var el = document.getElementById(statMap[key]); if (el) el.textContent = s[key] || 0; });
 
-      // Update tab counts
-      document.querySelectorAll('.users-tab-count-pending').forEach(function(el) { el.textContent = s.pending || 0; });
-      document.querySelectorAll('.users-tab-count-broker').forEach(function(el) { el.textContent = s.broker || 0; });
-      document.querySelectorAll('.users-tab-count-sale').forEach(function(el) { el.textContent = s.sale || 0; });
-      document.querySelectorAll('.users-tab-count-locked').forEach(function(el) { el.textContent = s.locked || 0; });
+      // Update tab count badges
+      ['pending','broker','sale','sale_admin','bds_admin','admin'].forEach(function(key) {
+        document.querySelectorAll('.users-tab-count-' + key).forEach(function(el) { el.textContent = s[key] || 0; });
+      });
 
       // Render user cards
       var users = data.users || [];
+
+      // Cache users for action sheet
+      window._usersCache = {};
+      users.forEach(function(u) { window._usersCache[u.id] = u; });
+
       if (users.length === 0) {
         container.innerHTML = '<div style="text-align:center;padding:48px 16px;color:var(--text-tertiary);">'
           + '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
@@ -6175,18 +6171,10 @@ window.loadUsers = function(reset) {
         return;
       }
 
-      var html = '';
       var tab = usersCurrentTab;
-
-      if (tab === 'pending') {
-        html += '<div class="user-divider"><span>Chờ phê duyệt tài khoản eBroker</span><span class="badge badge-red">' + users.length + ' tài khoản</span></div>';
-      } else if (tab === 'broker') {
-        html += '<div class="user-divider"><span>eBroker đang active</span><span class="badge badge-green">' + users.length + ' users</span></div>';
-      } else if (tab === 'sale') {
-        html += '<div class="user-divider"><span>Nhân viên Sale</span><span class="badge badge-green">' + users.length + ' users</span></div>';
-      } else if (tab === 'locked') {
-        html += '<div class="user-divider"><span>Tài khoản bị khoá</span><span class="badge badge-red">' + users.length + ' users</span></div>';
-      }
+      var tabLabels = { pending:'Chờ phê duyệt tài khoản eBroker', broker:'Broker', sale:'Nhân viên Sale', sale_admin:'Sale Admin', bds_admin:'BĐS Admin', admin:'Admin' };
+      var tabBadge  = (tab === 'pending') ? 'badge-red' : 'badge-green';
+      var html = '<div class="user-divider"><span>' + (tabLabels[tab] || tab) + '</span><span class="badge ' + tabBadge + '">' + users.length + ' người</span></div>';
 
       users.forEach(function(u) {
         html += renderUserCard(u, tab);
@@ -6200,92 +6188,51 @@ window.loadUsers = function(reset) {
 };
 
 function renderUserCard(u, tab) {
-  var roleBadge = getRoleBadge(u.role);
   var initials = u.initials || u.name.slice(0, 2).toUpperCase();
-  var avatar = '<div class="uc-avatar" style="background:' + (u.avatar_color || '#3b82f6') + ';">' + initials + '</div>';
+  var isLocked = u.isActive === 0;
+  var avatarBg = isLocked ? '#9ca3af' : (u.avatar_color || '#3270FC');
+  var avatar = '<div style="width:44px;height:44px;border-radius:50%;background:' + avatarBg
+    + ';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;">'
+    + initials + '</div>';
+  var metaLine = u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : '—');
 
+  // ===== PENDING TAB: inline action buttons =====
   if (tab === 'pending') {
-    return '<div class="user-card" id="uc-' + u.id + '">'
-      + '<div class="uc-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
-      + '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
+    return '<div id="uc-' + u.id + '" style="padding:12px 16px;">'
+      + '<div style="display:flex;align-items:center;gap:12px;">'
       + avatar
-      + '<div class="uc-info">'
-      + '<div class="uc-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(u.name) + '</div>'
-      + '<div class="uc-meta" style="font-size:13px;color:var(--text-muted);">'
-      + (u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : ''))
-      + '</div></div>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(u.name) + '</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">' + metaLine + '</div>'
       + '</div>'
-      + '<span class="badge badge-amber">⏳ Chờ duyệt</span>'
+      + '<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:#fef3c7;color:#d97706;white-space:nowrap;flex-shrink:0;">Chờ duyệt</span>'
       + '</div>'
-      + '<div class="uc-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">'
-      + '<button class="uc-btn reject" onclick="rejectUser(' + u.id + ',\'' + escHtml(u.name) + '\')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--danger);font-size:12px;cursor:pointer;">✕ Từ chối</button>'
-      + '<button class="uc-btn warn" onclick="approveTempUser(' + u.id + ',\'' + escHtml(u.name) + '\')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--warning);color:#fff;font-size:12px;cursor:pointer;">⏳ Duyệt tạm</button>'
-      + '<button class="uc-btn" onclick="approveUser(' + u.id + ',\'' + escHtml(u.name) + '\')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;background:var(--primary);color:#fff;border:none;font-size:12px;cursor:pointer;">✓ Duyệt</button>'
+      + '<div style="display:flex;gap:6px;margin-top:10px;">'
+      + '<button onclick="rejectUser(' + u.id + ',\'' + escHtml(u.name) + '\')" class="uc-btn reject" style="flex:1;padding:9px 8px;font-size:12px;border-radius:6px;border:1px solid var(--border);color:var(--danger);background:none;cursor:pointer;">✕ Từ chối</button>'
+      + '<button onclick="approveTempUser(' + u.id + ',\'' + escHtml(u.name) + '\')" class="uc-btn warn" style="flex:1;padding:9px 8px;font-size:12px;border-radius:6px;background:var(--warning);color:#fff;border:none;cursor:pointer;">⏳ Duyệt tạm</button>'
+      + '<button onclick="approveUser(' + u.id + ',\'' + escHtml(u.name) + '\')" class="uc-btn" style="flex:1;padding:9px 8px;font-size:12px;border-radius:6px;background:var(--primary);color:#fff;border:none;cursor:pointer;">✓ Duyệt</button>'
       + '</div>'
       + '</div>';
   }
 
-  if (tab === 'broker') {
-    return '<div class="user-card" id="uc-' + u.id + '">'
-      + '<div class="uc-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
-      + '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
-      + avatar
-      + '<div class="uc-info">'
-      + '<div class="uc-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(u.name) + '</div>'
-      + '<div class="uc-meta" style="font-size:13px;color:var(--text-muted);">'
-      + (u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : ''))
-      + '</div></div>'
-      + '</div>'
-      + roleBadge
-      + '</div>'
-      + '<div class="uc-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;">'
-      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--danger);font-size:12px;cursor:pointer;">🔒 Khoá</button>'
-      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--primary);font-size:12px;cursor:pointer;">👤 Phân quyền</button>'
-      + '</div>'
-      + '</div>';
-  }
+  // ===== ALL OTHER TABS: list-item row + three-dot menu =====
+  var roleLabels = { broker:'Broker', sale:'Sale', sale_admin:'Sale Admin', bds_admin:'BĐS Admin', admin:'Admin' };
+  var subLabel = (roleLabels[u.role] || u.role) + (metaLine !== '—' ? ' · ' + metaLine : '');
+  var lockIcon = isLocked ? ' <span style="font-size:11px;color:var(--danger);">🔒</span>' : '';
+  var nameColor = isLocked ? 'var(--text-secondary)' : 'var(--text-primary)';
 
-  if (tab === 'sale') {
-    return '<div class="user-card" id="uc-' + u.id + '">'
-      + '<div class="uc-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
-      + '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
-      + avatar
-      + '<div class="uc-info">'
-      + '<div class="uc-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(u.name) + '</div>'
-      + '<div class="uc-meta" style="font-size:13px;color:var(--text-muted);">'
-      + (u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : ''))
-      + '</div></div>'
-      + '</div>'
-      + roleBadge
-      + '</div>'
-      + '<div class="uc-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;">'
-      + '<button class="uc-btn warn" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--danger);font-size:12px;cursor:pointer;">🔒 Khoá</button>'
-      + '<button class="uc-btn" onclick="openRoleSheet(' + u.id + ',\'' + u.role + '\')" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);color:var(--primary);font-size:12px;cursor:pointer;">👤 Phân quyền</button>'
-      + '</div>'
-      + '</div>';
-  }
-
-  if (tab === 'locked') {
-    return '<div class="user-card" id="uc-' + u.id + '" style="opacity:.8;border-color:var(--danger);">'
-      + '<div class="uc-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
-      + '<div style="display:flex;align-items:center;gap:12px;flex:1;">'
-      + '<div class="uc-avatar" style="background:#6b7280;">' + initials + '</div>'
-      + '<div class="uc-info">'
-      + '<div class="uc-name" style="font-weight:600;font-size:14px;color:var(--text-primary);">' + escHtml(u.name) + '</div>'
-      + '<div class="uc-meta" style="font-size:13px;color:var(--danger);">'
-      + (u.mobile ? escHtml(u.mobile) : '')
-      + '</div></div>'
-      + '</div>'
-      + '<span class="badge badge-red">🔒 Khoá</span>'
-      + '</div>'
-      + '<div class="uc-actions" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">'
-      + '<button class="uc-btn approve" onclick="toggleUserLock(' + u.id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;background:var(--success);color:#fff;border:none;font-size:12px;cursor:pointer;">🔓 Mở khoá</button>'
-      + '<button class="uc-btn danger" onclick="deleteUserConfirm(' + u.id + ',\'' + escHtml(u.name) + '\')" style="flex:1;min-width:80px;padding:8px 12px;border-radius:6px;background:var(--danger);color:#fff;border:none;font-size:12px;cursor:pointer;">🗑 Xoá</button>'
-      + '</div>'
-      + '</div>';
-  }
-
-  return '';
+  return '<div id="uc-' + u.id + '" style="display:flex;align-items:center;gap:12px;padding:12px 16px;">'
+    + avatar
+    + '<div style="flex:1;min-width:0;">'
+    + '<div style="font-size:14px;font-weight:600;color:' + nameColor + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(u.name) + lockIcon + '</div>'
+    + '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + subLabel + '</div>'
+    + '</div>'
+    + '<button onclick="openUserActionSheet(' + u.id + ',\'' + tab + '\')"'
+    + ' style="width:36px;height:36px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--text-tertiary);flex-shrink:0;"'
+    + ' aria-label="Tuỳ chọn">'
+    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>'
+    + '</button>'
+    + '</div>';
 }
 
 function getRoleBadge(role) {
@@ -6320,18 +6267,59 @@ window.approveTempUser = function(id, name) {
   userAction('/approve-temp', id, null, 'Đã duyệt tạm thời ' + name);
 };
 
-window.openRoleSheet = function(id, currentRole) {
-  document.getElementById('userRoleSheetId').value = id;
-  var sheet = document.getElementById('userRoleSheet');
-  sheet.style.display = 'flex';
-  // Highlight current role
-  sheet.querySelectorAll('.rs-reason').forEach(function(el) { el.style.background = ''; });
+window.openUserActionSheet = function(id, tab) {
+  var u = window._usersCache && window._usersCache[id];
+  if (!u) return;
+
+  var avatarEl = document.getElementById('userActionSheetAvatar');
+  var nameEl   = document.getElementById('userActionSheetName');
+  var metaEl   = document.getElementById('userActionSheetMeta');
+  var optsEl   = document.getElementById('userActionSheetOptions');
+
+  if (avatarEl) { avatarEl.textContent = u.initials || u.name.slice(0,2).toUpperCase(); avatarEl.style.background = u.isActive === 0 ? '#9ca3af' : (u.avatar_color || '#3270FC'); }
+  if (nameEl)   nameEl.textContent = u.name;
+  if (metaEl)   metaEl.textContent = (u.mobile || u.email || '') + (u.isActive === 0 ? ' · 🔒 Đang bị khoá' : '');
+
+  var lockLabel    = u.isActive ? 'Khoá tài khoản'       : 'Mở khoá tài khoản';
+  var lockSubLabel = u.isActive ? 'Tạm thời vô hiệu hoá' : 'Khôi phục quyền truy cập';
+  var lockIcon     = u.isActive ? '🔒' : '🔓';
+
+  var actions = [];
+  if (tab === 'sale_admin') {
+    actions.push({ icon:'📋', label:'Thu hồi quyền Sale Admin', sub:'Hạ xuống Sale',   fn:'revokeRole(' + id + ',\'sale\')'   });
+  } else if (tab === 'bds_admin') {
+    actions.push({ icon:'🏘️', label:'Thu hồi quyền BĐS Admin', sub:'Hạ xuống Broker', fn:'revokeRole(' + id + ',\'broker\')' });
+  } else if (tab === 'admin') {
+    actions.push({ icon:'👑', label:'Thu hồi quyền Admin',      sub:'Hạ xuống Broker', fn:'revokeRole(' + id + ',\'broker\')' });
+  }
+  actions.push({ icon: lockIcon, label: lockLabel, sub: lockSubLabel, fn:'toggleUserLock(' + id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')' });
+
+  if (optsEl) {
+    optsEl.innerHTML = actions.map(function(a) {
+      return '<button onclick="closeUserActionSheet();' + a.fn + '"'
+        + ' style="width:100%;display:flex;align-items:center;gap:14px;padding:13px 18px;background:none;border:none;border-bottom:1px solid rgba(0,0,0,.06);cursor:pointer;text-align:left;">'
+        + '<span style="width:38px;height:38px;border-radius:10px;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + a.icon + '</span>'
+        + '<span style="flex:1;">'
+        + '<span style="display:block;font-size:14px;font-weight:600;color:var(--text-primary);">' + a.label + '</span>'
+        + '<span style="display:block;font-size:12px;color:var(--text-secondary);margin-top:1px;">' + a.sub + '</span>'
+        + '</span>'
+        + '</button>';
+    }).join('');
+  }
+
+  document.getElementById('userActionSheet').style.display = 'flex';
 };
 
-window.changeUserRole = function(role) {
-  var id = document.getElementById('userRoleSheetId').value;
-  document.getElementById('userRoleSheet').style.display = 'none';
-  userAction('/role', id, { role: role }, 'Đã đổi role thành công!', 'PATCH');
+window.closeUserActionSheet = function() {
+  var sheet = document.getElementById('userActionSheet');
+  if (sheet) sheet.style.display = 'none';
+};
+
+window.revokeRole = function(id, targetRole) {
+  var u = window._usersCache && window._usersCache[id];
+  var name = u ? u.name : 'người dùng này';
+  if (!confirm('Thu hồi quyền và đặt về "' + targetRole + '" cho ' + name + '?')) return;
+  userAction('/role', id, { role: targetRole }, 'Đã cập nhật quyền thành công!', 'PATCH');
 };
 
 window.toggleUserLock = function(id, name, isActive) {
