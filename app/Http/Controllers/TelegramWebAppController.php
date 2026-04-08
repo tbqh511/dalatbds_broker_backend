@@ -631,7 +631,7 @@ class TelegramWebAppController extends Controller
             $commissionTotal = CrmDeal::whereHas('lead', function ($q) use ($customer) {
                 $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id);
             })
-                ->whereIn('status', ['open', 'negotiating', 'waiting_finance'])
+                ->whereIn('crm_deals.status', ['open', 'negotiating', 'waiting_finance'])
                 ->join('crm_deals_commissions', 'crm_deals.id', '=', 'crm_deals_commissions.deal_id')
                 ->sum('crm_deals_commissions.sale_commission');
             $kpi['commission_expected'] = format_vnd((float) $commissionTotal);
