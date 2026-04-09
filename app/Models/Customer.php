@@ -184,11 +184,19 @@ class Customer extends Authenticatable implements JWTSubject
             return 'guest';
         }
 
+        // Flutter App users mặc định lưu role='customer' hoặc NULL.
+        // Map thành 'broker' để họ có thể dùng WebApp cơ bản ngay lập tức
+        // mà không cần sửa code Flutter.
+        // Admin vẫn thấy họ trong tab "Chờ duyệt" để nâng cấp role chính thức.
+        if (empty($this->role) || $this->role === 'customer') {
+            return 'broker';
+        }
+
         if (in_array($this->role, self::VALID_ROLES)) {
             return $this->role;
         }
 
-        // Có SĐT nhưng role không hợp lệ (guest/null/unknown) → mặc định broker
+        // Fallback: có SĐT nhưng role không hợp lệ → mặc định broker
         return 'broker';
     }
 

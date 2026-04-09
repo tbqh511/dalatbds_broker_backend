@@ -6194,7 +6194,13 @@ function renderUserCard(u, tab) {
   var avatar = '<div style="width:44px;height:44px;border-radius:50%;background:' + avatarBg
     + ';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;">'
     + initials + '</div>';
-  var metaLine = u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : '—');
+
+  // Badge nguồn: phân biệt Flutter App vs WebApp
+  var sourceBadge = (u.source === 'flutter')
+    ? ' <span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;vertical-align:middle;">📱 App</span>'
+    : '';
+
+  var metaLine = (u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : '—')) + sourceBadge;
 
   // ===== PENDING TAB: three-dot menu → Bottom Sheet =====
   if (tab === 'pending') {
@@ -6215,7 +6221,7 @@ function renderUserCard(u, tab) {
 
   // ===== ALL OTHER TABS: list-item row + three-dot menu =====
   var roleLabels = { broker:'Broker', sale:'Sale', sale_admin:'Sale Admin', bds_admin:'BĐS Admin', admin:'Admin' };
-  var subLabel = (roleLabels[u.role] || u.role) + (metaLine !== '—' ? ' · ' + metaLine : '');
+  var subLabel = (roleLabels[u.role] || u.role) + (u.mobile || u.email ? ' · ' + (u.mobile ? escHtml(u.mobile) : escHtml(u.email)) : '') + sourceBadge;
   var lockIcon = isLocked ? ' <span style="font-size:11px;color:var(--danger);">🔒</span>' : '';
   var nameColor = isLocked ? 'var(--text-secondary)' : 'var(--text-primary)';
 
@@ -6232,6 +6238,7 @@ function renderUserCard(u, tab) {
     + '</button>'
     + '</div>';
 }
+
 
 function getRoleBadge(role) {
   var badges = {

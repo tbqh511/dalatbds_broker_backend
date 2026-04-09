@@ -3714,7 +3714,14 @@ class TelegramWebAppController extends Controller
         // Build query per tab
         $query = Customer::query();
         if ($tab === 'pending') {
-            $query->where('isActive', 1)->whereNotIn('role', $approvedRoles);
+            // Users có SĐT (đã đăng ký thực sự) nhưng chưa được phân quyền WebApp.
+            // Bao gồm: role='customer' (Flutter App), role=NULL, role='guest'.
+            // Phải dùng orWhereNull() vì MySQL's NOT IN không match NULL values.
+            $query->whereNotNull('mobile')
+                  ->where(function ($q) use ($approvedRoles) {
+                      $q->whereNotIn('role', $approvedRoles)
+                        ->orWhereNull('role');
+                  });
         } elseif ($tab === 'broker') {
             $query->where('role', 'broker');
         } elseif ($tab === 'sale') {
@@ -3752,22 +3759,27 @@ class TelegramWebAppController extends Controller
             $propCount = Property::where('added_by', $c->id)->count();
 
             return [
-                'id' => $c->id,
-                'name' => $c->name,
-                'mobile' => $c->mobile ?? '',
-                'email' => $c->email ?? '',
-                'role' => $c->role ?? 'customer',
-                'isActive' => (int) $c->isActive,
-                'initials' => $this->adminUserInitials($c->name),
-                'avatar_color' => $this->adminUserAvatarColor($c->id),
+                'id'               => $c->id,
+                'name'             => $c->name,
+                'mobile'           => $c->mobile ?? '',
+                'email'            => $c->email ?? '',
+                'role'             => $c->role ?? 'customer',
+                'effective_role'   => $c->getEffectiveRole(),
+                'source'           => $c->telegram_id ? 'webapp' : 'flutter',
+                'isActive'         => (int) $c->isActive,
+                'initials'         => $this->adminUserInitials($c->name),
+                'avatar_color'     => $this->adminUserAvatarColor($c->id),
                 'created_at_human' => $c->created_at ? $c->created_at->diffForHumans() : '',
-                'property_count' => $propCount,
+                'property_count'   => $propCount,
             ];
         });
 
         // Stats counts — 6 tabs
         $stats = [
-            'pending'    => Customer::where('isActive', 1)->whereNotIn('role', $approvedRoles)->count(),
+            'pending'    => Customer::whereNotNull('mobile')
+                ->where(function ($q) use ($approvedRoles) {
+                    $q->whereNotIn('role', $approvedRoles)->orWhereNull('role');
+                })->count(),
             'broker'     => Customer::where('role', 'broker')->count(),
             'sale'       => Customer::where('role', 'sale')->count(),
             'sale_admin' => Customer::where('role', 'sale_admin')->count(),
