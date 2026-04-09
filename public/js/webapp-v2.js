@@ -6224,13 +6224,11 @@ function renderUserCard(u, tab) {
   var initials = u.initials || (u.name || '??').slice(0, 2).toUpperCase();
   var isLocked = (u.isActive === 0);
 
-  // Avatar tròn + status dot
-  var avatarBg = isLocked ? '#9ca3af' : (u.avatar_color || 'var(--primary)');
+  // Avatar hình + status dot
+  var avatarImgSrc = (u.avatar || u.avatar_url) ? (u.avatar || u.avatar_url) : '/images/favicon.ico';
   var dotColor = isLocked ? 'background:#d1d5db;border:2px solid var(--bg-primary);' : 'background:var(--primary);border:2px solid var(--bg-primary);';
   var avatar = '<div style="position:relative;flex-shrink:0;">'
-    + '<div style="width:42px;height:42px;border-radius:50%;background:' + avatarBg
-    + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;">'
-    + escHtml(initials) + '</div>'
+    + '<img src="' + escAttr(avatarImgSrc) + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;filter:' + (isLocked ? 'grayscale(100%) opacity(60%)' : 'none') + '" onerror="this.src=\'/images/favicon.ico\'">'
     + '<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;' + dotColor + ';"></div>'
     + '</div>';
 
@@ -6298,8 +6296,10 @@ window.openUserActionSheet = function(id, tab) {
   var isLocked = (u.isActive === 0);
 
   if (avatarEl) {
-    avatarEl.textContent = u.initials || (u.name || '??').slice(0,2).toUpperCase();
-    avatarEl.style.background = isLocked ? '#9ca3af' : (u.avatar_color || 'var(--primary)');
+    var avatarImgSrc = (u.avatar || u.avatar_url) ? (u.avatar || u.avatar_url) : '/images/favicon.ico';
+    avatarEl.innerHTML = '<img src="' + escAttr(avatarImgSrc) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;filter:' + (isLocked ? 'grayscale(100%) opacity(60%)' : 'none') + '" onerror="this.src=\'/images/favicon.ico\'">';
+    avatarEl.style.background = 'transparent';
+    avatarEl.style.padding = '0';
   }
   if (dotEl) { dotEl.style.background = isLocked ? '#d1d5db' : 'var(--primary)'; }
   if (nameEl) nameEl.textContent = u.name || '—';
