@@ -6196,22 +6196,20 @@ function renderUserCard(u, tab) {
     + initials + '</div>';
   var metaLine = u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : '—');
 
-  // ===== PENDING TAB: inline action buttons =====
+  // ===== PENDING TAB: three-dot menu → Bottom Sheet =====
   if (tab === 'pending') {
-    return '<div id="uc-' + u.id + '" style="padding:12px 16px;">'
-      + '<div style="display:flex;align-items:center;gap:12px;">'
+    return '<div id="uc-' + u.id + '" style="display:flex;align-items:center;gap:12px;padding:12px 16px;">'
       + avatar
       + '<div style="flex:1;min-width:0;">'
       + '<div style="font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(u.name) + '</div>'
       + '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">' + metaLine + '</div>'
       + '</div>'
-      + '<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:#fef3c7;color:#d97706;white-space:nowrap;flex-shrink:0;">Chờ duyệt</span>'
-      + '</div>'
-      + '<div style="display:flex;gap:6px;margin-top:10px;">'
-      + '<button onclick="rejectUser(' + u.id + ',\'' + escHtml(u.name) + '\')" class="uc-btn reject" style="flex:1;padding:9px 8px;font-size:12px;border-radius:6px;border:1px solid var(--border);color:var(--danger);background:none;cursor:pointer;">✕ Từ chối</button>'
-      + '<button onclick="approveTempUser(' + u.id + ',\'' + escHtml(u.name) + '\')" class="uc-btn warn" style="flex:1;padding:9px 8px;font-size:12px;border-radius:6px;background:var(--warning);color:#fff;border:none;cursor:pointer;">⏳ Duyệt tạm</button>'
-      + '<button onclick="approveUser(' + u.id + ',\'' + escHtml(u.name) + '\')" class="uc-btn" style="flex:1;padding:9px 8px;font-size:12px;border-radius:6px;background:var(--primary);color:#fff;border:none;cursor:pointer;">✓ Duyệt</button>'
-      + '</div>'
+      + '<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:rgba(50,112,252,0.1);color:var(--primary);white-space:nowrap;flex-shrink:0;margin-right:4px;">Chờ duyệt</span>'
+      + '<button onclick="openUserActionSheet(' + u.id + ',\'' + tab + '\')"'
+      + ' style="width:36px;height:36px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--text-tertiary);flex-shrink:0;"'
+      + ' aria-label="Tuỳ chọn">'
+      + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>'
+      + '</button>'
       + '</div>';
   }
 
@@ -6285,14 +6283,20 @@ window.openUserActionSheet = function(id, tab) {
   var lockIcon     = u.isActive ? '🔒' : '🔓';
 
   var actions = [];
-  if (tab === 'sale_admin') {
+  if (tab === 'pending') {
+    actions.push({ icon:'✓',  label:'Duyệt tài khoản',  sub:'Kích hoạt làm eBroker',   fn:'approveUser('     + id + ',\'' + escHtml(u.name) + '\')' });
+    actions.push({ icon:'⏳', label:'Duyệt tạm thời',    sub:'Cho phép dùng tạm',       fn:'approveTempUser(' + id + ',\'' + escHtml(u.name) + '\')' });
+    actions.push({ icon:'✕',  label:'Từ chối tài khoản', sub:'Khoá và từ chối đăng ký', fn:'rejectUser('      + id + ',\'' + escHtml(u.name) + '\')' });
+  } else if (tab === 'sale_admin') {
     actions.push({ icon:'📋', label:'Thu hồi quyền Sale Admin', sub:'Hạ xuống Sale',   fn:'revokeRole(' + id + ',\'sale\')'   });
   } else if (tab === 'bds_admin') {
     actions.push({ icon:'🏘️', label:'Thu hồi quyền BĐS Admin', sub:'Hạ xuống Broker', fn:'revokeRole(' + id + ',\'broker\')' });
   } else if (tab === 'admin') {
     actions.push({ icon:'👑', label:'Thu hồi quyền Admin',      sub:'Hạ xuống Broker', fn:'revokeRole(' + id + ',\'broker\')' });
   }
-  actions.push({ icon: lockIcon, label: lockLabel, sub: lockSubLabel, fn:'toggleUserLock(' + id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')' });
+  if (tab !== 'pending') {
+    actions.push({ icon: lockIcon, label: lockLabel, sub: lockSubLabel, fn:'toggleUserLock(' + id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')' });
+  }
 
   if (optsEl) {
     optsEl.innerHTML = actions.map(function(a) {
