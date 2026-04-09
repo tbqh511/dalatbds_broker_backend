@@ -3706,17 +3706,34 @@ class TelegramWebAppController extends Controller
 
     public function adminUsersApi(Request $request)
     {
-        $tab = $request->input('tab', 'pending');
+        $tab    = $request->input('tab', 'brokers');
         $search = trim($request->input('search', ''));
 
+        // Roles cũ dùng trong nhiều nơi — giữ nguyên để không phá backward compat
         $approvedRoles = ['broker', 'bds_admin', 'sale', 'sale_admin', 'admin'];
 
-        // Build query per tab
+        // Build query per tab — hỗ trợ cả 3 tabs mới VÀ 6 tabs cũ
         $query = Customer::query();
-        if ($tab === 'pending') {
-            // Users có SĐT (đã đăng ký thực sự) nhưng chưa được phân quyền WebApp.
-            // Bao gồm: role='customer' (Flutter App), role=NULL, role='guest'.
-            // Phải dùng orWhereNull() vì MySQL's NOT IN không match NULL values.
+
+        // ── 3 TABS MỚI ──────────────────────────────────────────────────────
+        if ($tab === 'brokers') {
+            // Gom: customer (Flutter App cũ) + broker (WebApp mới) → cùng nhóm
+            // Không hiển thị guest/null (chưa có SĐT)
+            $query->whereNotNull('mobile')
+                  ->where(function ($q) {
+                      $q->whereIn('role', ['customer', 'broker'])
+                        ->orWhere(function ($q2) {
+                            // role=NULL nhưng đã có SĐT → cũng xếp vào Brokers
+                            $q2->whereNull('role');
+                        });
+                  });
+        } elseif ($tab === 'sales') {
+            $query->whereIn('role', ['sale', 'sale_admin']);
+        } elseif ($tab === 'management') {
+            $query->whereIn('role', ['admin', 'bds_admin']);
+
+        // ── 6 TABS CŨ (backward compat) ──────────────────────────────────
+        } elseif ($tab === 'pending') {
             $query->whereNotNull('mobile')
                   ->where(function ($q) use ($approvedRoles) {
                       $q->whereNotIn('role', $approvedRoles)
@@ -3734,8 +3751,9 @@ class TelegramWebAppController extends Controller
             $query->where('role', 'admin');
         }
 
+        // ── SEARCH ──────────────────────────────────────────────────────────
         if ($search !== '') {
-            // Chuẩn hoá SĐT: "0947..." → tìm cả "84947..." và ngược lại
+            // Backend cũng chuẩn hoá SĐT «0xxx» ↔ «84xxx» để an toàn 2 chiều
             $mobileVariant = null;
             if (preg_match('/^0(\d+)$/', $search, $m)) {
                 $mobileVariant = '84'.$m[1];
@@ -3774,8 +3792,17 @@ class TelegramWebAppController extends Controller
             ];
         });
 
-        // Stats counts — 6 tabs
+        // ── STATS — trả về cả 2 bộ key (3 tabs mới + 6 tabs cũ) ───────────
         $stats = [
+            // 3 tabs mới
+            'brokers'    => Customer::whereNotNull('mobile')
+                ->where(function ($q) {
+                    $q->whereIn('role', ['customer', 'broker'])->orWhereNull('role');
+                })->count(),
+            'sales'      => Customer::whereIn('role', ['sale', 'sale_admin'])->count(),
+            'management' => Customer::whereIn('role', ['admin', 'bds_admin'])->count(),
+
+            // 6 tabs cũ (vẫn trả về để không phá caller cũ nếu có)
             'pending'    => Customer::whereNotNull('mobile')
                 ->where(function ($q) use ($approvedRoles) {
                     $q->whereNotIn('role', $approvedRoles)->orWhereNull('role');

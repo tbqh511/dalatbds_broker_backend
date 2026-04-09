@@ -295,7 +295,7 @@ window.openSubpage = function(id){
   if(!sp) return;
   sp.classList.add('open');
   document.querySelector('.bottom-nav').style.transform='translateY(100%)';
-  if(id === 'users') { usersCurrentTab = 'pending'; document.getElementById('usersSearchInput').value = ''; loadUsers(true); }
+  if(id === 'users') { usersCurrentTab = 'brokers'; document.getElementById('usersSearchInput').value = ''; loadUsers(true); }
   if(id === 'likedbds') loadLikedBds(true);
   if(id === 'mybds') loadMyBds(true);
   if(id === 'mycustomers') loadMyCustomers(true);
@@ -6111,14 +6111,24 @@ function renderCommissionCard(comm) {
 
 // ========== ADMIN: QUẢN LÝ NGƯỜI DÙNG ==========
 
-var usersCurrentTab = 'pending';
+var usersCurrentTab = 'brokers';
 var usersCurrentSearch = '';
 var usersSearchTimer = null;
 
+/**
+ * Debounce search + chuyển đổi SĐT "0xxx" → "84xxx" trước khi search
+ * để khớp với format lưu trong DB.
+ */
 window.usersSearchDebounce = function() {
   clearTimeout(usersSearchTimer);
   usersSearchTimer = setTimeout(function() {
-    usersCurrentSearch = document.getElementById('usersSearchInput').value.trim();
+    var raw = (document.getElementById('usersSearchInput').value || '').trim();
+    // Nếu chuỗi bắt đầu bằng "0" và toàn số → chuyển thành "84..."
+    if (/^0\d+$/.test(raw)) {
+      usersCurrentSearch = '84' + raw.slice(1);
+    } else {
+      usersCurrentSearch = raw;
+    }
     loadUsers(true);
   }, 400);
 };
@@ -6127,6 +6137,18 @@ window.switchUsersTab = function(tab, btn) {
   usersCurrentTab = tab;
   document.querySelectorAll('#usersTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
   if (btn) btn.classList.add('active');
+  // Cập nhật style badge đếm cho tab active/inactive
+  document.querySelectorAll('#usersTabBar .sp-tab').forEach(function(t) {
+    var badge = t.querySelector('span');
+    if (!badge) return;
+    if (t.classList.contains('active')) {
+      badge.style.background = 'var(--primary)';
+      badge.style.color = '#fff';
+    } else {
+      badge.style.background = 'var(--bg-secondary)';
+      badge.style.color = 'var(--text-secondary)';
+    }
+  });
   loadUsers(true);
 };
 
@@ -6137,44 +6159,51 @@ window.loadUsers = function(reset) {
 
   var container = document.getElementById('usersListContainer');
   if (reset) {
-    container.innerHTML = '<div id="usersSkeletonLoader" style="padding:16px;">'
-      + '<div style="height:90px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;animation:pulse 1.5s infinite;"></div>'
-      + '<div style="height:90px;background:var(--bg-secondary);border-radius:12px;margin-bottom:10px;animation:pulse 1.5s infinite;"></div>'
-      + '<div style="height:90px;background:var(--bg-secondary);border-radius:12px;animation:pulse 1.5s infinite;"></div>'
+    container.innerHTML = '<div style="padding:12px 16px;">'
+      + '<div style="height:64px;background:var(--bg-secondary);border-radius:10px;margin-bottom:8px;animation:pulse 1.5s infinite;"></div>'
+      + '<div style="height:64px;background:var(--bg-secondary);border-radius:10px;margin-bottom:8px;animation:pulse 1.5s infinite;"></div>'
+      + '<div style="height:64px;background:var(--bg-secondary);border-radius:10px;animation:pulse 1.5s infinite;"></div>'
       + '</div>';
   }
 
   fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      // Update hidden stat elements
+      // Update tab count badges (3 tabs: brokers, sales, management)
       var s = data.stats || {};
-      var statMap = { pending:'usersPendingCount', broker:'usersBrokerCount', sale:'usersSaleCount', sale_admin:'usersSaleAdminCount', bds_admin:'usersBdsAdminCount', admin:'usersAdminCount' };
-      Object.keys(statMap).forEach(function(key) { var el = document.getElementById(statMap[key]); if (el) el.textContent = s[key] || 0; });
 
-      // Update tab count badges
-      ['pending','broker','sale','sale_admin','bds_admin','admin'].forEach(function(key) {
-        document.querySelectorAll('.users-tab-count-' + key).forEach(function(el) { el.textContent = s[key] || 0; });
-      });
+      // Hidden stat holders
+      var brokersEl = document.getElementById('usersBrokersCount');
+      var salesEl   = document.getElementById('usersSalesCount');
+      var adminEl   = document.getElementById('usersAdminCount');
+      if (brokersEl) brokersEl.textContent = s.brokers || 0;
+      if (salesEl)   salesEl.textContent   = s.sales   || 0;
+      if (adminEl)   adminEl.textContent   = s.management || 0;
 
-      // Render user cards
+      // Badge in tab bar
+      document.querySelectorAll('.users-tab-count-brokers').forEach(function(el) { el.textContent = s.brokers || 0; });
+      document.querySelectorAll('.users-tab-count-sales').forEach(function(el)   { el.textContent = s.sales   || 0; });
+      document.querySelectorAll('.users-tab-count-management').forEach(function(el) { el.textContent = s.management || 0; });
+
+      // Cache users
       var users = data.users || [];
-
-      // Cache users for action sheet
       window._usersCache = {};
       users.forEach(function(u) { window._usersCache[u.id] = u; });
 
       if (users.length === 0) {
         container.innerHTML = '<div style="text-align:center;padding:48px 16px;color:var(--text-tertiary);">'
-          + '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
-          + '<div style="font-size:14px;">Không có người dùng nào</div></div>';
+          + '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.25;margin-bottom:12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+          + '<div style="font-size:13px;color:var(--text-tertiary);">Không có người dùng nào</div></div>';
         return;
       }
 
       var tab = usersCurrentTab;
-      var tabLabels = { pending:'Chờ phê duyệt tài khoản eBroker', broker:'Broker', sale:'Nhân viên Sale', sale_admin:'Sale Admin', bds_admin:'BĐS Admin', admin:'Admin' };
-      var tabBadge  = (tab === 'pending') ? 'badge-red' : 'badge-green';
-      var html = '<div class="user-divider"><span>' + (tabLabels[tab] || tab) + '</span><span class="badge ' + tabBadge + '">' + users.length + ' người</span></div>';
+      var tabLabels = { brokers: 'Brokers & Khách hàng', sales: 'Đội ngũ Sales', management: 'Quản trị hệ thống' };
+      var html = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;">'
+        + '<span style="font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--text-tertiary);text-transform:uppercase;">'
+        + escHtml(tabLabels[tab] || tab) + '</span>'
+        + '<span style="font-size:11px;color:var(--text-tertiary);">' + users.length + ' người</span>'
+        + '</div>';
 
       users.forEach(function(u) {
         html += renderUserCard(u, tab);
@@ -6182,74 +6211,73 @@ window.loadUsers = function(reset) {
 
       container.innerHTML = html;
     })
-    .catch(function(err) {
+    .catch(function() {
       container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--danger);">Lỗi tải dữ liệu. <button onclick="loadUsers(true)" style="color:var(--primary);text-decoration:underline;background:none;border:none;cursor:pointer;">Thử lại</button></div>';
     });
 };
 
+/**
+ * renderUserCard — Flat minimalist list item.
+ * 3 tabs: brokers | sales | management
+ */
 function renderUserCard(u, tab) {
-  var initials = u.initials || u.name.slice(0, 2).toUpperCase();
-  var isLocked = u.isActive === 0;
-  var avatarBg = isLocked ? '#9ca3af' : (u.avatar_color || '#3270FC');
-  var avatar = '<div style="width:44px;height:44px;border-radius:50%;background:' + avatarBg
-    + ';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;">'
-    + initials + '</div>';
+  var initials = u.initials || (u.name || '??').slice(0, 2).toUpperCase();
+  var isLocked = (u.isActive === 0);
 
-  // Badge nguồn: phân biệt Flutter App vs WebApp
+  // Avatar tròn + status dot
+  var avatarBg = isLocked ? '#9ca3af' : (u.avatar_color || 'var(--primary)');
+  var dotColor = isLocked ? 'background:#d1d5db;border:2px solid var(--bg-primary);' : 'background:var(--primary);border:2px solid var(--bg-primary);';
+  var avatar = '<div style="position:relative;flex-shrink:0;">'
+    + '<div style="width:42px;height:42px;border-radius:50%;background:' + avatarBg
+    + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;">'
+    + escHtml(initials) + '</div>'
+    + '<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;' + dotColor + ';"></div>'
+    + '</div>';
+
+  // SĐT hiển thị
+  var phoneDisplay = u.mobile || u.email || '—';
+
+  // Source badge (App)
   var sourceBadge = (u.source === 'flutter')
-    ? ' <span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;vertical-align:middle;">📱 App</span>'
+    ? ' <span style="font-size:9px;padding:1px 5px;border-radius:6px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;vertical-align:middle;">📱 App</span>'
     : '';
 
-  var metaLine = (u.mobile ? escHtml(u.mobile) : (u.email ? escHtml(u.email) : '—')) + sourceBadge;
-
-  // ===== PENDING TAB: three-dot menu → Bottom Sheet =====
-  if (tab === 'pending') {
-    return '<div id="uc-' + u.id + '" style="display:flex;align-items:center;gap:12px;padding:12px 16px;">'
-      + avatar
-      + '<div style="flex:1;min-width:0;">'
-      + '<div style="font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(u.name) + '</div>'
-      + '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">' + metaLine + '</div>'
-      + '</div>'
-      + '<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:rgba(50,112,252,0.1);color:var(--primary);white-space:nowrap;flex-shrink:0;margin-right:4px;">Chờ duyệt</span>'
-      + '<button onclick="openUserActionSheet(' + u.id + ',\'' + tab + '\')"'
-      + ' style="width:36px;height:36px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--text-tertiary);flex-shrink:0;"'
-      + ' aria-label="Tuỳ chọn">'
-      + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>'
-      + '</button>'
-      + '</div>';
+  // Role badge — chỉ hiện ở tab sales và management
+  var roleBadge = '';
+  if (tab === 'sales' || tab === 'management') {
+    var roleCfg = {
+      'sale':       { label: 'Sale',       style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
+      'sale_admin': { label: 'Sale Admin', style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
+      'admin':      { label: 'Admin',      style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
+      'bds_admin':  { label: 'BĐS Admin',  style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
+    };
+    var rc = roleCfg[u.role];
+    if (rc) {
+      roleBadge = '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;' + rc.style + 'white-space:nowrap;flex-shrink:0;margin-right:4px;">' + rc.label + '</span>';
+    }
   }
 
-  // ===== ALL OTHER TABS: list-item row + three-dot menu =====
-  var roleLabels = { broker:'Broker', sale:'Sale', sale_admin:'Sale Admin', bds_admin:'BĐS Admin', admin:'Admin' };
-  var subLabel = (roleLabels[u.role] || u.role) + (u.mobile || u.email ? ' · ' + (u.mobile ? escHtml(u.mobile) : escHtml(u.email)) : '') + sourceBadge;
-  var lockIcon = isLocked ? ' <span style="font-size:11px;color:var(--danger);">🔒</span>' : '';
-  var nameColor = isLocked ? 'var(--text-secondary)' : 'var(--text-primary)';
-
-  return '<div id="uc-' + u.id + '" style="display:flex;align-items:center;gap:12px;padding:12px 16px;">'
-    + avatar
-    + '<div style="flex:1;min-width:0;">'
-    + '<div style="font-size:14px;font-weight:600;color:' + nameColor + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(u.name) + lockIcon + '</div>'
-    + '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + subLabel + '</div>'
-    + '</div>'
-    + '<button onclick="openUserActionSheet(' + u.id + ',\'' + tab + '\')"'
+  // Three-dot button (flat icon)
+  var dotsBtn = '<button onclick="openUserActionSheet(' + u.id + ',\'' + tab + '\')"'
     + ' style="width:36px;height:36px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--text-tertiary);flex-shrink:0;"'
     + ' aria-label="Tuỳ chọn">'
-    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>'
-    + '</button>'
+    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>'
+    + '</svg>'
+    + '</button>';
+
+  return '<div id="uc-' + u.id + '" style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);">'
+    + avatar
+    + '<div style="flex:1;min-width:0;">'
+    + '<div style="font-size:14px;font-weight:600;color:' + (isLocked ? 'var(--text-tertiary)' : 'var(--text-primary)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+    + escHtml(u.name || '—') + '</div>'
+    + '<div style="font-size:12px;color:var(--text-secondary);margin-top:1px;display:flex;align-items:center;gap:4px;">'
+    + '<span>' + escHtml(phoneDisplay) + '</span>' + sourceBadge
+    + '</div>'
+    + '</div>'
+    + roleBadge
+    + dotsBtn
     + '</div>';
-}
-
-
-function getRoleBadge(role) {
-  var badges = {
-    'broker':     '<span class="badge badge-green">🏠 eBroker</span>',
-    'bds_admin':  '<span class="badge" style="background:#ccfbf1;color:#0f766e;">🏘️ BĐS Admin</span>',
-    'sale':       '<span class="badge" style="background:#ede9fe;color:#7c3aed;">💼 Sale</span>',
-    'sale_admin': '<span class="badge badge-amber">📋 Sale Admin</span>',
-    'admin':      '<span class="badge badge-red">👑 Admin</span>',
-    'guest':      '<span class="badge" style="background:var(--bg-secondary);color:var(--text-secondary);">👤 Guest</span>',
-  };
-  return badges[role] || '<span class="badge" style="background:var(--bg-secondary);color:var(--text-secondary);">' + role + '</span>';
 }
 
 function escHtml(str) {
@@ -6257,62 +6285,53 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-window.approveUser = function(id, name) {
-  if (!confirm('Duyệt tài khoản "' + name + '" làm eBroker?')) return;
-  userAction('/approve', id, null, 'Đã duyệt ' + name + ' làm eBroker!');
-};
-
-window.rejectUser = function(id, name) {
-  if (!confirm('Từ chối và khoá tài khoản "' + name + '"?')) return;
-  userAction('/reject', id, null, 'Đã từ chối tài khoản ' + name);
-};
-
-window.approveTempUser = function(id, name) {
-  if (!confirm('Duyệt tạm thời tài khoản "' + name + '"?')) return;
-  userAction('/approve-temp', id, null, 'Đã duyệt tạm thời ' + name);
-};
-
 window.openUserActionSheet = function(id, tab) {
   var u = window._usersCache && window._usersCache[id];
   if (!u) return;
 
   var avatarEl = document.getElementById('userActionSheetAvatar');
+  var dotEl    = document.getElementById('userActionSheetStatusDot');
   var nameEl   = document.getElementById('userActionSheetName');
   var metaEl   = document.getElementById('userActionSheetMeta');
   var optsEl   = document.getElementById('userActionSheetOptions');
 
-  if (avatarEl) { avatarEl.textContent = u.initials || u.name.slice(0,2).toUpperCase(); avatarEl.style.background = u.isActive === 0 ? '#9ca3af' : (u.avatar_color || '#3270FC'); }
-  if (nameEl)   nameEl.textContent = u.name;
-  if (metaEl)   metaEl.textContent = (u.mobile || u.email || '') + (u.isActive === 0 ? ' · 🔒 Đang bị khoá' : '');
+  var isLocked = (u.isActive === 0);
 
-  var lockLabel    = u.isActive ? 'Khoá tài khoản'       : 'Mở khoá tài khoản';
-  var lockSubLabel = u.isActive ? 'Tạm thời vô hiệu hoá' : 'Khôi phục quyền truy cập';
-  var lockIcon     = u.isActive ? '🔒' : '🔓';
+  if (avatarEl) {
+    avatarEl.textContent = u.initials || (u.name || '??').slice(0,2).toUpperCase();
+    avatarEl.style.background = isLocked ? '#9ca3af' : (u.avatar_color || 'var(--primary)');
+  }
+  if (dotEl) { dotEl.style.background = isLocked ? '#d1d5db' : 'var(--primary)'; }
+  if (nameEl) nameEl.textContent = u.name || '—';
+  if (metaEl) metaEl.textContent = (u.mobile || u.email || '') + (isLocked ? ' · Đang bị khoá' : '');
 
-  var actions = [];
-  if (tab === 'pending') {
-    actions.push({ icon:'✓',  label:'Duyệt tài khoản',  sub:'Kích hoạt làm eBroker',   fn:'approveUser('     + id + ',\'' + escHtml(u.name) + '\')' });
-    actions.push({ icon:'⏳', label:'Duyệt tạm thời',    sub:'Cho phép dùng tạm',       fn:'approveTempUser(' + id + ',\'' + escHtml(u.name) + '\')' });
-    actions.push({ icon:'✕',  label:'Từ chối tài khoản', sub:'Khoá và từ chối đăng ký', fn:'rejectUser('      + id + ',\'' + escHtml(u.name) + '\')' });
-  } else if (tab === 'sale_admin') {
-    actions.push({ icon:'📋', label:'Thu hồi quyền Sale Admin', sub:'Hạ xuống Sale',   fn:'revokeRole(' + id + ',\'sale\')'   });
-  } else if (tab === 'bds_admin') {
-    actions.push({ icon:'🏘️', label:'Thu hồi quyền BĐS Admin', sub:'Hạ xuống Broker', fn:'revokeRole(' + id + ',\'broker\')' });
-  } else if (tab === 'admin') {
-    actions.push({ icon:'👑', label:'Thu hồi quyền Admin',      sub:'Hạ xuống Broker', fn:'revokeRole(' + id + ',\'broker\')' });
-  }
-  if (tab !== 'pending') {
-    actions.push({ icon: lockIcon, label: lockLabel, sub: lockSubLabel, fn:'toggleUserLock(' + id + ',\'' + escHtml(u.name) + '\',' + u.isActive + ')' });
-  }
+  var iconEdit   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  var iconRole   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>';
+  var iconHome   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+  var iconLock   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+  var iconUnlock = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+
+  var lockLabel = isLocked ? 'Mở khoá tài khoản' : 'Khoá tài khoản';
+  var lockSub   = isLocked ? 'Khôi phục quyền truy cập' : 'Tạm thời vô hiệu hoá';
+
+  var actions = [
+    { icon: iconEdit,               label: 'Chỉnh sửa thông tin', sub: 'Cập nhật hồ sơ người dùng',      fn: 'showToast(\'Chức năng đang phát triển\')', danger: false },
+    { icon: iconRole,               label: 'Đổi vai trò',         sub: 'Thay đổi quyền hạn tài khoản',   fn: 'openChangeRoleSheet(' + id + ')',           danger: false },
+    { icon: iconHome,               label: 'Xem BĐS đã đăng',     sub: (u.property_count || 0) + ' BĐS', fn: 'showToast(\'Chức năng đang phát triển\')', danger: false },
+    { icon: isLocked ? iconUnlock : iconLock, label: lockLabel,   sub: lockSub,
+      fn: 'toggleUserLock(' + id + ',\'' + escHtml(u.name || '') + '\',' + u.isActive + ')', danger: !isLocked },
+  ];
 
   if (optsEl) {
     optsEl.innerHTML = actions.map(function(a) {
+      var lc = a.danger ? 'color:var(--danger);' : 'color:var(--text-primary);';
+      var ib = a.danger ? 'background:rgba(239,68,68,.08);' : 'background:var(--bg-secondary);';
       return '<button onclick="closeUserActionSheet();' + a.fn + '"'
-        + ' style="width:100%;display:flex;align-items:center;gap:14px;padding:13px 18px;background:none;border:none;border-bottom:1px solid rgba(0,0,0,.06);cursor:pointer;text-align:left;">'
-        + '<span style="width:38px;height:38px;border-radius:10px;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + a.icon + '</span>'
+        + ' style="width:100%;display:flex;align-items:center;gap:14px;padding:13px 18px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;text-align:left;">'
+        + '<span style="width:34px;height:34px;border-radius:9px;' + ib + 'display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + a.icon + '</span>'
         + '<span style="flex:1;">'
-        + '<span style="display:block;font-size:14px;font-weight:600;color:var(--text-primary);">' + a.label + '</span>'
-        + '<span style="display:block;font-size:12px;color:var(--text-secondary);margin-top:1px;">' + a.sub + '</span>'
+        + '<span style="display:block;font-size:14px;font-weight:500;' + lc + '">' + escHtml(a.label) + '</span>'
+        + '<span style="display:block;font-size:12px;color:var(--text-tertiary);margin-top:1px;">' + escHtml(a.sub) + '</span>'
         + '</span>'
         + '</button>';
     }).join('');
@@ -6326,11 +6345,21 @@ window.closeUserActionSheet = function() {
   if (sheet) sheet.style.display = 'none';
 };
 
-window.revokeRole = function(id, targetRole) {
+/* Đổi role qua prompt inline — được gọi từ Bottom Sheet */
+window.openChangeRoleSheet = function(id) {
   var u = window._usersCache && window._usersCache[id];
-  var name = u ? u.name : 'người dùng này';
-  if (!confirm('Thu hồi quyền và đặt về "' + targetRole + '" cho ' + name + '?')) return;
-  userAction('/role', id, { role: targetRole }, 'Đã cập nhật quyền thành công!', 'PATCH');
+  if (!u) return;
+  var validRoles = ['broker', 'sale', 'sale_admin', 'bds_admin', 'admin'];
+  var targetRole = prompt(
+    'Đổi vai trò cho "' + (u.name || '') + '"\n' +
+    'Nhập role mới: broker | sale | sale_admin | bds_admin | admin',
+    u.role || 'broker'
+  );
+  if (!targetRole) return;
+  var clean = (targetRole || '').trim().toLowerCase();
+  if (!validRoles.includes(clean)) { showToast('Role không hợp lệ!'); return; }
+  if (!confirm('Đổi role "' + (u.name || '') + '" thành "' + clean + '"?')) return;
+  userAction('/role', id, { role: clean }, 'Đã cập nhật role thành công!', 'PATCH');
 };
 
 window.toggleUserLock = function(id, name, isActive) {
