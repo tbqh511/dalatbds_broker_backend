@@ -6225,7 +6225,7 @@ function renderUserCard(u, tab) {
   var isLocked = (u.isActive === 0);
 
   // Avatar hình + status dot
-  var avatarImgSrc = (u.profile || u.avatar || u.avatar_url) ? (u.profile || u.avatar || u.avatar_url) : '/images/favicon.ico';
+  var avatarImgSrc = u.profile ? ('/images/users/' + u.profile) : (u.avatar || u.avatar_url || '/images/favicon.ico');
   var dotColor = isLocked ? 'background:#d1d5db;border:2px solid var(--bg-primary);' : 'background:var(--primary);border:2px solid var(--bg-primary);';
   var avatar = '<div style="position:relative;flex-shrink:0;">'
     + '<img src="' + escAttr(avatarImgSrc) + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;filter:' + (isLocked ? 'grayscale(100%) opacity(60%)' : 'none') + '" onerror="this.src=\'/images/favicon.ico\'">'
@@ -6296,7 +6296,7 @@ window.openUserActionSheet = function(id, tab) {
   var isLocked = (u.isActive === 0);
 
   if (avatarEl) {
-    var avatarImgSrc = (u.profile || u.avatar || u.avatar_url) ? (u.profile || u.avatar || u.avatar_url) : '/images/favicon.ico';
+    var avatarImgSrc = u.profile ? ('/images/users/' + u.profile) : (u.avatar || u.avatar_url || '/images/favicon.ico');
     avatarEl.innerHTML = '<img src="' + escAttr(avatarImgSrc) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;filter:' + (isLocked ? 'grayscale(100%) opacity(60%)' : 'none') + '" onerror="this.src=\'/images/favicon.ico\'">';
     avatarEl.style.background = 'transparent';
     avatarEl.style.padding = '0';
