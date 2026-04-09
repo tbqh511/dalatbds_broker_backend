@@ -362,6 +362,7 @@ class TelegramBotController extends Controller
                         'telegram_id' => (string) $telegramId,
                         'telegram_bot_started' => true,
                         'role' => 'broker',
+                        'isActive' => 1,
                     ]);
 
                     Log::info('[BotContact] new customer created', ['customer_id' => $customer->id]);
