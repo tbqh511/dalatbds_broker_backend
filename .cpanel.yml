@@ -3,8 +3,13 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/qymxlvghhosting/public_html/dalatbds.com
 
-    # Xóa các cache cũ để app load code mới nhất
+    # Xóa cache cũ
     - /usr/local/bin/php $DEPLOYPATH/artisan config:clear
     - /usr/local/bin/php $DEPLOYPATH/artisan cache:clear
     - /usr/local/bin/php $DEPLOYPATH/artisan route:clear
     - /usr/local/bin/php $DEPLOYPATH/artisan view:clear
+
+    # Rebuild cache (config:cache và route:cache đã fix Closure issue)
+    - /usr/local/bin/php $DEPLOYPATH/artisan config:cache
+    - /usr/local/bin/php $DEPLOYPATH/artisan route:cache
+    - /usr/local/bin/php $DEPLOYPATH/artisan view:cache
