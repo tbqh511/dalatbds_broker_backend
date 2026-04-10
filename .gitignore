@@ -1,4 +1,5 @@
 /vendor/
+.claude/cpanel.env
 /node_modules/
 /public/hot
 /public/storage
