@@ -9,8 +9,22 @@
 header('Content-Type: application/json');
 
 // ── Config ────────────────────────────────────────────────────────────────────
-$SECRET    = getenv('WEBHOOK_SECRET') ?: '';
 $APP_ROOT  = dirname(__DIR__); // /home/qymxlvghhosting/public_html/dalatbds.com
+
+// Read WEBHOOK_SECRET: try server env first, then fall back to Laravel .env file
+$SECRET = getenv('WEBHOOK_SECRET') ?: '';
+if (empty($SECRET)) {
+    $envFile = $APP_ROOT . '/.env';
+    if (is_readable($envFile)) {
+        foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            if (str_starts_with(trim($line), '#')) continue;
+            if (str_starts_with($line, 'WEBHOOK_SECRET=')) {
+                $SECRET = trim(substr($line, strlen('WEBHOOK_SECRET=')), " \t\"'");
+                break;
+            }
+        }
+    }
+}
 $PHP       = '/usr/local/bin/php';
 $GIT       = '/usr/bin/git';
 
