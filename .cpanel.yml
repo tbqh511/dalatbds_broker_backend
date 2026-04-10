@@ -3,19 +3,13 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/qymxlvghhosting/public_html/dalatbds.com
 
-    # Cài đặt dependencies nếu chưa có hoặc có thay đổi
-    - cd $DEPLOYPATH && /usr/local/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1 || true
-
     # Clear cache cũ
-    - cd $DEPLOYPATH && /usr/local/bin/php artisan config:clear 2>&1 || true
-    - cd $DEPLOYPATH && /usr/local/bin/php artisan cache:clear 2>&1 || true
-    - cd $DEPLOYPATH && /usr/local/bin/php artisan route:clear 2>&1 || true
-    - cd $DEPLOYPATH && /usr/local/bin/php artisan view:clear 2>&1 || true
+    - /usr/local/bin/php $DEPLOYPATH/artisan config:clear
+    - /usr/local/bin/php $DEPLOYPATH/artisan cache:clear
+    - /usr/local/bin/php $DEPLOYPATH/artisan route:clear
+    - /usr/local/bin/php $DEPLOYPATH/artisan view:clear
 
     # Rebuild cache
-    - cd $DEPLOYPATH && /usr/local/bin/php artisan config:cache 2>&1 || true
-    - cd $DEPLOYPATH && /usr/local/bin/php artisan route:cache 2>&1 || true
-    - cd $DEPLOYPATH && /usr/local/bin/php artisan view:cache 2>&1 || true
-
-    # Storage symlink
-    - cd $DEPLOYPATH && /usr/local/bin/php artisan storage:link --force 2>&1 || true
+    - /usr/local/bin/php $DEPLOYPATH/artisan config:cache
+    - /usr/local/bin/php $DEPLOYPATH/artisan route:cache
+    - /usr/local/bin/php $DEPLOYPATH/artisan view:cache
