@@ -3,7 +3,6 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/qymxlvghhosting/public_html/dalatbds.com
-    - cp -R * $DEPLOYPATH
     - cd $DEPLOYPATH && php artisan config:cache
     - cd $DEPLOYPATH && php artisan route:cache
     - cd $DEPLOYPATH && php artisan view:cache
