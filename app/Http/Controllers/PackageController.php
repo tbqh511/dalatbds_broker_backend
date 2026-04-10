@@ -246,6 +246,12 @@ class PackageController extends Controller
     {
         //
     }
+
+    public function usersPurchasedPackages()
+    {
+        return view('packages.users_packages');
+    }
+
     public function get_user_package_list()
     {
         $offset = 0;

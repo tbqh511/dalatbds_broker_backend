@@ -161,6 +161,33 @@ class HomeController extends Controller
         return back()->with('success', 'Profile Updated Successfully');
     }
 
+    public function adminLogin()
+    {
+        return view('auth.login');
+    }
+
+    public function chat()
+    {
+        return view('chat');
+    }
+
+    public function calculator()
+    {
+        return view('Calculator.calculator');
+    }
+
+    public function runMigrate()
+    {
+        \Illuminate\Support\Facades\Artisan::call('migrate');
+        return redirect()->back();
+    }
+
+    public function runFreshMigrate()
+    {
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh');
+        return redirect()->back();
+    }
+
     public function privacy_policy()
     {
         echo system_setting('privacy_policy');

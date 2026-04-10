@@ -86,12 +86,7 @@ Route::post('/webapp/leads/{id}/assign', [CrmLeadController::class, 'doAssign'])
     ->name('webapp.leads.do-assign')
     ->middleware('signed');
 Route::group(['middleware' => 'telegram.webapp'], function () {
-    Route::get('/webapp/logout', function () {
-        \Illuminate\Support\Facades\Auth::guard('webapp')->logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-        return redirect('/webapp');
-    })->name('webapp.logout');
+    Route::get('/webapp/logout', [TelegramWebAppController::class, 'logout'])->name('webapp.logout');
     Route::get('/webapp', [TelegramWebAppController::class , 'index'])->name('webapp');
     Route::get('/webapp/home-feed', [TelegramWebAppController::class , 'homeFeed'])->name('webapp.home_feed');
     Route::get('/webapp/search/suggestions', [TelegramWebAppController::class, 'searchSuggestions'])->name('webapp.search.suggestions');
@@ -259,12 +254,8 @@ Route::get('/agents', [FrontEndAgentsController::class , 'index'])->name('agents
 
 Route::get('/gioi-thieu', [FrontEndHomeController::class , 'about'])->name('about');
 
-Route::get('/lien-he', function () {
-    return view('contact');
-});
-Route::fallback(function () {
-    return view('404');
-});
+Route::get('/lien-he', [FrontEndHomeController::class, 'contact']);
+Route::fallback([FrontEndHomeController::class, 'notFound']);
 
 // //Create properties layout
 // Route::get('/dang-tin', function () {
@@ -273,20 +264,11 @@ Route::fallback(function () {
 //HuyTBQ: End - Route for Frontend Page
 
 
-Route::get('/admin', function () {
-    return view('auth.login');
-});
+Route::get('/admin', [HomeController::class, 'adminLogin']);
 
-Route::get('/new-migrate', function () {
-    Artisan::call('migrate');
-    return redirect()->back();
-});
+Route::get('/new-migrate', [HomeController::class, 'runMigrate']);
 
-
-Route::get('/fresh-migrate', function () {
-    Artisan::call('migrate:fresh');
-    return redirect()->back();
-});
+Route::get('/fresh-migrate', [HomeController::class, 'runFreshMigrate']);
 Route::get('customer-privacy-policy', [SettingController::class , 'show_privacy_policy'])->name('customer-privacy-policy');
 
 
@@ -423,10 +405,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
             Route::get('package_list', [PackageController::class , 'show']);
             Route::post('package-update', [PackageController::class , 'update']);
             Route::post('package-status', [PackageController::class , 'updatestatus'])->name('package.updatestatus');
-            Route::get('get_user_purchased_packages', [PackageController::class , function () {
-                    return view('packages.users_packages');
-                }
-                ]);
+            Route::get('get_user_purchased_packages', [PackageController::class, 'usersPurchasedPackages']);
 
                 Route::get('get_user_package_list', [PackageController::class , 'get_user_package_list']);
 
@@ -518,15 +497,9 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
                 Route::post('notification-multiple-delete', [NotificationController::class , 'multiple_delete']);
                 /// END :: NOTIFICATION
         
-                Route::get('chat', function () {
-                    return view('chat');
-                }
-                );
+                Route::get('chat', [HomeController::class, 'chat']);
 
-                Route::get('calculator', function () {
-                    return view('Calculator.calculator');
-                }
-                );
+                Route::get('calculator', [HomeController::class, 'calculator']);
             }
             );
         });

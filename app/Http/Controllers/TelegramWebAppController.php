@@ -42,6 +42,14 @@ class TelegramWebAppController extends Controller
 {
     use ValidatesTelegramInitData;
 
+    public function logout(Request $request)
+    {
+        \Illuminate\Support\Facades\Auth::guard('webapp')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/webapp');
+    }
+
     public function index(Request $request)
     {
         // Get authenticated customer

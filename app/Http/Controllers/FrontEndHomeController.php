@@ -110,6 +110,16 @@ class FrontEndHomeController extends Controller
     /**
      * Display a listing of the resource.
      */
+    public function contact()
+    {
+        return view('contact');
+    }
+
+    public function notFound()
+    {
+        return view('404');
+    }
+
     public function about()
     {
         // Get list top agent
