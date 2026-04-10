@@ -1,8 +1,21 @@
 ---
-# DalatBDS auto-deploy - last tested: 2026-04-10
 deployment:
   tasks:
     - export DEPLOYPATH=/home/qymxlvghhosting/public_html/dalatbds.com
-    - cd $DEPLOYPATH && php artisan config:cache
-    - cd $DEPLOYPATH && php artisan route:cache
-    - cd $DEPLOYPATH && php artisan view:cache
+
+    # Cài đặt dependencies nếu chưa có hoặc có thay đổi
+    - cd $DEPLOYPATH && /usr/local/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1 || true
+
+    # Clear cache cũ
+    - cd $DEPLOYPATH && /usr/local/bin/php artisan config:clear 2>&1 || true
+    - cd $DEPLOYPATH && /usr/local/bin/php artisan cache:clear 2>&1 || true
+    - cd $DEPLOYPATH && /usr/local/bin/php artisan route:clear 2>&1 || true
+    - cd $DEPLOYPATH && /usr/local/bin/php artisan view:clear 2>&1 || true
+
+    # Rebuild cache
+    - cd $DEPLOYPATH && /usr/local/bin/php artisan config:cache 2>&1 || true
+    - cd $DEPLOYPATH && /usr/local/bin/php artisan route:cache 2>&1 || true
+    - cd $DEPLOYPATH && /usr/local/bin/php artisan view:cache 2>&1 || true
+
+    # Storage symlink
+    - cd $DEPLOYPATH && /usr/local/bin/php artisan storage:link --force 2>&1 || true
