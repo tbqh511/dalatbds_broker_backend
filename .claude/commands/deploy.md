@@ -1,27 +1,49 @@
-Deploy DalatBDS lên production server (host cPanel đã cấu hình auto-deploy).
+Deploy DalatBDS lên production server.
 
-Chỉ cần push lên nhánh `main` trên GitHub — cPanel sẽ tự động kéo code mới về và chạy `.cpanel.yml`.
+Flow: commit → push GitHub main → gọi cPanel UAPI → cPanel tự pull & deploy.
 
-## Các bước thực hiện
+## Bước 1: Kiểm tra và commit
 
-1. Chạy `git status` để kiểm tra trạng thái working tree.
+Chạy `git status`. Nếu có file chưa commit:
+- Hỏi commit message (hoặc dùng $ARGUMENTS nếu có)
+- `git add -u`
+- Commit với message đó
 
-2. Nếu có file chưa commit:
-   - Hỏi người dùng commit message (hoặc dùng message từ $ARGUMENTS nếu được cung cấp)
-   - Stage các file đã thay đổi: `git add -u`
-   - Commit với message đó
+## Bước 2: Push lên GitHub main
 
-3. Kiểm tra branch hiện tại bằng `git branch --show-current`.
+Kiểm tra branch hiện tại (`git branch --show-current`).
 
-4. Nếu không ở nhánh `main`:
-   - Thông báo sẽ merge vào main
-   - `git checkout main`
-   - `git pull origin main` (đảm bảo main local up-to-date)
-   - `git merge <tên-branch-trước> --no-ff -m "Deploy: merge <branch> into main"`
+Nếu không ở `main`:
+- `git checkout main`
+- `git pull origin main`
+- `git merge <branch-trước> --no-ff -m "Deploy: merge <branch> into main"`
 
-5. Push lên GitHub: `git push -u origin main`
+Chạy: `git push -u origin main`
 
-6. Báo kết quả cho người dùng:
-   - Branch nào vừa được push
-   - Bao nhiêu commit mới
-   - Nhắc nhở: cPanel sẽ tự động pull code và chạy `.cpanel.yml` trên server
+## Bước 3: Trigger cPanel deploy qua UAPI
+
+Đọc credentials từ file `.claude/cpanel.env`. Nếu file không tồn tại, hướng dẫn user tạo từ `.claude/cpanel.env.example`.
+
+Sau khi load credentials, chạy lệnh curl sau:
+
+```bash
+source .claude/cpanel.env && curl -s -k \
+  -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+  -X POST \
+  "https://${CPANEL_HOST}:${CPANEL_PORT}/execute/VersionControlDeployment/create" \
+  --data-urlencode "repository_root=${CPANEL_REPO_PATH}"
+```
+
+## Bước 4: Kiểm tra kết quả
+
+Parse JSON response:
+- Nếu `"status": 1` → thành công, báo deploy đang chạy trên server
+- Nếu `"status": 0` → thất bại, show field `errors`
+- Nếu curl lỗi (không có cpanel.env hoặc network lỗi) → báo user kiểm tra `.claude/cpanel.env`
+
+## Kết quả mong đợi
+
+Báo cáo:
+- Branch và commit vừa push
+- Trạng thái deploy trên cPanel
+- Nhắc: deployment đang chạy trên server, có thể xem tiến trình tại cPanel > Git Version Control
