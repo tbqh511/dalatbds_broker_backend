@@ -3878,6 +3878,44 @@ class TelegramWebAppController extends Controller
         return response()->json(['success' => true, 'isActive' => $newStatus]);
     }
 
+    public function adminUpdateUser(Request $request, int $id)
+    {
+        $validRoles = ['broker', 'sale', 'sale_admin', 'bds_admin', 'admin'];
+
+        $validated = $request->validate([
+            'name'   => 'required|string|max:255',
+            'mobile' => 'nullable|string|max:20',
+            'email'  => 'nullable|email|max:255',
+            'role'   => 'nullable|in:' . implode(',', $validRoles),
+        ]);
+
+        $target = Customer::findOrFail($id);
+
+        // Chỉ cho phép cập nhật role nếu người dùng hiện tại là admin
+        $me = Auth::guard('webapp')->user();
+        $updateData = [
+            'name'   => $validated['name'],
+            'mobile' => $validated['mobile'] ?? $target->mobile,
+            'email'  => $validated['email'] ?? $target->email,
+        ];
+        if (isset($validated['role']) && $me->isAdmin()) {
+            $updateData['role'] = $validated['role'];
+        }
+
+        $target->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id'     => $target->id,
+                'name'   => $target->name,
+                'mobile' => $target->mobile,
+                'email'  => $target->email,
+                'role'   => $target->role,
+            ],
+        ]);
+    }
+
     public function adminDeleteUser(int $id)
     {
         $me = Auth::guard('webapp')->user();
@@ -3941,6 +3979,12 @@ class TelegramWebAppController extends Controller
                 // pending (default): chỉ lấy status=0 (chờ duyệt từ broker)
                 $query->where('status', 0)->orderBy('created_at', 'asc');
             }
+        }
+
+        // Lọc theo người đăng (added_by) — dùng khi admin xem BĐS của 1 user cụ thể
+        $addedBy = $request->input('added_by');
+        if (!empty($addedBy)) {
+            $query->where('propertys.added_by', (int) $addedBy);
         }
 
         // Search filter
