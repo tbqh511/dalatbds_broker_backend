@@ -174,12 +174,19 @@ class Customer extends Authenticatable implements JWTSubject
 
     /**
      * Tính role hiệu lực theo logic nghiệp vụ:
-     * - Không có SĐT → guest (dù role DB là gì)
+     * - Role đặc quyền (admin/bds_admin/sale_admin) → dùng role đó, KHÔNG yêu cầu SĐT
+     * - Không có SĐT → guest (với các role thông thường)
      * - Có SĐT, role hợp lệ (broker/sale/sale_admin/bds_admin/admin) → dùng role đó
      * - Có SĐT, role DB là 'guest'/null/unknown → broker (mặc định)
      */
     public function getEffectiveRole(): string
     {
+        // Admin-level roles bypass phone requirement.
+        // Accounts created manually (without bot flow) still have full access.
+        if (in_array($this->role, ['admin', 'bds_admin', 'sale_admin'])) {
+            return $this->role;
+        }
+
         if (empty($this->mobile)) {
             return 'guest';
         }

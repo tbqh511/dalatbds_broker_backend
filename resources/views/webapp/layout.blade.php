@@ -304,12 +304,31 @@
   }
 
   if (_loginStatus === 'error') {
-    // initData không hợp lệ — không retry tự động, hiện guest dialog
+    var _reason = _params.get('reason');
     sessionStorage.removeItem('_phone_shared');
     removeAuthOverlay();
-    document.addEventListener('DOMContentLoaded', function() {
-      if (typeof showGuestDialog === 'function') showGuestDialog();
-    });
+
+    // Nếu lỗi do initData không hợp lệ (invalid_initdata) — đây là lỗi cấu hình
+    // TELEGRAM_BOT_TOKEN, không thể tự giải quyết bằng cách share SĐT.
+    // Hiện thông báo lỗi rõ ràng thay vì dialog share SĐT gây nhầm lẫn.
+    if (_reason === 'invalid_initdata') {
+      document.addEventListener('DOMContentLoaded', function() {
+        var appEl = document.getElementById('app');
+        if (appEl) {
+          appEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:24px;">'
+            + '<img src="/images/logo.svg" alt="Đà Lạt BĐS" style="height:48px;margin-bottom:16px;">'
+            + '<h3 style="margin:0 0 8px;color:#333;">Lỗi xác thực</h3>'
+            + '<p style="color:#666;font-size:14px;margin:0 0 20px;">Không thể xác thực Telegram. Vui lòng đóng và mở lại ứng dụng.</p>'
+            + '<p style="color:#999;font-size:12px;margin:0 0 20px;">(Mã lỗi: E_INITDATA)</p>'
+            + '<button onclick="sessionStorage.clear();window.location.reload()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Thử lại</button>'
+            + '</div>';
+        }
+      });
+    } else {
+      document.addEventListener('DOMContentLoaded', function() {
+        if (typeof showGuestDialog === 'function') showGuestDialog();
+      });
+    }
     return;
   }
 
