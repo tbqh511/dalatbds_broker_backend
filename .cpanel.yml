@@ -9,7 +9,7 @@ deployment:
     - /usr/local/bin/php $DEPLOYPATH/artisan route:clear
     - /usr/local/bin/php $DEPLOYPATH/artisan view:clear
 
-    # Rebuild cache (config:cache và route:cache đã fix Closure issue)
+    # Rebuild cache (Closure issues fixed in installer.php + web.php)
     - /usr/local/bin/php $DEPLOYPATH/artisan config:cache
     - /usr/local/bin/php $DEPLOYPATH/artisan route:cache
     - /usr/local/bin/php $DEPLOYPATH/artisan view:cache
