@@ -1,7 +1,5 @@
 ---
 deployment:
   tasks:
-    # 1. Di chuyển vào thư mục code (tương đương cd public_html/dalatbds.com/)
     - export DEPLOYPATH=/home/qymxlvghhosting/public_html/dalatbds.com
-    
-  
+    - /bin/cp -R %{SOURCEURL}* $DEPLOYPATH
