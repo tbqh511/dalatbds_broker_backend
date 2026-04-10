@@ -1,37 +1,28 @@
 ---
 deployment:
   tasks:
-    # ============================================================
-    # HƯỚNG DẪN: Thay DEPLOY_PATH bằng đường dẫn thực tế trên server
-    # Ví dụ:
-    #   /home/dalatbdsc/public_html          (nếu deploy vào domain chính)
-    #   /home/dalatbdsc/dalatbds_broker_backend  (nếu app ở ngoài public_html)
-    # ============================================================
-    - export DEPLOYPATH=/home/dalatbdsc/dalatbds_broker_backend
+    - export DEPLOYPATH=/home/qymxlvghhosting/public_html/dalatbds.com
 
-    # 1. Copy toàn bộ code từ repo vào thư mục deploy
-    - /bin/cp -R * $DEPLOYPATH
+    # 1. Cài đặt PHP dependencies (không bao gồm dev packages)
+    - cd $DEPLOYPATH && /usr/local/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
 
-    # 2. Cài đặt PHP dependencies (không bao gồm dev packages)
-    - cd $DEPLOYPATH && /usr/local/bin/php composer.phar install --no-dev --optimize-autoloader --no-interaction
-
-    # 3. Chạy database migrations
+    # 2. Chạy database migrations
     - cd $DEPLOYPATH && /usr/local/bin/php artisan migrate --force
 
-    # 4. Clear cache cũ trước khi rebuild
+    # 3. Clear cache cũ trước khi rebuild
     - cd $DEPLOYPATH && /usr/local/bin/php artisan config:clear
     - cd $DEPLOYPATH && /usr/local/bin/php artisan cache:clear
     - cd $DEPLOYPATH && /usr/local/bin/php artisan route:clear
     - cd $DEPLOYPATH && /usr/local/bin/php artisan view:clear
 
-    # 5. Cache lại config/route/view để tăng performance
+    # 4. Cache lại config/route/view để tăng performance
     - cd $DEPLOYPATH && /usr/local/bin/php artisan config:cache
     - cd $DEPLOYPATH && /usr/local/bin/php artisan route:cache
     - cd $DEPLOYPATH && /usr/local/bin/php artisan view:cache
 
-    # 6. Tạo symlink storage (chỉ cần lần đầu, các lần sau sẽ bỏ qua nếu đã có)
+    # 5. Tạo symlink storage (bỏ qua nếu đã có)
     - cd $DEPLOYPATH && /usr/local/bin/php artisan storage:link --force
 
-    # 7. Phân quyền thư mục storage và bootstrap/cache
+    # 6. Phân quyền thư mục storage và bootstrap/cache
     - chmod -R 775 $DEPLOYPATH/storage
     - chmod -R 775 $DEPLOYPATH/bootstrap/cache
