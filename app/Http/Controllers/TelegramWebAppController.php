@@ -4981,9 +4981,12 @@ class TelegramWebAppController extends Controller
 
         $telegramUserData = $this->validateTelegramInitData($initData);
         if (! $telegramUserData) {
-            \Log::warning('WebApp authRedirect: Telegram initData validation failed');
+            \Log::warning('WebApp authRedirect: Telegram initData validation failed', [
+                'has_bot_token' => ! empty(env('TELEGRAM_BOT_TOKEN')),
+                'initData_len'  => strlen($initData),
+            ]);
 
-            return redirect('/webapp?login_status=error');
+            return redirect('/webapp?login_status=error&reason=invalid_initdata');
         }
 
         $telegramId = $telegramUserData['id'];
@@ -5004,6 +5007,32 @@ class TelegramWebAppController extends Controller
             'customer_role'  => $customer->role ?? null,
             'customer_phone' => $customer->mobile ?? null,
         ]);
+
+        // Fallback: nếu không tìm theo telegram_id, kiểm tra session hiện tại.
+        // Trường hợp hay gặp: admin account được tạo thủ công (không qua bot),
+        // telegram_id chưa được gán. Nếu họ đang có session hợp lệ → link ngay.
+        if (! $customer) {
+            $sessionCustomer = \Auth::guard('webapp')->user();
+            if ($sessionCustomer && empty($sessionCustomer->telegram_id)) {
+                $alreadyLinked = \App\Models\Customer::where('telegram_id', (string) $telegramId)
+                    ->where('id', '!=', $sessionCustomer->id)
+                    ->exists();
+                if (! $alreadyLinked) {
+                    $sessionCustomer->telegram_id = (string) $telegramId;
+                    $sessionCustomer->save();
+                    $customer = $sessionCustomer;
+                    \Log::info('[authRedirect] linked telegram_id via session fallback', [
+                        'customer_id' => $customer->id,
+                        'telegram_id' => $telegramId,
+                    ]);
+                } else {
+                    \Log::warning('[authRedirect] refused to link telegram_id: already linked to another customer', [
+                        'telegram_id'       => $telegramId,
+                        'session_customer'  => $sessionCustomer->id,
+                    ]);
+                }
+            }
+        }
 
         if ($customer) {
             // Gán referrer nếu user chưa có referred_by và có referral_code
