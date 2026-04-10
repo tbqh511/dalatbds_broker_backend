@@ -141,6 +141,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
         Route::post('/webapp/api/admin/users/{id}/approve', [TelegramWebAppController::class, 'adminApproveUser'])->name('webapp.admin.approve');
         Route::post('/webapp/api/admin/users/{id}/reject', [TelegramWebAppController::class, 'adminRejectUser'])->name('webapp.admin.reject');
         Route::post('/webapp/api/admin/users/{id}/approve-temp', [TelegramWebAppController::class, 'adminApproveTempUser'])->name('webapp.admin.approve-temp');
+        Route::patch('/webapp/api/admin/users/{id}', [TelegramWebAppController::class, 'adminUpdateUser'])->name('webapp.admin.update-user');
         Route::patch('/webapp/api/admin/users/{id}/role', [TelegramWebAppController::class, 'adminChangeUserRole'])->name('webapp.admin.change-role');
         Route::patch('/webapp/api/admin/users/{id}/toggle-active', [TelegramWebAppController::class, 'adminToggleUserActive'])->name('webapp.admin.toggle');
         Route::delete('/webapp/api/admin/users/{id}', [TelegramWebAppController::class, 'adminDeleteUser'])->name('webapp.admin.delete');
