@@ -1,4 +1,5 @@
 ---
+# DalatBDS auto-deploy - last tested: 2026-04-10
 deployment:
   tasks:
     - export DEPLOYPATH=/home/qymxlvghhosting/public_html/dalatbds.com
