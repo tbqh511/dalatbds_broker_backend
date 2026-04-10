@@ -353,6 +353,9 @@ window.openSubpage = function(id){
     if (searchEl) searchEl.value = '';
     window._approvebdsSearchId = null;
 
+    // Reset filter người đăng khi mở subpage thông thường (không phải từ viewUserBds)
+    abdsFilterAddedBy = null;
+
     document.querySelectorAll('#abdsTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
     var abdsDefaultTab = document.querySelector('#abdsTabBar [data-tab="' + abdsCurrentTab + '"]');
     if(abdsDefaultTab) abdsDefaultTab.classList.add('active');
@@ -643,11 +646,13 @@ function formatPriceToVNText(price) {
 }
 
 // ============ ADMIN — DUYỆT BĐS ============
-var currentRejectId = null;
-var abdsCurrentTab  = 'pending';
+var currentRejectId    = null;
+var abdsCurrentTab     = 'pending';
 var abdsCurrentFilters = {};
-var abdsCurrentSearch = '';
-var abdsSearchTimer = null;
+var abdsCurrentSearch  = '';
+var abdsSearchTimer    = null;
+// ID người dùng cần filter (set bởi viewUserBds, reset về null khi mở subpage thông thường)
+var abdsFilterAddedBy  = null;
 
 // Cache dữ liệu card để filter client-side (được dùng bởi approvebds.blade.php)
 if(typeof window._abdsCardData === 'undefined') {
@@ -709,6 +714,8 @@ window.loadApprovalBds = function(reset) {
   }
 
   if(abdsCurrentSearch) params.append('search', abdsCurrentSearch);
+  // Lọc theo người đăng khi được gọi từ viewUserBds
+  if(abdsFilterAddedBy) params.append('added_by', abdsFilterAddedBy);
   if(abdsCurrentFilters) {
     Object.keys(abdsCurrentFilters).forEach(key => {
       if(abdsCurrentFilters[key]) params.append(key, abdsCurrentFilters[key]);
@@ -6235,25 +6242,18 @@ function renderUserCard(u, tab) {
   // SĐT hiển thị
   var phoneDisplay = u.mobile || u.email || '—';
 
-  // Source badge (App)
-  var sourceBadge = (u.source === 'flutter')
-    ? ' <span style="font-size:9px;padding:1px 5px;border-radius:6px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;vertical-align:middle;">📱 App</span>'
+  // Role badge — hiện ở tất cả các tab
+  var _roleMap = {
+    'admin':      { label: 'Admin',      style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
+    'bds_admin':  { label: 'BĐS Admin',  style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
+    'sale_admin': { label: 'Sale Admin', style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
+    'sale':       { label: 'Sale',       style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' },
+    'broker':     { label: 'Broker',     style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' },
+  };
+  var _rc = _roleMap[u.role] || (u.role ? { label: u.role.charAt(0).toUpperCase() + u.role.slice(1), style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' } : null);
+  var roleBadge = _rc
+    ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;' + _rc.style + 'white-space:nowrap;flex-shrink:0;margin-right:4px;">' + escHtml(_rc.label) + '</span>'
     : '';
-
-  // Role badge — chỉ hiện ở tab sales và management
-  var roleBadge = '';
-  if (tab === 'sales' || tab === 'management') {
-    var roleCfg = {
-      'sale':       { label: 'Sale',       style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
-      'sale_admin': { label: 'Sale Admin', style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
-      'admin':      { label: 'Admin',      style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
-      'bds_admin':  { label: 'BĐS Admin',  style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
-    };
-    var rc = roleCfg[u.role];
-    if (rc) {
-      roleBadge = '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;' + rc.style + 'white-space:nowrap;flex-shrink:0;margin-right:4px;">' + rc.label + '</span>';
-    }
-  }
 
   // Three-dot button (flat icon)
   var dotsBtn = '<button onclick="openUserActionSheet(' + u.id + ',\'' + tab + '\')"'
@@ -6270,7 +6270,7 @@ function renderUserCard(u, tab) {
     + '<div style="font-size:14px;font-weight:600;color:' + (isLocked ? 'var(--text-tertiary)' : 'var(--text-primary)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
     + escHtml(u.name || '—') + '</div>'
     + '<div style="font-size:12px;color:var(--text-secondary);margin-top:1px;display:flex;align-items:center;gap:4px;">'
-    + '<span>' + escHtml(phoneDisplay) + '</span>' + sourceBadge
+    + '<span>' + escHtml(phoneDisplay) + '</span>'
     + '</div>'
     + '</div>'
     + roleBadge
@@ -6315,10 +6315,13 @@ window.openUserActionSheet = function(id, tab) {
   var lockSub   = isLocked ? 'Khôi phục quyền truy cập' : 'Tạm thời vô hiệu hoá';
 
   var actions = [
-    { icon: iconEdit,               label: 'Chỉnh sửa thông tin', sub: 'Cập nhật hồ sơ người dùng',      fn: 'showToast(\'Chức năng đang phát triển\')', danger: false },
-    { icon: iconRole,               label: 'Đổi vai trò',         sub: 'Thay đổi quyền hạn tài khoản',   fn: 'openChangeRoleSheet(' + id + ')',           danger: false },
-    { icon: iconHome,               label: 'Xem BĐS đã đăng',     sub: (u.property_count || 0) + ' BĐS', fn: 'showToast(\'Chức năng đang phát triển\')', danger: false },
-    { icon: isLocked ? iconUnlock : iconLock, label: lockLabel,   sub: lockSub,
+    { icon: iconEdit, label: 'Chỉnh sửa thông tin', sub: 'Cập nhật hồ sơ người dùng',
+      fn: 'openEditUserSheet(' + id + ')', danger: false },
+    { icon: iconRole, label: 'Đổi vai trò',         sub: 'Thay đổi quyền hạn tài khoản',
+      fn: 'openChangeRoleSheet(' + id + ')', danger: false },
+    { icon: iconHome, label: 'Xem BĐS đã đăng',     sub: (u.property_count || 0) + ' BĐS',
+      fn: 'viewUserBds(' + id + ',\'' + escHtml(u.name || '') + '\')', danger: false },
+    { icon: isLocked ? iconUnlock : iconLock, label: lockLabel, sub: lockSub,
       fn: 'toggleUserLock(' + id + ',\'' + escHtml(u.name || '') + '\',' + u.isActive + ')', danger: !isLocked },
   ];
 
@@ -6343,6 +6346,102 @@ window.openUserActionSheet = function(id, tab) {
 window.closeUserActionSheet = function() {
   var sheet = document.getElementById('userActionSheet');
   if (sheet) sheet.style.display = 'none';
+};
+
+/* Xem BĐS đã đăng của 1 user — mở subpage approvebds với filter added_by */
+window.viewUserBds = function(userId, userName) {
+  // Set filter trước khi mở subpage để loadApprovalBds dùng đúng added_by
+  abdsFilterAddedBy = userId;
+  abdsCurrentTab    = 'approved';
+  abdsCurrentSearch = '';
+
+  // Mở subpage trực tiếp (không qua openSubpage để tránh reset abdsFilterAddedBy)
+  var sp = document.getElementById('subpage-approvebds');
+  if (sp) {
+    sp.classList.add('open');
+    var nav = document.querySelector('.bottom-nav');
+    if (nav) nav.style.transform = 'translateY(100%)';
+  }
+
+  // Cập nhật tab active sang "approved"
+  document.querySelectorAll('#abdsTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  var approvedTab = document.querySelector('#abdsTabBar [data-tab="approved"]');
+  if (approvedTab) approvedTab.classList.add('active');
+
+  loadApprovalBds(true);
+};
+
+/* Mở form chỉnh sửa thông tin người dùng — bind dữ liệu từ _usersCache */
+window.openEditUserSheet = function(id) {
+  var u = window._usersCache && window._usersCache[id];
+  if (!u) return;
+
+  // Điền dữ liệu vào form
+  document.getElementById('editUserId').value    = u.id;
+  document.getElementById('editUserName').value  = u.name || '';
+  document.getElementById('editUserMobile').value = u.mobile || '';
+  document.getElementById('editUserEmail').value = u.email || '';
+
+  // Set role select — map 'customer'/null → 'broker'
+  var roleEl = document.getElementById('editUserRole');
+  var roleVal = u.role || 'broker';
+  if (roleVal === 'customer' || !roleVal) roleVal = 'broker';
+  roleEl.value = roleVal;
+
+  // Hiển thị bottom sheet
+  document.getElementById('editUserSheet').style.display = 'flex';
+};
+
+window.closeEditUserSheet = function() {
+  var sheet = document.getElementById('editUserSheet');
+  if (sheet) sheet.style.display = 'none';
+};
+
+/* Submit form chỉnh sửa thông tin — gọi PATCH /webapp/api/admin/users/{id} */
+window.submitEditUserForm = function() {
+  var id     = document.getElementById('editUserId').value;
+  var name   = (document.getElementById('editUserName').value || '').trim();
+  var mobile = (document.getElementById('editUserMobile').value || '').trim();
+  var email  = (document.getElementById('editUserEmail').value || '').trim();
+  var role   = document.getElementById('editUserRole').value;
+
+  if (!name) { showToast('Vui lòng nhập họ tên'); return; }
+
+  var btn = document.getElementById('editUserSubmitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang lưu...'; }
+
+  var url = window.WEBAPP_CONFIG.routes.adminUsersBase + id;
+  fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRF-TOKEN': window.WEBAPP_CONFIG.csrfToken,
+    },
+    body: JSON.stringify({ name: name, mobile: mobile, email: email, role: role }),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Lưu thay đổi'; }
+      if (data.success) {
+        // Cập nhật cache local để action sheet header hiển thị đúng ngay lập tức
+        if (window._usersCache && window._usersCache[id]) {
+          window._usersCache[id].name   = data.user.name;
+          window._usersCache[id].mobile = data.user.mobile;
+          window._usersCache[id].email  = data.user.email;
+          window._usersCache[id].role   = data.user.role;
+        }
+        closeEditUserSheet();
+        showToast('Đã cập nhật thông tin thành công');
+        loadUsers(true); // Reload danh sách để hiển thị thay đổi
+      } else {
+        showToast(data.message || 'Có lỗi xảy ra');
+      }
+    })
+    .catch(function() {
+      if (btn) { btn.disabled = false; btn.textContent = 'Lưu thay đổi'; }
+      showToast('Lỗi kết nối');
+    });
 };
 
 /* Đổi role qua prompt inline — được gọi từ Bottom Sheet */

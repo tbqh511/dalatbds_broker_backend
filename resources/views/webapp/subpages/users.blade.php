@@ -84,3 +84,69 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== Edit User Bottom Sheet ===== -->
+  <div class="reject-sheet" id="editUserSheet" style="display:none;" onclick="if(event.target===this)closeEditUserSheet()">
+    <div class="reject-sheet-inner" style="padding-bottom:env(safe-area-inset-bottom);max-height:90vh;overflow-y:auto;">
+      <div class="rs-handle"></div>
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 18px 14px;border-bottom:1px solid var(--border);">
+        <div style="font-size:16px;font-weight:600;color:var(--text-primary);">Chỉnh sửa thông tin</div>
+        <button onclick="closeEditUserSheet()" style="background:none;border:none;padding:4px;cursor:pointer;color:var(--text-tertiary);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Form chỉnh sửa thông tin người dùng -->
+      <div style="padding:16px 18px;">
+        <input type="hidden" id="editUserId">
+
+        <!-- Tên -->
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Họ và tên</label>
+          <input type="text" id="editUserName" placeholder="Nhập tên..."
+                 style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg-primary);color:var(--text-primary);outline:none;box-sizing:border-box;">
+        </div>
+
+        <!-- Số điện thoại -->
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Số điện thoại</label>
+          <input type="tel" id="editUserMobile" placeholder="84xxxxxxxxx..."
+                 style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg-primary);color:var(--text-primary);outline:none;box-sizing:border-box;">
+        </div>
+
+        <!-- Email -->
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Email</label>
+          <input type="email" id="editUserEmail" placeholder="email@example.com"
+                 style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg-primary);color:var(--text-primary);outline:none;box-sizing:border-box;">
+        </div>
+
+        <!-- Vai trò -->
+        <div style="margin-bottom:20px;">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Vai trò</label>
+          <div style="position:relative;">
+            <select id="editUserRole"
+                    style="width:100%;padding:11px 36px 11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg-primary);color:var(--text-primary);outline:none;box-sizing:border-box;appearance:none;-webkit-appearance:none;cursor:pointer;">
+              <option value="broker">Broker</option>
+              <option value="sale">Sale</option>
+              <option value="sale_admin">Sale Admin</option>
+              <option value="bds_admin">BĐS Admin</option>
+              <option value="admin">Admin</option>
+            </select>
+            {{-- Icon chevron cho select --}}
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-tertiary);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- Nút lưu — dùng màu primary -->
+        <button id="editUserSubmitBtn" onclick="submitEditUserForm()"
+                style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:999px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:0.01em;">
+          Lưu thay đổi
+        </button>
+      </div>
+    </div>
+  </div>
