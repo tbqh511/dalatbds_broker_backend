@@ -27,7 +27,9 @@ trait ValidatesTelegramInitData
         }
         $dataCheckString = implode("\n", $dataCheckArr);
 
-        $botToken = env('TELEGRAM_BOT_TOKEN');
+        // Dùng config() thay vì env() để tương thích với config:cache trên production.
+        // Khi Laravel đã chạy `php artisan config:cache`, env() luôn trả về null.
+        $botToken = config('services.telegram.bot_token');
         if (!$botToken) {
             return null;
         }
