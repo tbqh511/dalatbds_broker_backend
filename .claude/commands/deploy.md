@@ -1,57 +1,27 @@
-Deploy the DalatBDS project to the production server on cPanel.
+Deploy DalatBDS lên production server (host cPanel đã cấu hình auto-deploy).
 
-This works by:
-1. Pushing to `main` branch on GitHub
-2. Calling cPanel UAPI to "Update from Remote" (git pull on server)
-3. Calling cPanel UAPI to trigger "Deploy HEAD Commit" (runs .cpanel.yml)
+Chỉ cần push lên nhánh `main` trên GitHub — cPanel sẽ tự động kéo code mới về và chạy `.cpanel.yml`.
 
-## Credentials
+## Các bước thực hiện
 
-Read cPanel credentials from `.claude/cpanel.env` (file local, không commit vào git).
-Format file:
-```
-CPANEL_HOST=nethost-2711.net.vn
-CPANEL_PORT=2083
-CPANEL_USER=qymxlvghhosting
-CPANEL_TOKEN=your_api_token_here
-CPANEL_REPO_PATH=/home/qymxlvghhosting/public_html/dalatbds.com
-```
+1. Chạy `git status` để kiểm tra trạng thái working tree.
 
-If the file doesn't exist, tell the user to create it with the above format and get
-the API token from: cPanel > Security > Manage API Tokens > Create (name: "claude-deploy").
+2. Nếu có file chưa commit:
+   - Hỏi người dùng commit message (hoặc dùng message từ $ARGUMENTS nếu được cung cấp)
+   - Stage các file đã thay đổi: `git add -u`
+   - Commit với message đó
 
-## Steps
+3. Kiểm tra branch hiện tại bằng `git branch --show-current`.
 
-1. Run `git status` to ensure working tree is clean; commit any pending changes first.
+4. Nếu không ở nhánh `main`:
+   - Thông báo sẽ merge vào main
+   - `git checkout main`
+   - `git pull origin main` (đảm bảo main local up-to-date)
+   - `git merge <tên-branch-trước> --no-ff -m "Deploy: merge <branch> into main"`
 
-2. Check current branch. If not on `main`:
-   - Run `git checkout main`
-   - Run `git merge <previous-branch> --no-ff -m "Deploy: merge <branch> into main"`
+5. Push lên GitHub: `git push -u origin main`
 
-3. Run `git push -u origin main`
-
-4. Load credentials from `.claude/cpanel.env`
-
-5. Call cPanel UAPI to update from remote (pull from GitHub):
-```bash
-curl -s -k \
-  -H "Authorization: cpanel $CPANEL_USER:$CPANEL_TOKEN" \
-  "https://$CPANEL_HOST:$CPANEL_PORT/execute/VersionControl/retrieve" \
-  --data-urlencode "repository_root=$CPANEL_REPO_PATH"
-```
-
-6. Call cPanel UAPI to trigger deployment (runs .cpanel.yml):
-```bash
-curl -s -k \
-  -H "Authorization: cpanel $CPANEL_USER:$CPANEL_TOKEN" \
-  -X POST \
-  "https://$CPANEL_HOST:$CPANEL_PORT/execute/VersionControlDeployment/create" \
-  --data-urlencode "repository_root=$CPANEL_REPO_PATH"
-```
-
-7. Check the JSON response:
-   - `"status":1` = thành công
-   - `"status":0` = lỗi, show `errors` field
-   
-8. Report the deployment result to the user. Remind them they can monitor progress
-   in cPanel > Git Version Control > Manage Repository > Pull or Deploy.
+6. Báo kết quả cho người dùng:
+   - Branch nào vừa được push
+   - Bao nhiêu commit mới
+   - Nhắc nhở: cPanel sẽ tự động pull code và chạy `.cpanel.yml` trên server
