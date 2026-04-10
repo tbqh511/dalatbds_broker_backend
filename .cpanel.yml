@@ -2,6 +2,9 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/qymxlvghhosting/public_html/dalatbds.com
+    
+    # BƯỚC QUAN TRỌNG: Copy toàn bộ code mới từ Git đè vào thư mục web
+    - /bin/cp -R * $DEPLOYPATH
 
     # 1. Cài đặt PHP dependencies (không bao gồm dev packages)
     - cd $DEPLOYPATH && /usr/local/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
