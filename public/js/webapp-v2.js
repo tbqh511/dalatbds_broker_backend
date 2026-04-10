@@ -6242,25 +6242,18 @@ function renderUserCard(u, tab) {
   // SĐT hiển thị
   var phoneDisplay = u.mobile || u.email || '—';
 
-  // Source badge (App)
-  var sourceBadge = (u.source === 'flutter')
-    ? ' <span style="font-size:9px;padding:1px 5px;border-radius:6px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;vertical-align:middle;">📱 App</span>'
+  // Role badge — hiện ở tất cả các tab
+  var _roleMap = {
+    'admin':      { label: 'Admin',      style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
+    'bds_admin':  { label: 'BĐS Admin',  style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
+    'sale_admin': { label: 'Sale Admin', style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
+    'sale':       { label: 'Sale',       style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' },
+    'broker':     { label: 'Broker',     style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' },
+  };
+  var _rc = _roleMap[u.role] || (u.role ? { label: u.role.charAt(0).toUpperCase() + u.role.slice(1), style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' } : null);
+  var roleBadge = _rc
+    ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;' + _rc.style + 'white-space:nowrap;flex-shrink:0;margin-right:4px;">' + escHtml(_rc.label) + '</span>'
     : '';
-
-  // Role badge — chỉ hiện ở tab sales và management
-  var roleBadge = '';
-  if (tab === 'sales' || tab === 'management') {
-    var roleCfg = {
-      'sale':       { label: 'Sale',       style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
-      'sale_admin': { label: 'Sale Admin', style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
-      'admin':      { label: 'Admin',      style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
-      'bds_admin':  { label: 'BĐS Admin',  style: 'background:rgba(50,112,252,.08);color:var(--primary);border:1px solid rgba(50,112,252,.2);' },
-    };
-    var rc = roleCfg[u.role];
-    if (rc) {
-      roleBadge = '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;' + rc.style + 'white-space:nowrap;flex-shrink:0;margin-right:4px;">' + rc.label + '</span>';
-    }
-  }
 
   // Three-dot button (flat icon)
   var dotsBtn = '<button onclick="openUserActionSheet(' + u.id + ',\'' + tab + '\')"'
@@ -6277,7 +6270,7 @@ function renderUserCard(u, tab) {
     + '<div style="font-size:14px;font-weight:600;color:' + (isLocked ? 'var(--text-tertiary)' : 'var(--text-primary)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
     + escHtml(u.name || '—') + '</div>'
     + '<div style="font-size:12px;color:var(--text-secondary);margin-top:1px;display:flex;align-items:center;gap:4px;">'
-    + '<span>' + escHtml(phoneDisplay) + '</span>' + sourceBadge
+    + '<span>' + escHtml(phoneDisplay) + '</span>'
     + '</div>'
     + '</div>'
     + roleBadge
