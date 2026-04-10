@@ -1,6 +1,6 @@
 Deploy DalatBDS lên production server.
 
-Flow: commit → push GitHub main → gọi cPanel UAPI → cPanel tự pull & deploy.
+Flow: commit → push GitHub main → gọi webhook trên server → server tự git pull & rebuild cache.
 
 ## Bước 1: Kiểm tra và commit
 
@@ -20,30 +20,30 @@ Nếu không ở `main`:
 
 Chạy: `git push -u origin main`
 
-## Bước 3: Trigger cPanel deploy qua UAPI
+## Bước 3: Trigger deploy qua webhook
 
 Đọc credentials từ file `.claude/cpanel.env`. Nếu file không tồn tại, hướng dẫn user tạo từ `.claude/cpanel.env.example`.
 
 Sau khi load credentials, chạy lệnh curl sau:
 
 ```bash
-source .claude/cpanel.env && curl -s -k \
-  -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-  -X POST \
-  "https://${CPANEL_HOST}:${CPANEL_PORT}/execute/VersionControlDeployment/create" \
-  --data-urlencode "repository_root=${CPANEL_REPO_PATH}"
+source .claude/cpanel.env && curl -s \
+  "${WEBHOOK_URL}?token=${WEBHOOK_SECRET}"
 ```
 
 ## Bước 4: Kiểm tra kết quả
 
 Parse JSON response:
-- Nếu `"status": 1` → thành công, báo deploy đang chạy trên server
-- Nếu `"status": 0` → thất bại, show field `errors`
-- Nếu curl lỗi (không có cpanel.env hoặc network lỗi) → báo user kiểm tra `.claude/cpanel.env`
+- Nếu `"status": 1` → thành công, báo deploy hoàn tất
+- Nếu `"status": 0` → thất bại, show field `error` và `steps` để debug
+- Nếu curl lỗi (network, 403, 404) → kiểm tra:
+  - `.claude/cpanel.env` có đủ `WEBHOOK_URL` và `WEBHOOK_SECRET` không
+  - `WEBHOOK_SECRET` trên server (`.env` của Laravel) có khớp không
+  - File `public/webhook/deploy.php` đã được deploy lên server chưa
 
 ## Kết quả mong đợi
 
 Báo cáo:
 - Branch và commit vừa push
-- Trạng thái deploy trên cPanel
-- Nhắc: deployment đang chạy trên server, có thể xem tiến trình tại cPanel > Git Version Control
+- Từng bước deploy trên server (git pull, cache clear/rebuild)
+- Trạng thái cuối: thành công hay thất bại
