@@ -368,7 +368,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
     
             Route::resource('slider', SliderController::class);
             Route::post('slider-order', [SliderController::class , 'update'])->name('slider.slider-order');
-            Route::get('slider-destory/{id}', [SliderController::class , 'destroy'])->name('slider.destroy');
+            Route::get('slider-destory/{id}', [SliderController::class , 'destroy'])->name('slider.destroy.get');
             Route::get('get-property-by-category', [SliderController::class , 'getPropertyByCategory'])->name('slider.getpropertybycategory');
             Route::get('sliderList', [SliderController::class , 'sliderList']);
             /// END :: SLIDER ROUTE
@@ -377,7 +377,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
     
             Route::resource('article', ArticleController::class);
             Route::get('article_list', [ArticleController::class , 'show']);
-            Route::get('article-destory/{id}', [ArticleController::class , 'destroy'])->name('article.destroy');
+            Route::get('article-destory/{id}', [ArticleController::class , 'destroy'])->name('article.destroy.get');
             /// END :: ARTICLE ROUTE
     
             /// START :: POSTS ROUTE
@@ -434,7 +434,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
                 Route::resource('outdoor_facilities', OutdoorFacilityController::class);
                 Route::get('facility-list', [OutdoorFacilityController::class , 'show']);
                 Route::post('facility-update', [OutdoorFacilityController::class , 'update']);
-                Route::get('facility-delete/{id}', [OutdoorFacilityController::class , 'destroy'])->name('outdoor_facilities.destroy');
+                Route::get('facility-delete/{id}', [OutdoorFacilityController::class , 'destroy'])->name('outdoor_facilities.destroy.get');
                 /// END :: OUTDOOR FACILITY ROUTE
         
 
@@ -444,7 +444,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
                 Route::post('property-status', [PropertController::class , 'updateStatus'])->name('property.updatepropertystatus');
                 Route::post('property-gallery', [PropertController::class , 'removeGalleryImage'])->name('property.removeGalleryImage');
                 Route::get('get-state-by-country', [PropertController::class , 'getStatesByCountry'])->name('property.getStatesByCountry');
-                Route::get('property-destory/{id}', [PropertController::class , 'destroy'])->name('property.destroy');
+                Route::get('property-destory/{id}', [PropertController::class , 'destroy'])->name('property.destroy.get');
 
                 Route::get('updateFCMID', [UserController::class , 'updateFCMID']);
                 /// END :: PROPERTY ROUTE
@@ -460,7 +460,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
                 Route::resource('report-reasons', ReportReasonController::class);
                 Route::get('report-reasons-list', [ReportReasonController::class , 'show']);
                 Route::post('report-reasons-update', [ReportReasonController::class , 'update']);
-                Route::get('report-reasons-destroy/{id}', [ReportReasonController::class , 'destroy'])->name('reasons.destroy');
+                Route::get('report-reasons-destroy/{id}', [ReportReasonController::class , 'destroy'])->name('reasons.destroy.get');
 
                 Route::get('users_reports', [ReportReasonController::class , 'users_reports']);
 
