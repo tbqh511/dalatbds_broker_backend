@@ -27,3 +27,6 @@ yarn-error.log
 /public/images/chat_audio/
 /public/images/property_images/
 /public/images/property_legal_images/
+storage/installed
+.ftpquota
+congcu.txt
