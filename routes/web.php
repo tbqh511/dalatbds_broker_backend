@@ -76,7 +76,7 @@ Route::post('/webapp/auth', [TelegramWebAppController::class, 'authRedirect'])->
 // });
 
 Route::get('/', [FrontEndHomeController::class , 'index'])->name('index');
-Route::get('/webapp/temp', [TelegramWebAppController::class , 'tempui'])->name('webapp');
+Route::get('/webapp/temp', [TelegramWebAppController::class , 'tempui'])->name('webapp.temp');
 
 // Lead assignment via signed URL (no session required — opened from Telegram group button)
 Route::get('/webapp/leads/{id}/assign', [CrmLeadController::class, 'assignPage'])
