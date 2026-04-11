@@ -1921,11 +1921,15 @@ function loadAssignLeadData(){
   if (!cfg || !cfg.assignData) { showToast('Lỗi: Không tìm thấy endpoint assign data'); return; }
 
   fetch(cfg.assignData, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-  .then(function(r){ return r.json(); })
+  .then(function(r){
+    return r.json().then(function(data){ data._httpStatus = r.status; return data; });
+  })
   .then(function(data){
     if (!data.success) {
       if (loadingEl) loadingEl.style.display = 'none';
       if (emptyEl)   emptyEl.style.display = '';
+      var msg = data.message || ('HTTP ' + (data._httpStatus || '?'));
+      showToast('Lỗi tải assign data: ' + msg);
       return;
     }
     _assignLeadData = data;
