@@ -828,6 +828,125 @@ class TelegramWebAppController extends Controller
         }
     }
 
+    public function myClientsApi(Request $request)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (! $customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $search = trim($request->input('search', ''));
+            $status = trim((string) $request->input('status', ''));
+            $page = (int) $request->input('page', 1);
+
+            $baseQuery = CrmLead::with(['customer', 'deal', 'deal.products.property', 'deal.products.bookings'])
+                ->where(function ($q) use ($customer) {
+                    $q->where('sale_id', $customer->id)
+                        ->orWhere('user_id', $customer->id);
+                });
+
+            $kpi = [
+                'new' => (clone $baseQuery)->whereRaw("LOWER(crm_leads.status) = 'new'")->count(),
+                'care' => (clone $baseQuery)->where(function ($q) {
+                    $q->whereRaw("LOWER(crm_leads.status) = 'contacted'")
+                        ->orWhereHas('deal', fn ($dq) => $dq->whereIn('status', ['open', 'negotiating']));
+                })->count(),
+                'waiting' => (clone $baseQuery)->whereHas('deal', fn ($dq) => $dq->where('status', 'waiting_finance'))->count(),
+                'archived' => (clone $baseQuery)->where(function ($q) {
+                    $q->whereRaw("LOWER(crm_leads.status) = 'lost'")
+                        ->orWhereHas('deal', fn ($dq) => $dq->where('status', 'closed'));
+                })->count(),
+            ];
+
+            if ($search !== '') {
+                $baseQuery->where(function ($q) use ($search) {
+                    $q->whereHas('customer', function ($cq) use ($search) {
+                        $cq->where('full_name', 'LIKE', '%'.$search.'%')
+                            ->orWhere('contact', 'LIKE', '%'.$search.'%');
+                    })->orWhere('note', 'LIKE', '%'.$search.'%');
+                });
+            }
+
+            if ($status !== '') {
+                if ($status === 'care') {
+                    $baseQuery->where(function ($q) {
+                        $q->whereRaw("LOWER(crm_leads.status) = 'contacted'")
+                            ->orWhereHas('deal', fn ($dq) => $dq->whereIn('status', ['open', 'negotiating']));
+                    });
+                } elseif ($status === 'waiting') {
+                    $baseQuery->whereHas('deal', fn ($dq) => $dq->where('status', 'waiting_finance'));
+                } elseif ($status === 'archived') {
+                    $baseQuery->where(function ($q) {
+                        $q->whereRaw("LOWER(crm_leads.status) = 'lost'")
+                            ->orWhereHas('deal', fn ($dq) => $dq->where('status', 'closed'));
+                    });
+                } elseif ($status === 'new') {
+                    $baseQuery->whereRaw("LOWER(crm_leads.status) = 'new'");
+                }
+            }
+
+            $allCatIds = (clone $baseQuery)->get()->flatMap(fn ($l) => $l->categories ?? [])->unique()->values();
+            $allWardCodes = (clone $baseQuery)->get()->flatMap(fn ($l) => $l->wards ?? [])->unique()->values();
+            $catMap = \App\Models\Category::whereIn('id', $allCatIds)->pluck('category', 'id');
+            $wardMap = \App\Models\LocationsWard::whereIn('code', $allWardCodes)->pluck('full_name', 'code');
+
+            $paginator = $baseQuery->orderBy('created_at', 'desc')
+                ->paginate(15, ['*'], 'page', $page);
+
+            $clients = $paginator->getCollection()->map(function ($lead) use ($catMap, $wardMap) {
+                $rawStatus = $lead->getRawOriginal('status');
+                $deal = $lead->deal;
+                $dealStatus = $deal ? $deal->getRawOriginal('status') : null;
+
+                $categoryNames = collect($lead->categories ?? [])
+                    ->map(fn ($id) => $catMap[$id] ?? null)->filter()->implode(', ');
+
+                $wardNames = collect($lead->wards ?? [])
+                    ->map(fn ($c) => $wardMap[$c] ?? null)->filter()->implode(', ');
+
+                $budgetMin = (float) ($lead->demand_rate_min ?? 0);
+                $budgetMax = (float) ($lead->demand_rate_max ?? 0);
+                $budget = '';
+                if ($budgetMin > 0 || $budgetMax > 0) {
+                    $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
+                            .' – '
+                            .($budgetMax > 0 ? format_vnd($budgetMax) : '?');
+                }
+
+                $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
+
+                return [
+                    'id' => $lead->id,
+                    'status' => $rawStatus,
+                    'has_deal' => $deal !== null,
+                    'deal_status' => $dealStatus,
+                    'customer_name' => optional($lead->customer)->full_name ?? 'Khách vãng lai',
+                    'customer_phone' => optional($lead->customer)->contact ?? '',
+                    'categories' => $categoryNames,
+                    'wards' => $wardNames,
+                    'budget' => $budget,
+                    'note' => $lead->note ?? '',
+                    'created_at' => $createdAt->format('d/m/Y'),
+                    'created_diff' => $createdAt->diffForHumans(),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'kpi' => $kpi,
+                'clients' => $clients,
+                'total' => $paginator->total(),
+                'has_more' => $paginator->hasMorePages(),
+                'next_page' => $paginator->currentPage() + 1,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
     public function tempui(Request $request)
     {
         $categories = Category::where('status', 1)->orderBy('order')->get(['id', 'category']);
