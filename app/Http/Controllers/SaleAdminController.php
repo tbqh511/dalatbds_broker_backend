@@ -56,6 +56,16 @@ class SaleAdminController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
+        try {
+            return $this->_getAssignDataInner($request, $customer);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('getAssignData error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            return response()->json(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    private function _getAssignDataInner(Request $request, $customer)
+    {
         $districtCode = config('location.district_code');
         $categoryMap  = Category::where('status', '1')->pluck('category', 'id');
         $wardMap      = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
@@ -92,8 +102,9 @@ class SaleAdminController extends Controller
 
         // Build leads DTO (all leads)
         $leads = $rawLeads->map(function ($lead) use ($categoryMap, $wardMap, $now, $salesTeam, $activeLeadCounts) {
-            $ageHours   = $lead->created_at->diffInHours($now);
-            $ageMinutes = $lead->created_at->diffInMinutes($now);
+            $createdAt  = $lead->created_at ?? $now;
+            $ageHours   = $createdAt->diffInHours($now);
+            $ageMinutes = $createdAt->diffInMinutes($now);
 
             if ($ageHours < 3)      { $priority = 'hot'; }
             elseif ($ageHours < 24) { $priority = 'medium'; }
@@ -221,7 +232,7 @@ class SaleAdminController extends Controller
                 'customer_name' => $customerName,
                 'lead_type'     => $typeLabel,
                 'budget_label'  => format_vnd($lead->demand_rate_min ?? 0) . ' – ' . format_vnd($lead->demand_rate_max ?? 0),
-                'time_label'    => $lead->assigned_at->format('H:i'),
+                'time_label'    => $lead->assigned_at ? $lead->assigned_at->format('H:i') : '',
             ];
         })->values()->all();
 
