@@ -6247,10 +6247,11 @@ function renderUserCard(u, tab) {
     'admin':      { label: 'Admin',      style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
     'bds_admin':  { label: 'BĐS Admin',  style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
     'sale_admin': { label: 'Sale Admin', style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
-    'sale':       { label: 'Sale',       style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' },
-    'broker':     { label: 'Broker',     style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' },
+    'sale':       { label: 'Sale',       style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
+    'broker':     { label: 'Broker',     style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
+    'customer':   { label: 'Customer',   style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' },
   };
-  var _rc = _roleMap[u.role] || (u.role ? { label: u.role.charAt(0).toUpperCase() + u.role.slice(1), style: 'background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);' } : null);
+  var _rc = _roleMap[u.role] || (u.role ? { label: u.role.charAt(0).toUpperCase() + u.role.slice(1), style: 'background:rgba(50,112,252,.1);color:var(--primary);border:1px solid rgba(50,112,252,.25);' } : null);
   var roleBadge = _rc
     ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;' + _rc.style + 'white-space:nowrap;flex-shrink:0;margin-right:4px;">' + escHtml(_rc.label) + '</span>'
     : '';
