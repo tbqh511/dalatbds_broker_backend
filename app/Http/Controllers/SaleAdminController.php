@@ -52,7 +52,7 @@ class SaleAdminController extends Controller
     public function getAssignData(Request $request)
     {
         $customer = Auth::guard('webapp')->user();
-        if (!$customer || !$customer->isSaleAdmin()) {
+        if (!$customer || (!$customer->isSaleAdmin() && !$customer->hasRole('bds_admin'))) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -60,11 +60,10 @@ class SaleAdminController extends Controller
         $categoryMap  = Category::where('status', '1')->pluck('category', 'id');
         $wardMap      = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
 
-        // Unassigned leads
-        $rawLeads = CrmLead::with('customer')
-            ->whereNull('sale_id')
+        // ALL leads (all statuses, assigned or not) — latest 100
+        $rawLeads = CrmLead::with(['customer', 'sale'])
             ->orderBy('created_at', 'desc')
-            ->limit(50)
+            ->limit(100)
             ->get();
 
         // Sales team
@@ -75,12 +74,12 @@ class SaleAdminController extends Controller
         // Active lead counts per sale (non-converted/lost)
         $saleIds = $salesTeam->pluck('id');
         $activeLeadCounts = CrmLead::whereIn('sale_id', $saleIds)
-            ->whereNotIn('status', ['converted', 'lost'])
+            ->whereNotIn('status', ['converted', 'lost', 'bad-contact'])
             ->selectRaw('sale_id, count(*) as cnt')
             ->groupBy('sale_id')
             ->pluck('cnt', 'sale_id');
 
-        // Today's assignments
+        // Today's assignments (for history tab)
         $assignedToday = CrmLead::with(['customer', 'sale'])
             ->whereNotNull('sale_id')
             ->whereNotNull('assigned_at')
@@ -91,7 +90,7 @@ class SaleAdminController extends Controller
 
         $now = Carbon::now();
 
-        // Build leads DTO
+        // Build leads DTO (all leads)
         $leads = $rawLeads->map(function ($lead) use ($categoryMap, $wardMap, $now, $salesTeam, $activeLeadCounts) {
             $ageHours   = $lead->created_at->diffInHours($now);
             $ageMinutes = $lead->created_at->diffInMinutes($now);
@@ -110,21 +109,26 @@ class SaleAdminController extends Controller
             $wardNames = collect($lead->wards ?? [])->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->all();
             $wardCodes = $lead->wards ?? [];
 
-            // Sale suggestion: match work_area with lead wards
+            $statusRaw = $lead->getRawOriginal('status');
+            $isAssigned = !is_null($lead->sale_id);
+            $saleName   = $lead->sale?->name ?? '';
+
+            // Sale suggestion: match work_area with lead wards (only for unassigned)
             $suggestion = null;
-            foreach ($salesTeam as $s) {
-                $workArea = $s->work_area ?? '';
-                foreach ($wardCodes as $code) {
-                    if ($code && str_contains($workArea, (string) $code)) {
-                        $suggestion = $s->name;
-                        break 2;
+            if (!$isAssigned) {
+                foreach ($salesTeam as $s) {
+                    $workArea = $s->work_area ?? '';
+                    foreach ($wardCodes as $code) {
+                        if ($code && str_contains($workArea, (string) $code)) {
+                            $suggestion = $s->name;
+                            break 2;
+                        }
                     }
                 }
-            }
-            // Fallback: sale with fewest active leads
-            if (!$suggestion) {
-                $lightestSale = $salesTeam->sortBy(fn ($s) => $activeLeadCounts[$s->id] ?? 0)->first();
-                $suggestion   = $lightestSale?->name;
+                if (!$suggestion) {
+                    $lightestSale = $salesTeam->sortBy(fn ($s) => $activeLeadCounts[$s->id] ?? 0)->first();
+                    $suggestion   = $lightestSale?->name;
+                }
             }
 
             $budgetMax = (float) ($lead->demand_rate_max ?? 0);
@@ -155,13 +159,31 @@ class SaleAdminController extends Controller
                 'budget_max'  => format_vnd($lead->demand_rate_max ?? 0),
                 'budget_tier' => $budgetTier,
                 'suggestion'  => $suggestion,
+                'status_raw'  => $statusRaw,
+                'is_assigned' => $isAssigned,
+                'sale_name'   => $saleName,
             ];
         })->values()->all();
 
-        // Budget pool counts
+        // Budget pool counts — only for unassigned leads
         $budgetCounts = ['high' => 0, 'medium' => 0, 'low' => 0];
         foreach ($leads as $l) {
-            $budgetCounts[$l['budget_tier']]++;
+            if (!$l['is_assigned']) {
+                $budgetCounts[$l['budget_tier']]++;
+            }
+        }
+
+        // Status counts
+        $statusCounts = ['unassigned' => 0, 'new' => 0, 'contacted' => 0, 'converted' => 0, 'failed' => 0];
+        foreach ($leads as $l) {
+            if (!$l['is_assigned']) {
+                $statusCounts['unassigned']++;
+            }
+            $s = $l['status_raw'];
+            if ($s === 'new')                               { $statusCounts['new']++; }
+            elseif ($s === 'contacted')                     { $statusCounts['contacted']++; }
+            elseif ($s === 'converted')                     { $statusCounts['converted']++; }
+            elseif ($s === 'bad-contact' || $s === 'lost')  { $statusCounts['failed']++; }
         }
 
         // Sales DTO
@@ -183,7 +205,7 @@ class SaleAdminController extends Controller
             ];
         })->values()->all();
 
-        // History DTO
+        // History DTO (today's assignments)
         $history = $assignedToday->map(function ($lead) {
             $customerName = $lead->customer?->full_name ?? 'Khách vãng lai';
             $saleName     = $lead->sale?->name ?? '';
@@ -209,6 +231,7 @@ class SaleAdminController extends Controller
             'sales'         => $sales,
             'history'       => $history,
             'budget_counts' => $budgetCounts,
+            'status_counts' => $statusCounts,
         ]);
     }
 
