@@ -9,7 +9,18 @@
     </div>
   </div>
 
-  {{-- Stats header removed --}}
+  @include('webapp.partials.stats-header', [
+      'stats' => [
+          ['id' => 'mybdsCountActive', 'color' => 'var(--success)', 'label' => 'Đang hiển thị'],
+          ['id' => 'mybdsCountPending', 'color' => 'var(--warning)', 'label' => 'Chờ duyệt'],
+          ['id' => 'mybdsCountHidden', 'color' => 'var(--text-tertiary)', 'label' => 'Đã ẩn'],
+          ['id' => 'mybdsTotalViews', 'color' => 'var(--text-primary)', 'label' => 'Tổng lượt xem']
+      ],
+      'searchInputId' => 'mybdsSearchInput',
+      'searchPlaceholder' => 'Tìm theo tiêu đề, địa chỉ...',
+      'onSearchInput' => 'mybdsOnSearchInput',
+      'filterSheetId' => 'mybdsAdvancedFilter'
+  ])
 
   <!-- Status tabs -->
   <div class="sp-tabs">
@@ -40,8 +51,8 @@
   </div><!-- end sp-scroll -->
 
   <!-- Sort / Filter bottom sheet -->
-  <div id="mybdsFilterSheet" style="display:none;position:fixed;inset:0;z-index:505;background:rgba(0,0,0,0.45);" onclick="mybdsCloseFilterSheet()">
-    <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:18px 18px 0 0;padding:16px 0 32px;box-shadow:0 -4px 20px rgba(0,0,0,0.15);" onclick="event.stopPropagation()">
+  <div id="mybdsFilterSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.45);" onclick="mybdsCloseFilterSheet()">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:var(--bg-card);border-radius:18px 18px 0 0;padding:16px 0 32px;box-shadow:0 -4px 24px rgba(0,0,0,0.15);z-index:1;" onclick="event.stopPropagation()">
       <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
       <div style="font-size:13px;font-weight:700;color:var(--text-primary);padding:0 16px 12px;">Sắp xếp theo</div>
       <button class="mybds-sort-opt" id="mybdsSortLatest"   onclick="mybdsSortSelect('latest')"    style="display:flex;align-items:center;width:100%;padding:12px 16px;background:none;border:none;font-size:13px;color:var(--text-primary);cursor:pointer;gap:10px;">✓ Mới nhất</button>

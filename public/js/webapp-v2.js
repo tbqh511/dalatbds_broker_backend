@@ -4960,15 +4960,9 @@ function mybdsBuildCard(p, maxViews, maxFav) {
     ? ''
     : `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>`;
 
-  // Stat chips (views & likes) — only for active
-  const statChips = p.status === 1
-    ? `<div class="mybds-img-stats">
-        <div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;color:var(--primary);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${p.total_click}</span></div>
-        <div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;color:var(--primary);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${p.favourite_count}</span></div>
-      </div>`
-    : '';
+  // stat chips moved to body (see price-row below)
 
-  // Metadata items
+  // Metadata items (key + property type removed)
   const metaItems = [
     p.area     ? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>${escHtml(p.area)} m²</div>` : '',
     p.rooms    ? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>${escHtml(p.rooms)} PN</div>` : '',
@@ -4976,15 +4970,7 @@ function mybdsBuildCard(p, maxViews, maxFav) {
     p.direction? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>${escHtml(p.direction)}</div>` : '',
   ].filter(Boolean).join('');
 
-  // Performance bars (active only)
-  const viewPct = Math.round((p.total_click / maxViews) * 100);
-  const perfBars = p.status === 1
-    ? `<div class="perf-row">
-        <span class="perf-label">Lượt xem</span>
-        <div class="perf-bar-bg"><div class="perf-bar-fill" style="width:${viewPct}%;"></div></div>
-        <span class="perf-val">${p.total_click}</span>
-      </div>`
-    : '';
+  // perf bars removed
 
   // Pending notice banner
   const pendingBanner = p.status === 0
@@ -5061,15 +5047,20 @@ function mybdsBuildCard(p, maxViews, maxFav) {
       <div class="mybds-img-status">
         <span class="status-pill ${statusInfo.cls}">${statusInfo.label}</span>
       </div>
-      <div class="mybds-img-price" style="color:var(--primary);">${escHtml(p.price)}</div>
-      ${statChips}
+      <!-- price and icons moved to body -->
     </div>
     <div class="mybds-body">
       <div class="mybds-title" ${p.status === 1 ? `onclick="mybdsViewProp(${p.id})" style="cursor:pointer;"` : ''}>${escHtml(p.title)}</div>
-      <div class="mybds-addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escHtml(p.address_location || '')}</div>
+      <!-- address removed -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;">
+        <div style="color:var(--primary);font-size:14px;font-weight:700;">${escHtml(p.price)}</div>
+        <div style="display:flex;gap:10px;color:var(--primary);font-size:11px;align-items:center;">
+          <span style="display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${p.total_click}</span>
+          <span style="display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${p.favourite_count}</span>
+        </div>
+      </div>
       <div class="mybds-meta">${metaItems}</div>
     </div>
-    ${perfBars}
     ${pendingBanner}
     ${rejectedBanner}
     <div class="mybds-footer">

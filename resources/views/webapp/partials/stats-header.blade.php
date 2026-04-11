@@ -1,5 +1,5 @@
-<!-- Summary strip -->
-<div class="sp-summary">
+<!-- stats-bar removed -->
+{{-- <div class="sp-summary">
   @if(isset($stats) && is_array($stats))
     @foreach($stats as $stat)
     <div class="sp-sum-item" @if(!empty($stat['onclick'])) onclick="{{ $stat['onclick'] }}" style="cursor:pointer;" @endif>
@@ -10,7 +10,7 @@
     </div>
     @endforeach
   @endif
-</div>
+</div> --}}
 
 <!-- Search bar -->
 <div class="sp-searchbar">
