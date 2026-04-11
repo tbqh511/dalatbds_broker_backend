@@ -75,6 +75,7 @@
   @include('webapp.subpages.activitylog')
   @include('webapp.subpages.likedbds')
   @include('webapp.subpages.reviews')
+  @include('webapp.subpages.userbds')
   @endif
 
   {{-- GUEST DIALOG — no-account prompt --}}

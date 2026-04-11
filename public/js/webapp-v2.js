@@ -6306,7 +6306,6 @@ window.openUserActionSheet = function(id, tab) {
   if (metaEl) metaEl.textContent = (u.mobile || u.email || '') + (isLocked ? ' · Đang bị khoá' : '');
 
   var iconEdit   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-  var iconRole   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>';
   var iconHome   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
   var iconLock   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
   var iconUnlock = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
@@ -6317,8 +6316,6 @@ window.openUserActionSheet = function(id, tab) {
   var actions = [
     { icon: iconEdit, label: 'Chỉnh sửa thông tin', sub: 'Cập nhật hồ sơ người dùng',
       fn: 'openEditUserSheet(' + id + ')', danger: false },
-    { icon: iconRole, label: 'Đổi vai trò',         sub: 'Thay đổi quyền hạn tài khoản',
-      fn: 'openChangeRoleSheet(' + id + ')', danger: false },
     { icon: iconHome, label: 'Xem BĐS đã đăng',     sub: (u.property_count || 0) + ' BĐS',
       fn: 'viewUserBds(' + id + ',\'' + escHtml(u.name || '') + '\')', danger: false },
     { icon: isLocked ? iconUnlock : iconLock, label: lockLabel, sub: lockSub,
@@ -6349,26 +6346,203 @@ window.closeUserActionSheet = function() {
 };
 
 /* Xem BĐS đã đăng của 1 user — mở subpage approvebds với filter added_by */
+/* Xem BĐS đã đăng của 1 user — mở subpage userbds */
 window.viewUserBds = function(userId, userName) {
-  // Set filter trước khi mở subpage để loadApprovalBds dùng đúng added_by
-  abdsFilterAddedBy = userId;
-  abdsCurrentTab    = 'approved';
-  abdsCurrentSearch = '';
+  window._userBdsUserId        = userId;
+  window._userBdsCurrentTab    = 'all';
+  window._userBdsCurrentSearch = '';
+  window._userBdsCurrentSort   = 'latest';
 
-  // Mở subpage trực tiếp (không qua openSubpage để tránh reset abdsFilterAddedBy)
-  var sp = document.getElementById('subpage-approvebds');
+  // Cập nhật tiêu đề
+  var titleEl = document.getElementById('userBdsTitle');
+  if (titleEl) titleEl.textContent = 'BĐS của ' + (userName || 'người dùng');
+
+  // Reset search input
+  var searchEl = document.getElementById('userBdsSearchInput');
+  if (searchEl) searchEl.value = '';
+
+  // Reset tabs — chọn "Tất cả"
+  document.querySelectorAll('#userBdsTabs .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  var allTab = document.getElementById('userBdsTabAll');
+  if (allTab) allTab.classList.add('active');
+
+  // Mở subpage
+  var sp = document.getElementById('subpage-userbds');
   if (sp) {
     sp.classList.add('open');
     var nav = document.querySelector('.bottom-nav');
     if (nav) nav.style.transform = 'translateY(100%)';
   }
 
-  // Cập nhật tab active sang "approved"
-  document.querySelectorAll('#abdsTabBar .sp-tab').forEach(function(t) { t.classList.remove('active'); });
-  var approvedTab = document.querySelector('#abdsTabBar [data-tab="approved"]');
-  if (approvedTab) approvedTab.classList.add('active');
+  loadUserBds(true);
+};
 
-  loadApprovalBds(true);
+var _userBdsSearchTimer = null;
+
+window.loadUserBds = function(reset) {
+  var userId = window._userBdsUserId;
+  if (!userId) return;
+
+  var loadingEl = document.getElementById('userBdsLoading');
+  var emptyEl   = document.getElementById('userBdsEmpty');
+  var listEl    = document.getElementById('userBdsList');
+  if (!loadingEl || !emptyEl || !listEl) return;
+
+  if (reset) {
+    loadingEl.style.display = '';
+    emptyEl.style.display   = 'none';
+    listEl.style.display    = 'none';
+  }
+
+  var url = '/webapp/api/admin/users/' + userId + '/properties'
+    + '?status='  + encodeURIComponent(window._userBdsCurrentTab    || 'all')
+    + '&search=' + encodeURIComponent(window._userBdsCurrentSearch || '')
+    + '&sort='   + encodeURIComponent(window._userBdsCurrentSort   || 'latest');
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      loadingEl.style.display = 'none';
+      if (!data.success) { emptyEl.style.display = ''; return; }
+
+      var counts = data.counts || {};
+
+      // Update stat strip
+      setElText('userBdsCountActive',  counts.active  != null ? counts.active  : 0);
+      setElText('userBdsCountPending', counts.pending != null ? counts.pending : 0);
+      setElText('userBdsCountHidden',  counts.hidden  != null ? counts.hidden  : 0);
+      setElText('userBdsTotalViews',   (counts.total_views || 0).toLocaleString('vi-VN'));
+
+      // Update tab labels
+      setElText('userBdsTabAll',     'Tất cả ('     + (counts.all     || 0) + ')');
+      setElText('userBdsTabActive',  'Hiển thị ('   + (counts.active  || 0) + ')');
+      setElText('userBdsTabPending', 'Chờ duyệt ('  + (counts.pending || 0) + ')');
+      setElText('userBdsTabHidden',  'Đã ẩn ('      + (counts.hidden  || 0) + ')');
+
+      var props = data.properties || [];
+      if (!props.length) { emptyEl.style.display = ''; return; }
+
+      var maxViews = Math.max(1, Math.max.apply(null, props.map(function(p) { return p.total_click || 0; })));
+      var maxFav   = Math.max(1, Math.max.apply(null, props.map(function(p) { return p.favourite_count || 0; })));
+
+      listEl.innerHTML = props.map(function(p) {
+        return userBdsBuildCard(p, maxViews, maxFav);
+      }).join('');
+      listEl.style.display = '';
+    })
+    .catch(function() {
+      loadingEl.style.display = 'none';
+      emptyEl.style.display   = '';
+    });
+};
+
+function userBdsBuildCard(p, maxViews, maxFav) {
+  var statusInfo = p.status === 1
+    ? { cls: 'status-active',   label: '● Đang hiển thị' }
+    : p.status === 0
+      ? { cls: 'status-pending', label: '⏳ Chờ duyệt' }
+      : { cls: 'status-hidden',  label: '⊘ Đã ẩn' };
+
+  var imgStyle = p.title_image
+    ? 'background:url(\'' + escHtml(p.title_image) + '\') center/cover no-repeat;'
+    : 'background:linear-gradient(135deg,#1e3a5f,#0d1f3c);display:flex;align-items:center;justify-content:center;';
+
+  var imgPlaceholder = p.title_image
+    ? ''
+    : '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>';
+
+  var statChips = p.status === 1
+    ? '<div class="mybds-img-stats">'
+      + '<div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ' + (p.total_click || 0) + '</span></div>'
+      + '<div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ' + (p.favourite_count || 0) + '</span></div>'
+      + '</div>'
+    : '';
+
+  var metaItems = [
+    p.area          ? '<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>' + escHtml(p.area) + ' m²</div>' : '',
+    '<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>' + (p.property_type === 0 ? 'Mua' : 'Thuê') + '</div>',
+  ].filter(Boolean).join('');
+
+  var viewPct = Math.round((p.total_click / maxViews) * 100);
+  var favPct  = Math.round((p.favourite_count / maxFav) * 100);
+  var perfBars = p.status === 1
+    ? '<div class="perf-row">'
+      + '<span class="perf-label">Lượt xem</span>'
+      + '<div class="perf-bar-bg"><div class="perf-bar-fill" style="width:' + viewPct + '%;"></div></div>'
+      + '<span class="perf-val">' + p.total_click + '</span>'
+      + '</div>'
+      + '<div class="perf-row">'
+      + '<span class="perf-label">Quan tâm</span>'
+      + '<div class="perf-bar-bg"><div class="perf-bar-fill" style="width:' + favPct + '%;background:var(--danger);"></div></div>'
+      + '<span class="perf-val">' + p.favourite_count + '</span>'
+      + '</div>'
+    : '';
+
+  var footerLabel = p.status === 1
+    ? 'Đăng ' + escHtml(p.created_at)
+    : p.status === 0
+      ? 'Gửi ' + escHtml(p.created_at)
+      : 'Ẩn từ ' + escHtml(p.created_at);
+
+  var cardOpacity = p.status === 2 ? 'opacity:0.75;' : '';
+
+  return '<div class="mybds-card" style="' + cardOpacity + '">'
+    + '<div class="mybds-img" style="' + imgStyle + '">'
+    + imgPlaceholder
+    + '<div class="mybds-img-overlay"></div>'
+    + '<div class="mybds-img-status"><span class="status-pill ' + statusInfo.cls + '">' + statusInfo.label + '</span></div>'
+    + '<div class="mybds-img-price">' + escHtml(p.price) + '</div>'
+    + statChips
+    + '</div>'
+    + '<div class="mybds-body">'
+    + '<div class="mybds-title">' + escHtml(p.title) + '</div>'
+    + '<div class="mybds-addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escHtml(p.address_location || '') + '</div>'
+    + '<div class="mybds-meta">' + metaItems + '</div>'
+    + '</div>'
+    + perfBars
+    + '<div class="mybds-footer">'
+    + '<div class="mybds-analytics"><div class="mybds-analytic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + footerLabel + '</div></div>'
+    + '<div class="mybds-quick"></div>'
+    + '</div>'
+    + '</div>';
+}
+
+window.userBdsTabSwitch = function(btn, tab) {
+  document.querySelectorAll('#userBdsTabs .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  window._userBdsCurrentTab = tab;
+  loadUserBds(true);
+};
+
+window.userBdsOnSearchInput = function(val) {
+  clearTimeout(_userBdsSearchTimer);
+  _userBdsSearchTimer = setTimeout(function() {
+    window._userBdsCurrentSearch = val.trim();
+    loadUserBds(true);
+  }, 400);
+};
+
+window.userBdsToggleSortSheet = function() {
+  var sheet = document.getElementById('userBdsSortSheet');
+  if (sheet) sheet.style.display = 'flex';
+};
+
+window.userBdsCloseSortSheet = function() {
+  var sheet = document.getElementById('userBdsSortSheet');
+  if (sheet) sheet.style.display = 'none';
+};
+
+window.userBdsSortSelect = function(sort) {
+  window._userBdsCurrentSort = sort;
+  // Update checkmark labels
+  var sortMap = { latest: 'userBdsSortLatest', oldest: 'userBdsSortOldest', views: 'userBdsSortViews', price_asc: 'userBdsSortPriceAsc', price_desc: 'userBdsSortPriceDesc' };
+  var labels  = { latest: 'Mới nhất', oldest: 'Cũ nhất', views: 'Lượt xem nhiều nhất', price_asc: 'Giá tăng dần', price_desc: 'Giá giảm dần' };
+  Object.keys(sortMap).forEach(function(key) {
+    var el = document.getElementById(sortMap[key]);
+    if (el) el.textContent = (key === sort ? '✓ ' : '  ') + labels[key];
+  });
+  userBdsCloseSortSheet();
+  loadUserBds(true);
 };
 
 /* Mở form chỉnh sửa thông tin người dùng — bind dữ liệu từ _usersCache */

@@ -3797,6 +3797,7 @@ class TelegramWebAppController extends Controller
                 'avatar_color'     => $this->adminUserAvatarColor($c->id),
                 'created_at_human' => $c->created_at ? $c->created_at->diffForHumans() : '',
                 'property_count'   => $propCount,
+                'profile'          => $c->getRawOriginal('profile') ?? '',
             ];
         });
 
@@ -3823,6 +3824,92 @@ class TelegramWebAppController extends Controller
         ];
 
         return response()->json(['stats' => $stats, 'users' => $mappedUsers]);
+    }
+
+    public function adminUserPropertiesApi(Request $request, int $userId)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (! $customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $target = Customer::findOrFail($userId);
+            $statusFilter = $request->input('status', 'all');
+            $search = $request->input('search', '');
+            $sort = $request->input('sort', 'latest');
+
+            $activeCount  = Property::where('added_by', $userId)->where('status', 1)->count();
+            $pendingCount = Property::where('added_by', $userId)->where('status', 0)->count();
+            $hiddenCount  = Property::where('added_by', $userId)->where('status', 2)->count();
+            $totalViews   = Property::where('added_by', $userId)->sum('total_click');
+
+            $query = Property::where('propertys.added_by', $userId)
+                ->with(['category', 'ward', 'street', 'parameters'])
+                ->withCount(['favourite as favourite_count']);
+
+            if (in_array($statusFilter, ['0', '1', '2'])) {
+                $query->where('propertys.status', (int) $statusFilter);
+            }
+
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('propertys.title', 'like', '%'.$search.'%')
+                        ->orWhere('propertys.address', 'like', '%'.$search.'%');
+                });
+            }
+
+            switch ($sort) {
+                case 'oldest':
+                    $query->orderBy('propertys.created_at', 'asc');
+                    break;
+                case 'views':
+                    $query->orderBy('propertys.total_click', 'desc');
+                    break;
+                case 'price_asc':
+                    $query->orderBy('propertys.price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('propertys.price', 'desc');
+                    break;
+                default:
+                    $query->orderBy('propertys.created_at', 'desc');
+            }
+
+            $properties = $query->get()->map(function ($p) {
+                return [
+                    'id'               => $p->id,
+                    'title'            => $p->title ?: $p->title_by_address,
+                    'price'            => $p->formatted_prices,
+                    'status'           => (int) $p->status,
+                    'category_name'    => $p->category?->category ?? '',
+                    'property_type'    => (int) $p->property_type,
+                    'area'             => $p->area,
+                    'address_location' => $p->address_location,
+                    'total_click'      => (int) $p->total_click,
+                    'favourite_count'  => (int) $p->favourite_count,
+                    'created_at'       => $p->created_at ? $p->created_at->format('d/m/Y') : '',
+                    'title_image'      => $p->title_image,
+                ];
+            });
+
+            return response()->json([
+                'success'    => true,
+                'user_name'  => $target->name,
+                'counts'     => [
+                    'all'         => $activeCount + $pendingCount + $hiddenCount,
+                    'active'      => $activeCount,
+                    'pending'     => $pendingCount,
+                    'hidden'      => $hiddenCount,
+                    'total_views' => (int) $totalViews,
+                ],
+                'properties' => $properties,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
     }
 
     public function adminApproveUser(int $id)
