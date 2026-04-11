@@ -5638,7 +5638,6 @@ function renderLeadCards(leads) {
       + '<div class="lc-info">'
       + '<div class="lc-name">' + escHtml(name) + '</div>'
       + '<div class="lc-meta">'
-      + (phone ? '<span><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;">' + svgPhone + '</span>' + escHtml(phone) + '</span>' : '')
       + '</div>'
       + '</div>'
       + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
@@ -5651,7 +5650,7 @@ function renderLeadCards(leads) {
       + '<div class="lc-footer">'
       + (sourceText ? '<span class="lc-source"><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:3px;">' + svgSource + '</span> ' + escHtml(sourceText) + '</span>' : '<span></span>')
       + '<div class="lc-actions">'
-      + (phone ? '<a class="lc-btn icon" href="tel:' + encodeURIComponent(phone) + '" title="Gọi">' + svgPhoneLg + '</a>' : '')
+      + (phone ? '<a class="lc-btn icon" href="tel:' + encodeURIComponent(phone) + '" title="Gọi" onclick="leadCallLog(' + id + ',event)">' + svgPhoneLg + '</a>' : '')
       + ctaBtn
       + '</div>'
       + '</div>'
@@ -7989,5 +7988,26 @@ window.mpConfirmDelete = function() {
   })
   .catch(function() {
     if (typeof showToast === 'function') showToast('Lỗi kết nối. Vui lòng thử lại.');
+  });
+};
+
+// Ghi log khi bấm gọi điện lead
+window.leadCallLog = function(leadId) {
+  var cfg  = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  var logUrl = (cfg && cfg.logAction) || '/webapp/log-action';
+  fetch(logUrl, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': csrf,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      subject_type: 'lead',
+      subject_id: leadId,
+      subject_title: 'Lead #' + leadId,
+      action: 'call'
+    })
   });
 };

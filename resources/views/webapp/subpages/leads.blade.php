@@ -11,26 +11,6 @@
     <div class="sp-actions"></div>
   </div>
 
-  <!-- KPI strip -->
-  <div class="kpi-strip">
-    <div class="kpi-item" onclick="leadsTabSwitch(document.getElementById('leadsTabNew'),'new')" style="cursor:pointer;">
-      <div class="kpi-val" id="leadsKpiNew" style="color:var(--danger)">—</div>
-      <div class="kpi-lbl">Mới</div>
-    </div>
-    <div class="kpi-item" onclick="leadsTabSwitch(document.getElementById('leadsTabContacted'),'contacted')" style="cursor:pointer;">
-      <div class="kpi-val" id="leadsKpiContacted" style="color:var(--primary)">—</div>
-      <div class="kpi-lbl">Đã liên hệ</div>
-    </div>
-    <div class="kpi-item" onclick="leadsTabSwitch(document.getElementById('leadsTabConverted'),'converted')" style="cursor:pointer;">
-      <div class="kpi-val" id="leadsKpiConverted" style="color:var(--success)">—</div>
-      <div class="kpi-lbl">Đã chuyển</div>
-    </div>
-    <div class="kpi-item" onclick="leadsTabSwitch(document.getElementById('leadsTabLost'),'lost')" style="cursor:pointer;">
-      <div class="kpi-val" id="leadsKpiLost" style="color:var(--text-secondary)">—</div>
-      <div class="kpi-lbl">Huỷ</div>
-    </div>
-  </div>
-
   <!-- Search bar -->
   <div class="sp-searchbar">
     <div class="sp-search-input">
