@@ -260,6 +260,10 @@ class InAppNotificationService
                 'icon_bg' => 'var(--success-light)',
                 'icon'    => 'star',
             ],
+            'role_changed' => [
+                'icon_bg' => 'var(--primary-light)',
+                'icon'    => 'shield',
+            ],
         ];
 
         return $configs[$type] ?? ['icon_bg' => 'var(--primary-light)', 'icon' => 'bell'];

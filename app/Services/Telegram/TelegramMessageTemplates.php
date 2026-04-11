@@ -288,6 +288,42 @@ class TelegramMessageTemplates
     }
 
     /**
+     * Thông báo thay đổi vai trò — gửi cho người dùng bị thay đổi
+     */
+    public static function roleChanged(Customer $target, string $oldRole, string $newRole, Customer $changedBy): string
+    {
+        $name         = self::escape($target->name ?? 'Bạn');
+        $oldRoleLabel = self::escape(self::getRoleLabel($oldRole));
+        $newRoleLabel = self::escape(self::getRoleLabel($newRole));
+        $adminName    = self::escape($changedBy->name ?? 'Quản trị viên');
+        $time         = now()->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i');
+
+        return "🔔 *THAY ĐỔI VAI TRÒ*\n"
+            . "────────────────\n"
+            . "👤 Tài khoản: {$name}\n"
+            . "🔄 {$oldRoleLabel} → *{$newRoleLabel}*\n"
+            . "👮 Thực hiện bởi: {$adminName}\n"
+            . "📅 Thời gian: {$time}";
+    }
+
+    /**
+     * Trả về nhãn tiếng Việt cho từng role
+     */
+    public static function getRoleLabel(string $role): string
+    {
+        return match ($role) {
+            'guest'      => 'Khách vãng lai',
+            'customer'   => 'Khách hàng',
+            'broker'     => 'eBroker',
+            'bds_admin'  => 'BĐS Admin',
+            'sale'       => 'Sale',
+            'sale_admin' => 'Sale Admin',
+            'admin'      => 'Quản trị viên',
+            default      => ucfirst($role),
+        };
+    }
+
+    /**
      * Helper to escape special characters for MarkdownV2
      * Characters to escape: _ * [ ] ( ) ~ ` > # + - = | { } . !
      */

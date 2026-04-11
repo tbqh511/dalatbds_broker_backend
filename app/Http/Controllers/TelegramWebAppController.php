@@ -3954,7 +3954,13 @@ class TelegramWebAppController extends Controller
             return response()->json(['success' => false, 'message' => 'Role không hợp lệ.'], 422);
         }
 
-        Customer::where('id', $id)->update(['role' => $role]);
+        $target  = Customer::findOrFail($id);
+        $oldRole = $target->role;
+        $target->update(['role' => $role]);
+
+        if ($oldRole !== $role) {
+            $this->sendRoleChangedNotifications($target, $oldRole, $role, $me);
+        }
 
         return response()->json(['success' => true]);
     }
@@ -3988,6 +3994,7 @@ class TelegramWebAppController extends Controller
 
         // Chỉ cho phép cập nhật role nếu người dùng hiện tại là admin
         $me = Auth::guard('webapp')->user();
+        $oldRole = $target->role;
         $updateData = [
             'name'   => $validated['name'],
             'mobile' => $validated['mobile'] ?? $target->mobile,
@@ -3998,6 +4005,10 @@ class TelegramWebAppController extends Controller
         }
 
         $target->update($updateData);
+
+        if (isset($updateData['role']) && $oldRole !== $updateData['role']) {
+            $this->sendRoleChangedNotifications($target->fresh(), $oldRole, $updateData['role'], $me);
+        }
 
         return response()->json([
             'success' => true,
@@ -5329,5 +5340,30 @@ class TelegramWebAppController extends Controller
         MarketPrice::findOrFail($id)->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    // ─── Role Change Notifications ───────────────────────────────────────────
+
+    private function sendRoleChangedNotifications(Customer $target, string $oldRole, string $newRole, Customer $actor): void
+    {
+        $oldRoleLabel = TelegramMessageTemplates::getRoleLabel($oldRole);
+        $newRoleLabel = TelegramMessageTemplates::getRoleLabel($newRole);
+
+        // In-app notification (dùng notifyDirect để bỏ qua preference check — đây là thông báo hệ thống)
+        app(InAppNotificationService::class)->notifyDirect($target, 'role_changed', 'system', [
+            'title'    => 'Vai trò của bạn đã được cập nhật',
+            'body'     => "{$oldRoleLabel} → {$newRoleLabel}",
+            'actor_id' => $actor->id,
+            'data'     => [
+                'old_role' => $oldRole,
+                'new_role' => $newRole,
+            ],
+        ]);
+
+        // Telegram direct message (chỉ gửi nếu user đã kết nối Telegram)
+        if ($target->telegram_id) {
+            $message = TelegramMessageTemplates::roleChanged($target, $oldRole, $newRole, $actor);
+            app(NotificationService::class)->sendToCustomer($target, $message);
+        }
     }
 }
