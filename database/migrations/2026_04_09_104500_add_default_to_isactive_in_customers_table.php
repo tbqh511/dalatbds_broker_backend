@@ -12,16 +12,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            // Add default value of 1 (active) to isActive column
-            // This ensures newly created users are active by default
-            $table->unsignedTinyInteger('isActive')->default(1)->change();
-        });
-
-        // Update existing NULL values to 1 (active)
+        // Update existing NULL values to 1 (active) before modifying the column
         DB::table('customers')
             ->whereNull('isActive')
             ->update(['isActive' => 1]);
+
+        // Use raw SQL to add default constraint to isActive column
+        // This avoids Doctrine DBAL issues with changing existing columns
+        DB::statement('ALTER TABLE customers MODIFY isActive TINYINT NOT NULL DEFAULT 1');
     }
 
     /**
@@ -29,9 +27,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            // Revert to no default value
-            $table->unsignedTinyInteger('isActive')->nullable()->change();
-        });
+        // Revert to no default value
+        DB::statement('ALTER TABLE customers MODIFY isActive TINYINT NULL');
     }
 };
