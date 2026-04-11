@@ -900,10 +900,10 @@ class TelegramWebAppController extends Controller
                 $dealStatus = $deal ? $deal->getRawOriginal('status') : null;
 
                 $categoryNames = collect($lead->categories ?? [])
-                    ->map(fn ($id) => $catMap[$id] ?? null)->filter()->implode(', ');
+                    ->map(fn ($id) => $catMap[$id] ?? null)->filter()->values()->toArray();
 
                 $wardNames = collect($lead->wards ?? [])
-                    ->map(fn ($c) => $wardMap[$c] ?? null)->filter()->implode(', ');
+                    ->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->toArray();
 
                 $budgetMin = (float) ($lead->demand_rate_min ?? 0);
                 $budgetMax = (float) ($lead->demand_rate_max ?? 0);
