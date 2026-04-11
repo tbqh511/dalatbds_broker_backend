@@ -9,8 +9,7 @@
     </div>
   </div>
 
-  <!-- Stats header removed -->
-  <!-- @include('webapp.partials.stats-header', [...]) -->
+  {{-- Stats header removed --}}
 
   <!-- Status tabs -->
   <div class="sp-tabs">
