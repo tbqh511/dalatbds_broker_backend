@@ -27,9 +27,13 @@
     </div>
   </div>
 
-  <div class="sp-tabs">
+  <div class="sp-tabs" style="overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
     <button class="sp-tab active" id="tabUnassigned" data-tab="unassigned" onclick="assignLeadTabSwitch(this)">Chờ assign</button>
-    <button class="sp-tab" data-tab="history" onclick="assignLeadTabSwitch(this)">Đã assign hôm nay</button>
+    <button class="sp-tab" id="tabNew" data-tab="new" onclick="assignLeadTabSwitch(this)">Mới</button>
+    <button class="sp-tab" id="tabContacted" data-tab="contacted" onclick="assignLeadTabSwitch(this)">Đang xử lý</button>
+    <button class="sp-tab" id="tabConverted" data-tab="converted" onclick="assignLeadTabSwitch(this)">Đã tạo Deal</button>
+    <button class="sp-tab" id="tabFailed" data-tab="failed" onclick="assignLeadTabSwitch(this)">Thất bại</button>
+    <button class="sp-tab" data-tab="history" onclick="assignLeadTabSwitch(this)">Lịch sử</button>
   </div>
 
   <div class="sp-scroll" style="padding-bottom:80px;">
@@ -48,7 +52,27 @@
       <div id="unassignedLeadsList" style="display:none;"></div>
     </div>
 
-    <!-- Tab: Đã assign hôm nay -->
+    <!-- Tab: Mới (status = new) -->
+    <div id="assignLeadTabNew" style="display:none;">
+      <div id="assignLeadTabNewContent"></div>
+    </div>
+
+    <!-- Tab: Đang xử lý (status = contacted) -->
+    <div id="assignLeadTabContacted" style="display:none;">
+      <div id="assignLeadTabContactedContent"></div>
+    </div>
+
+    <!-- Tab: Đã tạo Deal (status = converted) -->
+    <div id="assignLeadTabConverted" style="display:none;">
+      <div id="assignLeadTabConvertedContent"></div>
+    </div>
+
+    <!-- Tab: Thất bại (status = bad-contact / lost) -->
+    <div id="assignLeadTabFailed" style="display:none;">
+      <div id="assignLeadTabFailedContent"></div>
+    </div>
+
+    <!-- Tab: Lịch sử assign hôm nay -->
     <div id="assignLeadTabHistory" style="display:none;">
       <div class="assign-history" style="margin-top:8px;">
         <div class="ah-title">Đã assign hôm nay</div>

@@ -198,7 +198,7 @@ class CrmLeadController extends Controller
         $customer = Auth::guard('webapp')->user();
         $lead = $this->leadService->getLead($id);
 
-        if (!$lead || !$customer->isSaleAdmin()) {
+        if (!$lead || (!$customer->isSaleAdmin() && !$customer->hasRole('bds_admin'))) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -250,7 +250,7 @@ class CrmLeadController extends Controller
     public function bulkAssign(Request $request)
     {
         $customer = Auth::guard('webapp')->user();
-        if (!$customer || !$customer->isSaleAdmin()) {
+        if (!$customer || (!$customer->isSaleAdmin() && !$customer->hasRole('bds_admin'))) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 

@@ -193,8 +193,8 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
             Route::post('/webapp/leads/{id}/deal', [CrmLeadController::class, 'createDeal'])->name('webapp.leads.create-deal');
         });
 
-        // Sale Admin routes (sale_admin only)
-        Route::middleware(['webapp.role:sale_admin'])->group(function () {
+        // Sale Admin routes (sale_admin + bds_admin)
+        Route::middleware(['webapp.role:sale_admin,bds_admin'])->group(function () {
             Route::post('/webapp/leads/bulk-assign', [CrmLeadController::class, 'bulkAssign'])->name('webapp.leads.bulk-assign');
             Route::post('/webapp/leads/{id}/assign-sale', [CrmLeadController::class, 'assignSale'])->name('webapp.leads.assign-sale');
             Route::get('/webapp/sale-admin', [SaleAdminController::class, 'index'])->name('webapp.sale-admin');

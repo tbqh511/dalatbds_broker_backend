@@ -1827,8 +1827,20 @@ window.confirmAssign = function(){
         if (lEl) lEl.textContent = bc.low     || 0;
       }
 
-      // Refresh history tab
+      // Refresh history tab + reload all status tabs
       loadAssignHistoryOnly();
+      // Re-render status tabs if _assignLeadData exists (mark assigned leads)
+      if (_assignLeadData) {
+        (res.assigned_ids || []).forEach(function(id){
+          var lead = (_assignLeadData.leads || []).find(function(l){ return l.id === id; });
+          if (lead) { lead.is_assigned = true; lead.sale_name = res.sale_name || ''; }
+        });
+        var allLeads = _assignLeadData.leads || [];
+        _renderAssignStatusTab('assignLeadTabNewContent',       allLeads, 'new');
+        _renderAssignStatusTab('assignLeadTabContactedContent', allLeads, 'contacted');
+        _renderAssignStatusTab('assignLeadTabConvertedContent', allLeads, 'converted');
+        _renderAssignStatusTab('assignLeadTabFailedContent',    allLeads, 'failed');
+      }
 
       var saleName = res.sale_name || 'Sale';
       var msg = '✓ Đã assign ' + assignedCount + ' lead cho ' + saleName;
@@ -1857,14 +1869,27 @@ document.getElementById('salePicker')?.addEventListener('click', function(e){
 });
 
 // ---- Assign Lead: tab switch ----
+var _assignLeadTabMap = {
+  'unassigned': 'assignLeadTabUnassigned',
+  'new':        'assignLeadTabNew',
+  'contacted':  'assignLeadTabContacted',
+  'converted':  'assignLeadTabConverted',
+  'failed':     'assignLeadTabFailed',
+  'history':    'assignLeadTabHistory',
+};
 window.assignLeadTabSwitch = function(btn){
   btn.closest('.sp-tabs').querySelectorAll('.sp-tab').forEach(function(t){ t.classList.remove('active'); });
   btn.classList.add('active');
   var tab = btn.dataset.tab;
-  var unassignedPanel = document.getElementById('assignLeadTabUnassigned');
-  var historyPanel    = document.getElementById('assignLeadTabHistory');
-  if (unassignedPanel) unassignedPanel.style.display = tab === 'unassigned' ? '' : 'none';
-  if (historyPanel)    historyPanel.style.display    = tab === 'history'    ? '' : 'none';
+  Object.values(_assignLeadTabMap).forEach(function(panelId){
+    var el = document.getElementById(panelId);
+    if (el) el.style.display = 'none';
+  });
+  var activeId = _assignLeadTabMap[tab];
+  if (activeId) {
+    var activeEl = document.getElementById(activeId);
+    if (activeEl) activeEl.style.display = '';
+  }
 };
 
 // ---- Assign Lead: data loading ----
@@ -1882,15 +1907,15 @@ function loadAssignLeadData(){
   if (emptyEl)   { emptyEl.style.display = 'none'; }
   if (listEl)    { listEl.style.display = 'none'; listEl.innerHTML = ''; }
 
-  // Ensure unassigned tab is active
-  var tabUnassigned = document.getElementById('tabUnassigned');
-  var tabHistory    = document.querySelector('[data-tab="history"]');
-  var panelUnassigned = document.getElementById('assignLeadTabUnassigned');
-  var panelHistory    = document.getElementById('assignLeadTabHistory');
-  if (tabUnassigned)  tabUnassigned.classList.add('active');
-  if (tabHistory)     tabHistory.classList.remove('active');
-  if (panelUnassigned) panelUnassigned.style.display = '';
-  if (panelHistory)    panelHistory.style.display = 'none';
+  // Reset all tab panels — show only unassigned on load
+  Object.values(_assignLeadTabMap).forEach(function(panelId){
+    var el = document.getElementById(panelId);
+    if (el) el.style.display = panelId === 'assignLeadTabUnassigned' ? '' : 'none';
+  });
+  // Reset tab buttons — activate "Chờ assign"
+  document.querySelectorAll('#subpage-assignlead .sp-tabs .sp-tab').forEach(function(t){ t.classList.remove('active'); });
+  var tabUnassignedBtn = document.getElementById('tabUnassigned');
+  if (tabUnassignedBtn) tabUnassignedBtn.classList.add('active');
 
   var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
   if (!cfg || !cfg.assignData) { showToast('Lỗi: Không tìm thấy endpoint assign data'); return; }
@@ -1905,7 +1930,10 @@ function loadAssignLeadData(){
     }
     _assignLeadData = data;
 
+    var sc = data.status_counts || {};
     var bc = data.budget_counts || {};
+
+    // Update budget tier counts (unassigned leads only)
     var hEl = document.getElementById('budgetHigh');
     var mEl = document.getElementById('budgetMedium');
     var lEl = document.getElementById('budgetLow');
@@ -1913,19 +1941,40 @@ function loadAssignLeadData(){
     if (mEl) mEl.textContent = bc.medium  || 0;
     if (lEl) lEl.textContent = bc.low     || 0;
 
-    var total   = (data.leads || []).length;
+    // Update unassigned pool count badge
+    var unassignedCount = sc.unassigned || 0;
     var countEl = document.getElementById('unassignedCount');
-    if (countEl) countEl.textContent = total + ' lead';
-    var tabEl = document.getElementById('tabUnassigned');
-    if (tabEl) tabEl.textContent = 'Chờ assign (' + total + ')';
+    if (countEl) countEl.textContent = unassignedCount + ' lead';
+
+    // Update tab labels with counts
+    var tabUnassigned = document.getElementById('tabUnassigned');
+    var tabNew        = document.getElementById('tabNew');
+    var tabContacted  = document.getElementById('tabContacted');
+    var tabConverted  = document.getElementById('tabConverted');
+    var tabFailed     = document.getElementById('tabFailed');
+    if (tabUnassigned) tabUnassigned.textContent = 'Chờ assign' + (unassignedCount ? ' (' + unassignedCount + ')' : '');
+    if (tabNew)        tabNew.textContent        = 'Mới'        + (sc.new       ? ' (' + sc.new       + ')' : '');
+    if (tabContacted)  tabContacted.textContent  = 'Đang xử lý' + (sc.contacted ? ' (' + sc.contacted + ')' : '');
+    if (tabConverted)  tabConverted.textContent  = 'Đã tạo Deal'+ (sc.converted ? ' (' + sc.converted + ')' : '');
+    if (tabFailed)     tabFailed.textContent     = 'Thất bại'   + (sc.failed    ? ' (' + sc.failed    + ')' : '');
 
     if (loadingEl) loadingEl.style.display = 'none';
 
-    if (!data.leads || data.leads.length === 0) {
+    var allLeads = data.leads || [];
+
+    // Tab: Chờ assign — unassigned leads only (with checkbox + bulk assign)
+    var unassignedLeads = allLeads.filter(function(l){ return !l.is_assigned; });
+    if (unassignedLeads.length === 0) {
       if (emptyEl) emptyEl.style.display = '';
     } else {
-      if (listEl) { listEl.innerHTML = renderUnassignedLeadCards(data.leads); listEl.style.display = ''; }
+      if (listEl) { listEl.innerHTML = renderUnassignedLeadCards(unassignedLeads); listEl.style.display = ''; }
     }
+
+    // Status tabs — render leads by status_raw
+    _renderAssignStatusTab('assignLeadTabNewContent',       allLeads, 'new');
+    _renderAssignStatusTab('assignLeadTabContactedContent', allLeads, 'contacted');
+    _renderAssignStatusTab('assignLeadTabConvertedContent', allLeads, 'converted');
+    _renderAssignStatusTab('assignLeadTabFailedContent',    allLeads, 'failed');
 
     renderSalePickerList(data.sales || []);
     renderAssignHistory(data.history || []);
@@ -1935,6 +1984,25 @@ function loadAssignLeadData(){
     if (emptyEl)   emptyEl.style.display = '';
     showToast('Lỗi tải dữ liệu assign lead');
   });
+}
+
+function _renderAssignStatusTab(containerId, allLeads, status){
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var filtered = allLeads.filter(function(l){
+    if (status === 'failed') return l.status_raw === 'bad-contact' || l.status_raw === 'lost';
+    return l.status_raw === status;
+  });
+  if (filtered.length === 0) {
+    var labels = { new: 'Mới', contacted: 'Đang xử lý', converted: 'Đã tạo Deal', failed: 'Thất bại' };
+    el.innerHTML = '<div style="padding:48px 24px;text-align:center;">'
+      + '<div style="font-size:28px;margin-bottom:8px;">📋</div>'
+      + '<div style="font-size:14px;font-weight:600;color:var(--text-secondary);">Không có lead nào</div>'
+      + '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">Chưa có lead trạng thái ' + (labels[status] || status) + '</div>'
+      + '</div>';
+  } else {
+    el.innerHTML = renderStatusLeadCards(filtered);
+  }
 }
 
 function loadAssignHistoryOnly(){
@@ -2015,6 +2083,68 @@ function renderUnassignedLeadCards(leads){
         + '<button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">'
           + '<span style="display:inline-flex;align-items:center;gap:4px;">' + svgAssign + ' Assign ngay</span>'
         + '</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// Render lead cards for status tabs (no checkbox, read-only; assign btn only if unassigned)
+function renderStatusLeadCards(leads){
+  var svgPhone  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.93a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>';
+  var svgAssign = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+
+  var statusConfig = {
+    'new':         { label: 'Mới',         style: 'background:#dbeafe;color:#1d4ed8;' },
+    'contacted':   { label: 'Đang xử lý',  style: 'background:#fef3c7;color:#d97706;' },
+    'converted':   { label: 'Đã tạo Deal', style: 'background:#d1fae5;color:#065f46;' },
+    'bad-contact': { label: 'Sai số',      style: 'background:#fee2e2;color:#dc2626;' },
+    'lost':        { label: 'Thất bại',    style: 'background:#f3f4f6;color:#6b7280;' },
+  };
+  var avatarColors = ['#ef4444', 'var(--teal)', 'var(--purple)', '#f59e0b', 'var(--primary)', '#059669'];
+
+  return leads.map(function(lead, index){
+    var domId    = 'sll-' + lead.id;
+    var avatarBg = avatarColors[index % avatarColors.length];
+    var sCfg     = statusConfig[lead.status_raw] || { label: lead.status_raw, style: 'background:#f3f4f6;color:#6b7280;' };
+
+    var catStr  = (lead.categories || []).join(', ');
+    var wardStr = (lead.wards || []).join(', ');
+    var needStr = [lead.lead_type, lead.purpose].filter(Boolean).join(' ');
+
+    var rows = '';
+    if (catStr)  rows += '<div class="ul-row"><span class="ul-label">Loại BĐS</span><span class="ul-value">' + escHtml(catStr) + '</span></div>';
+    if (needStr) rows += '<div class="ul-row"><span class="ul-label">Nhu cầu</span><span class="ul-value">' + escHtml(needStr) + '</span></div>';
+    if (lead.budget_min || lead.budget_max)
+                 rows += '<div class="ul-row"><span class="ul-label">Ngân sách</span><span class="ul-value money">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span></div>';
+    if (wardStr) rows += '<div class="ul-row"><span class="ul-label">Khu vực</span><span class="ul-value">' + escHtml(wardStr) + '</span></div>';
+
+    var footerRight = lead.is_assigned
+      ? '<span style="font-size:11px;color:var(--text-secondary);display:inline-flex;align-items:center;gap:3px;">'
+          + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+          + ' ' + escHtml(lead.sale_name)
+          + '</span>'
+      : '<button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker([\'ull-' + lead.id + '\']);">'
+          + '<span style="display:inline-flex;align-items:center;gap:4px;">' + svgAssign + ' Assign ngay</span>'
+          + '</button>';
+
+    return '<div class="ul-card" id="' + domId + '">'
+      + '<div class="ul-head">'
+        + '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">' + escHtml(lead.initials) + '</div>'
+        + '<div class="ul-info">'
+          + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
+          + '<div class="ul-meta">'
+            + (lead.phone ? '<span>' + svgPhone + escHtml(lead.phone) + '</span>' : '')
+            + '<span style="font-size:11px;color:var(--text-tertiary);">' + escHtml(lead.time_ago) + '</span>'
+          + '</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">'
+          + '<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;' + sCfg.style + '">' + sCfg.label + '</span>'
+        + '</div>'
+      + '</div>'
+      + (rows ? '<div class="ul-body">' + rows + '</div>' : '')
+      + '<div class="ul-footer">'
+        + '<span style="font-size:11px;color:var(--text-tertiary);">' + escHtml(lead.source_note || '') + '</span>'
+        + footerRight
       + '</div>'
       + '</div>';
   }).join('');
