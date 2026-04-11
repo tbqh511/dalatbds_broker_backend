@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::table('customers', function (Blueprint $table) {
             // Add default value of 1 (active) to isActive column
             // This ensures newly created users are active by default
-            $table->tinyInteger('isActive')->default(1)->change();
+            $table->unsignedTinyInteger('isActive')->default(1)->change();
         });
 
         // Update existing NULL values to 1 (active)
@@ -31,7 +31,7 @@ return new class extends Migration
     {
         Schema::table('customers', function (Blueprint $table) {
             // Revert to no default value
-            $table->tinyInteger('isActive')->nullable()->change();
+            $table->unsignedTinyInteger('isActive')->nullable()->change();
         });
     }
 };
