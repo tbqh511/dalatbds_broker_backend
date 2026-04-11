@@ -57,6 +57,7 @@
   @if($customer)
   @include('webapp.subpages.mybds')
   @include('webapp.subpages.mycustomers')
+  @include('webapp.subpages.clients')
   @include('webapp.subpages.leads')
   @include('webapp.subpages.deals')
   @include('webapp.subpages.bookings')
@@ -124,6 +125,7 @@
       myPropertiesJson: @json(route('webapp.api.my_properties')),
       myCustomersJson: @json(route('webapp.api.my_customers')),
       myLeadsJson: @json(route('webapp.api.leads')),
+      myClientsJson: @json(route('webapp.api.my_clients')),
       myDealsJson: @json(route('webapp.api.deals')),
       myCommissionsJson: @json(route('webapp.api.commissions')),
       leadsUpdateStatusBase: '/webapp/leads/',

@@ -319,6 +319,16 @@ window.openSubpage = function(id){
     if (dealsSearchEl) dealsSearchEl.value = '';
     loadDeals(true);
   }
+  if(id === 'clients') {
+    clientsCurrentStatus = '';
+    clientsCurrentSearch = '';
+    document.querySelectorAll('#subpage-clients .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+    var clientsTabAllEl = document.getElementById('clientsTabAll');
+    if (clientsTabAllEl) clientsTabAllEl.classList.add('active');
+    var clientsSearchEl = document.getElementById('clientsSearchInput');
+    if (clientsSearchEl) clientsSearchEl.value = '';
+    loadClients(true);
+  }
   if(id === 'bookings') {
     if(typeof window.loadBookings === 'function') window.loadBookings();
   }
@@ -5873,6 +5883,173 @@ window.dealsOnSearchInput = function(val) {
     loadDeals(true);
   }, 400);
 };
+
+// ============ CLIENTS (Khách hàng) ============
+let clientsLoaded        = false;
+let clientsCurrentStatus = '';
+let clientsCurrentSearch = '';
+let clientsSearchTimer   = null;
+let clientsCurrentPage   = 1;
+let clientsHasMore       = false;
+
+function loadClients(force) {
+  if (clientsLoaded && !force) return;
+  clientsLoaded      = true;
+  clientsCurrentPage = 1;
+
+  var loadingEl = document.getElementById('clientsLoading');
+  var emptyEl   = document.getElementById('clientsEmpty');
+  var listEl    = document.getElementById('clientsList');
+  var moreEl    = document.getElementById('clientsLoadMore');
+  if (!loadingEl || !emptyEl || !listEl) return;
+
+  loadingEl.style.display = '';
+  emptyEl.style.display   = 'none';
+  listEl.style.display    = 'none';
+  if (moreEl) moreEl.style.display = 'none';
+
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.myClientsJson) return;
+
+  var url = cfg.myClientsJson
+    + '?search=' + encodeURIComponent(clientsCurrentSearch)
+    + '&status=' + encodeURIComponent(clientsCurrentStatus)
+    + '&page=1';
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      loadingEl.style.display = 'none';
+      if (!res.success) { emptyEl.style.display = ''; return; }
+
+      // Update KPI (nếu có)
+      if (res.kpi) {
+        ['new', 'care', 'waiting', 'archived'].forEach(function(key) {
+          var el = document.getElementById('clientsKpi' + key.charAt(0).toUpperCase() + key.slice(1));
+          if (el) el.textContent = res.kpi[key] || 0;
+        });
+      }
+
+      if (!res.clients || res.clients.length === 0) {
+        emptyEl.style.display = '';
+        return;
+      }
+
+      listEl.innerHTML = renderClientCards(res.clients);
+      listEl.style.display = '';
+      clientsHasMore     = res.has_more;
+      clientsCurrentPage = 1;
+      if (moreEl) moreEl.style.display = res.has_more ? '' : 'none';
+    })
+    .catch(function() {
+      loadingEl.style.display = 'none';
+      emptyEl.style.display   = '';
+    });
+}
+
+window.clientsTabSwitch = function(btn, status) {
+  if (!btn) return;
+  document.querySelectorAll('#subpage-clients .sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  clientsCurrentStatus = status;
+  clientsLoaded = false;
+  loadClients(true);
+};
+
+window.clientsOnSearchInput = function(val) {
+  clearTimeout(clientsSearchTimer);
+  clientsSearchTimer = setTimeout(function() {
+    clientsCurrentSearch = val.trim();
+    clientsLoaded = false;
+    loadClients(true);
+  }, 400);
+};
+
+window.clientsLoadMore = function() {
+  if (!clientsHasMore) return;
+  var cfg = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  if (!cfg || !cfg.myClientsJson) return;
+
+  var nextPage = clientsCurrentPage + 1;
+  var url = cfg.myClientsJson
+    + '?search=' + encodeURIComponent(clientsCurrentSearch)
+    + '&status=' + encodeURIComponent(clientsCurrentStatus)
+    + '&page=' + nextPage;
+
+  var moreEl = document.getElementById('clientsLoadMore');
+  if (moreEl) moreEl.querySelector('button').textContent = 'Đang tải...';
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (!res.success || !res.clients || res.clients.length === 0) {
+        if (moreEl) moreEl.style.display = 'none';
+        return;
+      }
+      var listEl = document.getElementById('clientsList');
+      if (listEl) listEl.innerHTML += renderClientCards(res.clients);
+      clientsHasMore     = res.has_more;
+      clientsCurrentPage = nextPage;
+      if (moreEl) {
+        if (res.has_more) {
+          moreEl.querySelector('button').textContent = 'Xem thêm';
+          moreEl.style.display = '';
+        } else {
+          moreEl.style.display = 'none';
+        }
+      }
+    })
+    .catch(function() {
+      if (moreEl) moreEl.style.display = 'none';
+    });
+};
+
+function renderClientCards(clients) {
+  return clients.map(renderClientCard).join('');
+}
+
+function renderClientCard(client) {
+  var statusBadges = {
+    'new': '<span style="background:#FEE2E2;color:#991B1B;font-size:11px;padding:2px 6px;border-radius:4px;">Mới</span>',
+    'care': '<span style="background:#FEF3C7;color:#92400E;font-size:11px;padding:2px 6px;border-radius:4px;">Đang chăm</span>',
+    'waiting': '<span style="background:#FED7AA;color:#9A3412;font-size:11px;padding:2px 6px;border-radius:4px;">Chờ chốt</span>',
+    'contacted': '<span style="background:#FEF3C7;color:#92400E;font-size:11px;padding:2px 6px;border-radius:4px;">Đã liên hệ</span>',
+    'converted': '<span style="background:#D1FAE5;color:#065F46;font-size:11px;padding:2px 6px;border-radius:4px;">Đã chuyển</span>',
+    'lost': '<span style="background:#F3F4F6;color:#4B5563;font-size:11px;padding:2px 6px;border-radius:4px;">Huỷ</span>'
+  };
+
+  var statusDisplay = client.status ? (statusBadges[client.status.toLowerCase()] || '') : '';
+  var dealStatusDisplay = '';
+  if (client.has_deal && client.deal_status) {
+    dealStatusDisplay = ' / <span style="color:#666;font-size:12px;">' + client.deal_status + '</span>';
+  }
+
+  var categories = client.categories && client.categories.length > 0
+    ? client.categories.join(', ')
+    : '—';
+  var wards = client.wards && client.wards.length > 0
+    ? client.wards.join(', ')
+    : '—';
+  var budget = client.budget || '—';
+
+  return '<div style="background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #f0f0f0;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">'
+      + '<div style="flex:1;">'
+        + '<div style="font-weight:600;font-size:14px;color:#333;margin-bottom:4px;">' + (client.customer_name || 'N/A') + '</div>'
+        + '<div style="font-size:12px;color:#666;">' + (client.customer_phone || '') + '</div>'
+      + '</div>'
+      + '<div style="text-align:right;">'
+        + statusDisplay + dealStatusDisplay
+      + '</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:6px;">'
+      + '<div><strong>BĐS:</strong> ' + categories + '</div>'
+      + '<div><strong>Khu:</strong> ' + wards + '</div>'
+      + '<div><strong>Giá:</strong> ' + budget + '</div>'
+    + '</div>'
+    + (client.note ? '<div style="font-size:11px;color:#999;border-top:1px solid #f0f0f0;padding-top:6px;margin-top:6px;">📝 ' + client.note + '</div>' : '')
+    + '</div>';
+}
 
 function renderDealCards(deals) {
   return deals.map(renderDealCard).join('');
