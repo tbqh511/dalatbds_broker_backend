@@ -73,12 +73,15 @@ $steps = [];
 // 1. git pull
 $steps[] = run("$GIT pull origin main", $APP_ROOT);
 
-// 2. Clear caches
+// 2. Run database migrations
+$steps[] = run("$PHP artisan migrate --force", $APP_ROOT);
+
+// 3. Clear caches
 foreach (['config:clear', 'cache:clear', 'route:clear', 'view:clear'] as $cmd) {
     $steps[] = run("$PHP artisan $cmd", $APP_ROOT);
 }
 
-// 3. Rebuild caches
+// 4. Rebuild caches
 foreach (['config:cache', 'route:cache', 'view:cache'] as $cmd) {
     $steps[] = run("$PHP artisan $cmd", $APP_ROOT);
 }
