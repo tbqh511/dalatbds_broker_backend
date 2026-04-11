@@ -116,9 +116,11 @@ class SaleAdminController extends Controller
             elseif ($ageHours < 48)     { $timeAgo = 'Hôm qua'; }
             else                        { $timeAgo = (int) ($ageHours / 24) . ' ngày trước'; }
 
-            $catNames  = collect($lead->categories ?? [])->map(fn ($id) => $categoryMap[$id] ?? null)->filter()->values()->all();
-            $wardNames = collect($lead->wards ?? [])->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->all();
-            $wardCodes = $lead->wards ?? [];
+            $categoriesRaw = is_array($lead->categories) ? $lead->categories : [];
+            $wardsRaw      = is_array($lead->wards) ? $lead->wards : [];
+            $catNames  = collect($categoriesRaw)->map(fn ($id) => $categoryMap[$id] ?? null)->filter()->values()->all();
+            $wardNames = collect($wardsRaw)->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->all();
+            $wardCodes = $wardsRaw;
 
             $statusRaw = $lead->getRawOriginal('status');
             $isAssigned = !is_null($lead->sale_id);
