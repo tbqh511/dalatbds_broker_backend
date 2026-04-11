@@ -4963,8 +4963,8 @@ function mybdsBuildCard(p, maxViews, maxFav) {
   // Stat chips (views & likes) — only for active
   const statChips = p.status === 1
     ? `<div class="mybds-img-stats">
-        <div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${p.total_click}</span></div>
-        <div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${p.favourite_count}</span></div>
+        <div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;color:var(--primary);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${p.total_click}</span></div>
+        <div class="mybds-stat-chip"><span style="display:inline-flex;align-items:center;gap:2px;color:var(--primary);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${p.favourite_count}</span></div>
       </div>`
     : '';
 
@@ -4974,22 +4974,15 @@ function mybdsBuildCard(p, maxViews, maxFav) {
     p.rooms    ? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>${escHtml(p.rooms)} PN</div>` : '',
     p.legal    ? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>${escHtml(p.legal)}</div>` : '',
     p.direction? `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>${escHtml(p.direction)}</div>` : '',
-    `<div class="mybds-meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>${p.property_type === 0 ? 'Mua' : 'Thuê'}</div>`,
   ].filter(Boolean).join('');
 
   // Performance bars (active only)
   const viewPct = Math.round((p.total_click / maxViews) * 100);
-  const favPct  = Math.round((p.favourite_count / maxFav) * 100);
   const perfBars = p.status === 1
     ? `<div class="perf-row">
         <span class="perf-label">Lượt xem</span>
         <div class="perf-bar-bg"><div class="perf-bar-fill" style="width:${viewPct}%;"></div></div>
         <span class="perf-val">${p.total_click}</span>
-      </div>
-      <div class="perf-row">
-        <span class="perf-label">Quan tâm</span>
-        <div class="perf-bar-bg"><div class="perf-bar-fill" style="width:${favPct}%;background:var(--danger);"></div></div>
-        <span class="perf-val">${p.favourite_count}</span>
       </div>`
     : '';
 
@@ -5068,7 +5061,7 @@ function mybdsBuildCard(p, maxViews, maxFav) {
       <div class="mybds-img-status">
         <span class="status-pill ${statusInfo.cls}">${statusInfo.label}</span>
       </div>
-      <div class="mybds-img-price">${escHtml(p.price)}</div>
+      <div class="mybds-img-price" style="color:var(--primary);">${escHtml(p.price)}</div>
       ${statChips}
     </div>
     <div class="mybds-body">
