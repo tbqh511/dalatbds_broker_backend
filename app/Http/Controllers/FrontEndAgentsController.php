@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class FrontEndAgentsController extends Controller
 {
-    public function getAgentById(Request $request, int $id)
+    public function getAgentById(Request $request, string $id)
     {
         // Get the district code from configuration
         $districtCode = config('location.district_code', null);
@@ -24,10 +24,10 @@ class FrontEndAgentsController extends Controller
         $categories = Category::orderBy('category')->get();
 
         // Get agent or return 404 if not found
-        $agent = Customer::findOrFail($id);
+        $agent = Customer::findOrFail((int) $id);
 
         // Get properties paging by agent ID
-        $propertiesQuery = Property::where('added_by', $id)->where('status', '1');
+        $propertiesQuery = Property::where('added_by', (int) $id)->where('status', '1');
         $properties = $propertiesQuery->paginate(6)->appends($request->except('_token', 'page'));
 
         return view('frontend_agents_detail', [

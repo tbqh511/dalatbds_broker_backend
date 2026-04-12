@@ -248,7 +248,7 @@ Route::get('/tin-tuc/nam/{year}/thang/{month}', [FrontEndNewsController::class ,
 
 
 //agent layout
-Route::get('/agent/{id}', [FrontEndAgentsController::class , 'getAgentById'])->name('agent.showid');
+Route::get('/agent/{id}', [FrontEndAgentsController::class , 'getAgentById'])->name('agent.showid')->whereNumber('id');
 
 
 Route::get('/agents', [FrontEndAgentsController::class , 'index'])->name('agents.index');
@@ -336,7 +336,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
             Route::resource('language', LanguageController::class);
             Route::get('language_list', [LanguageController::class , 'show']);
             Route::post('language_update', [LanguageController::class , 'update'])->name('language_update');
-            Route::get('language-destory/{id}', [LanguageController::class , 'destroy'])->name('language.destroy.get');
+            Route::get('language-destory/{id}', [LanguageController::class , 'destroy'])->name('language.destroy-get');
             Route::get('set-language/{lang}', [LanguageController::class , 'set_language']);
             Route::get('downloadPanelFile', [LanguageController::class , 'downloadPanelFile'])->name('downloadPanelFile');
             Route::get('downloadAppFile', [LanguageController::class , 'downloadAppFile'])->name('downloadAppFile');
@@ -370,7 +370,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
     
             Route::resource('slider', SliderController::class);
             Route::post('slider-order', [SliderController::class , 'update'])->name('slider.slider-order');
-            Route::get('slider-destory/{id}', [SliderController::class , 'destroy'])->name('slider.destroy.get');
+            Route::get('slider-destory/{id}', [SliderController::class , 'destroy'])->name('slider.destroy-get');
             Route::get('get-property-by-category', [SliderController::class , 'getPropertyByCategory'])->name('slider.getpropertybycategory');
             Route::get('sliderList', [SliderController::class , 'sliderList']);
             /// END :: SLIDER ROUTE
@@ -379,7 +379,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
     
             Route::resource('article', ArticleController::class);
             Route::get('article_list', [ArticleController::class , 'show']);
-            Route::get('article-destory/{id}', [ArticleController::class , 'destroy'])->name('article.destroy.get');
+            Route::get('article-destory/{id}', [ArticleController::class , 'destroy'])->name('article.destroy-get');
             /// END :: ARTICLE ROUTE
     
             /// START :: POSTS ROUTE
@@ -446,7 +446,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
                 Route::post('property-status', [PropertController::class , 'updateStatus'])->name('property.updatepropertystatus');
                 Route::post('property-gallery', [PropertController::class , 'removeGalleryImage'])->name('property.removeGalleryImage');
                 Route::get('get-state-by-country', [PropertController::class , 'getStatesByCountry'])->name('property.getStatesByCountry');
-                Route::get('property-destory/{id}', [PropertController::class , 'destroy'])->name('property.destroy.get');
+                Route::get('property-destory/{id}', [PropertController::class , 'destroy'])->name('property.destroy-get');
 
                 Route::get('updateFCMID', [UserController::class , 'updateFCMID']);
                 /// END :: PROPERTY ROUTE

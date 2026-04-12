@@ -710,7 +710,7 @@
                     <!--box-widget: Telegram Deep Link CTA -->
                     <div class="box-widget fl-wrap">
                         <div class="box-widget-content fl-wrap" style="padding:16px">
-                            <a href="{{ $telegramDeepLink }}"
+                            <a href="{{ $telegramDeepLink ?? '' }}"
                                target="_blank"
                                rel="noopener noreferrer"
                                style="display:flex;align-items:center;justify-content:center;gap:10px;

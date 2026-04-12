@@ -5199,7 +5199,7 @@ class TelegramWebAppController extends Controller
         $telegramUserData = $this->validateTelegramInitData($initData);
         if (! $telegramUserData) {
             \Log::warning('WebApp authRedirect: Telegram initData validation failed', [
-                'has_bot_token' => ! empty(env('TELEGRAM_BOT_TOKEN')),
+                'has_bot_token' => ! empty(config('services.telegram.bot_token')),
                 'initData_len'  => strlen($initData),
             ]);
 
@@ -5269,6 +5269,14 @@ class TelegramWebAppController extends Controller
             // không nhận ra user → loop vô hạn.
             // Giải pháp PRG thay thế: set user vào guard + session, render index() ngay tại đây.
             // JS trong layout sẽ dùng history.replaceState để sửa URL từ /webapp/auth → /webapp.
+            // Regenerate session ID nếu session hiện tại đang thuộc về user khác.
+            // Tránh: (1) session fixation, (2) hai user ghi đè session của nhau khi
+            // cùng share webview/cookie (thường gặp trên Telegram Android).
+            $currentSessionCustomer = $request->session()->get(Auth::guard('webapp')->getName());
+            if ($currentSessionCustomer && $currentSessionCustomer !== $customer->id) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
             Auth::guard('webapp')->setUser($customer); // set in-memory cho request này
             $request->session()->put(Auth::guard('webapp')->getName(), $customer->id);
             $request->session()->save(); // flush để các request sau (refresh) cũng có session

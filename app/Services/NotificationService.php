@@ -75,7 +75,9 @@ class NotificationService
         }
 
         try {
-            $response = Http::retry(3, 100, null, false)->post($this->apiUrl, [
+            $response = Http::retry(3, 100, function (\Exception $e, $response) {
+                return !$response || $response->status() >= 500;
+            }, false)->post($this->apiUrl, [
                 'chat_id'      => $chatId,
                 'text'         => $message,
                 'parse_mode'   => 'Markdown',
@@ -195,8 +197,10 @@ class NotificationService
                 unset($payload['parse_mode']);
             }
 
-            // Retry 3 times with 100ms delay; $throw=false so 4xx returns response instead of throwing
-            $response = Http::retry(3, 100, null, false)->post($this->apiUrl, $payload);
+            // Retry 3 times with 100ms delay only for 5xx/network errors; skip retry on 4xx
+            $response = Http::retry(3, 100, function (\Exception $e, $response) {
+                return !$response || $response->status() >= 500;
+            }, false)->post($this->apiUrl, $payload);
 
             if ($response->successful()) {
                 Log::info("NotificationService: Message sent to {$chatId}.");

@@ -14,12 +14,12 @@
           ['id' => 'mybdsCountActive', 'color' => 'var(--success)', 'label' => 'Đang hiển thị'],
           ['id' => 'mybdsCountPending', 'color' => 'var(--warning)', 'label' => 'Chờ duyệt'],
           ['id' => 'mybdsCountHidden', 'color' => 'var(--text-tertiary)', 'label' => 'Đã ẩn'],
-          ['id' => 'mybdsTotalViews', 'color' => 'var(--text-primary)', 'label' => 'Tổng lượt xem']
+          ['id' => 'mybdsTotalViews', 'color' => 'var(--text-primary)', 'label' => 'Tổng lượt xem'],
       ],
       'searchInputId' => 'mybdsSearchInput',
       'searchPlaceholder' => 'Tìm theo tiêu đề, địa chỉ...',
       'onSearchInput' => 'mybdsOnSearchInput',
-      'filterSheetId' => 'mybdsAdvancedFilter'
+      'filterSheetId' => 'mybdsAdvancedFilter',
   ])
 
   <!-- Status tabs -->

@@ -249,12 +249,20 @@ class FrontEndPropertiesController extends Controller
         //dd(Property::where('added_by', '2')->get()->count());
 
         // Return the property detail view with the necessary data
+        $telegramDeepLink = sprintf(
+            'https://t.me/%s/%s?startapp=property_%d',
+            config('services.telegram.bot_username'),
+            config('services.telegram.webapp_short_name'),
+            $property->id
+        );
+
         return view('frontend_properties_detail', [
             'property' => $property,
             'relatedProducts' => $relatedProducts,
             'highlightedProducts' => $highlightedProducts,
             'categories' => $categories,
             'locationsWards' => $locationsWards,
+            'telegramDeepLink' => $telegramDeepLink,
         ]);
     }
 

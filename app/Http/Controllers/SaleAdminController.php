@@ -116,8 +116,10 @@ class SaleAdminController extends Controller
             elseif ($ageHours < 48)     { $timeAgo = 'Hôm qua'; }
             else                        { $timeAgo = (int) ($ageHours / 24) . ' ngày trước'; }
 
-            $categoriesRaw = is_array($lead->categories) ? $lead->categories : [];
-            $wardsRaw      = is_array($lead->wards) ? $lead->wards : [];
+            $categories    = $lead->getRawOriginal('categories');
+            $wards         = $lead->getRawOriginal('wards');
+            $categoriesRaw = is_string($categories) ? (json_decode($categories, true) ?? []) : (is_array($categories) ? $categories : []);
+            $wardsRaw      = is_string($wards)      ? (json_decode($wards, true)      ?? []) : (is_array($wards)      ? $wards      : []);
             $catNames  = collect($categoriesRaw)->map(fn ($id) => $categoryMap[$id] ?? null)->filter()->values()->all();
             $wardNames = collect($wardsRaw)->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->all();
             $wardCodes = $wardsRaw;
@@ -128,7 +130,7 @@ class SaleAdminController extends Controller
 
             // Sale suggestion: match work_area with lead wards (only for unassigned)
             $suggestion = null;
-            if (!$isAssigned) {
+            if (!$isAssigned && is_iterable($salesTeam)) {
                 foreach ($salesTeam as $s) {
                     $workArea = $s->work_area ?? '';
                     foreach ($wardCodes as $code) {
