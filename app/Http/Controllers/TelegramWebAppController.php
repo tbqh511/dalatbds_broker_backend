@@ -4496,9 +4496,10 @@ class TelegramWebAppController extends Controller
 
             $broker = $property->agent;
             if ($broker && $broker->telegram_id) {
-                app(NotificationService::class)->sendToCustomer(
-                    $broker,
-                    TelegramMessageTemplates::propertyApproved($property)
+                app(NotificationService::class)->sendWithInlineKeyboard(
+                    (string) $broker->telegram_id,
+                    TelegramMessageTemplates::propertyApproved($property),
+                    TelegramMessageTemplates::propertyApprovedKeyboard($property)
                 );
             }
 

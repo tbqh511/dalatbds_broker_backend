@@ -278,13 +278,25 @@ class TelegramMessageTemplates
     public static function propertyApproved(Property $property): string
     {
         $title = self::escape($property->title ?? 'BĐS');
-        $url   = url('/bds/' . ($property->slug ?? $property->id));
 
         return "✅ *TIN BĐS ĐÃ ĐƯỢC DUYỆT*\n"
             . "────────────────\n"
             . "🏠 {$title}\n"
-            . "🎉 Tin của bạn đã được đăng lên hệ thống\\!\n"
-            . "👉 [Xem tin đăng]({$url})";
+            . "🎉 Tin của bạn đã được đăng lên hệ thống và đang hiển thị công khai\\!";
+    }
+
+    /**
+     * Inline keyboard cho thông báo BĐS được duyệt
+     */
+    public static function propertyApprovedKeyboard(Property $property): array
+    {
+        $botUsername      = config('services.telegram.bot_username');
+        $webappShortName  = config('services.telegram.webapp_short_name');
+        $webappUrl        = "https://t.me/{$botUsername}/{$webappShortName}?startapp=property_{$property->id}";
+
+        return [[
+            ['text' => '🔍 Xem BĐS của bạn', 'url' => $webappUrl],
+        ]];
     }
 
     /**
