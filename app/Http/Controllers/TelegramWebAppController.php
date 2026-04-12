@@ -3326,6 +3326,11 @@ class TelegramWebAppController extends Controller
             $posterPhone = $customer->mobile ?? $customer->phone ?? 'N/A';
             $propertyUrl = route('bds.show', $property->slug);
 
+            $botUsername     = config('services.telegram.bot_username', 'dalatbds_telegram_bot');
+            $webappShortName = config('services.telegram.webapp_short_name', 'dangtin');
+            $webappUrl       = "https://t.me/{$botUsername}/{$webappShortName}?startapp=property_{$property->id}";
+            $keyboard        = [[['text' => '🏠 Xem trong App', 'url' => $webappUrl]]];
+
             $message = "🏠 *BĐS MỚI TỪ WEBAPP*\n";
             $message .= "----------------\n";
             $message .= "🆔 ID: `{$property->id}`\n";
@@ -3335,10 +3340,10 @@ class TelegramWebAppController extends Controller
             $message .= "💰 Giá: {$price} VNĐ\n";
             $message .= '👤 Người đăng: '.$this->escapeTelegramText($posterName)."\n";
             $message .= '📞 Liên hệ: '.$this->escapeTelegramText($posterPhone)."\n";
-            $message .= "📊 Trạng thái: Chờ duyệt\n";
-            $message .= "🔗 [Xem tin]({$propertyUrl})";
+            $message .= "📊 Trạng thái: Chờ duyệt";
 
-            $notificationService->sendToGroup('public_channel', $message);
+            $publicChatId = config('services.telegram.groups.public_channel');
+            $notificationService->sendWithInlineKeyboard((string) $publicChatId, $message, $keyboard);
 
             // Telegram DM to the broker who submitted the listing (transactional — always send)
             Log::info("notifyNewListingToTelegram: customer_id={$customer->id}, telegram_id=" . ($customer->telegram_id ?? 'NULL'));
@@ -3397,19 +3402,19 @@ class TelegramWebAppController extends Controller
 
             // Telegram notification to BDS admin group
             try {
-                $message = "🏠 *BĐS MỚI CHỜ DUYỆT*\n";
-                $message .= "----------------\n";
-                $message .= "🆔 ID: `{$property->id}`\n";
-                $message .= "📌 Loại tin: {$type}\n";
-                $message .= '📝 Tiêu đề: '.$this->escapeTelegramText($property->title)."\n";
-                $message .= '📍 Địa chỉ: '.$this->escapeTelegramText($property->address)."\n";
-                $message .= "💰 Giá: {$price} VNĐ\n";
-                $message .= '👤 Người đăng: '.$this->escapeTelegramText($customer->name ?? 'N/A')."\n";
-                $message .= '📞 Liên hệ: '.$this->escapeTelegramText($customer->mobile ?? $customer->phone ?? 'N/A')."\n";
-                $message .= "📊 Trạng thái: Chờ duyệt\n";
-                $message .= "🔗 [Xem tin]({$propertyUrl})";
+                $adminMessage = "🏠 *BĐS MỚI CHỜ DUYỆT*\n";
+                $adminMessage .= "----------------\n";
+                $adminMessage .= "🆔 ID: `{$property->id}`\n";
+                $adminMessage .= "📌 Loại tin: {$type}\n";
+                $adminMessage .= '📝 Tiêu đề: '.$this->escapeTelegramText($property->title)."\n";
+                $adminMessage .= '📍 Địa chỉ: '.$this->escapeTelegramText($property->address)."\n";
+                $adminMessage .= "💰 Giá: {$price} VNĐ\n";
+                $adminMessage .= '👤 Người đăng: '.$this->escapeTelegramText($customer->name ?? 'N/A')."\n";
+                $adminMessage .= '📞 Liên hệ: '.$this->escapeTelegramText($customer->mobile ?? $customer->phone ?? 'N/A')."\n";
+                $adminMessage .= "📊 Trạng thái: Chờ duyệt";
 
-                $notificationService->sendToGroup('bds_admin', $message);
+                $adminChatId = config('services.telegram.groups.bds_admin');
+                $notificationService->sendWithInlineKeyboard((string) $adminChatId, $adminMessage, $keyboard);
             } catch (\Exception $e) {
                 Log::warning('Failed to send BDS admin group telegram notification: '.$e->getMessage());
             }

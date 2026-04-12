@@ -7903,6 +7903,7 @@ window.activityApp = function() {
   if (param.indexOf('property_') === 0) {
     var propId = parseInt(param.substring(9));
     if (propId) {
+      sessionStorage.setItem('pending_deeplink', 'property_' + propId);
       setTimeout(function() { openDetail({ id: propId }); }, 500);
     }
   } else if (param.indexOf('ref_') === 0) {

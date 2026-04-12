@@ -262,6 +262,19 @@
     }
     sessionStorage.removeItem('_auth_submit');
     sessionStorage.removeItem('_auth_loop');
+    // Replay deep link if user just completed auth (e.g. new user after phone-sharing flow)
+    var _pending = sessionStorage.getItem('pending_deeplink');
+    if (_pending && _pending.indexOf('property_') === 0) {
+      sessionStorage.removeItem('pending_deeplink');
+      var _propId = parseInt(_pending.substring(9));
+      if (_propId) {
+        document.addEventListener('DOMContentLoaded', function() {
+          setTimeout(function() {
+            if (typeof openDetail === 'function') openDetail({ id: _propId });
+          }, 800);
+        });
+      }
+    }
     removeAuthOverlay();
     return;
   }
