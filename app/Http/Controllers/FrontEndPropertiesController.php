@@ -27,8 +27,10 @@ class FrontEndPropertiesController extends Controller
         // If there's a district code, get the list of wards in that district
         $locationsWards = ($districtCode != null) ? LocationsWard::where('district_code', $districtCode)->get()->sortBy('full_name') : LocationsWard::all();
 
-        // Fetch the property based on the slug
-        $property = Property::where('slug', $slug)->firstOrFail();
+        // Fetch the property based on the slug, eager load relations để tránh N+1 và null pointer
+        $property = Property::with(['category', 'ward', 'street'])
+            ->where('slug', $slug)
+            ->firstOrFail();
         //dd($property);
 
         // === Smart Deep Link: Redirect Telegram browser to Mini App ===

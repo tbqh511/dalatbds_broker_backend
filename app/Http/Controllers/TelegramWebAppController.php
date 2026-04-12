@@ -3355,9 +3355,21 @@ class TelegramWebAppController extends Controller
                 $brokerMessage .= "📌 Loại tin: {$type}\n";
                 $brokerMessage .= "💰 Giá: {$price} VNĐ\n";
                 $brokerMessage .= "⏳ Trạng thái: Chờ duyệt\n";
-                $brokerMessage .= "📝 Tin sẽ hiển thị công khai sau khi admin duyệt.\n";
-                $brokerMessage .= "🔗 Xem tin: {$propertyUrl}";
-                $notificationService->sendToCustomer($customer, $brokerMessage, ['parse_mode' => '']);
+                $brokerMessage .= "📝 Tin sẽ hiển thị công khai sau khi admin duyệt.";
+
+                // Inline Keyboard button mở thẳng BĐS trong Web App
+                $botUsername   = config('services.telegram.bot_username');
+                $webappShort   = config('services.telegram.webapp_short_name');
+                $webappUrl     = "https://t.me/{$botUsername}/{$webappShort}?startapp=property_{$property->id}";
+                $brokerKeyboard = [[
+                    ['text' => '🔍 Xem BĐS của bạn', 'url' => $webappUrl],
+                ]];
+
+                $notificationService->sendWithInlineKeyboard(
+                    (string) $customer->telegram_id,
+                    $brokerMessage,
+                    $brokerKeyboard
+                );
             }
 
             // In-app notification to the broker

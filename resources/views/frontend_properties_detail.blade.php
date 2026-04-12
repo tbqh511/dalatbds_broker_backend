@@ -54,7 +54,7 @@
             <div class="list-single-opt_header fl-wrap">
                 <ul class="list-single-opt_header_cat">
                     <li><a href="{{ route('properties.index') }}" class="cat-opt blue-bg">{{
-                            $property->category->category }}</a></li>
+                            optional($property->category)->category ?? 'Chưa phân loại' }}</a></li>
                     <li><a href="{{ route('properties.index') }}" class="cat-opt color-bg">{{
                             $property->created_at->diffForHumans() }}</a></li>
                 </ul>
@@ -102,8 +102,8 @@
     'title' => 'BDS',
     'nodes' => [
     ['title' => 'Trang chủ', 'url' => route('index')],
-    ['title' => $property->ward->full_name, 'url' => route('properties.index', ['ward' => $property->ward_code])],
-    ['title' => $property->street->street_name, 'url' => route('properties.index', ['street' =>
+    ['title' => optional($property->ward)->full_name ?? 'Đà Lạt', 'url' => route('properties.index', ['ward' => $property->ward_code])],
+    ['title' => optional($property->street)->street_name ?? '', 'url' => route('properties.index', ['street' =>
     $property->street_code])],
     ]
     ])
@@ -165,7 +165,7 @@
                                     <h6>
                                         {{$property->type}}
                                     </h6>
-                                    <span>{{$property->category->category}}</span>
+                                    <span>{{ optional($property->category)->category ?? 'Chưa phân loại' }}</span>
                                 </div>
                             </div>
                             <!-- inline-facts end -->
