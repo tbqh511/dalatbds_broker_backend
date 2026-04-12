@@ -4321,7 +4321,7 @@ window.guestShareContact = function(){
           // Đánh dấu user vừa share SĐT để auth handler biết cần retry (chờ bot webhook xử lý)
           try { sessionStorage.setItem('_phone_shared', '1'); } catch(e) {}
           form.submit();
-        }, 8000);
+        }, 12000);
       }
     });
   } else {

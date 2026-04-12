@@ -294,7 +294,7 @@
         var _ovP = _ov.querySelector('p');
         if (_ovP) _ovP.textContent = 'Đang tạo tài khoản... (' + (_loginRetry + 1) + '/5)';
       }
-      setTimeout(function() { submitAuthForm(_loginRetry + 1); }, 4000);
+      setTimeout(function() { submitAuthForm(_loginRetry + 1); }, 6000);
     } else {
       // Lần đầu mở (chưa share SĐT) HOẶC hết retry → hiện guest dialog ngay
       sessionStorage.removeItem('_phone_shared');

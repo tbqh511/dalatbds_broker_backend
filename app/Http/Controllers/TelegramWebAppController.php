@@ -5299,6 +5299,60 @@ class TelegramWebAppController extends Controller
             \Cache::put("pending_referral:{$telegramId}", $referralCode, now()->addHours(24));
         }
 
+        // Fallback: nếu user đã share phone (retry >= 3 nghĩa là đã chờ ~30s)
+        // nhưng bot webhook vẫn chưa tạo customer (có thể do webhook bị delay/miss),
+        // tạo customer ngay từ initData để user không bị kẹt mãi.
+        // mobile dùng placeholder "tg_{id}" — bot webhook sẽ cập nhật số thật khi đến sau.
+        if ($retry >= 3 && $telegramId) {
+            $firstName = $telegramUserData['first_name'] ?? '';
+            $lastName  = $telegramUserData['last_name'] ?? '';
+            $fullName  = trim($firstName . ' ' . $lastName) ?: 'Thành viên mới';
+            try {
+                $customer = \App\Models\Customer::create([
+                    'name'                 => $fullName,
+                    'mobile'               => 'tg_' . $telegramId,
+                    'telegram_id'          => (string) $telegramId,
+                    'telegram_bot_started' => false,
+                    'role'                 => 'broker',
+                    'isActive'             => 1,
+                ]);
+                \Log::info('[authRedirect] fallback: created customer from initData (bot webhook missed)', [
+                    'customer_id' => $customer->id,
+                    'telegram_id' => $telegramId,
+                    'name'        => $fullName,
+                ]);
+            } catch (\Throwable $e) {
+                // Có thể bị duplicate nếu có race condition — tìm lại lần cuối
+                $customer = \App\Models\Customer::where('telegram_id', (string) $telegramId)->orderBy('id', 'desc')->first();
+                if ($customer) {
+                    \Log::info('[authRedirect] fallback: found customer after create error (race condition)', [
+                        'customer_id' => $customer->id,
+                        'error'       => $e->getMessage(),
+                    ]);
+                } else {
+                    \Log::error('[authRedirect] fallback create failed: ' . $e->getMessage(), [
+                        'telegram_id' => $telegramId,
+                    ]);
+                }
+            }
+        }
+
+        if ($customer) {
+            Auth::guard('webapp')->setUser($customer);
+            $request->session()->put(Auth::guard('webapp')->getName(), $customer->id);
+            $request->session()->save();
+            \Log::info('[authRedirect] fallback session set, rendering index', [
+                'customer_id' => $customer->id,
+                'session_id'  => $request->session()->getId(),
+            ]);
+            try {
+                return $this->index($request);
+            } catch (\Throwable $e) {
+                \Log::error('WebApp authRedirect fallback: index() threw: ' . $e->getMessage());
+                return redirect('/webapp?login_status=ok');
+            }
+        }
+
         \Log::warning('[authRedirect] no customer found, returning guest', [
             'telegram_id'      => $telegramId,
             'telegram_id_type' => gettype($telegramId),
