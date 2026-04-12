@@ -965,7 +965,13 @@ class TelegramWebAppController extends Controller
         // Admin and BĐS Admin can view properties of any status (including pending approval)
         $adminRoles = ['admin', 'bds_admin'];
         if (! $customer || ! in_array($customer->role, $adminRoles)) {
-            $query->where('status', 1);
+            $query->where(function ($q) use ($customer) {
+                $q->where('status', 1);
+                // Broker can view their own properties regardless of status
+                if ($customer) {
+                    $q->orWhere('added_by', $customer->id);
+                }
+            });
         }
 
         $property = $query->find($id);
@@ -1118,6 +1124,7 @@ class TelegramWebAppController extends Controller
             'addedBy' => $property->added_by,
             'slug' => $property->slug,
             'status' => (int) $property->status,
+            'statusLabel' => $property->status == 0 ? 'Chờ duyệt' : ($property->status == 2 ? 'Từ chối' : null),
             'property_type' => $property->property_type,
             'similar' => $similar,
         ]);
