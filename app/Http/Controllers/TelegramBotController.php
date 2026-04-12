@@ -356,16 +356,38 @@ class TelegramBotController extends Controller
                         'name'        => $fullName,
                     ]);
 
-                    $customer = Customer::create([
-                        'name' => $fullName,
-                        'mobile' => $phoneNumber,
-                        'telegram_id' => (string) $telegramId,
-                        'telegram_bot_started' => true,
-                        'role' => 'broker',
-                        'isActive' => 1,
-                    ]);
-
-                    Log::info('[BotContact] new customer created', ['customer_id' => $customer->id]);
+                    try {
+                        $customer = Customer::create([
+                            'name' => $fullName,
+                            'mobile' => $phoneNumber,
+                            'telegram_id' => (string) $telegramId,
+                            'telegram_bot_started' => true,
+                            'role' => 'broker',
+                            'isActive' => 1,
+                        ]);
+                        Log::info('[BotContact] new customer created', ['customer_id' => $customer->id]);
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        if ($e->getCode() === '23000') {
+                            // Duplicate mobile — tìm lại record đã tồn tại và cập nhật telegram_id
+                            Log::warning('[BotContact] duplicate mobile on create, falling back to update', [
+                                'phone' => $phoneNumber,
+                                'telegram_id' => $telegramId,
+                            ]);
+                            $phoneVariants = [$phoneNumber];
+                            if (preg_match('/^84(\d{9})$/', $phoneNumber, $m)) {
+                                $phoneVariants[] = '0' . $m[1];
+                            }
+                            $customer = Customer::whereIn('mobile', $phoneVariants)->first();
+                            if ($customer) {
+                                $customer->telegram_id = (string) $telegramId;
+                                $customer->telegram_bot_started = true;
+                                $customer->save();
+                                Log::info('[BotContact] updated existing customer after duplicate', ['customer_id' => $customer->id]);
+                            }
+                        } else {
+                            throw $e;
+                        }
+                    }
                 } else {
                     $customer->mobile = $phoneNumber;
 

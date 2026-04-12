@@ -336,7 +336,7 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
             Route::resource('language', LanguageController::class);
             Route::get('language_list', [LanguageController::class , 'show']);
             Route::post('language_update', [LanguageController::class , 'update'])->name('language_update');
-            Route::get('language-destory/{id}', [LanguageController::class , 'destroy'])->name('language.destroy-get');
+            Route::get('language-destroy/{id}', [LanguageController::class , 'destroy'])->name('language.destroy-get');
             Route::get('set-language/{lang}', [LanguageController::class , 'set_language']);
             Route::get('downloadPanelFile', [LanguageController::class , 'downloadPanelFile'])->name('downloadPanelFile');
             Route::get('downloadAppFile', [LanguageController::class , 'downloadAppFile'])->name('downloadAppFile');
@@ -479,9 +479,6 @@ Route::middleware(['auth', 'checklogin'])->group(function () {
         
 
 
-
-
-                Route::resource('property-inquiry', PropertysInquiryController::class);
 
 
                 /// START :: CHAT ROUTE

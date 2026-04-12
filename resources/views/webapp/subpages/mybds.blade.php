@@ -59,7 +59,7 @@
       <button class="mybds-sort-opt" id="mybdsSortOldest"   onclick="mybdsSortSelect('oldest')"    style="display:flex;align-items:center;width:100%;padding:12px 16px;background:none;border:none;font-size:13px;color:var(--text-secondary);cursor:pointer;gap:10px;">  Cũ nhất</button>
       <button class="mybds-sort-opt" id="mybdsSortViews"    onclick="mybdsSortSelect('views')"     style="display:flex;align-items:center;width:100%;padding:12px 16px;background:none;border:none;font-size:13px;color:var(--text-secondary);cursor:pointer;gap:10px;">  Lượt xem nhiều nhất</button>
       <button class="mybds-sort-opt" id="mybdsSortPriceAsc" onclick="mybdsSortSelect('price_asc')" style="display:flex;align-items:center;width:100%;padding:12px 16px;background:none;border:none;font-size:13px;color:var(--text-secondary);cursor:pointer;gap:10px;">  Giá tăng dần</button>
-      <button class="mybds-sort-opt" id="mybdsSortPriceDesc"onclick="mybdsSortSelect('price_desc')"style="display:flex;align-items:center;width:100%;padding:12px 16px;background:none;border:none;font-size:13px;color:var(--text-secondary);cursor:pointer;gap:10px;">  Giá giảm dần</button>
+      <button class="mybds-sort-opt" id="mybdsSortPriceDesc" onclick="mybdsSortSelect('price_desc')" style="display:flex;align-items:center;width:100%;padding:12px 16px;background:none;border:none;font-size:13px;color:var(--text-secondary);cursor:pointer;gap:10px;">  Giá giảm dần</button>
     </div>
   </div>
 

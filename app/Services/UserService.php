@@ -144,6 +144,14 @@ class UserService
 
         if (!$customer) {
             // Auto-register new customer
+            // Re-check with lock to avoid race condition on duplicate mobile
+            $customer = Customer::whereIn('mobile', $phoneVariants)->lockForUpdate()->first();
+            if ($customer) {
+                Log::info("Customer already exists (race condition avoided): ID {$customer->id}");
+            }
+        }
+
+        if (!$customer) {
             try {
                 $customer = new Customer();
                 $customer->mobile = $cleanPhone;
