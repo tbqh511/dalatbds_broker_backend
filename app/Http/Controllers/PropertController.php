@@ -22,6 +22,8 @@ use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NotificationService;
+use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Support\Facades\DB;
 use kornrunner\Blurhash\Blurhash;
 use Intervention\Image\ImageManagerStatic as Image;
@@ -654,6 +656,18 @@ class PropertController extends Controller
                     ]);
                 }
             }
+            // Gửi Telegram khi duyệt BĐS (status = 1)
+            if ((string) $request->status === '1') {
+                $broker = $Property->agent()->first();
+                if ($broker && $broker->telegram_id) {
+                    app(NotificationService::class)->sendWithInlineKeyboard(
+                        (string) $broker->telegram_id,
+                        TelegramMessageTemplates::propertyApproved($Property),
+                        TelegramMessageTemplates::propertyApprovedKeyboard($Property)
+                    );
+                }
+            }
+
             $response['error'] = false;
             return response()->json($response);
         }
