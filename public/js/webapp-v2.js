@@ -2034,15 +2034,16 @@ function loadAssignHistoryOnly(){
 }
 
 function renderUnassignedLeadCards(leads){
-  var svgPhone  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.93a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>';
+  // SVG icon lửa — dùng cho badge Hot và thời gian
   var svgFlame  = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-7 6-7 12a7 7 0 0 0 14 0c0-6-7-12-7-12z"/></svg>';
-  var svgAssign = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  // SVG icon người dùng — dùng cho nút Phân công
+  var svgUser   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 
   var priorityConfig = {
-    hot:    { badge: 'badge-red',   label: 'Hot',        color: 'var(--danger)',        tagStyle: 'background:#fee2e2;color:#dc2626;' },
-    medium: { badge: 'badge-amber', label: 'Trung bình', color: 'var(--warning)',       tagStyle: 'background:#fef3c7;color:#d97706;' },
-    normal: { badge: 'badge-blue',  label: 'Bình thường',color: 'var(--primary)',       tagStyle: 'background:#dbeafe;color:#1d4ed8;' },
-    low:    { badge: 'badge-gray',  label: 'Thấp',       color: 'var(--text-tertiary)', tagStyle: 'background:var(--bg-secondary);color:var(--text-secondary);' },
+    hot:    { badge: 'badge-red',   label: 'Hot',         color: 'var(--danger)'        },
+    medium: { badge: 'badge-amber', label: 'Trung bình',  color: 'var(--warning)'       },
+    normal: { badge: 'badge-blue',  label: 'Bình thường', color: 'var(--primary)'       },
+    low:    { badge: 'badge-gray',  label: 'Thấp',        color: 'var(--text-tertiary)' },
   };
   var avatarColors = ['#ef4444', 'var(--teal)', 'var(--purple)', '#f59e0b', 'var(--primary)', '#059669'];
 
@@ -2051,61 +2052,73 @@ function renderUnassignedLeadCards(leads){
     var pCfg     = priorityConfig[lead.priority] || priorityConfig.normal;
     var avatarBg = avatarColors[index % avatarColors.length];
 
-    var catStr  = (lead.categories || []).join(', ');
-    var wardStr = (lead.wards || []).join(', ');
-    var needStr = [lead.lead_type, lead.purpose].filter(Boolean).join(' ');
+    var catStr   = (lead.categories || []).join(', ');
+    var wardStr  = (lead.wards || []).join(', ');
+    var needStr  = [lead.lead_type, catStr].filter(Boolean).join(' · ');
 
-    var rows = '';
-    if (catStr)  rows += '<div class="ul-row"><span class="ul-label">Loại BĐS</span><span class="ul-value">' + escHtml(catStr) + '</span></div>';
-    if (needStr) rows += '<div class="ul-row"><span class="ul-label">Nhu cầu</span><span class="ul-value">' + escHtml(needStr) + '</span></div>';
+    // Thông tin nhu cầu: dùng text đơn giản + icon thay vì badge nền đậm
+    var infoLines = '';
+    if (needStr)
+      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;display:flex;align-items:center;gap:5px;">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
+        + escHtml(needStr)
+        + (lead.purpose ? ' <span style="color:var(--text-tertiary);">–</span> ' + escHtml(lead.purpose) : '')
+        + '</div>';
     if (lead.budget_min || lead.budget_max)
-                 rows += '<div class="ul-row"><span class="ul-label">Ngân sách</span><span class="ul-value money">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span></div>';
-    if (wardStr) rows += '<div class="ul-row"><span class="ul-label">Khu vực</span><span class="ul-value">' + escHtml(wardStr) + '</span></div>';
+      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+        + 'Tài chính: <span style="color:var(--primary);font-weight:600;">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span>'
+        + '</div>';
+    if (wardStr)
+      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+        + 'Khu vực: ' + escHtml(wardStr)
+        + '</div>';
 
-    var tags = [];
-    (lead.categories || []).forEach(function(c){ if(c) tags.push(c); });
-    if (lead.budget_min && lead.budget_max) tags.push(lead.budget_min + '–' + lead.budget_max);
-    (lead.wards || []).forEach(function(w){ if(w) tags.push(w); });
-    var tagsHtml = tags.slice(0, 4).map(function(t){ return '<span class="ul-tag">' + escHtml(t) + '</span>'; }).join('');
-    if (lead.priority === 'hot') {
-      tagsHtml += '<span class="ul-tag" style="' + pCfg.tagStyle + 'display:inline-flex;align-items:center;gap:3px;">' + svgFlame + ' Ưu tiên cao</span>';
-    }
+    // Gợi ý sale (nếu có)
+    var suggestionTxt = lead.suggestion ? 'Gợi ý: ' + lead.suggestion + ' (phù hợp khu vực)' : '';
 
-    var timeStyle    = 'color:' + pCfg.color + ';font-weight:600;display:inline-flex;align-items:center;gap:3px;';
-    var suggestionTxt = lead.suggestion ? 'Gợi ý: ' + lead.suggestion + ' (phù hợp khu vực)' : 'Chưa có gợi ý';
+    // Thời gian — màu theo mức độ ưu tiên
+    var timeStyle = 'color:' + pCfg.color + ';font-weight:600;display:inline-flex;align-items:center;gap:3px;font-size:11px;';
 
     return '<div class="ul-card" id="' + domId + '" onclick="toggleUlSelect(\'' + domId + '\')">'
+
+      // Header: checkbox + avatar + tên + thời gian + badge ưu tiên
       + '<div class="ul-head">'
         + '<div class="ul-checkbox" id="' + domId + '-cb">○</div>'
         + '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">' + escHtml(lead.initials) + '</div>'
-        + '<div class="ul-info">'
+        + '<div class="ul-info" style="flex:1;min-width:0;">'
+          // Tên khách hàng (không hiển thị SĐT — bảo mật)
           + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
-          + '<div class="ul-meta">'
-            + (lead.phone ? '<span>' + svgPhone + escHtml(lead.phone) + '</span>' : '')
+          // Chỉ hiện thời gian và nguồn, bỏ số điện thoại
+          + '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">'
             + '<span style="' + timeStyle + '">' + svgFlame + escHtml(lead.time_ago) + '</span>'
+            + (lead.source_note ? '<span style="font-size:10px;color:var(--text-tertiary);">' + escHtml(lead.source_note) + '</span>' : '')
           + '</div>'
         + '</div>'
-        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">'
-          + '<span class="badge ' + pCfg.badge + '">' + pCfg.label + '</span>'
-          + '<span style="font-size:10px;color:var(--text-tertiary);">' + escHtml(lead.source_note) + '</span>'
-        + '</div>'
+        // Badge mức ưu tiên
+        + '<span class="badge ' + pCfg.badge + '" style="flex-shrink:0;">' + pCfg.label + '</span>'
       + '</div>'
-      + (rows ? '<div class="ul-body">' + rows + '</div>' : '')
-      + (tagsHtml ? '<div class="ul-tags">' + tagsHtml + '</div>' : '')
-      + '<div class="ul-footer">'
-        + '<span style="font-size:11px;color:var(--text-tertiary);">' + escHtml(suggestionTxt) + '</span>'
-        + '<button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">'
-          + '<span style="display:inline-flex;align-items:center;gap:4px;">' + svgAssign + ' Assign ngay</span>'
+
+      // Thông tin nhu cầu — dạng text gọn, không dùng badge nền đậm
+      + (infoLines ? '<div style="padding:0 12px 8px;">' + infoLines + '</div>' : '')
+
+      // Footer: gợi ý sale + nút Phân công full-width bo tròn
+      + '<div style="padding:8px 12px 12px;border-top:1px solid var(--border);">'
+        + (suggestionTxt ? '<div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">' + escHtml(suggestionTxt) + '</div>' : '')
+        + '<button class="lc-btn primary" style="width:100%;height:36px;border-radius:999px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">'
+          + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công ngay</span>'
         + '</button>'
       + '</div>'
+
       + '</div>';
   }).join('');
 }
 
-// Render lead cards for status tabs (no checkbox, read-only; assign btn only if unassigned)
+// Render lead cards cho các tab theo trạng thái (không có checkbox, read-only; nút assign chỉ hiện nếu chưa phân công)
 function renderStatusLeadCards(leads){
-  var svgPhone  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.93a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>';
-  var svgAssign = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  // SVG icon người dùng — dùng cho nút Phân công và trạng thái đã assign
+  var svgUser   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 
   var statusConfig = {
     'new':         { label: 'Mới',         style: 'background:#dbeafe;color:#1d4ed8;' },
@@ -2121,45 +2134,63 @@ function renderStatusLeadCards(leads){
     var avatarBg = avatarColors[index % avatarColors.length];
     var sCfg     = statusConfig[lead.status_raw] || { label: lead.status_raw, style: 'background:#f3f4f6;color:#6b7280;' };
 
-    var catStr  = (lead.categories || []).join(', ');
-    var wardStr = (lead.wards || []).join(', ');
-    var needStr = [lead.lead_type, lead.purpose].filter(Boolean).join(' ');
+    var catStr   = (lead.categories || []).join(', ');
+    var wardStr  = (lead.wards || []).join(', ');
+    var needStr  = [lead.lead_type, catStr].filter(Boolean).join(' · ');
 
-    var rows = '';
-    if (catStr)  rows += '<div class="ul-row"><span class="ul-label">Loại BĐS</span><span class="ul-value">' + escHtml(catStr) + '</span></div>';
-    if (needStr) rows += '<div class="ul-row"><span class="ul-label">Nhu cầu</span><span class="ul-value">' + escHtml(needStr) + '</span></div>';
+    // Thông tin nhu cầu: text đơn giản + icon, không dùng badge nền đậm
+    var infoLines = '';
+    if (needStr)
+      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;display:flex;align-items:center;gap:5px;">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
+        + escHtml(needStr)
+        + (lead.purpose ? ' <span style="color:var(--text-tertiary);">–</span> ' + escHtml(lead.purpose) : '')
+        + '</div>';
     if (lead.budget_min || lead.budget_max)
-                 rows += '<div class="ul-row"><span class="ul-label">Ngân sách</span><span class="ul-value money">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span></div>';
-    if (wardStr) rows += '<div class="ul-row"><span class="ul-label">Khu vực</span><span class="ul-value">' + escHtml(wardStr) + '</span></div>';
+      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+        + 'Tài chính: <span style="color:var(--primary);font-weight:600;">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span>'
+        + '</div>';
+    if (wardStr)
+      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+        + 'Khu vực: ' + escHtml(wardStr)
+        + '</div>';
 
-    var footerRight = lead.is_assigned
-      ? '<span style="font-size:11px;color:var(--text-secondary);display:inline-flex;align-items:center;gap:3px;">'
-          + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
-          + ' ' + escHtml(lead.sale_name)
-          + '</span>'
-      : '<button class="lc-btn primary" style="height:28px;font-size:11px;" onclick="event.stopPropagation();openSalePicker([\'ull-' + lead.id + '\']);">'
-          + '<span style="display:inline-flex;align-items:center;gap:4px;">' + svgAssign + ' Assign ngay</span>'
-          + '</button>';
+    // Footer bên phải: hiển thị tên sale đã assign hoặc nút Phân công full-width
+    var footerSection = lead.is_assigned
+      ? '<div style="padding:8px 12px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:5px;">'
+          + svgUser
+          + '<span style="font-size:12px;color:var(--text-secondary);">Đã assign: <strong>' + escHtml(lead.sale_name) + '</strong></span>'
+          + '</div>'
+      : '<div style="padding:8px 12px 12px;border-top:1px solid var(--border);">'
+          + '<button class="lc-btn primary" style="width:100%;height:36px;border-radius:999px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'ull-' + lead.id + '\']);">'
+            + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công ngay</span>'
+          + '</button>'
+          + '</div>';
 
     return '<div class="ul-card" id="' + domId + '">'
+
+      // Header: avatar + tên + thời gian + badge trạng thái (không hiện SĐT — bảo mật)
       + '<div class="ul-head">'
         + '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">' + escHtml(lead.initials) + '</div>'
-        + '<div class="ul-info">'
+        + '<div class="ul-info" style="flex:1;min-width:0;">'
+          // Tên khách hàng (không hiển thị SĐT — bảo mật)
           + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
-          + '<div class="ul-meta">'
-            + (lead.phone ? '<span>' + svgPhone + escHtml(lead.phone) + '</span>' : '')
+          + '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">'
             + '<span style="font-size:11px;color:var(--text-tertiary);">' + escHtml(lead.time_ago) + '</span>'
+            + (lead.source_note ? '<span style="font-size:10px;color:var(--text-tertiary);">' + escHtml(lead.source_note) + '</span>' : '')
           + '</div>'
         + '</div>'
-        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">'
-          + '<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;' + sCfg.style + '">' + sCfg.label + '</span>'
-        + '</div>'
+        + '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;' + sCfg.style + '">' + sCfg.label + '</span>'
       + '</div>'
-      + (rows ? '<div class="ul-body">' + rows + '</div>' : '')
-      + '<div class="ul-footer">'
-        + '<span style="font-size:11px;color:var(--text-tertiary);">' + escHtml(lead.source_note || '') + '</span>'
-        + footerRight
-      + '</div>'
+
+      // Thông tin nhu cầu — text đơn giản với icon
+      + (infoLines ? '<div style="padding:0 12px 8px;">' + infoLines + '</div>' : '')
+
+      // Footer: trạng thái assign hoặc nút Phân công
+      + footerSection
+
       + '</div>';
   }).join('');
 }
