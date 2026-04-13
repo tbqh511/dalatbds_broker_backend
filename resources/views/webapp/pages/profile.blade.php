@@ -129,14 +129,6 @@
       </div>
       <div class="menu-item-right">@if(($stats['pending_count'] ?? 0) > 0)<span class="badge badge-red">{{ $stats['pending_count'] }}</span> @endif ›</div>
     </div>
-    <div class="menu-item" onclick="openSubpage('assignlead')">
-      <div class="menu-item-icon" style="background:var(--danger-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div>
-      <div class="menu-item-body">
-        <div class="menu-item-title">Assign Lead</div>
-        <div class="menu-item-sub">Phân công lead cho sale</div>
-      </div>
-      <div class="menu-item-right">›</div>
-    </div>
   </div>
 
   <!-- Sale Admin section -->
