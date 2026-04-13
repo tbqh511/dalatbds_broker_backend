@@ -1746,10 +1746,21 @@ window.openSalePicker = function(leads){
   selectedSale = null;
   // reset picker state
   document.querySelectorAll('.spi-check').forEach(el=>el.textContent='○');
-  document.querySelectorAll('.sale-pick-item').forEach(el=>el.classList.remove('selected'));
+  document.querySelectorAll('.sale-pick-item').forEach(el=>{ el.classList.remove('selected'); el.style.display=''; });
   document.getElementById('spAssignBtn').disabled = true;
   const sub = document.getElementById('salePickerSub');
   sub.textContent = `Đang assign ${leads.length} lead · Chọn Sale phù hợp`;
+  // reset ô tìm kiếm và gắn listener
+  var si = document.getElementById('searchInputSale');
+  if(si){
+    si.value = '';
+    // clone để xóa listener cũ, tránh bind trùng
+    var siNew = si.cloneNode(true);
+    si.parentNode.replaceChild(siNew, si);
+    siNew.addEventListener('input', function(){ filterSalePicker(this.value); });
+    siNew.addEventListener('keyup', function(){ filterSalePicker(this.value); });
+    setTimeout(function(){ siNew.focus(); }, 300);
+  }
   document.getElementById('salePicker').classList.add('open');
 };
 
@@ -2203,7 +2214,7 @@ function renderSalePickerList(sales){
     var wClass   = sale.workload === 'high' ? 'high' : (sale.workload === 'mid' ? 'mid' : 'low');
     var cntLabel = sale.active_leads + ' deal' + (sale.active_leads !== 1 ? 's' : '');
     var avatarBg = avatarColors[index % avatarColors.length];
-    return '<div class="sale-pick-item sale-item" data-name="' + escHtml(sale.name.toLowerCase()) + '" onclick="selectSalePick(this,' + sale.id + ')">'
+    return '<div class="sale-pick-item sale-item" data-name="' + sale.name.toLowerCase() + '" onclick="selectSalePick(this,' + sale.id + ')">'
       + '<div class="spi-avatar" style="background:' + avatarBg + '">' + escHtml(sale.initials) + '</div>'
       + '<div class="spi-info">'
         + '<div class="spi-name">' + escHtml(sale.name) + '</div>'

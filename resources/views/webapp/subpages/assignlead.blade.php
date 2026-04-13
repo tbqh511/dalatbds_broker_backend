@@ -92,7 +92,7 @@
     <div style="margin:10px 0 6px;padding:0 2px;">
       <div style="display:flex;align-items:center;gap:8px;background:#f3f4f6;border-radius:999px;padding:8px 14px;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="searchInputSale" type="text" placeholder="Tìm kiếm tên Sale..." style="flex:1;border:none;background:transparent;outline:none;font-size:14px;color:var(--text-primary);" oninput="filterSalePicker(this.value)">
+        <input id="searchInputSale" type="text" placeholder="Tìm kiếm tên Sale..." style="flex:1;border:none;background:transparent;outline:none;font-size:14px;color:var(--text-primary);" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
     <div id="salePickerList">
