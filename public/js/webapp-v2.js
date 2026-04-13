@@ -290,7 +290,7 @@ window.showDeals = function(){
 };
 
 // ============ SUB-PAGES (BĐS / Khách) ============
-window.openSubpage = function(id){
+window.openSubpage = function(id, opts){
   const sp = document.getElementById('subpage-'+id);
   if(!sp) return;
   sp.classList.add('open');
@@ -346,6 +346,8 @@ window.openSubpage = function(id){
     initNotifSettings();
   }
   if(id === 'assignlead') {
+    // Lưu lead_id cần focus (nếu có) để xử lý sau khi data load xong
+    window._assignLeadFocusId = (opts && opts.lead_id) ? opts.lead_id : null;
     loadAssignLeadData();
   }
   if(id === 'kpiteam') {
@@ -2003,12 +2005,43 @@ function loadAssignLeadData(){
 
     renderSalePickerList(data.sales || []);
     renderAssignHistory(data.history || []);
+
+    // Focus lead cụ thể nếu được mở từ thông báo
+    if (window._assignLeadFocusId) {
+      _assignLeadFocusById(window._assignLeadFocusId);
+      window._assignLeadFocusId = null;
+    }
   })
   .catch(function(){
     if (loadingEl) loadingEl.style.display = 'none';
     if (emptyEl)   emptyEl.style.display = '';
     showToast('Lỗi tải dữ liệu assign lead');
   });
+}
+
+// Focus và highlight lead card theo ID sau khi trang assignlead đã load xong
+function _assignLeadFocusById(leadId){
+  // Cards dùng id="ull-{id}" (unassigned) hoặc "sll-{id}" (status tabs)
+  var card = document.getElementById('ull-' + leadId)
+          || document.getElementById('sll-' + leadId);
+  if (!card) return;
+
+  // Lấy panel cha để biết card đang ở tab nào — kích hoạt nếu đang ẩn
+  var tabPanel = card.closest('[id^="assignLeadTab"]');
+  if (tabPanel && tabPanel.style.display === 'none') {
+    var tabKey = tabPanel.id.replace('assignLeadTab', '').toLowerCase();
+    var tabBtn = document.querySelector('#subpage-assignlead .sp-tab[data-tab="' + tabKey + '"]');
+    if (tabBtn) tabBtn.click();
+  }
+
+  // Scroll tới card và highlight tạm thời 3 giây
+  setTimeout(function(){
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.transition = 'outline 0.3s';
+    card.style.outline = '2px solid var(--primary)';
+    card.style.borderRadius = '10px';
+    setTimeout(function(){ card.style.outline = ''; }, 3000);
+  }, 300);
 }
 
 function _renderAssignStatusTab(containerId, allLeads, status){
@@ -7321,7 +7354,7 @@ var _NP_ICONS = {
 };
 
 var _NP_TYPE_SUBPAGE = {
-  lead_assigned:'leads', lead_followup:'leads', lead_created:'leads',
+  lead_assigned:'leads', lead_followup:'leads', lead_created:'assignlead',
   booking_reminder:'bookings', booking_result:'bookings', booking_changed:'bookings',
   property_submitted:'mybds', property_approved:'mybds', property_rejected:'mybds', property_pending:'approvebds',
   commission_status:'commissions', commission_completed:'commissions',
@@ -7567,7 +7600,7 @@ window.activityApp = function() {
       { label: 'Xem Lead', primary: true, icon: 'eye', subpage: 'leads' }
     ],
     lead_created: [
-      { label: 'Phân công', primary: true, icon: 'eye', subpage: 'leads' }
+      { label: 'Phân công', primary: true, icon: 'eye', subpage: 'assignlead' }
     ],
     booking_reminder: [
       { label: 'Xem chi tiết', primary: true, icon: 'clipboard', subpage: 'bookings' },
@@ -7614,7 +7647,7 @@ window.activityApp = function() {
 
   // Navigation mapping: type → subpage to open on tap
   var TYPE_SUBPAGE = {
-    lead_assigned: 'leads', lead_followup: 'leads', lead_created: 'leads',
+    lead_assigned: 'leads', lead_followup: 'leads', lead_created: 'assignlead',
     booking_reminder: 'bookings', booking_result: 'bookings', booking_changed: 'bookings',
     property_submitted: 'mybds', property_approved: 'mybds', property_rejected: 'mybds', property_pending: 'approvebds',
     commission_status: 'commissions', commission_completed: 'commissions',
@@ -7788,6 +7821,10 @@ window.activityApp = function() {
         window.history.pushState(null, '', '?ref_slug=' + refVal + '&tab=pending');
         if (typeof openSubpage === 'function') openSubpage('approvebds');
         return;
+      } else if (notif.type === 'lead_created' && notif.data && notif.data.lead_id) {
+        // Chuyển về trang Assign Lead và focus đúng lead
+        if (typeof openSubpage === 'function') openSubpage('assignlead', { lead_id: notif.data.lead_id });
+        return;
       }
 
       var subpage = TYPE_SUBPAGE[notif.type];
@@ -7917,7 +7954,12 @@ window.activityApp = function() {
         return;
       }
       if (action._subpage && typeof openSubpage === 'function') {
-        openSubpage(action._subpage);
+        // Nếu chuyển sang assignlead từ thông báo lead_created, truyền lead_id để focus
+        if (action._subpage === 'assignlead' && notif.data && notif.data.lead_id) {
+          openSubpage('assignlead', { lead_id: notif.data.lead_id });
+        } else {
+          openSubpage(action._subpage);
+        }
       }
     },
 
