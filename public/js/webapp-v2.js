@@ -2054,14 +2054,18 @@ function renderUnassignedLeadCards(leads){
 
     var catStr   = (lead.categories || []).join(', ');
     var wardStr  = (lead.wards || []).join(', ');
-    var needStr  = [lead.lead_type, catStr].filter(Boolean).join(' · ');
+
+    // Tách hành vi (Mua/Thuê) và loại BĐS để tô màu riêng
+    var leadTypeStr = lead.lead_type ? escHtml(lead.lead_type) : '';
+    var catEscaped  = catStr ? '<span style="color:var(--primary);font-weight:600;">' + escHtml(catStr) + '</span>' : '';
+    var needHtml    = [leadTypeStr, catEscaped].filter(Boolean).join(' · ');
 
     // Thông tin nhu cầu: dùng text đơn giản + icon thay vì badge nền đậm
     var infoLines = '';
-    if (needStr)
+    if (needHtml)
       infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;display:flex;align-items:center;gap:5px;">'
         + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
-        + escHtml(needStr)
+        + needHtml
         + (lead.purpose ? ' <span style="color:var(--text-tertiary);">–</span> ' + escHtml(lead.purpose) : '')
         + '</div>';
     if (lead.budget_min || lead.budget_max)
@@ -2078,34 +2082,26 @@ function renderUnassignedLeadCards(leads){
     // Gợi ý sale (nếu có)
     var suggestionTxt = lead.suggestion ? 'Gợi ý: ' + lead.suggestion + ' (phù hợp khu vực)' : '';
 
-    // Thời gian — màu theo mức độ ưu tiên
-    var timeStyle = 'color:' + pCfg.color + ';font-weight:600;display:inline-flex;align-items:center;gap:3px;font-size:11px;';
-
     return '<div class="ul-card" id="' + domId + '" onclick="toggleUlSelect(\'' + domId + '\')">'
 
-      // Header: checkbox + avatar + tên + thời gian + badge ưu tiên
+      // Header: checkbox + avatar + tên (bỏ thời gian, nguồn, badge ưu tiên)
       + '<div class="ul-head">'
         + '<div class="ul-checkbox" id="' + domId + '-cb">○</div>'
         + '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">' + escHtml(lead.initials) + '</div>'
         + '<div class="ul-info" style="flex:1;min-width:0;">'
-          // Tên khách hàng (không hiển thị SĐT — bảo mật)
+          // Chỉ hiện tên khách hàng, bỏ dòng thời gian và nguồn tạo lead
           + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
-          // Chỉ hiện thời gian và nguồn, bỏ số điện thoại
-          + '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">'
-            + '<span style="' + timeStyle + '">' + svgFlame + escHtml(lead.time_ago) + '</span>'
-            + (lead.source_note ? '<span style="font-size:10px;color:var(--text-tertiary);">' + escHtml(lead.source_note) + '</span>' : '')
-          + '</div>'
         + '</div>'
-        // Badge mức ưu tiên
-        + '<span class="badge ' + pCfg.badge + '" style="flex-shrink:0;">' + pCfg.label + '</span>'
+        // Đã xóa badge mức ưu tiên (Trung bình / Hot / Bình thường)
       + '</div>'
 
       // Thông tin nhu cầu — dạng text gọn, không dùng badge nền đậm
       + (infoLines ? '<div style="padding:0 12px 8px;">' + infoLines + '</div>' : '')
 
-      // Footer: gợi ý sale + nút Phân công full-width bo tròn
+      // Footer: gợi ý sale canh giữa + nút Phân công full-width bo tròn
       + '<div style="padding:8px 12px 12px;border-top:1px solid var(--border);">'
-        + (suggestionTxt ? '<div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">' + escHtml(suggestionTxt) + '</div>' : '')
+        // Canh giữa dòng gợi ý sale
+        + (suggestionTxt ? '<div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;text-align:center;width:100%;">' + escHtml(suggestionTxt) + '</div>' : '')
         + '<button class="lc-btn primary" style="width:100%;height:36px;border-radius:999px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">'
           + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công ngay</span>'
         + '</button>'
@@ -2136,14 +2132,18 @@ function renderStatusLeadCards(leads){
 
     var catStr   = (lead.categories || []).join(', ');
     var wardStr  = (lead.wards || []).join(', ');
-    var needStr  = [lead.lead_type, catStr].filter(Boolean).join(' · ');
+
+    // Tách hành vi (Mua/Thuê) và loại BĐS để tô màu riêng
+    var leadTypeStr = lead.lead_type ? escHtml(lead.lead_type) : '';
+    var catEscaped  = catStr ? '<span style="color:var(--primary);font-weight:600;">' + escHtml(catStr) + '</span>' : '';
+    var needHtml    = [leadTypeStr, catEscaped].filter(Boolean).join(' · ');
 
     // Thông tin nhu cầu: text đơn giản + icon, không dùng badge nền đậm
     var infoLines = '';
-    if (needStr)
+    if (needHtml)
       infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;display:flex;align-items:center;gap:5px;">'
         + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
-        + escHtml(needStr)
+        + needHtml
         + (lead.purpose ? ' <span style="color:var(--text-tertiary);">–</span> ' + escHtml(lead.purpose) : '')
         + '</div>';
     if (lead.budget_min || lead.budget_max)
@@ -2171,16 +2171,12 @@ function renderStatusLeadCards(leads){
 
     return '<div class="ul-card" id="' + domId + '">'
 
-      // Header: avatar + tên + thời gian + badge trạng thái (không hiện SĐT — bảo mật)
+      // Header: avatar + tên + badge trạng thái (bỏ thời gian và nguồn tạo lead)
       + '<div class="ul-head">'
         + '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">' + escHtml(lead.initials) + '</div>'
         + '<div class="ul-info" style="flex:1;min-width:0;">'
-          // Tên khách hàng (không hiển thị SĐT — bảo mật)
+          // Chỉ hiện tên khách hàng, bỏ dòng thời gian và nguồn tạo lead
           + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
-          + '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">'
-            + '<span style="font-size:11px;color:var(--text-tertiary);">' + escHtml(lead.time_ago) + '</span>'
-            + (lead.source_note ? '<span style="font-size:10px;color:var(--text-tertiary);">' + escHtml(lead.source_note) + '</span>' : '')
-          + '</div>'
         + '</div>'
         + '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;' + sCfg.style + '">' + sCfg.label + '</span>'
       + '</div>'
@@ -2207,7 +2203,7 @@ function renderSalePickerList(sales){
     var wClass   = sale.workload === 'high' ? 'high' : (sale.workload === 'mid' ? 'mid' : 'low');
     var cntLabel = sale.active_leads + ' deal' + (sale.active_leads !== 1 ? 's' : '');
     var avatarBg = avatarColors[index % avatarColors.length];
-    return '<div class="sale-pick-item" onclick="selectSalePick(this,' + sale.id + ')">'
+    return '<div class="sale-pick-item sale-item" data-name="' + escHtml(sale.name.toLowerCase()) + '" onclick="selectSalePick(this,' + sale.id + ')">'
       + '<div class="spi-avatar" style="background:' + avatarBg + '">' + escHtml(sale.initials) + '</div>'
       + '<div class="spi-info">'
         + '<div class="spi-name">' + escHtml(sale.name) + '</div>'
@@ -2217,6 +2213,17 @@ function renderSalePickerList(sales){
       + '<span class="spi-check" id="sp-' + sale.id + '">○</span>'
       + '</div>';
   }).join('');
+  // Reset ô tìm kiếm mỗi lần render lại danh sách
+  var si = document.getElementById('searchInputSale');
+  if (si) si.value = '';
+}
+
+// Lọc danh sách Sale theo tên khi gõ vào ô tìm kiếm
+function filterSalePicker(query){
+  var q = query.toLowerCase().trim();
+  document.querySelectorAll('#salePickerList .sale-item').forEach(function(el){
+    el.style.display = (!q || el.dataset.name.indexOf(q) !== -1) ? '' : 'none';
+  });
 }
 
 function renderAssignHistory(history){
