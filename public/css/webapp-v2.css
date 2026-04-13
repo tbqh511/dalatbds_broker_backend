@@ -4383,9 +4383,12 @@ img {
 .sale-picker-inner {
   background: var(--bg-card);
   border-radius: 20px 20px 0 0;
-  padding: 8px 0 32px;
+  padding: 8px 0 0;
   width: 100%;
   max-width: 430px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .sp-inner-handle {
@@ -4394,6 +4397,13 @@ img {
   background: var(--border);
   border-radius: 2px;
   margin: 0 auto 14px;
+  flex-shrink: 0;
+}
+
+#salePickerList {
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sp-inner-title {
@@ -4402,6 +4412,7 @@ img {
   color: var(--text-primary);
   padding: 0 18px 10px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .sp-inner-sub {
@@ -4409,6 +4420,7 @@ img {
   color: var(--text-secondary);
   padding: 8px 18px;
   background: var(--primary-light);
+  flex-shrink: 0;
 }
 
 .sale-pick-item {
@@ -4503,7 +4515,7 @@ img {
 }
 
 .sp-assign-btn {
-  margin: 12px 18px 0;
+  margin: 12px 18px 32px;
   width: calc(100% - 36px);
   padding: 13px;
   background: var(--primary);
@@ -4514,6 +4526,7 @@ img {
   font-weight: 700;
   cursor: pointer;
   transition: opacity .15s;
+  flex-shrink: 0;
 }
 
 .sp-assign-btn:disabled {
