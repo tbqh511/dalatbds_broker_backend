@@ -68,7 +68,6 @@ class TelegramMessageTemplates
     public static function newLeadForGroupWebApp(CrmLead $lead, string $assignUrl): array
     {
         $customerName = self::escape($lead->customer->full_name ?? 'N/A');
-        $phone        = self::escape($lead->customer->contact ?? 'N/A');
         $leadType     = ($lead->getRawOriginal('lead_type') ?? $lead->lead_type) === 'buy' ? 'Mua' : 'Thuê';
         $budget       = number_format($lead->demand_rate_min) . ' – ' . number_format($lead->demand_rate_max);
         $brokerName   = self::escape($lead->user->name ?? 'N/A');
@@ -77,16 +76,17 @@ class TelegramMessageTemplates
         $text = "🎯 *LEAD MỚI CẦN PHÂN CÔNG*\n" .
                 "────────────────\n" .
                 "👤 Khách: {$customerName}\n" .
-                "📞 SĐT: {$phone}\n" .
                 "🏠 Nhu cầu: {$leadType}\n" .
                 "💰 Ngân sách: {$budget} VNĐ\n" .
                 "📝 Ghi chú: {$note}\n" .
                 "🙋 Broker: {$brokerName}";
 
-        // Dùng callback_data để bot gửi private message với web_app button khi người dùng click.
-        // Cách này hoạt động trong group và cho phép mở Mini App thật sự (không phải in-app browser).
+        $botUsername     = config('services.telegram.bot_username');
+        $webappShortName = config('services.telegram.webapp_short_name');
+        $webappUrl       = "https://t.me/{$botUsername}/{$webappShortName}?startapp=assignlead_{$lead->id}";
+
         $keyboard = [[
-            ['text' => '👤 Phân công Sale', 'callback_data' => "open_assign_lead:{$lead->id}"],
+            ['text' => '👤 Phân công Sale', 'url' => $webappUrl],
         ]];
 
         return ['text' => $text, 'keyboard' => $keyboard];
@@ -103,7 +103,6 @@ class TelegramMessageTemplates
     public static function newLeadForGroup(CrmLead $lead, Collection $salesTeam): array
     {
         $customerName = self::escape($lead->customer->full_name ?? 'N/A');
-        $phone        = self::escape($lead->customer->contact ?? 'N/A');
         $leadType     = $lead->lead_type === 'buy' ? 'Mua' : 'Thuê';
         $budget       = number_format($lead->demand_rate_min) . ' – ' . number_format($lead->demand_rate_max);
         $brokerName   = self::escape($lead->user->name ?? 'N/A');
@@ -112,7 +111,6 @@ class TelegramMessageTemplates
         $text = "🎯 *LEAD MỚI CẦN PHÂN CÔNG*\n" .
                 "────────────────\n" .
                 "👤 Khách: {$customerName}\n" .
-                "📞 SĐT: {$phone}\n" .
                 "🏠 Nhu cầu: {$leadType}\n" .
                 "💰 Ngân sách: {$budget} VNĐ\n" .
                 "📝 Ghi chú: {$note}\n" .

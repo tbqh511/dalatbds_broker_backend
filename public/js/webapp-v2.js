@@ -7990,7 +7990,29 @@ window.activityApp = function() {
   if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.start_param) return;
   var param = tg.initDataUnsafe.start_param;
 
-  if (param.indexOf('property_') === 0) {
+  if (param.indexOf('assignlead_') === 0) {
+    var leadId = parseInt(param.substring(11));
+    if (leadId) {
+      sessionStorage.setItem('pending_deeplink', 'assignlead_' + leadId);
+      // Mở subpage assign lead sau khi app khởi tạo xong
+      setTimeout(function() {
+        openSubpage('assignlead');
+        // Highlight lead được chỉ định khi danh sách đã render
+        var checkReady = setInterval(function() {
+          var el = document.getElementById('lead-item-' + leadId);
+          if (el) {
+            clearInterval(checkReady);
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.transition = 'box-shadow 0.3s';
+            el.style.boxShadow = '0 0 0 2px var(--primary)';
+            setTimeout(function() { el.style.boxShadow = ''; }, 2500);
+          }
+        }, 300);
+        // Dừng check sau 10s nếu không tìm thấy
+        setTimeout(function() { clearInterval(checkReady); }, 10000);
+      }, 600);
+    }
+  } else if (param.indexOf('property_') === 0) {
     var propId = parseInt(param.substring(9));
     if (propId) {
       sessionStorage.setItem('pending_deeplink', 'property_' + propId);
