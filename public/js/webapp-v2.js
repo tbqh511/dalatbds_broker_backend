@@ -2104,49 +2104,43 @@ function renderUnassignedLeadCards(leads){
     var catEscaped  = catStr ? '<span style="color:var(--primary);font-weight:600;">' + escHtml(catStr) + '</span>' : '';
     var needHtml    = [leadTypeStr, catEscaped].filter(Boolean).join(' · ');
 
-    // Thông tin nhu cầu: dùng text đơn giản + icon thay vì badge nền đậm
-    var infoLines = '';
-    if (needHtml)
-      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;display:flex;align-items:center;gap:5px;">'
-        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
-        + needHtml
-        + (lead.purpose ? ' <span style="color:var(--text-tertiary);">–</span> ' + escHtml(lead.purpose) : '')
+    // Compact info row: Tài chính + Khu vực trên cùng 1 dòng
+    var hasBudget = lead.budget_min || lead.budget_max;
+    var svgMoney = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+    var svgPin   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+    var infoRow = '';
+    if (hasBudget || wardStr) {
+      infoRow = '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:#6b7280;">'
+        + (hasBudget
+            ? '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="color:var(--primary);font-weight:600;">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span></div>'
+            : '<div></div>')
+        + (wardStr
+            ? '<div style="display:flex;align-items:center;gap:4px;">' + svgPin + escHtml(wardStr) + '</div>'
+            : '')
         + '</div>';
-    if (lead.budget_min || lead.budget_max)
-      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;">'
-        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
-        + 'Tài chính: <span style="color:var(--primary);font-weight:600;">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span>'
-        + '</div>';
-    if (wardStr)
-      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;">'
-        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
-        + 'Khu vực: ' + escHtml(wardStr)
-        + '</div>';
+    }
 
     // Gợi ý sale (nếu có)
     var suggestionTxt = lead.suggestion ? 'Gợi ý: ' + lead.suggestion + ' (phù hợp khu vực)' : '';
 
-    return '<div class="ul-card" id="' + domId + '" onclick="toggleUlSelect(\'' + domId + '\')">'
+    return '<div class="ul-card" id="' + domId + '" onclick="toggleUlSelect(\'' + domId + '\')" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:1px solid #f3f4f6;margin-bottom:10px;">'
 
-      // Header: checkbox + avatar + tên (bỏ thời gian, nguồn, badge ưu tiên)
+      // Header: checkbox + avatar + tên
       + '<div class="ul-head">'
         + '<div class="ul-checkbox" id="' + domId + '-cb">○</div>'
         + '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">' + escHtml(lead.initials) + '</div>'
         + '<div class="ul-info" style="flex:1;min-width:0;">'
-          // Chỉ hiện tên khách hàng, bỏ dòng thời gian và nguồn tạo lead
           + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
         + '</div>'
-        // Đã xóa badge mức ưu tiên (Trung bình / Hot / Bình thường)
       + '</div>'
 
-      // Thông tin nhu cầu — dạng text gọn, không dùng badge nền đậm
-      + (infoLines ? '<div style="padding:0 12px 8px;">' + infoLines + '</div>' : '')
+      // Compact info row: Tài chính + Khu vực
+      + (infoRow ? '<div style="padding:0 4px;">' + infoRow + '</div>' : '')
 
-      // Footer: gợi ý sale canh giữa + nút Phân công full-width bo tròn
-      + '<div style="padding:8px 12px 12px;border-top:1px solid var(--border);">'
-        // Canh giữa dòng gợi ý sale
-        + (suggestionTxt ? '<div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;text-align:center;width:100%;">' + escHtml(suggestionTxt) + '</div>' : '')
-        + '<button class="lc-btn primary" style="width:100%;height:36px;border-radius:999px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">'
+      // Footer: gợi ý sale + nút Phân công
+      + '<div style="padding-top:10px;margin-top:10px;border-top:1px solid #f3f4f6;">'
+        + (suggestionTxt ? '<div style="font-size:11px;font-style:italic;color:#9ca3af;text-align:center;margin-bottom:8px;">' + escHtml(suggestionTxt) + '</div>' : '')
+        + '<button class="lc-btn primary" style="width:100%;height:36px;border-radius:999px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">' 
           + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công ngay</span>'
         + '</button>'
       + '</div>'
@@ -2182,51 +2176,47 @@ function renderStatusLeadCards(leads){
     var catEscaped  = catStr ? '<span style="color:var(--primary);font-weight:600;">' + escHtml(catStr) + '</span>' : '';
     var needHtml    = [leadTypeStr, catEscaped].filter(Boolean).join(' · ');
 
-    // Thông tin nhu cầu: text đơn giản + icon, không dùng badge nền đậm
-    var infoLines = '';
-    if (needHtml)
-      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;display:flex;align-items:center;gap:5px;">'
-        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
-        + needHtml
-        + (lead.purpose ? ' <span style="color:var(--text-tertiary);">–</span> ' + escHtml(lead.purpose) : '')
+    // Compact info row: Tài chính + Khu vực trên cùng 1 dòng
+    var hasBudget = lead.budget_min || lead.budget_max;
+    var svgMoney = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+    var svgPin   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+    var infoRow = '';
+    if (hasBudget || wardStr) {
+      infoRow = '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:#6b7280;">'
+        + (hasBudget
+            ? '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="color:var(--primary);font-weight:600;">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span></div>'
+            : '<div></div>')
+        + (wardStr
+            ? '<div style="display:flex;align-items:center;gap:4px;">' + svgPin + escHtml(wardStr) + '</div>'
+            : '')
         + '</div>';
-    if (lead.budget_min || lead.budget_max)
-      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;">'
-        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
-        + 'Tài chính: <span style="color:var(--primary);font-weight:600;">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span>'
-        + '</div>';
-    if (wardStr)
-      infoLines += '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;">'
-        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
-        + 'Khu vực: ' + escHtml(wardStr)
-        + '</div>';
+    }
 
-    // Footer bên phải: hiển thị tên sale đã assign hoặc nút Phân công full-width
+    // Footer: hiển thị tên sale đã assign hoặc nút Phân công full-width
     var footerSection = lead.is_assigned
-      ? '<div style="padding:8px 12px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:5px;">'
+      ? '<div style="padding-top:10px;margin-top:10px;border-top:1px solid #f3f4f6;display:flex;align-items:center;gap:5px;">'
           + svgUser
           + '<span style="font-size:12px;color:var(--text-secondary);">Đã assign: <strong>' + escHtml(lead.sale_name) + '</strong></span>'
           + '</div>'
-      : '<div style="padding:8px 12px 12px;border-top:1px solid var(--border);">'
-          + '<button class="lc-btn primary" style="width:100%;height:36px;border-radius:999px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'ull-' + lead.id + '\']);">'
+      : '<div style="padding-top:10px;margin-top:10px;border-top:1px solid #f3f4f6;">'
+          + '<button class="lc-btn primary" style="width:100%;height:36px;border-radius:999px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([' + "'ull-" + lead.id + "']" + ')">'
             + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công ngay</span>'
           + '</button>'
           + '</div>';
 
-    return '<div class="ul-card" id="' + domId + '">'
+    return '<div class="ul-card" id="' + domId + '" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:1px solid #f3f4f6;margin-bottom:10px;">'
 
-      // Header: avatar + tên + badge trạng thái (bỏ thời gian và nguồn tạo lead)
+      // Header: avatar + tên + badge trạng thái
       + '<div class="ul-head">'
         + '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">' + escHtml(lead.initials) + '</div>'
         + '<div class="ul-info" style="flex:1;min-width:0;">'
-          // Chỉ hiện tên khách hàng, bỏ dòng thời gian và nguồn tạo lead
           + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
         + '</div>'
         + '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;' + sCfg.style + '">' + sCfg.label + '</span>'
       + '</div>'
 
-      // Thông tin nhu cầu — text đơn giản với icon
-      + (infoLines ? '<div style="padding:0 12px 8px;">' + infoLines + '</div>' : '')
+      // Compact info row: Tài chính + Khu vực
+      + (infoRow ? '<div style="padding:0 4px;">' + infoRow + '</div>' : '')
 
       // Footer: trạng thái assign hoặc nút Phân công
       + footerSection
