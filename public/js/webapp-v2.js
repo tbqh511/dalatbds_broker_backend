@@ -1751,7 +1751,22 @@ window.openSalePicker = function(leads){
   document.querySelectorAll('.sale-pick-item').forEach(el=>{ el.classList.remove('selected'); el.style.display=''; });
   document.getElementById('spAssignBtn').disabled = true;
   const sub = document.getElementById('salePickerSub');
-  sub.textContent = `Đang assign ${leads.length} lead · Chọn Sale phù hợp`;
+
+  // Hiển thị thông tin lead đang được assign vào subtitle
+  var subText = '';
+  if (leads.length === 1 && _assignLeadData && _assignLeadData.leads) {
+    var leadId = parseInt(String(leads[0]).replace(/^ull-/, ''), 10);
+    var leadInfo = _assignLeadData.leads.find(function(l){ return l.id === leadId; });
+    if (leadInfo) {
+      var needLabel = leadInfo.lead_type || '';
+      var catLabel  = (leadInfo.categories && leadInfo.categories.length) ? leadInfo.categories[0] : '';
+      subText = escHtml(leadInfo.name);
+      if (leadInfo.phone) subText += ' · ' + escHtml(leadInfo.phone);
+      if (needLabel || catLabel) subText += ' · ' + escHtml([needLabel, catLabel].filter(Boolean).join(' '));
+    }
+  }
+  if (!subText) subText = leads.length + ' lead được chọn · Chọn Sale phù hợp';
+  sub.innerHTML = '<span style="font-size:12px;color:var(--text-secondary);">' + subText + '</span>';
   // reset ô tìm kiếm và gắn listener
   var si = document.getElementById('searchInputSale');
   if(si){
@@ -2234,17 +2249,41 @@ function renderSalePickerList(sales){
   }
   var avatarColors = ['var(--primary)', 'var(--teal)', '#f59e0b', '#8b5cf6', '#059669', '#ef4444'];
   container.innerHTML = sales.map(function(sale, index){
-    var wClass   = sale.workload === 'high' ? 'high' : (sale.workload === 'mid' ? 'mid' : 'low');
-    var cntLabel = sale.active_leads + ' deal' + (sale.active_leads !== 1 ? 's' : '');
-    var avatarBg = avatarColors[index % avatarColors.length];
-    return '<div class="sale-pick-item sale-item" data-name="' + sale.name.toLowerCase() + '" onclick="selectSalePick(this,' + sale.id + ')">'
-      + '<div class="spi-avatar" style="background:' + avatarBg + '">' + escHtml(sale.initials) + '</div>'
-      + '<div class="spi-info">'
-        + '<div class="spi-name">' + escHtml(sale.name) + '</div>'
-        + '<div class="spi-meta">' + escHtml(sale.active_leads + ' lead đang chăm') + '</div>'
+    var avatarBg  = avatarColors[index % avatarColors.length];
+    var roleLabel = sale.role === 'sale_admin' ? 'Quản lý Sale' : 'Nhân viên Sale';
+    var totalLeads  = sale.total_leads  !== undefined ? sale.total_leads  : sale.active_leads;
+    var closedLeads = sale.closed_leads !== undefined ? sale.closed_leads : 0;
+    var wDot = sale.workload === 'high'
+      ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:4px;"></span>'
+      : (sale.workload === 'mid'
+        ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>'
+        : '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:4px;"></span>');
+    return '<div class="sale-pick-item sale-item" data-name="' + sale.name.toLowerCase() + '" onclick="selectSalePick(this,' + sale.id + ')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;">'
+      + '<div class="spi-avatar" style="background:' + avatarBg + ';flex-shrink:0;">' + escHtml(sale.initials) + '</div>'
+      + '<div style="flex:1;min-width:0;">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">'
+          + '<div class="spi-name" style="font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(sale.name) + '</div>'
+          + '<span class="spi-check" id="sp-' + sale.id + '" style="font-size:18px;color:var(--primary);flex-shrink:0;margin-left:8px;">○</span>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;">'
+          + wDot
+          + '<span style="font-size:11px;color:var(--text-tertiary);">' + escHtml(roleLabel) + '</span>'
+        + '</div>'
+        + '<div style="display:flex;gap:0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">'
+          + '<div style="flex:1;text-align:center;padding:5px 4px;border-right:1px solid #e5e7eb;">'
+            + '<div style="font-size:13px;font-weight:700;color:var(--text-primary);">' + sale.active_leads + '</div>'
+            + '<div style="font-size:10px;color:var(--text-tertiary);margin-top:1px;">Đang xử lý</div>'
+          + '</div>'
+          + '<div style="flex:1;text-align:center;padding:5px 4px;border-right:1px solid #e5e7eb;">'
+            + '<div style="font-size:13px;font-weight:700;color:var(--text-primary);">' + totalLeads + '</div>'
+            + '<div style="font-size:10px;color:var(--text-tertiary);margin-top:1px;">Tổng lead</div>'
+          + '</div>'
+          + '<div style="flex:1;text-align:center;padding:5px 4px;">'
+            + '<div style="font-size:13px;font-weight:700;color:#10b981;">' + closedLeads + '</div>'
+            + '<div style="font-size:10px;color:var(--text-tertiary);margin-top:1px;">Đã chốt</div>'
+          + '</div>'
+        + '</div>'
       + '</div>'
-      + '<div class="spi-workload"><span class="spi-leads ' + wClass + '">' + escHtml(cntLabel) + '</span></div>'
-      + '<span class="spi-check" id="sp-' + sale.id + '">○</span>'
       + '</div>';
   }).join('');
   // Reset ô tìm kiếm mỗi lần render lại danh sách

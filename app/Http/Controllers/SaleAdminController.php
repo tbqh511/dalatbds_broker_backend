@@ -89,6 +89,19 @@ class SaleAdminController extends Controller
             ->groupBy('sale_id')
             ->pluck('cnt', 'sale_id');
 
+        // Total lead counts per sale (all statuses)
+        $totalLeadCounts = CrmLead::whereIn('sale_id', $saleIds)
+            ->selectRaw('sale_id, count(*) as cnt')
+            ->groupBy('sale_id')
+            ->pluck('cnt', 'sale_id');
+
+        // Closed (converted) lead counts per sale
+        $closedLeadCounts = CrmLead::whereIn('sale_id', $saleIds)
+            ->where('status', 'converted')
+            ->selectRaw('sale_id, count(*) as cnt')
+            ->groupBy('sale_id')
+            ->pluck('cnt', 'sale_id');
+
         // Today's assignments (for history tab)
         $assignedToday = CrmLead::with(['customer', 'sale'])
             ->whereNotNull('sale_id')
@@ -202,7 +215,7 @@ class SaleAdminController extends Controller
         }
 
         // Sales DTO
-        $sales = $salesTeam->map(function ($s) use ($activeLeadCounts) {
+        $sales = $salesTeam->map(function ($s) use ($activeLeadCounts, $totalLeadCounts, $closedLeadCounts) {
             $count    = $activeLeadCounts[$s->id] ?? 0;
             $workload = $count >= 10 ? 'high' : ($count >= 5 ? 'mid' : 'low');
             $parts    = preg_split('/\s+/', trim($s->name));
@@ -216,6 +229,8 @@ class SaleAdminController extends Controller
                 'initials'     => $initials,
                 'role'         => $s->role,
                 'active_leads' => $count,
+                'total_leads'  => (int) ($totalLeadCounts[$s->id] ?? 0),
+                'closed_leads' => (int) ($closedLeadCounts[$s->id] ?? 0),
                 'workload'     => $workload,
             ];
         })->values()->all();
