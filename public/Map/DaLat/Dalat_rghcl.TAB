@@ -1,0 +1,28 @@
+!table
+!version 450
+!charset WindowsLatin1
+
+Definition Table
+  Type NATIVE Charset "WindowsLatin1"
+  Fields 3
+    ID Integer ;
+    MA Integer ;
+    Ten Char (30) ;
+begin_metadata
+"\IsReadOnly" = "FALSE"
+"\MapInfo" = ""
+"\MapInfo\TableID" = "4cbd0ba5-c2ad-4371-81e5-d4de5c280561"
+"\MapInfo\ParentTableID" = "c5575a15-a4de-4250-b799-54933ba2fa37"
+"\SNAPTHIN" = ""
+"\SNAPTHIN\EnableSnap" = "FALSE"
+"\SNAPTHIN\Node" = "0"
+"\SNAPTHIN\Vec" = "0"
+"\SNAPTHIN\TolUnit" = "7"
+"\SNAPTHIN\EnableThin" = "FALSE"
+"\SNAPTHIN\Bend" = "0"
+"\SNAPTHIN\Dist" = "0"
+"\SNAPTHIN\ThinUnit" = "7"
+"\SNAPTHIN\EnableArea" = "FALSE"
+"\SNAPTHIN\Area" = "0"
+"\SNAPTHIN\AreaUnit" = "29"
+end_metadata

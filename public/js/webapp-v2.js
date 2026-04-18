@@ -3829,13 +3829,17 @@ function populateFull(d){
     // Store URL for click overlay
     const preview = document.getElementById('detailMapPreview');
     if(preview) {
-      preview.dataset.mapsUrl  = mapsUrl;
-      preview.dataset.lat      = d.latitude;
-      preview.dataset.lng      = d.longitude;
-      preview.dataset.price    = d.price    || '';
-      preview.dataset.propType = d.type     || '';
-      preview.dataset.addr     = addr       || '';
+      preview.dataset.mapsUrl   = mapsUrl;
+      preview.dataset.lat       = d.latitude;
+      preview.dataset.lng       = d.longitude;
+      preview.dataset.price     = d.price    || '';
+      preview.dataset.propType  = d.type     || '';
+      preview.dataset.addr      = addr       || '';
+      preview.dataset.wardCode  = d.ward_code || '';
     }
+    // Show/hide legal map button depending on ward coverage
+    const btnWrap = document.getElementById('btnLegalMapWrap');
+    if(btnWrap) btnWrap.style.display = d.latitude && d.longitude ? '' : 'none';
 
     // Inject Google Maps iframe embed (no API key needed)
     const iframeContainer = document.getElementById('mapIframeContainer');
@@ -3905,6 +3909,144 @@ function escHtml(s){
   if(!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// ─── Legal map (bản đồ pháp lý thửa đất) ───────────────────────────────────
+(function(){
+  const INDEX_URL = '/Map/DaLat/geojson/wards_index.json';
+  let legalMap    = null;   // Leaflet map instance
+  let wardCache   = {};     // file path → GeoJSON data
+  let indexCache  = null;   // wards_index.json data
+  let activeParcelLayer = null;
+  let allParcelLayer    = null;
+
+  function ptInBbox(lng, lat, bbox){
+    return lng >= bbox[0] && lat >= bbox[1] && lng <= bbox[2] && lat <= bbox[3];
+  }
+
+  async function resolveFile(wardCode, lng, lat){
+    if(!indexCache){
+      const r = await fetch(INDEX_URL);
+      indexCache = await r.json();
+    }
+    const slug = indexCache.by_code[wardCode];
+    if(!slug) return null;
+    const entry = indexCache.by_slug[slug];
+    if(!entry) return null;
+    if(entry.file) return entry.file;
+    // sub-file split (xuan-truong): pick by bbox
+    if(entry.files){
+      for(const sub of entry.files){
+        if(ptInBbox(lng, lat, sub.bbox)) return sub.file;
+      }
+      // fallback: first sub-file
+      return entry.files[0].file;
+    }
+    return null;
+  }
+
+  async function loadGeoJson(filePath){
+    if(wardCache[filePath]) return wardCache[filePath];
+    const r = await fetch('/Map/DaLat/geojson/' + filePath);
+    const gj = await r.json();
+    wardCache[filePath] = gj;
+    return gj;
+  }
+
+  window.openLegalMap = async function(){
+    const preview = document.getElementById('detailMapPreview');
+    const lat = parseFloat(preview && preview.dataset.lat);
+    const lng = parseFloat(preview && preview.dataset.lng);
+    const wardCode = preview && preview.dataset.wardCode;
+
+    if(!lat || !lng){
+      if(typeof toast === 'function') toast('BĐS chưa có tọa độ');
+      return;
+    }
+
+    const sheet = document.getElementById('legalMapSheet');
+    if(sheet) sheet.style.display = '';
+    document.body.style.overflow = 'hidden';
+
+    // Init Leaflet once
+    if(!legalMap){
+      legalMap = L.map('legalMapContainer', {zoomControl:true}).setView([lat, lng], 17);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        attribution:'© OpenStreetMap',maxZoom:20
+      }).addTo(legalMap);
+    } else {
+      legalMap.setView([lat, lng], 17);
+      legalMap.invalidateSize();
+    }
+
+    // Clear previous layers
+    if(allParcelLayer)    { legalMap.removeLayer(allParcelLayer);    allParcelLayer    = null; }
+    if(activeParcelLayer) { legalMap.removeLayer(activeParcelLayer); activeParcelLayer = null; }
+
+    // Property marker
+    L.marker([lat, lng]).addTo(legalMap);
+
+    const infoEl = document.getElementById('legalParcelInfo');
+    if(infoEl) infoEl.innerHTML = '<div style="color:#aaa;font-size:12px;">Đang tải dữ liệu quy hoạch...</div>';
+
+    try {
+      const filePath = await resolveFile(wardCode, lng, lat);
+      if(!filePath){ showNoParcel(infoEl); return; }
+      const gj = await loadGeoJson(filePath);
+
+      allParcelLayer = L.geoJSON(gj, {
+        style:{ color:'#4a7fb5', weight:0.6, fillColor:'#4a7fb5', fillOpacity:0.08 },
+        onEachFeature:(f, layer)=>{ layer.on('click', ()=>{ showParcelInfo(f.properties, infoEl); }); }
+      }).addTo(legalMap);
+
+      const pt = turf.point([lng, lat]);
+      const match = gj.features.find(f => {
+        try{ return turf.booleanPointInPolygon(pt, f); } catch(e){ return false; }
+      });
+
+      if(match){
+        activeParcelLayer = L.geoJSON(match, {
+          style:{ color:'#e03131', weight:2, fillColor:'#e03131', fillOpacity:0.3 }
+        }).addTo(legalMap);
+        showParcelInfo(match.properties, infoEl);
+      } else {
+        showNoParcel(infoEl);
+      }
+    } catch(err) {
+      if(infoEl) infoEl.innerHTML = '<div style="color:#e03131;font-size:12px;">Lỗi tải dữ liệu quy hoạch.</div>';
+    }
+    legalMap.invalidateSize();
+  };
+
+  function showNoParcel(el){
+    if(el) el.innerHTML = '<div style="color:#aaa;font-size:12px;">Không tìm thấy thửa đất tại vị trí này trong dữ liệu quy hoạch.</div>';
+  }
+
+  function showParcelInfo(p, el){
+    if(!el) return;
+    const qhLabel = {1:'Rừng đặc dụng',2:'Rừng phòng hộ',3:'Rừng sản xuất'};
+    const rows = [
+      p.Thuad   ? ['Thửa', escHtml(p.Thuad)] : null,
+      p.tobando ? ['Tờ BĐ', escHtml(p.tobando)] : null,
+      p.Xa      ? ['Xã / Phường', escHtml(p.Xa)] : null,
+      p.Khoanh  ? ['Khoảnh', escHtml(p.Khoanh)] : null,
+      p.Dtich   ? ['Diện tích', escHtml(String(p.Dtich)) + ' m²'] : null,
+      p.LDLR    ? ['Loại đất rừng', escHtml(p.LDLR)] : null,
+      p.mdsd    ? ['Mục đích SD', escHtml(p.mdsd)] : null,
+      p.Malr3_Qh != null ? ['QH 3 loại rừng', escHtml(qhLabel[p.Malr3_Qh] || 'Ngoài quy hoạch')] : null,
+      p.Churung  ? ['Chủ rừng', escHtml(p.Churung)] : null,
+      p.Tenkhu   ? ['Tên khu', escHtml(p.Tenkhu)] : null,
+    ].filter(Boolean);
+    el.innerHTML = rows.map(([k,v])=>`<div style="display:flex;gap:6px;"><span style="color:#888;min-width:120px;">${k}:</span><span style="font-weight:600;">${v}</span></div>`).join('');
+  }
+
+  window.closeLegalMap = function(){
+    const sheet = document.getElementById('legalMapSheet');
+    if(sheet) sheet.style.display = 'none';
+    document.body.style.overflow = '';
+    if(legalMap) legalMap.invalidateSize();
+  };
+})();
+// ────────────────────────────────────────────────────────────────────────────
 
 // Open property detail directly by ID (used from suggestion click)
 window.openPropertyById = function(propId) {

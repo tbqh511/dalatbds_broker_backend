@@ -277,6 +277,27 @@
             </span>
           </div>
         </div>
+        <!-- Nút bản đồ pháp lý — chỉ hiện khi có lat/lng (JS toggle qua data-wardcode) -->
+        <div id="btnLegalMapWrap" style="margin-top:10px;display:none;">
+          <button onclick="openLegalMap()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;border-radius:10px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+            Xem bản đồ pháp lý thửa đất
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom sheet: bản đồ pháp lý -->
+    <div id="legalMapSheet" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.45);" onclick="if(event.target===this)closeLegalMap()">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:18px 18px 0 0;display:flex;flex-direction:column;max-height:92vh;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid #eee;flex-shrink:0;">
+          <span style="font-size:15px;font-weight:700;color:#1a1a2e;">Bản đồ pháp lý thửa đất</span>
+          <button onclick="closeLegalMap()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+        <div id="legalMapContainer" style="flex:1;min-height:300px;max-height:55vh;"></div>
+        <div id="legalParcelInfo" style="flex-shrink:0;padding:12px 16px;border-top:1px solid #eee;font-size:13px;color:#333;max-height:160px;overflow-y:auto;line-height:1.8;">
+          <div style="color:#aaa;font-size:12px;">Đang tải dữ liệu quy hoạch...</div>
+        </div>
       </div>
     </div>
 

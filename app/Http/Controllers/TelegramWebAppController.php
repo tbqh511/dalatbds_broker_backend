@@ -1127,6 +1127,7 @@ class TelegramWebAppController extends Controller
             'statusLabel' => $property->status == 0 ? 'Chờ duyệt' : ($property->status == 2 ? 'Từ chối' : null),
             'property_type' => $property->property_type,
             'similar' => $similar,
+            'ward_code' => $property->ward_code ?? null,
         ]);
     }
 

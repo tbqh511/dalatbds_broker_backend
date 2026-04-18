@@ -1,0 +1,20 @@
+!table
+!version 450
+!charset WindowsLatin1
+
+Definition Table
+  Type NATIVE Charset "WindowsLatin1"
+  Fields 7
+    TT Decimal (7, 0) Index 1 ;
+    matinh Decimal (4, 0) ;
+    mahuyen Decimal (4, 0) ;
+    maxa Decimal (6, 0) ;
+    tinh Char (30) ;
+    huyen Char (30) ;
+    xa Char (20) ;
+begin_metadata
+"\IsReadOnly" = "FALSE"
+"\MapInfo" = ""
+"\MapInfo\TableID" = "1fa8f736-4736-41cf-8dca-59543d386cec"
+"\MapInfo\ParentTableID" = "925ae198-1445-47fa-9189-dd765d718d5d"
+end_metadata

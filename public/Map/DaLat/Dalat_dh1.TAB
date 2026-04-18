@@ -1,0 +1,17 @@
+!table
+!version 450
+!charset WindowsLatin1
+
+Definition Table
+  Type NATIVE Charset "WindowsLatin1"
+  Fields 4
+    ID Integer ;
+    MA Integer ;
+    Ten Char (30) ;
+    Value Decimal (8, 1) ;
+begin_metadata
+"\IsReadOnly" = "FALSE"
+"\MapInfo" = ""
+"\MapInfo\TableID" = "79541c7b-5fae-4048-943a-c1604d33a980"
+"\MapInfo\ParentTableID" = "17c6c9df-9da5-42d2-bce2-e2f21f14f838"
+end_metadata
