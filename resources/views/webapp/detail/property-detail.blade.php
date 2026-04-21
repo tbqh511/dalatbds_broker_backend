@@ -290,16 +290,34 @@
     <!-- Bottom sheet: bản đồ pháp lý -->
     <div id="legalMapSheet" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.45);" onclick="if(event.target===this)closeLegalMap()">
       <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:18px 18px 0 0;display:flex;flex-direction:column;max-height:92vh;">
+        <!-- Header -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid #eee;flex-shrink:0;">
-          <span style="font-size:15px;font-weight:700;color:#1a1a2e;">Bản đồ pháp lý thửa đất</span>
-          <button onclick="closeLegalMap()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#1a1a2e;">Bản đồ pháp lý thửa đất</div>
+            <div style="font-size:11px;color:#aaa;margin-top:1px;">Nguồn: UBND TP Đà Lạt · QH 2021</div>
+          </div>
+          <button onclick="closeLegalMap()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
         </div>
-        <div id="legalMapContainer" style="flex:1;min-height:300px;max-height:55vh;"></div>
-        <div id="legalParcelInfo" style="flex-shrink:0;padding:12px 16px;border-top:1px solid #eee;font-size:13px;color:#333;max-height:160px;overflow-y:auto;line-height:1.8;">
-          <div style="color:#aaa;font-size:12px;">Đang tải dữ liệu quy hoạch...</div>
+        <!-- Map container (với loading skeleton bên trong) -->
+        <div style="position:relative;flex:1;min-height:300px;max-height:55vh;">
+          <div id="legalMapContainer" style="position:absolute;inset:0;"></div>
+          <!-- Loading skeleton overlay -->
+          <div id="legalMapLoading" style="position:absolute;inset:0;z-index:10;background:#f0f2f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+            <div style="width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#4a7fb5;border-radius:50%;animation:legalMapSpin 0.8s linear infinite;"></div>
+            <div style="font-size:12px;color:#aaa;">Đang tải bản đồ quy hoạch...</div>
+          </div>
+        </div>
+        <!-- Legend bar -->
+        <div id="legalMapLegend" style="flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;border-top:1px solid #eee;background:#fafafa;"></div>
+        <!-- Kết quả quy hoạch -->
+        <div id="legalParcelInfo" style="flex-shrink:0;padding:10px 14px 14px;border-top:1px solid #eee;max-height:150px;overflow-y:auto;">
+          <div style="color:#bbb;font-size:12px;text-align:center;padding:6px 0;">Đang phân tích vùng quy hoạch...</div>
         </div>
       </div>
     </div>
+    <style>
+      @keyframes legalMapSpin { to { transform: rotate(360deg); } }
+    </style>
 
     <!-- BROKER / NGƯỜI ĐĂNG -->
     <div class="detail-section">
