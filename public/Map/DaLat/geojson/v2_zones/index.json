@@ -1,0 +1,54 @@
+{
+  "NN": {
+    "type": "NN",
+    "label": "Nghiêm ngặt",
+    "color": "#FFFF14",
+    "file": "zone_NN.geojson",
+    "feature_count": 1241,
+    "bbox": [
+      108.3153156097,
+      11.8198393372,
+      108.591084404,
+      12.0042275072
+    ]
+  },
+  "MT": {
+    "type": "MT",
+    "label": "Môi trường",
+    "color": "#8CFF96",
+    "file": "zone_MT.geojson",
+    "feature_count": 930,
+    "bbox": [
+      108.3151582888,
+      11.8082612037,
+      108.5926079307,
+      12.0085994944
+    ]
+  },
+  "SX": {
+    "type": "SX",
+    "label": "Sản xuất",
+    "color": "#00FF00",
+    "file": "zone_SX.geojson",
+    "feature_count": 842,
+    "bbox": [
+      108.3153225278,
+      11.8281579388,
+      108.5774280719,
+      12.0034071174
+    ]
+  },
+  "DD": {
+    "type": "DD",
+    "label": "Đặc dụng",
+    "color": "#FF0000",
+    "file": "zone_DD.geojson",
+    "feature_count": 15,
+    "bbox": [
+      108.3779305138,
+      11.9276941532,
+      108.4127023052,
+      11.9497066826
+    ]
+  }
+}

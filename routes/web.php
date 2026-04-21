@@ -78,6 +78,12 @@ Route::post('/webapp/auth', [TelegramWebAppController::class, 'authRedirect'])->
 Route::get('/', [FrontEndHomeController::class , 'index'])->name('index');
 Route::get('/webapp/temp', [TelegramWebAppController::class , 'tempui'])->name('webapp.temp');
 
+// MBTiles raster tile proxy — public, no auth required
+use App\Http\Controllers\MapTileController;
+Route::get('/map-tiles/dalat/{z}/{x}/{y}.png', [MapTileController::class, 'dalatTile'])
+    ->where(['z' => '[0-9]+', 'x' => '[0-9]+', 'y' => '[0-9]+'])
+    ->name('map.tiles.dalat');
+
 // Lead assignment via signed URL (no session required — opened from Telegram group button)
 Route::get('/webapp/leads/{id}/assign', [CrmLeadController::class, 'assignPage'])
     ->name('webapp.leads.assign-page')

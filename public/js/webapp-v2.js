@@ -3910,53 +3910,78 @@ function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ─── Legal map (bản đồ pháp lý thửa đất) ───────────────────────────────────
+// ─── Legal map V2 (bản đồ pháp lý — dữ liệu quy hoạch 2021) ────────────────
 (function(){
-  const INDEX_URL = '/Map/DaLat/geojson/wards_index.json';
-  let legalMap    = null;   // Leaflet map instance
-  let wardCache   = {};     // file path → GeoJSON data
-  let indexCache  = null;   // wards_index.json data
-  let activeParcelLayer = null;
-  let allParcelLayer    = null;
+  const ZONES_URL = '/Map/DaLat/geojson/v2_zones/dalat_zones.geojson';
 
-  function ptInBbox(lng, lat, bbox){
-    return lng >= bbox[0] && lat >= bbox[1] && lng <= bbox[2] && lat <= bbox[3];
+  // Zone colors matching KMZ source (used for highlight; base colors in zoneStyle)
+  const ZONE_COLORS = { NN:'#e6c000', MT:'#3aab4a', SX:'#1a7a2e', DD:'#c0392b' };
+
+  let legalMap         = null;
+  let zonesCache       = null;   // GeoJSON FeatureCollection (loaded once)
+  let qhLayer          = null;   // mbtiles raster layer reference
+  let activeZoneLayer  = null;
+  let allZonesLayer    = null;
+
+  function zoneStyle(f){
+    const c = ZONE_COLORS[f.properties.zone_type] || '#888888';
+    return { color: c, weight: 1, fillColor: c, fillOpacity: 0.22 };
   }
 
-  async function resolveFile(wardCode, lng, lat){
-    if(!indexCache){
-      const r = await fetch(INDEX_URL);
-      indexCache = await r.json();
-    }
-    const slug = indexCache.by_code[wardCode];
-    if(!slug) return null;
-    const entry = indexCache.by_slug[slug];
-    if(!entry) return null;
-    if(entry.file) return entry.file;
-    // sub-file split (xuan-truong): pick by bbox
-    if(entry.files){
-      for(const sub of entry.files){
-        if(ptInBbox(lng, lat, sub.bbox)) return sub.file;
-      }
-      // fallback: first sub-file
-      return entry.files[0].file;
-    }
-    return null;
+  async function loadZones(){
+    if(zonesCache) return zonesCache;
+    const r = await fetch(ZONES_URL);
+    zonesCache = await r.json();
+    return zonesCache;
   }
 
-  async function loadGeoJson(filePath){
-    if(wardCache[filePath]) return wardCache[filePath];
-    const r = await fetch('/Map/DaLat/geojson/' + filePath);
-    const gj = await r.json();
-    wardCache[filePath] = gj;
-    return gj;
+  function initMap(lat, lng){
+    if(legalMap) return;   // already initialised
+
+    legalMap = L.map('legalMapContainer', { zoomControl: true }).setView([lat, lng], 15);
+
+    // OSM base — handles zoom <13 and edges outside Da Lat coverage
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://osm.org/copyright">OpenStreetMap</a>',
+      maxZoom: 20,
+    }).addTo(legalMap);
+
+    // Quy hoạch 2021 raster overlay from mbtiles (served via Laravel)
+    // tms: false because the PHP controller already flips Y (TMS→XYZ)
+    qhLayer = L.tileLayer('/map-tiles/dalat/{z}/{x}/{y}.png', {
+      attribution: 'Bản đồ QH 2021 © UBND TP Đà Lạt',
+      minZoom: 13, maxZoom: 17, maxNativeZoom: 17,
+      opacity: 0.85, tms: false, crossOrigin: true, errorTileUrl: '',
+    }).addTo(legalMap);
+
+    // Toggle button for the QH raster layer
+    const QhControl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd: function(){
+        const btn = L.DomUtil.create('button', '');
+        btn.textContent = 'QH 2021';
+        btn.title = 'Bật/tắt lớp bản đồ quy hoạch';
+        btn.style.cssText = 'padding:4px 8px;font-size:11px;font-weight:600;'
+          + 'background:#fff;border:1.5px solid #4a7fb5;border-radius:6px;'
+          + 'color:#4a7fb5;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);';
+        let visible = true;
+        L.DomEvent.on(btn, 'click', function(e){
+          L.DomEvent.stopPropagation(e);
+          visible = !visible;
+          visible ? qhLayer.addTo(legalMap) : legalMap.removeLayer(qhLayer);
+          btn.style.background = visible ? '#fff' : '#e8eef5';
+          btn.style.color      = visible ? '#4a7fb5' : '#999';
+        });
+        return btn;
+      },
+    });
+    new QhControl().addTo(legalMap);
   }
 
   window.openLegalMap = async function(){
     const preview = document.getElementById('detailMapPreview');
     const lat = parseFloat(preview && preview.dataset.lat);
     const lng = parseFloat(preview && preview.dataset.lng);
-    const wardCode = preview && preview.dataset.wardCode;
 
     if(!lat || !lng){
       if(typeof toast === 'function') toast('BĐS chưa có tọa độ');
@@ -3967,20 +3992,13 @@ function escHtml(s){
     if(sheet) sheet.style.display = '';
     document.body.style.overflow = 'hidden';
 
-    // Init Leaflet once
-    if(!legalMap){
-      legalMap = L.map('legalMapContainer', {zoomControl:true}).setView([lat, lng], 17);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-        attribution:'© OpenStreetMap',maxZoom:20
-      }).addTo(legalMap);
-    } else {
-      legalMap.setView([lat, lng], 17);
-      legalMap.invalidateSize();
-    }
+    initMap(lat, lng);
+    legalMap.setView([lat, lng], 15);
+    legalMap.invalidateSize();
 
-    // Clear previous layers
-    if(allParcelLayer)    { legalMap.removeLayer(allParcelLayer);    allParcelLayer    = null; }
-    if(activeParcelLayer) { legalMap.removeLayer(activeParcelLayer); activeParcelLayer = null; }
+    // Clear previous zone layers (keep base tiles)
+    if(allZonesLayer)   { legalMap.removeLayer(allZonesLayer);   allZonesLayer  = null; }
+    if(activeZoneLayer) { legalMap.removeLayer(activeZoneLayer); activeZoneLayer = null; }
 
     // Property marker
     L.marker([lat, lng]).addTo(legalMap);
@@ -3989,54 +4007,46 @@ function escHtml(s){
     if(infoEl) infoEl.innerHTML = '<div style="color:#aaa;font-size:12px;">Đang tải dữ liệu quy hoạch...</div>';
 
     try {
-      const filePath = await resolveFile(wardCode, lng, lat);
-      if(!filePath){ showNoParcel(infoEl); return; }
-      const gj = await loadGeoJson(filePath);
+      const gj = await loadZones();
 
-      allParcelLayer = L.geoJSON(gj, {
-        style:{ color:'#4a7fb5', weight:0.6, fillColor:'#4a7fb5', fillOpacity:0.08 },
-        onEachFeature:(f, layer)=>{ layer.on('click', ()=>{ showParcelInfo(f.properties, infoEl); }); }
+      allZonesLayer = L.geoJSON(gj, {
+        style: zoneStyle,
+        onEachFeature: (f, layer) => { layer.on('click', () => showZoneInfo(f.properties, infoEl)); },
       }).addTo(legalMap);
 
-      const pt = turf.point([lng, lat]);
+      const pt    = turf.point([lng, lat]);
       const match = gj.features.find(f => {
-        try{ return turf.booleanPointInPolygon(pt, f); } catch(e){ return false; }
+        try { return turf.booleanPointInPolygon(pt, f); } catch(e){ return false; }
       });
 
       if(match){
-        activeParcelLayer = L.geoJSON(match, {
-          style:{ color:'#e03131', weight:2, fillColor:'#e03131', fillOpacity:0.3 }
+        activeZoneLayer = L.geoJSON(match, {
+          style:{ color:'#e03131', weight:2.5, fillColor:'#e03131', fillOpacity:0.4 },
         }).addTo(legalMap);
-        showParcelInfo(match.properties, infoEl);
+        showZoneInfo(match.properties, infoEl);
       } else {
-        showNoParcel(infoEl);
+        showNoZone(infoEl);
       }
-    } catch(err) {
+    } catch(err){
       if(infoEl) infoEl.innerHTML = '<div style="color:#e03131;font-size:12px;">Lỗi tải dữ liệu quy hoạch.</div>';
     }
     legalMap.invalidateSize();
   };
 
-  function showNoParcel(el){
-    if(el) el.innerHTML = '<div style="color:#aaa;font-size:12px;">Không tìm thấy thửa đất tại vị trí này trong dữ liệu quy hoạch.</div>';
+  function showNoZone(el){
+    if(el) el.innerHTML = '<div style="color:#aaa;font-size:12px;">Vị trí BĐS nằm ngoài vùng dữ liệu quy hoạch.</div>';
   }
 
-  function showParcelInfo(p, el){
+  function showZoneInfo(p, el){
     if(!el) return;
-    const qhLabel = {1:'Rừng đặc dụng',2:'Rừng phòng hộ',3:'Rừng sản xuất'};
+    const dot = ZONE_COLORS[p.zone_type] || '#888';
     const rows = [
-      p.Thuad   ? ['Thửa', escHtml(p.Thuad)] : null,
-      p.tobando ? ['Tờ BĐ', escHtml(p.tobando)] : null,
-      p.Xa      ? ['Xã / Phường', escHtml(p.Xa)] : null,
-      p.Khoanh  ? ['Khoảnh', escHtml(p.Khoanh)] : null,
-      p.Dtich   ? ['Diện tích', escHtml(String(p.Dtich)) + ' m²'] : null,
-      p.LDLR    ? ['Loại đất rừng', escHtml(p.LDLR)] : null,
-      p.mdsd    ? ['Mục đích SD', escHtml(p.mdsd)] : null,
-      p.Malr3_Qh != null ? ['QH 3 loại rừng', escHtml(qhLabel[p.Malr3_Qh] || 'Ngoài quy hoạch')] : null,
-      p.Churung  ? ['Chủ rừng', escHtml(p.Churung)] : null,
-      p.Tenkhu   ? ['Tên khu', escHtml(p.Tenkhu)] : null,
+      p.zone_type  ? ['Loại quy hoạch', `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${dot};margin-right:4px;vertical-align:middle;"></span>${escHtml(p.zone_type)}`] : null,
+      p.zone_label ? ['Phân loại', escHtml(p.zone_label)] : null,
     ].filter(Boolean);
-    el.innerHTML = rows.map(([k,v])=>`<div style="display:flex;gap:6px;"><span style="color:#888;min-width:120px;">${k}:</span><span style="font-weight:600;">${v}</span></div>`).join('');
+    el.innerHTML = rows.map(([k,v]) =>
+      `<div style="display:flex;gap:6px;align-items:center;"><span style="color:#888;min-width:120px;">${k}:</span><span style="font-weight:600;">${v}</span></div>`
+    ).join('');
   }
 
   window.closeLegalMap = function(){
