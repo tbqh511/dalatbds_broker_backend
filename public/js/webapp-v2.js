@@ -3939,6 +3939,8 @@ function escHtml(s){
   let activeZoneLayer = null;
   let allZonesLayer   = null;
   let propertyMarker  = null;
+  let qhAutoHidden    = false;
+  let qhManualOff     = false;
 
   function zoneStyle(f){
     const m = ZONE_META[f.properties.zone_type];
@@ -3994,6 +3996,16 @@ function escHtml(s){
   function initMap(lat, lng){
     if(legalMap) return;
 
+    // Subclass để upscale tile bằng nearest-neighbour thay vì bilinear —
+    // khi zoom > maxNativeZoom (17) tiles ra crisp/blocky thay vì mờ nhòe
+    const PixelatedTileLayer = L.TileLayer.extend({
+      createTile(coords, done){
+        const tile = L.TileLayer.prototype.createTile.call(this, coords, done);
+        tile.style.imageRendering = 'pixelated';
+        return tile;
+      }
+    });
+
     legalMap = L.map('legalMapContainer', { zoomControl: true }).setView([lat, lng], 15);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -4002,13 +4014,14 @@ function escHtml(s){
     }).addTo(legalMap);
 
     // QH 2021 raster overlay (tms:false vì PHP controller đã flip Y TMS→XYZ)
-    qhLayer = L.tileLayer('/map-tiles/dalat/{z}/{x}/{y}.png', {
+    qhLayer = new PixelatedTileLayer('/map-tiles/dalat/{z}/{x}/{y}.png', {
       attribution: 'Bản đồ QH 2021 © UBND TP Đà Lạt',
       minZoom: 13, maxZoom: 17, maxNativeZoom: 17,
       opacity: 0.85, tms: false, crossOrigin: true, errorTileUrl: '',
     }).addTo(legalMap);
 
     // Toggle button QH layer — style rõ hơn V2
+    let qhBtnRef = null;
     const QhControl = L.Control.extend({
       options: { position: 'topright' },
       onAdd: function(){
@@ -4019,11 +4032,18 @@ function escHtml(s){
           + 'background:#4a7fb5;border:none;border-radius:8px;'
           + 'color:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);'
           + 'display:flex;align-items:center;gap:4px;';
+        qhBtnRef = btn;
         let visible = true;
         L.DomEvent.on(btn, 'click', function(e){
           L.DomEvent.stopPropagation(e);
           visible = !visible;
-          visible ? qhLayer.addTo(legalMap) : legalMap.removeLayer(qhLayer);
+          qhManualOff = !visible;
+          if(visible){
+            qhLayer.addTo(legalMap);
+            qhAutoHidden = false;
+          } else {
+            legalMap.removeLayer(qhLayer);
+          }
           btn.style.background = visible ? '#4a7fb5' : '#ccc';
           btn.style.color      = visible ? '#fff'    : '#555';
         });
@@ -4031,6 +4051,27 @@ function escHtml(s){
       },
     });
     new QhControl().addTo(legalMap);
+
+    // Tự động ẩn QH raster khi zoom > maxNativeZoom (17) để tránh blur
+    legalMap.on('zoomend', function(){
+      const z = legalMap.getZoom();
+      const notice = document.getElementById('legalMapZoomNotice');
+      if(z > 17){
+        if(!qhManualOff && legalMap.hasLayer(qhLayer)){
+          legalMap.removeLayer(qhLayer);
+          qhAutoHidden = true;
+          if(qhBtnRef){ qhBtnRef.style.background='#ccc'; qhBtnRef.style.color='#555'; }
+        }
+        if(notice) notice.style.display = '';
+      } else {
+        if(qhAutoHidden){
+          qhLayer.addTo(legalMap);
+          qhAutoHidden = false;
+          if(qhBtnRef){ qhBtnRef.style.background='#4a7fb5'; qhBtnRef.style.color='#fff'; }
+        }
+        if(notice) notice.style.display = 'none';
+      }
+    });
 
     renderLegend();
   }

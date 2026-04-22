@@ -308,7 +308,9 @@
           </div>
         </div>
         <!-- Legend bar -->
-        <div id="legalMapLegend" style="flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;border-top:1px solid #eee;background:#fafafa;"></div>
+        <div id="legalMapLegend" style="flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;border-top:1px solid #eee;background:#fafafa;">
+          <div id="legalMapZoomNotice" style="display:none;width:100%;font-size:11px;color:#888;padding:2px 0;">ℹ️ Lớp QH 2021 ẩn ở mức zoom này — thu nhỏ để xem lại</div>
+        </div>
         <!-- Kết quả quy hoạch -->
         <div id="legalParcelInfo" style="flex-shrink:0;padding:10px 14px 14px;border-top:1px solid #eee;max-height:150px;overflow-y:auto;">
           <div style="color:#bbb;font-size:12px;text-align:center;padding:6px 0;">Đang phân tích vùng quy hoạch...</div>
