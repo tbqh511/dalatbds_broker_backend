@@ -3910,9 +3910,11 @@ function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ─── Legal map V3 UX (bản đồ pháp lý — dữ liệu quy hoạch 2021) ─────────────
+// ─── Legal map V3 UX (bản đồ pháp lý — dữ liệu quy hoạch 2021 + thửa đất V3) ─
 (function(){
-  const ZONES_URL = '/Map/DaLat/geojson/v2_zones/dalat_zones.geojson';
+  const ZONES_URL   = '/Map/DaLat/geojson/v2_zones/dalat_zones.geojson';
+  const PARCEL_IDX  = '/Map/DaLat/geojson/v3_parcels/index.json';
+  const PARCEL_BASE = '/Map/DaLat/geojson/v3_parcels/';
 
   const ZONE_META = {
     NN: { label:'Nghiêm ngặt', desc:'Khu vực bảo vệ nghiêm ngặt',       bg:'#fffbe6', border:'#c8a800', fill:'#e6c000' },
@@ -3921,12 +3923,22 @@ function escHtml(s){
     DD: { label:'Đặc dụng',    desc:'Khu vực rừng đặc dụng / bảo tồn',  bg:'#fff0f0', border:'#a02020', fill:'#c0392b' },
   };
 
+  // Parcel grid config (phải khớp với convert_dxf_v3.py)
+  const P_LNG_STEP  = 0.05;
+  const P_LAT_STEP  = 0.05;
+  const P_LNG_START = 108.55;
+  const P_LAT_START = 11.80;
+
   let legalMap        = null;
   let zonesCache      = null;
+  let parcelIndex     = null;   // index.json đã fetch
+  let parcelCache     = {};     // slug → GeoJSON đã fetch
+  let parcelLayer     = null;   // L.geoJSON layer tất cả thửa
+  let activeParcel    = null;   // L.geoJSON layer thửa highlight
   let qhLayer         = null;
   let activeZoneLayer = null;
   let allZonesLayer   = null;
-  let propertyMarker  = null;  // track để remove khi đổi BĐS
+  let propertyMarker  = null;
 
   function zoneStyle(f){
     const m = ZONE_META[f.properties.zone_type];
@@ -3939,6 +3951,33 @@ function escHtml(s){
     const r = await fetch(ZONES_URL);
     zonesCache = await r.json();
     return zonesCache;
+  }
+
+  async function loadParcelIndex(){
+    if(parcelIndex) return parcelIndex;
+    try {
+      const r = await fetch(PARCEL_IDX);
+      parcelIndex = await r.json();
+    } catch(e){ parcelIndex = {}; }
+    return parcelIndex;
+  }
+
+  function parcelGridSlug(lng, lat){
+    const col = Math.floor((lng - P_LNG_START) / P_LNG_STEP);
+    const row = Math.floor((lat - P_LAT_START) / P_LAT_STEP);
+    return `grid_${col}_${row}`;
+  }
+
+  async function loadParcelsForPoint(lng, lat){
+    const idx = await loadParcelIndex();
+    const slug = parcelGridSlug(lng, lat);
+    if(!idx[slug]) return null;
+    if(parcelCache[slug]) return parcelCache[slug];
+    try {
+      const r = await fetch(PARCEL_BASE + idx[slug].file);
+      parcelCache[slug] = await r.json();
+    } catch(e){ parcelCache[slug] = null; }
+    return parcelCache[slug];
   }
 
   function renderLegend(){
@@ -4034,6 +4073,8 @@ function escHtml(s){
 
     if(allZonesLayer)   { legalMap.removeLayer(allZonesLayer);   allZonesLayer  = null; }
     if(activeZoneLayer) { legalMap.removeLayer(activeZoneLayer); activeZoneLayer = null; }
+    if(parcelLayer)     { legalMap.removeLayer(parcelLayer);     parcelLayer     = null; }
+    if(activeParcel)    { legalMap.removeLayer(activeParcel);    activeParcel    = null; }
 
     placePropertyMarker(lat, lng);
 
@@ -4062,6 +4103,43 @@ function escHtml(s){
         showZoneInfo(match.properties, infoEl);
       } else {
         showNoZone(infoEl);
+      }
+
+      // ── Load thửa đất địa chính (V3 DXF) ──────────────────────────────────
+      const parcelGJ = await loadParcelsForPoint(lng, lat);
+      if(parcelGJ && parcelGJ.features && parcelGJ.features.length){
+        // Vẽ tất cả thửa xung quanh
+        parcelLayer = L.geoJSON(parcelGJ, {
+          style:{ color:'#555', weight:0.8, fillOpacity:0 },
+          onEachFeature: (f, lyr) => {
+            lyr.on('click', () => {
+              if(activeParcel) legalMap.removeLayer(activeParcel);
+              activeParcel = L.geoJSON(f, {
+                style:{ color:'#e03131', weight:2, fillColor:'#e03131', fillOpacity:0.15 },
+              }).addTo(legalMap);
+              if(f.properties.parcel_id && infoEl){
+                infoEl.innerHTML = `<div style="padding:8px 12px;background:#fff3f3;border-left:3px solid #e03131;border-radius:8px;font-size:13px;font-weight:600;color:#c0392b;">📍 Thửa ${escHtml(f.properties.parcel_id)}</div>`;
+              }
+            });
+          },
+        }).addTo(legalMap);
+
+        // Tìm và highlight thửa chứa điểm BĐS
+        const pt = turf.point([lng, lat]);
+        const matchedParcel = parcelGJ.features.find(f => {
+          try { return turf.booleanPointInPolygon(pt, f); } catch(e){ return false; }
+        });
+        if(matchedParcel){
+          activeParcel = L.geoJSON(matchedParcel, {
+            style:{ color:'#e03131', weight:2.5, fillColor:'#e03131', fillOpacity:0.18 },
+          }).addTo(legalMap);
+          legalMap.fitBounds(activeParcel.getBounds(), { padding:[30,30] });
+          if(matchedParcel.properties.parcel_id && infoEl){
+            const existing = infoEl.innerHTML;
+            infoEl.innerHTML = existing +
+              `<div style="margin-top:6px;padding:8px 12px;background:#fff3f3;border-left:3px solid #e03131;border-radius:8px;font-size:13px;font-weight:600;color:#c0392b;">📍 Thửa số ${escHtml(matchedParcel.properties.parcel_id)}</div>`;
+          }
+        }
       }
     } catch(err){
       if(infoEl) infoEl.innerHTML = '<div style="color:#e03131;font-size:12px;text-align:center;padding:6px 0;">Lỗi tải dữ liệu quy hoạch. Vui lòng thử lại.</div>';
@@ -4098,7 +4176,8 @@ function escHtml(s){
   }
 
   window.zoomToActiveZone = function(){
-    if(activeZoneLayer && legalMap) legalMap.fitBounds(activeZoneLayer.getBounds(), { padding: [24, 24] });
+    const target = activeParcel || activeZoneLayer;
+    if(target && legalMap) legalMap.fitBounds(target.getBounds(), { padding: [24, 24] });
   };
 
   window.closeLegalMap = function(){
