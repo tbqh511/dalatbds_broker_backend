@@ -1,4 +1,7 @@
 /vendor/
+Temp/node_modules/
+Temp/*.mbtiles
+Temp/*.dxf
 .claude/cpanel.env
 /node_modules/
 /public/hot
@@ -35,3 +38,4 @@ testautodeploy.txt
 public/Map/DaLat/MapFile/V2/TP DA LAT LD 2021.mbtiles
 public/Map/DaLat/MapFile/V3/BanDo_QH2030_DALAT_25k_183_TrinhPheDuyet.dgn
 public/Map/DaLat/MapFile/V3/QH-DaLat-2030.dxf
+public/Map/DaLat/MapFile/V3/QH-DaLat-2030.mbtiles

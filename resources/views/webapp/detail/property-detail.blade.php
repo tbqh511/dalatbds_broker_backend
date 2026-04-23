@@ -294,7 +294,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid #eee;flex-shrink:0;">
           <div>
             <div style="font-size:15px;font-weight:700;color:#1a1a2e;">Bản đồ pháp lý thửa đất</div>
-            <div style="font-size:11px;color:#aaa;margin-top:1px;">Nguồn: UBND TP Đà Lạt · QH 2021</div>
+            <div style="font-size:11px;color:#aaa;margin-top:1px;">Nguồn: UBND TP Đà Lạt · QH 2030</div>
           </div>
           <button onclick="closeLegalMap()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
         </div>
@@ -309,7 +309,7 @@
         </div>
         <!-- Legend bar -->
         <div id="legalMapLegend" style="flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;border-top:1px solid #eee;background:#fafafa;">
-          <div id="legalMapZoomNotice" style="display:none;width:100%;font-size:11px;color:#888;padding:2px 0;">ℹ️ Lớp QH 2021 ẩn ở mức zoom này — thu nhỏ để xem lại</div>
+          <div id="legalMapZoomNotice" style="display:none;width:100%;font-size:11px;color:#888;padding:2px 0;">ℹ️ Lớp QH 2030 ẩn ở mức zoom này — thu nhỏ để xem lại</div>
         </div>
         <!-- Kết quả quy hoạch -->
         <div id="legalParcelInfo" style="flex-shrink:0;padding:10px 14px 14px;border-top:1px solid #eee;max-height:150px;overflow-y:auto;">

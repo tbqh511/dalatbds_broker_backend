@@ -3910,7 +3910,7 @@ function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ─── Legal map V3 UX (bản đồ pháp lý — dữ liệu quy hoạch 2021 + thửa đất V3) ─
+// ─── Legal map V3 UX (bản đồ pháp lý — dữ liệu quy hoạch 2030 + thửa đất V3) ─
 (function(){
   const ZONES_URL   = '/Map/DaLat/geojson/v2_zones/dalat_zones.geojson';
   const PARCEL_IDX  = '/Map/DaLat/geojson/v3_parcels/index.json';
@@ -3939,7 +3939,6 @@ function escHtml(s){
   let activeZoneLayer = null;
   let allZonesLayer   = null;
   let propertyMarker  = null;
-  let qhAutoHidden    = false;
   let qhManualOff     = false;
 
   function zoneStyle(f){
@@ -3996,16 +3995,6 @@ function escHtml(s){
   function initMap(lat, lng){
     if(legalMap) return;
 
-    // Subclass để upscale tile bằng nearest-neighbour thay vì bilinear —
-    // khi zoom > maxNativeZoom (17) tiles ra crisp/blocky thay vì mờ nhòe
-    const PixelatedTileLayer = L.TileLayer.extend({
-      createTile(coords, done){
-        const tile = L.TileLayer.prototype.createTile.call(this, coords, done);
-        tile.style.imageRendering = 'pixelated';
-        return tile;
-      }
-    });
-
     legalMap = L.map('legalMapContainer', { zoomControl: true }).setView([lat, lng], 15);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -4013,20 +4002,36 @@ function escHtml(s){
       maxZoom: 20,
     }).addTo(legalMap);
 
-    // QH 2021 raster overlay (tms:false vì PHP controller đã flip Y TMS→XYZ)
-    qhLayer = new PixelatedTileLayer('/map-tiles/dalat/{z}/{x}/{y}.png', {
-      attribution: 'Bản đồ QH 2021 © UBND TP Đà Lạt',
-      minZoom: 13, maxZoom: 17, maxNativeZoom: 17,
-      opacity: 0.85, tms: false, crossOrigin: true, errorTileUrl: '',
+    // QH 2030 vector overlay (PBF tiles from MBTiles via PHP controller)
+    qhLayer = L.vectorGrid.protobuf('/map-tiles/dalat/{z}/{x}/{y}.pbf', {
+      attribution: 'Bản đồ QH 2030 © UBND TP Đà Lạt',
+      minZoom: 13, maxZoom: 20,
+      vectorTileLayerStyles: {
+        dxf_layer: function(properties, zoom) {
+          // Style thửa đất: viền rõ, fill trong suốt để thấy basemap bên dưới
+          var weight = zoom >= 18 ? 1.8 : (zoom >= 16 ? 1.2 : 0.8);
+          return {
+            weight: weight,
+            color: '#1a5276',
+            fillColor: '#3498db',
+            fillOpacity: 0.08,
+            fill: true,
+            opacity: 0.7,
+          };
+        }
+      },
+      interactive: false,
+      rendererFactory: L.canvas.tile,
+      maxNativeZoom: 20,
     }).addTo(legalMap);
 
-    // Toggle button QH layer — style rõ hơn V2
+    // Toggle button QH layer
     let qhBtnRef = null;
     const QhControl = L.Control.extend({
       options: { position: 'topright' },
       onAdd: function(){
         const btn = L.DomUtil.create('button', '');
-        btn.innerHTML = '<span style="font-size:10px;">🗺</span> QH 2021';
+        btn.innerHTML = '<span style="font-size:10px;">🗺</span> QH 2030';
         btn.title = 'Bật/tắt lớp bản đồ quy hoạch';
         btn.style.cssText = 'padding:5px 10px;font-size:11px;font-weight:700;'
           + 'background:#4a7fb5;border:none;border-radius:8px;'
@@ -4040,7 +4045,6 @@ function escHtml(s){
           qhManualOff = !visible;
           if(visible){
             qhLayer.addTo(legalMap);
-            qhAutoHidden = false;
           } else {
             legalMap.removeLayer(qhLayer);
           }
@@ -4051,27 +4055,6 @@ function escHtml(s){
       },
     });
     new QhControl().addTo(legalMap);
-
-    // Tự động ẩn QH raster khi zoom > maxNativeZoom (17) để tránh blur
-    legalMap.on('zoomend', function(){
-      const z = legalMap.getZoom();
-      const notice = document.getElementById('legalMapZoomNotice');
-      if(z > 17){
-        if(!qhManualOff && legalMap.hasLayer(qhLayer)){
-          legalMap.removeLayer(qhLayer);
-          qhAutoHidden = true;
-          if(qhBtnRef){ qhBtnRef.style.background='#ccc'; qhBtnRef.style.color='#555'; }
-        }
-        if(notice) notice.style.display = '';
-      } else {
-        if(qhAutoHidden){
-          qhLayer.addTo(legalMap);
-          qhAutoHidden = false;
-          if(qhBtnRef){ qhBtnRef.style.background='#4a7fb5'; qhBtnRef.style.color='#fff'; }
-        }
-        if(notice) notice.style.display = 'none';
-      }
-    });
 
     renderLegend();
   }

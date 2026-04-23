@@ -9,16 +9,16 @@ use SQLite3;
 class MapTileController extends Controller
 {
     /**
-     * Serve a single PNG tile from the Đà Lạt planning MBTiles file.
+     * Serve a single vector tile (PBF) from the Đà Lạt planning MBTiles file.
      *
-     * GET /map-tiles/dalat/{z}/{x}/{y}.png
+     * GET /map-tiles/dalat/{z}/{x}/{y}.pbf
      *
      * MBTiles uses TMS row convention (Y-flipped relative to XYZ/Leaflet):
      *   tile_row = (2^z − 1) − y_xyz
      */
     public function dalatTile(Request $request, int $z, int $x, int $y): Response
     {
-        if ($z < 13 || $z > 17) {
+        if ($z < 13 || $z > 20) {
             return $this->emptyTile();
         }
 
@@ -53,29 +53,30 @@ class MapTileController extends Controller
             return response('', 304);
         }
 
-        return response($tileData, 200, [
-            'Content-Type'               => 'image/png',
+        // Detect gzip: PBF tiles in MBTiles are often gzip-compressed.
+        // Check for gzip magic bytes (0x1f 0x8b) at start of tile_data.
+        $headers = [
+            'Content-Type'               => 'application/x-protobuf',
             'Cache-Control'              => 'public, max-age=2592000, immutable',
             'ETag'                       => $etag,
             'Access-Control-Allow-Origin'=> '*',
-        ]);
+        ];
+
+        if (strlen($tileData) >= 2 && ord($tileData[0]) === 0x1f && ord($tileData[1]) === 0x8b) {
+            $headers['Content-Encoding'] = 'gzip';
+        }
+
+        return response($tileData, 200, $headers);
     }
 
     /**
-     * Return a 1×1 transparent PNG for out-of-bounds or missing tiles.
-     * Leaflet shows blank (not broken-image icon) at coverage edges.
+     * Return an empty response for out-of-bounds or missing tiles.
+     * For vector tiles (PBF), we return an empty body with 204 No Content.
      */
     private function emptyTile(): Response
     {
-        static $blank = null;
-        if ($blank === null) {
-            $blank = base64_decode(
-                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-            );
-        }
-
-        return response($blank, 200, [
-            'Content-Type'  => 'image/png',
+        return response('', 204, [
+            'Content-Type'  => 'application/x-protobuf',
             'Cache-Control' => 'public, max-age=86400',
         ]);
     }
