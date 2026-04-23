@@ -42,6 +42,9 @@ class MapTileController extends Controller
         $tileRow = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
         $db->close();
 
+        // TEMP LOGGING
+        file_put_contents(storage_path('logs/mbtiles.log'), date('Y-m-d H:i:s') . " - Req: $z/$x/$y (TMS Row: $tmsRow) - Found: " . ($tileRow ? 'YES' : 'NO') . "\n", FILE_APPEND);
+
         if (!$tileRow || empty($tileRow['tile_data'])) {
             return $this->emptyTile();
         }

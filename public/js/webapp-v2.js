@@ -4009,14 +4009,13 @@ function escHtml(s){
       vectorTileLayerStyles: {
         dxf_layer: function(properties, zoom) {
           // Style thửa đất: viền rõ, fill trong suốt để thấy basemap bên dưới
-          var weight = zoom >= 18 ? 1.8 : (zoom >= 16 ? 1.2 : 0.8);
           return {
-            weight: weight,
-            color: '#1a5276',
-            fillColor: '#3498db',
-            fillOpacity: 0.08,
+            weight: zoom >= 18 ? 2 : 1.5,
+            color: '#ff0000', // Đỏ nổi bật để dễ nhìn thấy
+            fillColor: '#ff0000',
+            fillOpacity: 0.2,
             fill: true,
-            opacity: 0.7,
+            opacity: 1,
           };
         }
       },
