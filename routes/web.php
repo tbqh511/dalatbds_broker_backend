@@ -84,6 +84,10 @@ Route::get('/map-tiles/dalat/{z}/{x}/{y}.pbf', [MapTileController::class, 'dalat
     ->where(['z' => '[0-9]+', 'x' => '[0-9]+', 'y' => '[0-9]+'])
     ->name('map.tiles.dalat');
 
+// TEMP: diagnostic endpoint — DELETE after debugging
+use App\Http\Controllers\MapDiagController;
+Route::get('/map-diag', MapDiagController::class);
+
 // Lead assignment via signed URL (no session required — opened from Telegram group button)
 Route::get('/webapp/leads/{id}/assign', [CrmLeadController::class, 'assignPage'])
     ->name('webapp.leads.assign-page')
