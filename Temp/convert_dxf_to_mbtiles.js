@@ -9,14 +9,15 @@ const Database = require('better-sqlite3');
 const INPUT_DXF = path.join(__dirname, 'QH-DaLat-2030.dxf');
 const OUTPUT_MBTILES = path.join(__dirname, 'QH-DaLat-2030.mbtiles');
 const MIN_ZOOM = 13;
-const MAX_ZOOM = 20;
+const MAX_ZOOM = 19; // Reduced from 20 to prevent Out of Memory error
 const DPI = 150;
 
-// VN-2000 / UTM zone 48N (EPSG:3405)
-const VN2000_UTM48 = '+proj=utm +zone=48 +ellps=WGS84 +units=m +no_defs';
+// VN-2000 / TM-3 lon_0=108° (hệ tọa độ chính xác của file DXF Đà Lạt)
+// ⚠ KHÔNG dùng UTM zone 48N (lon_0=105°) — sẽ bị dịch ~3° về phía Tây!
+const VN2000_TM3 = '+proj=tmerc +lat_0=0 +lon_0=108 +k=0.9999 +x_0=500000 +y_0=0 +ellps=GRS80 +units=m +no_defs';
 const WGS84 = 'EPSG:4326';
 
-proj4.defs('VN2000', VN2000_UTM48);
+proj4.defs('VN2000', VN2000_TM3);
 
 function reprojectCoord(x, y) {
   try {
