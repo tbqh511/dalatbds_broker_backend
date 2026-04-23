@@ -18,7 +18,7 @@ class MapTileController extends Controller
      */
     public function dalatTile(Request $request, int $z, int $x, int $y): Response
     {
-        if ($z < 13 || $z > 20) {
+        if ($z < 13 || $z > 18) {
             return $this->emptyTile();
         }
 

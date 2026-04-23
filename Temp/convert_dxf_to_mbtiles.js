@@ -3,13 +3,14 @@ const path = require('path');
 const readline = require('readline');
 const proj4 = require('proj4');
 const vtpbf = require('vt-pbf');
+const zlib = require('zlib');
 const Database = require('better-sqlite3');
 
 // === CONFIG ===
 const INPUT_DXF = path.join(__dirname, 'QH-DaLat-2030.dxf');
 const OUTPUT_MBTILES = path.join(__dirname, 'QH-DaLat-2030.mbtiles');
 const MIN_ZOOM = 13;
-const MAX_ZOOM = 19; // Reduced from 20 to prevent Out of Memory error
+const MAX_ZOOM = 18; // Reduced from 19 — zoom 19 had 87K tiles (71%). Over-zoom z18 at frontend.
 const DPI = 150;
 
 // VN-2000 / TM-3 lon_0=108° (hệ tọa độ chính xác của file DXF Đà Lạt)
@@ -376,18 +377,25 @@ async function main() {
 
   let totalTiles = 0;
   const batch = [];
-  const tolerance = Math.round(3 * 96 / DPI);
+
+  // Adaptive tolerance/buffer per zoom: simplify more at low zooms to reduce tile size
+  function getZoomParams(z) {
+    if (z <= 14) return { tolerance: 6, buffer: 32 };   // aggressive simplification
+    if (z <= 16) return { tolerance: 3, buffer: 48 };   // moderate
+    return { tolerance: 1, buffer: 64 };                 // full detail
+  }
 
   // Process one zoom level at a time with a fresh geojsonvt per pass.
   // This keeps peak memory bounded: old index is GC-eligible before new one is built.
   for (let z = MIN_ZOOM; z <= MAX_ZOOM; z++) {
-    process.stdout.write(`  Zoom ${z}: building index...`);
+    const { tolerance, buffer } = getZoomParams(z);
+    process.stdout.write(`  Zoom ${z}: building index (tol=${tolerance}, buf=${buffer})...`);
     const tileIndex = geojsonvt(geojson, {
       maxZoom: z,
       indexMaxZoom: z,
       indexMaxPoints: 200,
       tolerance,
-      buffer: 64,
+      buffer,
       extent: 4096,
     });
 
@@ -395,20 +403,24 @@ async function main() {
     const topLeft = lngLatToTileXY(bounds.minLng, bounds.maxLat, z);
     const bottomRight = lngLatToTileXY(bounds.maxLng, bounds.minLat, z);
     let zoomTiles = 0;
+    let zoomBytes = 0;
     for (let x = topLeft.x; x <= bottomRight.x; x++) {
       for (let y = topLeft.y; y <= bottomRight.y; y++) {
         const tile = tileIndex.getTile(z, x, y);
         if (tile && tile.features && tile.features.length > 0) {
-          const pbf = vtpbf.fromGeojsonVt({ dxf_layer: tile }, { version: 2 });
+          const pbfRaw = Buffer.from(vtpbf.fromGeojsonVt({ dxf_layer: tile }, { version: 2 }));
+          // Gzip compress PBF tiles for ~40-60% size reduction
+          const pbfGz = zlib.gzipSync(pbfRaw, { level: 9 });
           const tmsY = maxTileCount - 1 - y;
-          batch.push({ z, x, y: tmsY, data: Buffer.from(pbf) });
+          batch.push({ z, x, y: tmsY, data: pbfGz });
           zoomTiles++;
+          zoomBytes += pbfGz.length;
           if (batch.length >= 500) { insertMany(batch); batch.length = 0; }
         }
       }
     }
     totalTiles += zoomTiles;
-    console.log(` ${zoomTiles} tiles`);
+    console.log(` ${zoomTiles} tiles (${(zoomBytes / 1024 / 1024).toFixed(1)} MB)`);
     // tileIndex goes out of scope here → GC eligible. Force GC if available (--expose-gc).
     if (typeof global.gc === 'function') global.gc();
   }

@@ -3,102 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Vector Tiles</title>
+    <title>Bản đồ Quy hoạch Đà Lạt 2030</title>
+    <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" as="style">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { height: 100%; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
         #map { width: 100%; height: 100vh; }
+
         .info-panel {
-            position: absolute;
-            top: 10px; right: 10px;
-            background: white; padding: 10px; border-radius: 5px;
-            z-index: 1000; box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            font-family: sans-serif; font-size: 14px;
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255,255,255,0.95); padding: 12px 16px;
+            border-radius: 10px; z-index: 1000;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            font-size: 13px; max-width: 280px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .info-panel h3 { font-size: 14px; margin-bottom: 6px; color: #1a1a2e; }
+        .info-panel .stat { color: #555; font-size: 12px; }
+
+        .legend-panel {
+            position: absolute; bottom: 30px; left: 10px;
+            background: rgba(255,255,255,0.95); padding: 12px 14px;
+            border-radius: 10px; z-index: 1000;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            font-size: 11px; max-width: 220px; max-height: 70vh;
+            overflow-y: auto; backdrop-filter: blur(8px);
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .legend-panel h4 { font-size: 13px; margin-bottom: 8px; color: #1a1a2e; }
+        .legend-item {
+            display: flex; align-items: center; gap: 6px;
+            padding: 3px 0; border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .legend-swatch {
+            width: 14px; height: 14px; border-radius: 3px;
+            flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15);
+        }
+        .legend-label { color: #333; font-size: 11px; line-height: 1.3; }
+        .legend-toggle {
+            position: absolute; bottom: 30px; left: 10px;
+            background: #fff; border: 1px solid #ddd; border-radius: 8px;
+            padding: 6px 12px; font-size: 12px; cursor: pointer; z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <div class="info-panel" id="info">Đang tải...</div>
+    <div class="info-panel" id="info">
+        <h3>🗺 QH Đà Lạt 2030</h3>
+        <div class="stat" id="statText">Đang tải...</div>
+    </div>
+    <div class="legend-panel" id="legendPanel"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
     <script>
-        // Tọa độ trung tâm Đà Lạt
-        const map = L.map('map').setView([11.9416, 108.4383], 15);
+    (function(){
+        // ═══════════════════════════════════════════════════════════════════
+        // BẢNG MÀU QUY HOẠCH - kế thừa từ legacy 2021 + mã đất Việt Nam
+        // Mapping: DXF layer suffix code → { color, fill, label }
+        //
+        // Mã đất theo Thông tư 27/2018/TT-BTNMT:
+        //   DGT = Đất giao thông       ONT = Đất ở nông thôn
+        //   ODT = Đất ở đô thị         CLN = Cây lâu năm
+        //   HNK = Hàng năm khác        TMD = Thương mại dịch vụ
+        //   DGD = Đất giáo dục          DYT = Đất y tế
+        //   DVH = Đất văn hóa           DTT = Đất thể thao
+        //   DKV = Đất khu vui chơi      DSH = Đất sinh hoạt cộng đồng
+        //   CQP = Cơ quan quân sự       NKH = Nông nghiệp khác
+        //   SKC = Sông kênh cũ          SKN = Suối khe nhỏ
+        //   SKS = Sông kênh suối        SKX = Sông kênh xả
+        //   DDL = Đất di tích lịch sử   SON = Sông
+        //   MNC = Mặt nước chuyên dùng  TSC = Trụ sở cơ quan
+        //   DTS = Đất tôn giáo          TIN = Đất tín ngưỡng
+        //   DBV = Đất bảo vệ            DKG = Đất khoáng sản
+        //   DNL = Đất năng lượng         DTL = Đất thủy lợi
+        //   DKH = Đất khác              DXH = Đất xã hội
+        //   DHT = Đất hạ tầng            TON = Đất tôn giáo
+        //   NTD = Đất nghĩa trang       DRA = Đất rừng/đặc dụng
+        //   DCH = Đất chợ               DDT = Đất đầu tư
+        //   LUA = Lúa                   PNK = Phi nông nghiệp khác
+        //   CDG = Cảng                  CSD = Chưa sử dụng
+        //   DCK = Đường cao tốc
+        // ═══════════════════════════════════════════════════════════════════
 
-        // Lớp nền OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 20,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        const LAYER_COLORS = {
+            // ── Giao thông (Đỏ/Cam - chiếm ~7% legacy pixels) ──────────────
+            'DGT':  { color: '#e03010', fill: '#e03010', opacity: 0.55, label: 'Đất giao thông' },
+            'DCK':  { color: '#cc2200', fill: '#cc2200', opacity: 0.5,  label: 'Đường cao tốc' },
 
-        // Lớp VectorGrid
-        const vectorUrl = '/map-tiles/dalat-v3/{z}/{x}/{y}.pbf';
-        
-        const qhLayer = L.vectorGrid.protobuf(vectorUrl, {
-            minZoom: 13,
-            maxZoom: 19,
-            vectorTileLayerStyles: {
-                dxf_layer: function(properties, zoom) {
-                    return {
-                        weight: 2,
-                        color: '#ff0000',
-                        fillColor: '#ff0000',
-                        fillOpacity: 0.2,
-                        fill: true,
-                        opacity: 1,
-                    };
-                }
-            },
-            interactive: true,
-            getFeatureId: function(f) {
-                return f.properties.layer;
-            }
-        });
+            // ── Đất ở (Vàng/Cam - chiếm ~13% legacy) ───────────────────────
+            'ONT':  { color: '#d0a030', fill: '#d0b040', opacity: 0.5,  label: 'Đất ở nông thôn' },
+            'ODT':  { color: '#d09030', fill: '#d09040', opacity: 0.5,  label: 'Đất ở đô thị' },
 
-        // Xử lý sự kiện để debug
-        let tilesLoaded = 0;
-        qhLayer.on('load', function() {
-            document.getElementById('info').innerHTML = 'Vector Layer: Đã tải xong ' + tilesLoaded + ' tiles.<br>Nếu không thấy màu đỏ, có thể file PBF rỗng hoặc lỗi parse.';
-        });
+            // ── Thương mại / Dịch vụ (Hồng/Cam nhạt - ~6% legacy) ──────────
+            'TMD':  { color: '#e07050', fill: '#e09070', opacity: 0.45, label: 'Thương mại dịch vụ' },
 
-        // Vì VectorGrid không emit sự kiện 'tileload' chuẩn như raster,
-        // chúng ta monkey patch method _getVectorTilePromise để log.
-        const originalGetTile = L.VectorGrid.Protobuf.prototype._getVectorTilePromise;
-        L.VectorGrid.Protobuf.prototype._getVectorTilePromise = function(coords, tileBounds) {
-            const url = this._getSubdomain(coords, this._url);
-            console.log('Đang request tile:', url);
-            return originalGetTile.call(this, coords, tileBounds).then(function(vtile) {
-                tilesLoaded++;
-                document.getElementById('info').innerHTML = 'Đang tải... (' + tilesLoaded + ' tiles)';
-                if (vtile.layers && vtile.layers.dxf_layer) {
-                    console.log('Tile OK, số lượng tính năng:', vtile.layers.dxf_layer.length);
-                } else {
-                    console.warn('Tile trống hoặc không có layer dxf_layer!');
-                }
-                return vtile;
-            }).catch(function(err) {
-                console.error('Lỗi khi tải tile:', err);
-                throw err;
-            });
+            // ── Nông nghiệp (Xanh lá vàng - ~6% legacy) ────────────────────
+            'LUA':  { color: '#a0d030', fill: '#c0e050', opacity: 0.45, label: 'Đất lúa' },
+            'HNK':  { color: '#b0d040', fill: '#c0e060', opacity: 0.45, label: 'Đất hàng năm khác' },
+            'NKH':  { color: '#90c030', fill: '#b0d050', opacity: 0.45, label: 'Nông nghiệp khác' },
+
+            // ── Cây xanh / Rừng (Xanh lá - chiếm ~41% legacy - dominant) ───
+            'CLN':  { color: '#70b050', fill: '#90d070', opacity: 0.45, label: 'Cây lâu năm' },
+            'CAN':  { color: '#60a040', fill: '#80c060', opacity: 0.45, label: 'Cây ăn quả' },
+            '3LR':  { color: '#408030', fill: '#509040', opacity: 0.45, label: 'Rừng 3 loại' },
+            'DRA':  { color: '#306828', fill: '#407838', opacity: 0.5,  label: 'Rừng đặc dụng' },
+
+            // ── Mặt nước (Xanh dương nhạt - ~0.1% legacy) ──────────────────
+            'SON':  { color: '#4090c0', fill: '#70b0e0', opacity: 0.45, label: 'Sông' },
+            'MNC':  { color: '#5098c8', fill: '#80b8e0', opacity: 0.45, label: 'Mặt nước chuyên dùng' },
+            'SKC':  { color: '#6098b8', fill: '#80b0d0', opacity: 0.4,  label: 'Sông kênh cũ' },
+            'SKN':  { color: '#6098b8', fill: '#80b0d0', opacity: 0.4,  label: 'Suối khe nhỏ' },
+            'SKS':  { color: '#5090b8', fill: '#70a8d0', opacity: 0.4,  label: 'Sông kênh suối' },
+            'SKX':  { color: '#5090b8', fill: '#70a8d0', opacity: 0.4,  label: 'Sông kênh xả' },
+            'DTL':  { color: '#5898c0', fill: '#78b0d8', opacity: 0.4,  label: 'Đất thủy lợi' },
+
+            // ── Công trình công cộng (Tím/Hồng) ────────────────────────────
+            'DGD':  { color: '#9060a0', fill: '#a878b8', opacity: 0.45, label: 'Đất giáo dục' },
+            'DYT':  { color: '#c06090', fill: '#d080a8', opacity: 0.45, label: 'Đất y tế' },
+            'DVH':  { color: '#8868a0', fill: '#a080b8', opacity: 0.45, label: 'Đất văn hóa' },
+            'DTT':  { color: '#7860a0', fill: '#9078b8', opacity: 0.45, label: 'Đất thể thao' },
+            'DKV':  { color: '#6878c0', fill: '#8090d0', opacity: 0.45, label: 'Đất khu vui chơi' },
+
+            // ── Hành chính / Quốc phòng (Nâu/Xám) ──────────────────────────
+            'TSC':  { color: '#a08860', fill: '#b8a078', opacity: 0.45, label: 'Trụ sở cơ quan' },
+            'CQP':  { color: '#808058', fill: '#989870', opacity: 0.45, label: 'Quốc phòng/An ninh' },
+            'DSH':  { color: '#b89870', fill: '#c8a880', opacity: 0.4,  label: 'Sinh hoạt cộng đồng' },
+
+            // ── Tôn giáo / Tín ngưỡng ──────────────────────────────────────
+            'DTS':  { color: '#a07048', fill: '#b88860', opacity: 0.45, label: 'Đất tôn giáo' },
+            'TIN':  { color: '#987050', fill: '#b08868', opacity: 0.45, label: 'Đất tín ngưỡng' },
+            'TON':  { color: '#987050', fill: '#b08868', opacity: 0.45, label: 'Tôn giáo' },
+            'DDL':  { color: '#c08850', fill: '#d0a068', opacity: 0.45, label: 'Di tích lịch sử' },
+
+            // ── Chuyên dùng / Khác ──────────────────────────────────────────
+            'NTD':  { color: '#707070', fill: '#888888', opacity: 0.4,  label: 'Nghĩa trang' },
+            'DBV':  { color: '#508838', fill: '#689850', opacity: 0.45, label: 'Đất bảo vệ' },
+            'DKG':  { color: '#b08040', fill: '#c89858', opacity: 0.4,  label: 'Đất khoáng sản' },
+            'DNL':  { color: '#c09030', fill: '#d0a848', opacity: 0.4,  label: 'Đất năng lượng' },
+            'DKH':  { color: '#909090', fill: '#a0a0a0', opacity: 0.35, label: 'Đất khác' },
+            'DXH':  { color: '#c09078', fill: '#d0a890', opacity: 0.4,  label: 'Đất xã hội' },
+            'DHT':  { color: '#808070', fill: '#989888', opacity: 0.4,  label: 'Đất hạ tầng' },
+            'DCH':  { color: '#c07850', fill: '#d09068', opacity: 0.45, label: 'Đất chợ' },
+            'DDT':  { color: '#b89050', fill: '#c8a068', opacity: 0.4,  label: 'Đất đầu tư' },
+            'CSD':  { color: '#c8c8b0', fill: '#d8d8c0', opacity: 0.3,  label: 'Chưa sử dụng' },
+            'PNK':  { color: '#a0a090', fill: '#b0b0a0', opacity: 0.35, label: 'Phi nông nghiệp khác' },
+            'CDG':  { color: '#7080a0', fill: '#8898b0', opacity: 0.4,  label: 'Cảng' },
         };
 
-        qhLayer.addTo(map);
+        // Default style for unrecognized layers
+        const DEFAULT_STYLE = { color: '#888888', fill: '#aaaaaa', opacity: 0.3, label: 'Khác' };
 
+        /**
+         * Extract the land-use code suffix from a DXF layer name.
+         * DXF layers follow patterns like:
+         *   "Level 30_12_1_DGT"  → suffix "DGT"
+         *   "Level 31_16_ONT"    → suffix "ONT"
+         *   "Level 17_GiaoThongPhanKhu_Dalat" → special case
+         */
+        function extractLayerCode(layerName) {
+            if (!layerName) return null;
+            const n = layerName.toUpperCase();
+
+            // Special named layers
+            if (n.includes('GIAOTHONG') || n.includes('GIAO_THONG')) return 'DGT';
+            if (n.includes('NHA_O_XA_HOI') || n.includes('NHA_O')) return 'ODT';
+            if (n.includes('DAT_O') || n.includes('DAT O')) return 'ODT';
+            if (n.includes('DU_LICH') || n.includes('DU LICH') || n.includes('KDL')) return 'TMD';
+            if (n.includes('DAU_GIA') || n.includes('DAUGIA')) return 'DDT';
+            if (n.includes('KEU_GOI_DAU_TU') || n.includes('KEU GOI')) return 'DDT';
+            if (n.includes('TIEU_KHU') || n.includes('TIEU KHU')) return null; // text label, skip
+
+            // Standard suffix: last segment after underscore
+            const parts = layerName.split(/[_ ]+/);
+            const lastPart = parts[parts.length - 1].toUpperCase();
+            if (LAYER_COLORS[lastPart]) return lastPart;
+
+            // Try second-to-last
+            if (parts.length >= 2) {
+                const prev = parts[parts.length - 2].toUpperCase();
+                if (LAYER_COLORS[prev]) return prev;
+            }
+
+            // Check for embedded codes
+            for (const code of Object.keys(LAYER_COLORS)) {
+                if (n.includes('_' + code + '_') || n.endsWith('_' + code) || n.includes(' ' + code)) {
+                    return code;
+                }
+            }
+
+            return null;
+        }
+
+        function getLayerStyle(properties, zoom) {
+            const code = extractLayerCode(properties.layer);
+            const cfg = code ? LAYER_COLORS[code] : DEFAULT_STYLE;
+            const s = cfg || DEFAULT_STYLE;
+
+            // Skip text/label entities from rendering as geometry
+            const entityType = (properties.type || '').toUpperCase();
+            if (entityType === 'MTEXT' || entityType === 'TEXT') {
+                return { weight: 0, fill: false, opacity: 0 };
+            }
+
+            return {
+                weight: zoom >= 17 ? 1.8 : zoom >= 15 ? 1.2 : 0.8,
+                color: s.color,
+                fillColor: s.fill,
+                fillOpacity: s.opacity || 0.35,
+                fill: true,
+                opacity: 0.9,
+            };
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // MAP INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════
+
+        const map = L.map('map', { maxZoom: 19 }).setView([11.9416, 108.4383], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Vector tile overlay — over-zoom z18 tiles at z19
+        const vectorUrl = '/map-tiles/dalat-v3/{z}/{x}/{y}.pbf';
+        const qhLayer = L.vectorGrid.protobuf(vectorUrl, {
+            attribution: 'QH 2030 &copy; UBND TP Đà Lạt',
+            minZoom: 13,
+            maxZoom: 19,
+            maxNativeZoom: 18,
+            vectorTileLayerStyles: { dxf_layer: getLayerStyle },
+            interactive: true,
+            rendererFactory: L.canvas.tile,
+            getFeatureId: function(f) { return f.properties.layer + '_' + f.properties.type; }
+        }).addTo(map);
+
+        // Click handler
         qhLayer.on('click', function(e) {
+            const p = e.layer.properties;
+            const code = extractLayerCode(p.layer);
+            const cfg = code ? LAYER_COLORS[code] : null;
+            const label = cfg ? cfg.label : 'Chưa phân loại';
             L.popup()
-                .setContent('Layer: ' + e.layer.properties.layer + '<br>Type: ' + e.layer.properties.type)
+                .setContent(
+                    '<div style="font-size:13px;">' +
+                    '<strong>' + label + '</strong><br>' +
+                    '<span style="color:#666;">Layer: ' + (p.layer || '?') + '</span><br>' +
+                    '<span style="color:#666;">Type: ' + (p.type || '?') + '</span>' +
+                    (code ? '<br><span style="color:#888;font-size:11px;">Mã: ' + code + '</span>' : '') +
+                    '</div>'
+                )
                 .setLatLng(e.latlng)
                 .openOn(map);
             L.DomEvent.stop(e);
         });
 
-        map.on('moveend', function() {
-            console.log('Current Map Bounds:', map.getBounds());
-            console.log('Current Map Center:', map.getCenter());
-            console.log('Current Zoom:', map.getZoom());
-        });
+        // Zoom/stats display
+        map.on('moveend', updateStats);
+        updateStats();
+        function updateStats() {
+            document.getElementById('statText').innerHTML =
+                'Zoom: <b>' + map.getZoom() + '</b> · ' +
+                'Lat: ' + map.getCenter().lat.toFixed(4) + ' · ' +
+                'Lng: ' + map.getCenter().lng.toFixed(4) +
+                '<br><span style="color:#999;font-size:11px;">Tiles: z13-18 · Over-zoom z19</span>';
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // LEGEND PANEL
+        // ═══════════════════════════════════════════════════════════════════
+        function buildLegend() {
+            const panel = document.getElementById('legendPanel');
+            let html = '<h4>📋 Chú giải Quy hoạch</h4>';
+
+            const groups = {
+                'Giao thông': ['DGT', 'DCK'],
+                'Đất ở': ['ONT', 'ODT'],
+                'Thương mại': ['TMD'],
+                'Nông nghiệp': ['LUA', 'HNK', 'NKH'],
+                'Cây xanh / Rừng': ['CLN', 'CAN', '3LR', 'DRA'],
+                'Mặt nước': ['SON', 'MNC', 'SKS', 'DTL'],
+                'Công cộng': ['DGD', 'DYT', 'DVH', 'DTT', 'DKV'],
+                'Hành chính': ['TSC', 'CQP', 'DSH'],
+                'Tôn giáo / VH': ['DTS', 'TIN', 'DDL'],
+                'Khác': ['NTD', 'DBV', 'CSD'],
+            };
+
+            for (const [groupName, codes] of Object.entries(groups)) {
+                html += '<div style="margin-top:6px;font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px;">' + groupName + '</div>';
+                for (const code of codes) {
+                    const cfg = LAYER_COLORS[code];
+                    if (!cfg) continue;
+                    html += '<div class="legend-item">' +
+                        '<div class="legend-swatch" style="background:' + cfg.fill + ';border-color:' + cfg.color + ';"></div>' +
+                        '<span class="legend-label">' + cfg.label + '</span>' +
+                        '</div>';
+                }
+            }
+            panel.innerHTML = html;
+        }
+        buildLegend();
+    })();
     </script>
 </body>
 </html>
