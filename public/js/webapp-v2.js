@@ -4003,7 +4003,7 @@ function escHtml(s){
     }).addTo(legalMap);
 
     // QH 2030 vector overlay (PBF tiles from MBTiles via PHP controller)
-    qhLayer = L.vectorGrid.protobuf('/map-tiles/dalat/{z}/{x}/{y}.pbf', {
+    qhLayer = L.vectorGrid.protobuf('/map-tiles/dalat-v3/{z}/{x}/{y}.pbf', {
       attribution: 'Bản đồ QH 2030 © UBND TP Đà Lạt',
       minZoom: 13, maxZoom: 20,
       vectorTileLayerStyles: {

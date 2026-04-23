@@ -80,7 +80,7 @@ Route::get('/webapp/temp', [TelegramWebAppController::class , 'tempui'])->name('
 
 // MBTiles vector tile proxy — public, no auth required
 use App\Http\Controllers\MapTileController;
-Route::get('/map-tiles/dalat/{z}/{x}/{y}.pbf', [MapTileController::class, 'dalatTile'])
+Route::get('/map-tiles/dalat-v3/{z}/{x}/{y}.pbf', [MapTileController::class, 'dalatTile'])
     ->where(['z' => '[0-9]+', 'x' => '[0-9]+', 'y' => '[0-9]+'])
     ->name('map.tiles.dalat');
 
