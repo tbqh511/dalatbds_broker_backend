@@ -23,7 +23,10 @@
                 <div class="clearfix"></div>
 
                 <div style="text-align: right; margin-top: 5px; position: absolute; right: 20px; bottom: 70px;">
-                    @if($property->status == 1)
+                    @if($property->is_private)
+                    <span
+                        style="background: #f59e0b; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;"><i class="fas fa-lock" style="margin-right: 3px;"></i>Riêng tư</span>
+                    @elseif($property->status == 1)
                     <span
                         style="background: #4db7fe; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Đang
                         hiển thị</span>

@@ -60,6 +60,7 @@ class FrontEndHomeController extends Controller
             ->with('street')
             ->with('host')
             ->where('status','1')
+            ->visibleTo(null)
             ->orderBy($sort, $order)
             ->skip($offset)
             ->take($limit)

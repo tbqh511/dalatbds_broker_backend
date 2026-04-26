@@ -31,6 +31,10 @@ class FrontEndPropertiesController extends Controller
         $property = Property::with(['category', 'ward', 'street'])
             ->where('slug', $slug)
             ->firstOrFail();
+
+        if ($property->is_private) {
+            abort(404);
+        }
         //dd($property);
 
         // === Smart Deep Link: Redirect Telegram browser to Mini App ===
@@ -204,6 +208,10 @@ class FrontEndPropertiesController extends Controller
 
         // Fetch the property based on the ID
         $property = Property::findOrFail($id);
+
+        if ($property->is_private) {
+            abort(404);
+        }
         //dd($property);
 
         // Set parameters for the product query
@@ -437,7 +445,7 @@ class FrontEndPropertiesController extends Controller
         // Lấy các tham số tìm kiếm
         $searchParams = $request->except('_token', 'page');
         // Lấy danh sách bất động sản dựa trên truy vấn
-        $properties = $propertiesQuery->where('status', '1')->paginate(6)->appends($searchParams);
+        $properties = $propertiesQuery->where('status', '1')->visibleTo(null)->paginate(6)->appends($searchParams);
 
         //dd($areaInput, $numberFloorInput, $numberFloorInput);
         //dd($propertyTypeInput);

@@ -35,6 +35,7 @@ class Property extends Model
         'country',
         'state',
         'status',
+        'is_private',
         'total_click',
         'rentduration',
         'latitude',
@@ -53,6 +54,7 @@ class Property extends Model
         'rejected_at' => 'datetime',
         'category_id' => 'integer',
         'status'      => 'integer',
+        'is_private'  => 'boolean',
     ];
     protected $hidden = [
         'updated_at',
@@ -476,6 +478,30 @@ class Property extends Model
     public function propery_image()
     {
         return $this->hasMany(PropertyImages::class, 'propertys_id');
+    }
+
+    /**
+     * Lọc BĐS theo quyền hiển thị của user.
+     * - null (guest): chỉ thấy public (is_private=0)
+     * - privileged roles (sale, sale_admin, bds_admin, admin): thấy tất cả
+     * - broker thường: thấy public + BĐS riêng của mình
+     */
+    public function scopeVisibleTo($query, $user = null): void
+    {
+        $privilegedRoles = ['sale', 'sale_admin', 'bds_admin', 'admin'];
+
+        if ($user && in_array($user->role, $privilegedRoles)) {
+            return;
+        }
+
+        if ($user) {
+            $query->where(function ($q) use ($user) {
+                $q->where('is_private', 0)
+                  ->orWhere('added_by', $user->id);
+            });
+        } else {
+            $query->where('is_private', 0);
+        }
     }
 
 }

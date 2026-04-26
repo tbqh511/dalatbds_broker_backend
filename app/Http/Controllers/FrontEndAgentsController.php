@@ -27,7 +27,7 @@ class FrontEndAgentsController extends Controller
         $agent = Customer::findOrFail((int) $id);
 
         // Get properties paging by agent ID
-        $propertiesQuery = Property::where('added_by', (int) $id)->where('status', '1');
+        $propertiesQuery = Property::where('added_by', (int) $id)->where('status', '1')->visibleTo(null);
         $properties = $propertiesQuery->paginate(6)->appends($request->except('_token', 'page'));
 
         return view('frontend_agents_detail', [

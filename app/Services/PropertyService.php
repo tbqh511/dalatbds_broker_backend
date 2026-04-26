@@ -191,10 +191,12 @@ class PropertyService
                 $q->where('parameter_id', $parameter_id);
             });
         }
+        $userModel = $current_user ? \App\Models\Customer::find($current_user) : null;
+
         if (isset($userid)) {
             $query->where('post_type', 1)->where('added_by', $userid);
         } else {
-            $query->where('status', 1);
+            $query->where('status', 1)->visibleTo($userModel);
         }
         if (isset($max_price) && isset($min_price)) {
             $query->whereBetween('price', [$min_price, $max_price]);
@@ -349,6 +351,7 @@ class PropertyService
         $Saveproperty->slug = (isset($request->slug)) ? $request->slug : '';
         $Saveproperty->added_by = $current_user;
         $Saveproperty->status = (isset($request->status)) ? $request->status : 0;
+        $Saveproperty->is_private = $request->boolean('is_private', false);
         $Saveproperty->video_link = (isset($request->video_link)) ? $request->video_link : "";
         $Saveproperty->package_id = $request->package_id;
         $Saveproperty->post_type = 1;

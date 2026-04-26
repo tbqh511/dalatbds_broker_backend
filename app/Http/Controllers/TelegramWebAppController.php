@@ -198,6 +198,7 @@ class TelegramWebAppController extends Controller
         $properties = Property::with(['category', 'ward'])
             ->whereIn('id', Favourite::where('user_id', $customer->id)->pluck('property_id'))
             ->where('status', 1)
+            ->visibleTo($customer)
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($p) {
@@ -962,14 +963,20 @@ class TelegramWebAppController extends Controller
             'category', 'ward', 'street', 'parameters', 'assignfacilities.outdoorfacilities', 'host', 'propery_image',
         ]);
 
-        // Admin and BĐS Admin can view properties of any status (including pending approval)
+        // Admin và BĐS Admin xem được mọi BĐS kể cả pending/private
         $adminRoles = ['admin', 'bds_admin'];
+        $privilegedRoles = ['sale', 'sale_admin', 'bds_admin', 'admin'];
         if (! $customer || ! in_array($customer->role, $adminRoles)) {
-            $query->where(function ($q) use ($customer) {
-                $q->where('status', 1);
-                // Broker can view their own properties regardless of status
+            $query->where(function ($q) use ($customer, $privilegedRoles) {
+                // Public: status=1 và không private
+                $q->where('status', 1)->where('is_private', 0);
+                // Owner thấy BĐS của mình ở mọi trạng thái và privacy
                 if ($customer) {
                     $q->orWhere('added_by', $customer->id);
+                }
+                // Privileged roles thấy tất cả status=1 kể cả private
+                if ($customer && in_array($customer->role, $privilegedRoles)) {
+                    $q->orWhere('status', 1);
                 }
             });
         }
@@ -1151,9 +1158,12 @@ class TelegramWebAppController extends Controller
                         + sin(radians($lat)) 
                         * sin(radians(latitude))))";
 
+        $customer = Auth::guard('webapp')->user();
+
         $query = Property::select('id', 'title_by_address as title', 'category_id', 'latitude', 'longitude', 'title_image', 'price', 'type')
             ->selectRaw("{$haversine} AS distance")
             ->where('status', 1)
+            ->visibleTo($customer)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->where('latitude', '!=', '')
@@ -1199,8 +1209,11 @@ class TelegramWebAppController extends Controller
             'khachsan' => [2],            // Khách sạn
         ];
 
+        $customer = Auth::guard('webapp')->user();
+
         $query = Property::with(['category', 'ward', 'propery_image'])
             ->where('status', 1)
+            ->visibleTo($customer)
             ->orderBy('created_at', 'desc');
 
         if ($categorySlug && isset($categorySlugMap[$categorySlug])) {
@@ -1251,12 +1264,13 @@ class TelegramWebAppController extends Controller
      * Build the base search query with all filters applied.
      * Shared by searchResults() and searchResultsMap().
      */
-    private function buildSearchQuery(Request $request)
+    private function buildSearchQuery(Request $request, $customer = null)
     {
         $q = trim($request->get('q', ''));
 
         $query = Property::with(['category', 'ward', 'host'])
-            ->where('status', 1);
+            ->where('status', 1)
+            ->visibleTo($customer);
 
         // Default sort
         $sort = $request->get('sort', 'latest');
@@ -1407,8 +1421,9 @@ class TelegramWebAppController extends Controller
     public function searchResults(Request $request)
     {
         $page = (int) $request->get('page', 1);
+        $customer = Auth::guard('webapp')->user();
 
-        $query = $this->buildSearchQuery($request);
+        $query = $this->buildSearchQuery($request, $customer);
         $query->with('propery_image');
 
         $paginator = $query->paginate(10, ['*'], 'page', $page);
@@ -1458,7 +1473,8 @@ class TelegramWebAppController extends Controller
      */
     public function searchResultsMap(Request $request)
     {
-        $query = $this->buildSearchQuery($request);
+        $customer = Auth::guard('webapp')->user();
+        $query = $this->buildSearchQuery($request, $customer);
         $totalAll = (clone $query)->count();
 
         $query->whereNotNull('latitude')
@@ -1858,7 +1874,7 @@ class TelegramWebAppController extends Controller
 
             $perPage = 10;
             // Get properties with status = 1 (Active) and sort by newest
-            $query = Property::with(['category', 'host'])->where('status', 1)->orderBy('created_at', 'desc');
+            $query = Property::with(['category', 'host'])->where('status', 1)->visibleTo($customer)->orderBy('created_at', 'desc');
 
             $properties = $query->paginate($perPage);
 
@@ -2465,6 +2481,7 @@ class TelegramWebAppController extends Controller
             $property->price = $request->input('price');
             $property->added_by = $customer->id;
             $property->status = 0; // Pending approval
+            $property->is_private = $request->boolean('is_private', false);
             $property->host_id = $host->id;
             $property->post_type = 1; // User submitted
             $property->street_code = $streetId;
@@ -2725,6 +2742,9 @@ class TelegramWebAppController extends Controller
         }
         $editData['amenities'] = $editAmenities;
 
+        // Privacy
+        $editData['is_private'] = (bool) $property->is_private;
+
         // Images
         $editData['titleImage'] = $property->title_image ?: null;
         $editData['gallery'] = $property->gallery->map(function ($img) {
@@ -2963,6 +2983,7 @@ class TelegramWebAppController extends Controller
             $property->host_id = $host->id;
             $property->street_code = $streetId;
             $property->ward_code = $wardId;
+            $property->is_private = $request->boolean('is_private', false);
 
             $commissionRate = $request->input('commissionRate', 0);
             $commissionType = $request->input('commissionType', 'percent');

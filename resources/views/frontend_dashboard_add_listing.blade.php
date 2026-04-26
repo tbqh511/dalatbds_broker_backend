@@ -167,7 +167,8 @@ build. --}}
                 amenities: {},
                 parameters: {},
                 rentduration: 'Monthly',
-                price: 0
+                price: 0,
+                is_private: false
             },
 
             // IMAGE UPLOAD STATE
@@ -356,6 +357,7 @@ build. --}}
             loadEditData(data) {
                 this.isEditMode = true;
                 this.editPropertyId = data.id;
+                this.formData.is_private = data.is_private || false;
 
                 // Basic fields
                 this.formData.transactionType = data.transactionType || '';
@@ -996,6 +998,7 @@ build. --}}
                     fd.append('contact', JSON.stringify(this.formData.contact));
                     fd.append('parameters', JSON.stringify(this.formData.parameters));
                     fd.append('amenities', JSON.stringify(this.formData.amenities));
+                    fd.append('is_private', this.formData.is_private ? '1' : '0');
 
                     if (this.pickerLat && this.pickerLng) {
                         fd.append('latitude', this.pickerLat);
@@ -1016,7 +1019,11 @@ build. --}}
 
                     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-                    const response = await fetch("{{ route('webapp.submit_listing') }}", {
+                    const submitUrl = this.isEditMode
+                        ? `/webapp/update-listing/${this.editPropertyId}`
+                        : "{{ route('webapp.submit_listing') }}";
+
+                    const response = await fetch(submitUrl, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': token || '',
@@ -2097,6 +2104,25 @@ build. --}}
                     <i class="fa-solid fa-map-location-dot text-4xl mb-2 text-gray-200"></i>
                     <p class="text-xs text-center">Chưa chọn tiện ích nào</p>
                 </div>
+
+                <!-- TOGGLE TIN ĐĂNG RIÊNG TƯ -->
+                <div class="mt-6 flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-lock text-amber-500 w-5 text-center"></i>
+                        <div>
+                            <p class="font-medium text-gray-800 text-sm">Tin đăng riêng tư</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Chỉ bạn và đội sale nội bộ mới thấy</p>
+                        </div>
+                    </div>
+                    <button type="button"
+                        @click="formData.is_private = !formData.is_private"
+                        :class="formData.is_private ? 'bg-amber-500' : 'bg-gray-300'"
+                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 flex-shrink-0">
+                        <span :class="formData.is_private ? 'translate-x-6' : 'translate-x-1'"
+                              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-sm"></span>
+                    </button>
+                </div>
+
             </div>
 
         </form>
