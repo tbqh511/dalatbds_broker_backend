@@ -9,16 +9,16 @@ use SQLite3;
 class MapTileController extends Controller
 {
     /**
-     * Serve a single raster tile (PNG) from the Đà Lạt planning MBTiles file.
+     * Serve a single PNG tile from the Đà Lạt planning MBTiles file.
      *
-     * GET /map-tiles/dalat-v3/{z}/{x}/{y}.png
+     * GET /map-tiles/dalat/{z}/{x}/{y}.png
      *
      * MBTiles uses TMS row convention (Y-flipped relative to XYZ/Leaflet):
      *   tile_row = (2^z − 1) − y_xyz
      */
     public function dalatTile(Request $request, int $z, int $x, int $y): Response
     {
-        if ($z < 13 || $z > 18) {
+        if ($z < 13 || $z > 17) {
             return $this->emptyTile();
         }
 
@@ -54,22 +54,27 @@ class MapTileController extends Controller
         }
 
         return response($tileData, 200, [
-            'Content-Type'                => 'image/png',
-            'Cache-Control'               => 'public, max-age=2592000, immutable',
-            'ETag'                        => $etag,
-            'Access-Control-Allow-Origin' => '*',
+            'Content-Type'               => 'image/png',
+            'Cache-Control'              => 'public, max-age=2592000, immutable',
+            'ETag'                       => $etag,
+            'Access-Control-Allow-Origin'=> '*',
         ]);
     }
 
     /**
-     * Return a transparent 1×1 PNG for out-of-bounds or missing tiles.
+     * Return a 1×1 transparent PNG for out-of-bounds or missing tiles.
+     * Leaflet shows blank (not broken-image icon) at coverage edges.
      */
     private function emptyTile(): Response
     {
-        // Transparent 1×1 PNG (67 bytes)
-        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAAxJREFUCNdjYGBgAAAABAABJzQnCgAAAABJRU5ErkJggg==');
+        static $blank = null;
+        if ($blank === null) {
+            $blank = base64_decode(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+            );
+        }
 
-        return response($png, 200, [
+        return response($blank, 200, [
             'Content-Type'  => 'image/png',
             'Cache-Control' => 'public, max-age=86400',
         ]);

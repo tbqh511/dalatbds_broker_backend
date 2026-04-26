@@ -78,31 +78,11 @@ Route::post('/webapp/auth', [TelegramWebAppController::class, 'authRedirect'])->
 Route::get('/', [FrontEndHomeController::class , 'index'])->name('index');
 Route::get('/webapp/temp', [TelegramWebAppController::class , 'tempui'])->name('webapp.temp');
 
-// MBTiles vector tile proxy — public, no auth required
+// MBTiles tile proxy — public, no auth required
 use App\Http\Controllers\MapTileController;
-Route::get('/map-tiles/dalat-v3/{z}/{x}/{y}.png', [MapTileController::class, 'dalatTile'])
+Route::get('/map-tiles/dalat/{z}/{x}/{y}.png', [MapTileController::class, 'dalatTile'])
     ->where(['z' => '[0-9]+', 'x' => '[0-9]+', 'y' => '[0-9]+'])
     ->name('map.tiles.dalat');
-
-// TEMP: diagnostic endpoint — DELETE after debugging
-Route::get('/map-diag', function() {
-    $mbtilesPath = config('location.mbtiles_dalat');
-    $db = file_exists($mbtilesPath) ? new \SQLite3($mbtilesPath, SQLITE3_OPEN_READONLY) : null;
-    $meta = [];
-    if ($db) {
-        $r = $db->query("SELECT name, value FROM metadata");
-        while ($row = $r->fetchArray(SQLITE3_ASSOC)) { $meta[$row['name']] = $row['value']; }
-    }
-    return response()->json([
-        'env_MBTILES_DALAT_PATH' => env('MBTILES_DALAT_PATH', 'NOT_SET'),
-        'config_location_path' => $mbtilesPath,
-        'config_is_cached' => app()->configurationIsCached(),
-        'file_exists' => file_exists($mbtilesPath),
-        'file_size_mb' => file_exists($mbtilesPath) ? round(filesize($mbtilesPath) / 1024 / 1024, 1) : 0,
-        'metadata_format' => $meta['format'] ?? 'unknown',
-        'is_this_png_or_pbf' => ($meta['format'] ?? '') === 'png' ? 'THIS IS A PNG FILE! (OLD V2)' : 'THIS IS PBF (NEW V3)',
-    ], 200, [], JSON_PRETTY_PRINT);
-});
 
 // Lead assignment via signed URL (no session required — opened from Telegram group button)
 Route::get('/webapp/leads/{id}/assign', [CrmLeadController::class, 'assignPage'])
