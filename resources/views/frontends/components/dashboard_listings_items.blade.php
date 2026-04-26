@@ -31,15 +31,33 @@
                     @elseif($property->status == 2)
                     <span style="background: #999; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Đang ẩn</span>
                     @else
-                    <span style="background: #fbc54f; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Chờ duyệt</span>
+                    <span style="background: #fbc54f; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;"><i class="fas fa-hourglass-half" style="margin-right:3px;"></i>Chờ duyệt</span>
                     @endif
                 </div>
 
                 <div style="font-weight: 600; color: #3270FC; font-size: 14px; margin-top: 10px; text-align: left;">
                     {{ $property->formatted_prices }}
                 </div>
+
+                @if($property->status == 0)
+                <div style="background: #fff8e1; border-left: 3px solid #fbc54f; border-radius: 4px; padding: 7px 10px; margin: 6px 0; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <div>
+                        <div style="color: #f59e0b; font-weight: 600; margin-bottom: 2px;">
+                            <i class="fas fa-hourglass-half" style="margin-right: 4px;"></i>Đang chờ Admin duyệt
+                        </div>
+                        <div style="color: #888;">Gửi {{ $property->created_at->format('d/m/Y') }} &middot; Thường duyệt trong 24h</div>
+                    </div>
+                    <button onclick="deleteListing({{ $property->id }})"
+                        style="background: #f59e0b; color: white; border: none; border-radius: 4px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                        Rút tin
+                    </button>
+                </div>
+                @endif
+
                 <div class="dashboard-listings-item_opt">
-                    <span class="viewed-counter"><i class="fas fa-eye"></i> Lượt xem - {{ $property->total_click ?? 0 }}
+                    <span class="viewed-counter" style="display:flex; align-items:center; gap:8px;">
+                        <span><i class="fas fa-eye"></i> {{ $property->total_click ?? 0 }}</span>
+                        <span style="font-size:12px; color:#aaa;"><i class="far fa-calendar" style="margin-right:3px;"></i>{{ $property->created_at->format('d/m/Y') }}</span>
                     </span>
                     <ul>
                         <li><a href="{{ route('webapp.edit_listing', $property->id) }}" class="tolt"
@@ -71,7 +89,7 @@
     @endforeach
     @else
     <div class="col-12">
-        <div class="alert alert-info">Bạn chưa có tin đăng nào.</div>
+        <div class="alert alert-info">Không có tin đăng nào trong mục này.</div>
     </div>
     @endif
 </div>

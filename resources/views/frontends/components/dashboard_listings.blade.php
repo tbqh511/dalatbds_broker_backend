@@ -12,6 +12,30 @@
 
             <div class="dasboard-wrapper fl-wrap">
                 <div class="dasboard-listing-box fl-wrap">
+
+                    <!-- Tab Filter Bar -->
+                    @php
+                        $tabs = [
+                            'all'     => ['label' => 'Tất cả',    'icon' => '',          'activeColor' => '#3270FC'],
+                            'active'  => ['label' => 'Hiển thị',  'icon' => '',          'activeColor' => '#3270FC'],
+                            'pending' => ['label' => 'Chờ duyệt', 'icon' => '',          'activeColor' => '#f59e0b'],
+                            'hidden'  => ['label' => 'Đã ẩn',     'icon' => '',          'activeColor' => '#888'],
+                            'private' => ['label' => 'Riêng tư',  'icon' => 'fa-lock ',  'activeColor' => '#f59e0b'],
+                        ];
+                        $currentTab = $activeTab ?? 'all';
+                    @endphp
+                    <div id="tab-bar" style="display:flex; border-bottom: 2px solid #eee; margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+                        @foreach($tabs as $key => $tab)
+                        @php $isActive = ($currentTab === $key); $color = $isActive ? $tab['activeColor'] : '#888'; @endphp
+                        <button onclick="switchTab('{{ $key }}')" id="tab-{{ $key }}"
+                            style="flex-shrink:0; padding:10px 12px; border:none; border-bottom: 2px solid {{ $isActive ? $tab['activeColor'] : 'transparent' }}; background:none; font-weight:600; font-size:13px; color:{{ $color }}; white-space:nowrap; cursor:pointer; transition: all 0.2s;">
+                            @if($tab['icon'])<i class="fas {{ $tab['icon'] }}" style="font-size:11px;"></i>@endif
+                            {{ $tab['label'] }}
+                            <span id="badge-{{ $key }}" style="display:inline-block; background:{{ $isActive ? $tab['activeColor'] : '#ddd' }}; color:white; border-radius:10px; padding:1px 7px; font-size:11px; margin-left:2px; min-width:20px; text-align:center;">{{ $counts[$key] ?? 0 }}</span>
+                        </button>
+                        @endforeach
+                    </div>
+
                     <div class="dasboard-opt sl-opt fl-wrap">
                         <div class="dashboard-search-listing">
                             <input type="text" id="search-input" onkeyup="handleSearch(this)"
@@ -55,6 +79,7 @@
                                     transform: rotate(360deg);
                                 }
                             }
+                            #tab-bar::-webkit-scrollbar { display: none; }
                         </style>
 
                         @include('frontends.components.dashboard_listings_items')
@@ -71,7 +96,16 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     let searchTimeout;
-    let isBusy = false; // Prevent concurrent operations
+    let isBusy = false;
+    let currentTab = '{{ $activeTab ?? "all" }}';
+
+    const TAB_COLORS = {
+        all:     '#3270FC',
+        active:  '#3270FC',
+        pending: '#f59e0b',
+        hidden:  '#888',
+        private: '#f59e0b',
+    };
 
     // Show/hide loading overlay helpers
     function showLoader() {
@@ -81,6 +115,31 @@
     function hideLoader() {
         const loader = document.getElementById('loading-overlay');
         if (loader) loader.style.display = 'none';
+    }
+
+    function updateTabUI(activeTab, counts) {
+        const tabs = ['all', 'active', 'pending', 'hidden', 'private'];
+        tabs.forEach(key => {
+            const btn = document.getElementById('tab-' + key);
+            const badge = document.getElementById('badge-' + key);
+            if (!btn) return;
+            const isActive = key === activeTab;
+            const color = isActive ? TAB_COLORS[key] : '#888';
+            btn.style.color = color;
+            btn.style.borderBottomColor = isActive ? TAB_COLORS[key] : 'transparent';
+            if (badge) {
+                badge.style.background = isActive ? TAB_COLORS[key] : '#ddd';
+                if (counts && counts[key] !== undefined) {
+                    badge.textContent = counts[key];
+                }
+            }
+        });
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        updateTabUI(tab, null);
+        fetchListings();
     }
 
     // Handle Search with Debounce
@@ -96,7 +155,7 @@
         fetchListings();
     }
 
-    // Hook into Chosen plugin if it exists (since onchange on hidden select might not work directly)
+    // Hook into Chosen plugin if it exists
     document.addEventListener('DOMContentLoaded', function () {
         if (window.jQuery) {
             $('#sort-select').on('change', function () {
@@ -105,33 +164,43 @@
         }
     });
 
-    // Main Fetch Function - returns a Promise so callers can await completion
+    // Main Fetch Function
     function fetchListings(url = "{{ route('webapp.listings') }}") {
         const search = document.getElementById('search-input').value;
         const sort = document.getElementById('sort-select').value;
 
         showLoader();
 
-        // Construct URL
         const targetUrl = new URL(url);
         if (search) targetUrl.searchParams.set('search', search);
         if (sort) targetUrl.searchParams.set('sort', sort);
+        targetUrl.searchParams.set('tab', currentTab);
 
         return fetch(targetUrl, {
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         })
-            .then(response => response.text())
-            .then(html => {
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    hideLoader();
+                    return;
+                }
+
                 const wrapper = document.querySelector('.dashboard-listings-wrap');
                 const overlay = document.getElementById('loading-overlay');
 
-                // Replace content and re-append overlay
-                wrapper.innerHTML = html;
+                wrapper.innerHTML = data.html;
                 if (overlay) {
                     overlay.style.display = 'none';
                     wrapper.appendChild(overlay);
+                }
+
+                if (data.counts) {
+                    updateTabUI(data.activeTab || currentTab, data.counts);
                 }
             })
             .catch(error => {
@@ -148,19 +217,17 @@
                 throw new Error(data.message || `Lỗi máy chủ: ${response.status}`);
             } catch (e) {
                 if (e instanceof SyntaxError) {
-                    // Response body was not JSON
                     if (response.status === 419) {
                         throw new Error('Phiên làm việc đã hết hạn. Vui lòng tải lại trang.');
                     }
                     throw new Error(`Lỗi kết nối: ${response.status} ${response.statusText}`);
                 }
-                throw e; // Re-throw the Error we created above
+                throw e;
             }
         }
         return response.json();
     }
 
-    // Retrieve CSRF token from meta tag
     function getCsrfToken() {
         return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     }
@@ -199,7 +266,7 @@
                                 'Tin đăng đã được xóa thành công.',
                                 'success'
                             );
-                            return fetchListings(); // Wait for reload to complete
+                            return fetchListings();
                         } else {
                             throw new Error(data.message || 'Không thể xóa tin đăng.');
                         }
@@ -258,7 +325,7 @@
 
     // Toggle Status
     function toggleListing(id) {
-        if (isBusy) return; // Prevent concurrent operations
+        if (isBusy) return;
         isBusy = true;
         showLoader();
 
@@ -273,7 +340,6 @@
             .then(handleFetchResponse)
             .then(data => {
                 if (data.success) {
-                    // Show toast
                     const Toast = Swal.mixin({
                         toast: true,
                         position: 'top-end',
@@ -285,7 +351,7 @@
                         icon: 'success',
                         title: data.message
                     });
-                    return fetchListings(); // Wait for reload to complete before releasing busy flag
+                    return fetchListings();
                 } else {
                     throw new Error(data.message || 'Không thể cập nhật trạng thái.');
                 }

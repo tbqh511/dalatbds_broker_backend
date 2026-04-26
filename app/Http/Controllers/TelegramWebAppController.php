@@ -1791,26 +1791,42 @@ class TelegramWebAppController extends Controller
                 'search' => ['nullable', 'string', 'max:255'],
                 'sort' => ['nullable', 'string'],
                 'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+                'tab' => ['nullable', 'string', 'in:all,active,pending,hidden,private'],
             ]);
 
             $perPage = $data['per_page'] ?? 10;
+            $activeTab = $data['tab'] ?? 'all';
 
-            $query = Property::query()->with(['category']);
-
-            // Select columns. Ensure we select 'propertys.*' to avoid ambiguity when joining
-            $query->select('propertys.*');
-
-            if ($customer) {
-                $query->where('propertys.added_by', $customer->id);
-            }
+            // Base query scoped to current user (reused for counts)
+            $baseQuery = Property::query()->where('propertys.added_by', $customer?->id);
 
             if (! empty($data['search'])) {
                 $search = $data['search'];
-                $query->where(function ($q) use ($search) {
+                $baseQuery->where(function ($q) use ($search) {
                     $q->where('propertys.title', 'like', '%'.$search.'%')
                         ->orWhere('propertys.address', 'like', '%'.$search.'%');
                 });
             }
+
+            // Count per tab (before applying tab filter, after applying search)
+            $counts = [
+                'all'     => (clone $baseQuery)->count(),
+                'active'  => (clone $baseQuery)->where('propertys.status', 1)->where('propertys.is_private', 0)->count(),
+                'pending' => (clone $baseQuery)->where('propertys.status', 0)->count(),
+                'hidden'  => (clone $baseQuery)->where('propertys.status', 2)->count(),
+                'private' => (clone $baseQuery)->where('propertys.is_private', 1)->count(),
+            ];
+
+            $query = $baseQuery->with(['category'])->select('propertys.*');
+
+            // Apply tab filter
+            match($activeTab) {
+                'active'  => $query->where('propertys.status', 1)->where('propertys.is_private', 0),
+                'pending' => $query->where('propertys.status', 0),
+                'hidden'  => $query->where('propertys.status', 2),
+                'private' => $query->where('propertys.is_private', 1),
+                default   => null,
+            };
 
             if (! empty($data['sort'])) {
                 switch ($data['sort']) {
@@ -1847,10 +1863,11 @@ class TelegramWebAppController extends Controller
             $properties = $query->paginate($perPage)->appends($request->query());
 
             if ($request->ajax()) {
-                return view('frontends.components.dashboard_listings_items', compact('properties'))->render();
+                $html = view('frontends.components.dashboard_listings_items', compact('properties'))->render();
+                return response()->json(['html' => $html, 'counts' => $counts, 'activeTab' => $activeTab]);
             }
 
-            return view('frontend_dashboard_listings', compact('customer', 'properties'));
+            return view('frontend_dashboard_listings', compact('customer', 'properties', 'counts', 'activeTab'));
         } catch (\Illuminate\Validation\ValidationException $ve) {
             if ($request->ajax()) {
                 return response()->json(['error' => $ve->errors()], 422);
