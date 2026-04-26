@@ -287,38 +287,28 @@
       </div>
     </div>
 
-    <!-- Bottom sheet: bản đồ pháp lý -->
-    <div id="legalMapSheet" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.45);" onclick="if(event.target===this)closeLegalMap()">
-      <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:18px 18px 0 0;display:flex;flex-direction:column;max-height:92vh;">
-        <!-- Header -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid #eee;flex-shrink:0;">
-          <div>
-            <div style="font-size:15px;font-weight:700;color:#1a1a2e;">Bản đồ pháp lý thửa đất</div>
-            <div style="font-size:11px;color:#aaa;margin-top:1px;">Nguồn: UBND TP Đà Lạt · QH 2030</div>
-          </div>
-          <button onclick="closeLegalMap()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+    <!-- Fullscreen overlay: bản đồ pháp lý -->
+    <div id="legalMapSheet" style="display:none;position:fixed;inset:0;z-index:3000;background:#fff;flex-direction:column;">
+      <!-- Header bar -->
+      <div style="height:52px;display:flex;align-items:center;padding:0 12px;background:#fff;border-bottom:1px solid #e5e7eb;flex-shrink:0;z-index:10;">
+        <button onclick="closeLegalMap()" style="width:36px;height:36px;border-radius:50%;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <div style="flex:1;min-width:0;margin-left:6px;">
+          <div style="font-size:15px;font-weight:700;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Bản đồ pháp lý thửa đất</div>
+          <div style="font-size:11px;color:#aaa;margin-top:1px;">Nguồn: UBND TP Đà Lạt · QH 2021</div>
         </div>
-        <!-- Map container (với loading skeleton bên trong) -->
-        <div style="position:relative;flex:1;min-height:300px;max-height:55vh;">
-          <div id="legalMapContainer" style="position:absolute;inset:0;"></div>
-          <!-- Loading skeleton overlay -->
-          <div id="legalMapLoading" style="position:absolute;inset:0;z-index:10;background:#f0f2f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
-            <div style="width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#4a7fb5;border-radius:50%;animation:legalMapSpin 0.8s linear infinite;"></div>
-            <div style="font-size:12px;color:#aaa;">Đang tải bản đồ quy hoạch...</div>
-          </div>
-        </div>
-        <!-- Legend bar -->
-        <div id="legalMapLegend" style="flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;border-top:1px solid #eee;background:#fafafa;">
-          <div id="legalMapZoomNotice" style="display:none;width:100%;font-size:11px;color:#888;padding:2px 0;">ℹ️ Lớp QH 2030 ẩn ở mức zoom này — thu nhỏ để xem lại</div>
-        </div>
-        <!-- Kết quả quy hoạch -->
-        <div id="legalParcelInfo" style="flex-shrink:0;padding:10px 14px 14px;border-top:1px solid #eee;max-height:150px;overflow-y:auto;">
-          <div style="color:#bbb;font-size:12px;text-align:center;padding:6px 0;">Đang phân tích vùng quy hoạch...</div>
-        </div>
+      </div>
+      <!-- Map container fills all remaining space -->
+      <div style="position:relative;flex:1;min-height:0;">
+        <div id="legalMapContainer" style="position:absolute;inset:0;"></div>
       </div>
     </div>
     <style>
-      @keyframes legalMapSpin { to { transform: rotate(360deg); } }
+      #legalMapSheet { display:none; }
+      #legalMapSheet[style*="display: flex"], #legalMapSheet[style*="display:flex"] { display:flex!important; }
+      /* Ensure Leaflet map gets full touch interaction */
+      #legalMapContainer .leaflet-container { touch-action: none; }
     </style>
 
     <!-- BROKER / NGƯỜI ĐĂNG -->
