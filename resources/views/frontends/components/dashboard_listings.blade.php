@@ -216,6 +216,46 @@
         })
     }
 
+    // Toggle Private
+    function togglePrivateListing(id) {
+        if (isBusy) return;
+        isBusy = true;
+        showLoader();
+
+        fetch(`{{ url('/webapp/listings') }}/${id}/toggle-private`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+            .then(handleFetchResponse)
+            .then(data => {
+                if (data.success) {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                    });
+                    Toast.fire({ icon: 'success', title: data.message });
+                    return fetchListings();
+                } else {
+                    throw new Error(data.message || 'Không thể cập nhật.');
+                }
+            })
+            .catch(err => {
+                console.error('Toggle Private Error:', err);
+                Swal.fire('Lỗi!', err.message || 'Lỗi kết nối máy chủ.', 'error');
+                hideLoader();
+            })
+            .finally(() => {
+                isBusy = false;
+            });
+    }
+
     // Toggle Status
     function toggleListing(id) {
         if (isBusy) return; // Prevent concurrent operations

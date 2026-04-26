@@ -1962,6 +1962,32 @@ class TelegramWebAppController extends Controller
         }
     }
 
+    public function togglePrivate($id)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (! $customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $property = Property::where('id', $id)->where('added_by', $customer->id)->first();
+            if (! $property) {
+                return response()->json(['success' => false, 'message' => 'Tin đăng không tồn tại.'], 404);
+            }
+
+            $property->is_private = ! $property->is_private;
+            $property->save();
+
+            $message = $property->is_private ? 'Đã chuyển sang chế độ riêng tư.' : 'Đã chuyển sang chế độ công khai.';
+
+            return response()->json(['success' => true, 'is_private' => $property->is_private, 'message' => $message]);
+        } catch (\Exception $e) {
+            Log::error($e);
+
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
     public function resubmitProperty($id)
     {
         try {

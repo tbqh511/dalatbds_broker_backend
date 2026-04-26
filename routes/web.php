@@ -179,6 +179,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
         Route::get('/webapp/check-host-phone', [TelegramWebAppController::class , 'checkHostPhone'])->name('webapp.check_host_phone');
         Route::delete('/webapp/listings/{id}', [TelegramWebAppController::class , 'destroy'])->name('webapp.listings.destroy');
         Route::patch('/webapp/listings/{id}/toggle', [TelegramWebAppController::class , 'toggleStatus'])->name('webapp.listings.toggle');
+        Route::patch('/webapp/listings/{id}/toggle-private', [TelegramWebAppController::class , 'togglePrivate'])->name('webapp.listings.toggle_private');
         Route::patch('/webapp/listings/{id}/resubmit', [TelegramWebAppController::class , 'resubmitProperty'])->name('webapp.listings.resubmit');
         Route::get('/webapp/edit-listing/{id}', [TelegramWebAppController::class , 'editListing'])->name('webapp.edit_listing');
         Route::post('/webapp/update-listing/{id}', [TelegramWebAppController::class , 'updateForm'])->name('webapp.update_listing');

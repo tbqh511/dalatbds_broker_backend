@@ -22,22 +22,16 @@
                 </div>
                 <div class="clearfix"></div>
 
-                <div style="text-align: right; margin-top: 5px; position: absolute; right: 20px; bottom: 70px;">
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; margin-top: 5px; position: absolute; right: 20px; bottom: 70px;">
                     @if($property->is_private)
-                    <span
-                        style="background: #f59e0b; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;"><i class="fas fa-lock" style="margin-right: 3px;"></i>Riêng tư</span>
-                    @elseif($property->status == 1)
-                    <span
-                        style="background: #4db7fe; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Đang
-                        hiển thị</span>
+                    <span style="background: #f59e0b; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;"><i class="fas fa-lock" style="margin-right: 3px;"></i>Riêng tư</span>
+                    @endif
+                    @if($property->status == 1)
+                    <span style="background: #4db7fe; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Đang hiển thị</span>
                     @elseif($property->status == 2)
-                    <span
-                        style="background: #999; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Đang
-                        ẩn</span>
+                    <span style="background: #999; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Đang ẩn</span>
                     @else
-                    <span
-                        style="background: #fbc54f; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Chờ
-                        duyệt</span>
+                    <span style="background: #fbc54f; color: white; padding: 3px 8px; font-size: 10px; border-radius: 4px; font-weight: bold;">Chờ duyệt</span>
                     @endif
                 </div>
 
@@ -56,6 +50,14 @@
                                 data-microtip-position="top-left"
                                 data-tooltip="{{ ($property->status == 1) ? 'Ẩn tin' : 'Hiện tin' }}">
                                 <i class="far {{ ($property->status == 1) ? 'fa-eye-slash' : 'fa-eye' }}"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);" onclick="togglePrivateListing({{ $property->id }})" class="tolt"
+                                data-microtip-position="top-left"
+                                data-tooltip="{{ $property->is_private ? 'Bỏ riêng tư' : 'Đặt riêng tư' }}"
+                                style="{{ $property->is_private ? 'color: #f59e0b;' : '' }}">
+                                <i class="fas {{ $property->is_private ? 'fa-lock' : 'fa-lock-open' }}"></i>
                             </a>
                         </li>
                         <li><a href="javascript:void(0);" onclick="deleteListing({{ $property->id }})" class="tolt"
