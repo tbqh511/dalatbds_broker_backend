@@ -4002,57 +4002,14 @@ function escHtml(s){
       maxZoom: 19,
     }).addTo(legalMap);
 
-    // ── Bảng màu quy hoạch (kế thừa Legacy 2021 + mã đất VN) ────────
-    var QH_COLORS = {
-      DGT:'#e03010', DCK:'#cc2200', ONT:'#d0b040', ODT:'#d09040',
-      TMD:'#e09070', LUA:'#c0e050', HNK:'#c0e060', NKH:'#b0d050',
-      CLN:'#90d070', CAN:'#80c060', '3LR':'#509040', DRA:'#407838',
-      SON:'#70b0e0', MNC:'#80b8e0', SKC:'#80b0d0', SKN:'#80b0d0',
-      SKS:'#70a8d0', SKX:'#70a8d0', DTL:'#78b0d8',
-      DGD:'#a878b8', DYT:'#d080a8', DVH:'#a080b8', DTT:'#9078b8', DKV:'#8090d0',
-      TSC:'#b8a078', CQP:'#989870', DSH:'#c8a880',
-      DTS:'#b88860', TIN:'#b08868', TON:'#b08868', DDL:'#d0a068',
-      NTD:'#888888', DBV:'#689850', DKG:'#c89858', DNL:'#d0a848',
-      DKH:'#a0a0a0', DXH:'#d0a890', DHT:'#989888', DCH:'#d09068',
-      DDT:'#c8a068', CSD:'#d8d8c0', PNK:'#b0b0a0', CDG:'#8898b0',
-    };
-    function qhExtractCode(name) {
-      if (!name) return null;
-      var n = name.toUpperCase();
-      if (n.indexOf('GIAOTHONG') >= 0 || n.indexOf('GIAO_THONG') >= 0) return 'DGT';
-      if (n.indexOf('NHA_O') >= 0 || n.indexOf('DAT O') >= 0 || n.indexOf('DAT_O') >= 0) return 'ODT';
-      if (n.indexOf('DU_LICH') >= 0 || n.indexOf('DU LICH') >= 0 || n.indexOf('KDL') >= 0) return 'TMD';
-      var parts = name.split(/[_ ]+/);
-      for (var i = parts.length - 1; i >= 0; i--) {
-        var p = parts[i].toUpperCase();
-        if (QH_COLORS[p]) return p;
-      }
-      return null;
-    }
-
-    // QH 2030 vector overlay (PBF tiles from MBTiles via PHP controller)
-    qhLayer = L.vectorGrid.protobuf('/map-tiles/dalat-v3/{z}/{x}/{y}.pbf', {
+    // QH 2030 raster overlay (PNG tiles from MBTiles via PHP controller)
+    qhLayer = L.tileLayer('/map-tiles/dalat-v3/{z}/{x}/{y}.png', {
       attribution: 'Bản đồ QH 2030 © UBND TP Đà Lạt',
-      minZoom: 13, maxZoom: 19, maxNativeZoom: 18,
-      vectorTileLayerStyles: {
-        dxf_layer: function(properties, zoom) {
-          // Skip text entities
-          var t = (properties.type || '').toUpperCase();
-          if (t === 'MTEXT' || t === 'TEXT') return { weight: 0, fill: false, opacity: 0 };
-          var code = qhExtractCode(properties.layer);
-          var c = code && QH_COLORS[code] ? QH_COLORS[code] : '#888888';
-          return {
-            weight: zoom >= 17 ? 1.8 : zoom >= 15 ? 1.2 : 0.8,
-            color: c,
-            fillColor: c,
-            fillOpacity: code ? 0.4 : 0.2,
-            fill: true,
-            opacity: 0.85,
-          };
-        }
-      },
-      interactive: false,
-      rendererFactory: L.canvas.tile,
+      minZoom: 13,
+      maxZoom: 18,
+      maxNativeZoom: 18,
+      opacity: 0.7,
+      tms: false,
     }).addTo(legalMap);
 
     // Toggle button QH layer

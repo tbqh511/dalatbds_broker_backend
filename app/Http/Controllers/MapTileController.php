@@ -9,9 +9,9 @@ use SQLite3;
 class MapTileController extends Controller
 {
     /**
-     * Serve a single vector tile (PBF) from the Đà Lạt planning MBTiles file.
+     * Serve a single raster tile (PNG) from the Đà Lạt planning MBTiles file.
      *
-     * GET /map-tiles/dalat/{z}/{x}/{y}.pbf
+     * GET /map-tiles/dalat-v3/{z}/{x}/{y}.png
      *
      * MBTiles uses TMS row convention (Y-flipped relative to XYZ/Leaflet):
      *   tile_row = (2^z − 1) − y_xyz
@@ -42,9 +42,6 @@ class MapTileController extends Controller
         $tileRow = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
         $db->close();
 
-        // TEMP LOGGING
-        file_put_contents(storage_path('logs/mbtiles.log'), date('Y-m-d H:i:s') . " - Req: $z/$x/$y (TMS Row: $tmsRow) - Found: " . ($tileRow ? 'YES' : 'NO') . "\n", FILE_APPEND);
-
         if (!$tileRow || empty($tileRow['tile_data'])) {
             return $this->emptyTile();
         }
@@ -56,30 +53,24 @@ class MapTileController extends Controller
             return response('', 304);
         }
 
-        // Detect gzip: PBF tiles in MBTiles are often gzip-compressed.
-        // Check for gzip magic bytes (0x1f 0x8b) at start of tile_data.
-        $headers = [
-            'Content-Type'               => 'application/x-protobuf',
-            'Cache-Control'              => 'public, max-age=2592000, immutable',
-            'ETag'                       => $etag,
-            'Access-Control-Allow-Origin'=> '*',
-        ];
-
-        if (strlen($tileData) >= 2 && ord($tileData[0]) === 0x1f && ord($tileData[1]) === 0x8b) {
-            $headers['Content-Encoding'] = 'gzip';
-        }
-
-        return response($tileData, 200, $headers);
+        return response($tileData, 200, [
+            'Content-Type'                => 'image/png',
+            'Cache-Control'               => 'public, max-age=2592000, immutable',
+            'ETag'                        => $etag,
+            'Access-Control-Allow-Origin' => '*',
+        ]);
     }
 
     /**
-     * Return an empty response for out-of-bounds or missing tiles.
-     * For vector tiles (PBF), we return an empty body with 204 No Content.
+     * Return a transparent 1×1 PNG for out-of-bounds or missing tiles.
      */
     private function emptyTile(): Response
     {
-        return response('', 204, [
-            'Content-Type'  => 'application/x-protobuf',
+        // Transparent 1×1 PNG (67 bytes)
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAAxJREFUCNdjYGBgAAAABAABJzQnCgAAAABJRU5ErkJggg==');
+
+        return response($png, 200, [
+            'Content-Type'  => 'image/png',
             'Cache-Control' => 'public, max-age=86400',
         ]);
     }
