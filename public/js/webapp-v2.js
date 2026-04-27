@@ -5275,7 +5275,7 @@ function loadMyBds(force) {
       setElText('mybdsTabActive',  'Hiển thị (' + (counts.active ?? 0) + ')');
       setElText('mybdsTabPending', 'Chờ duyệt (' + (counts.pending ?? 0) + ')');
       setElText('mybdsTabHidden',  'Đã ẩn (' + (counts.hidden ?? 0) + ')');
-      setElText('mybdsTabPrivate', '🔒 Riêng tư (' + (counts.private ?? 0) + ')');
+      setElText('mybdsTabPrivate', 'Riêng tư (' + (counts.private ?? 0) + ')');
 
       const props = res.properties || [];
       mybdsAllData = props;

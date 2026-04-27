@@ -1267,6 +1267,28 @@ build. --}}
                     </div>
                 </div>
 
+                <!-- Chế độ hiển thị (Công khai / Cá nhân) -->
+                <div class="mb-4" x-show="formData.contact.name && formData.contact.phone"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4"
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <div class="grid grid-cols-2 gap-3 p-1 bg-gray-100 rounded-xl">
+                        <button type="button" @click="formData.is_private = false"
+                            :class="!formData.is_private ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-earth-asia mr-2"></i> Công khai
+                        </button>
+                        <button type="button" @click="formData.is_private = true"
+                            :class="formData.is_private ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:text-primary'"
+                            class="py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-lock mr-2"></i> Cá nhân
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1.5 text-center"
+                        x-text="formData.is_private ? 'Chỉ bạn và đội sale nội bộ mới thấy' : 'Hiển thị công khai trên trang tìm kiếm'">
+                    </p>
+                </div>
+
                 <!-- Hình thức giao dịch (Bán / Cho Thuê) -->
                 <div class="mb-6" x-show="formData.contact.name && formData.contact.phone"
                     x-transition:enter="transition ease-out duration-300"
@@ -2105,23 +2127,6 @@ build. --}}
                     <p class="text-xs text-center">Chưa chọn tiện ích nào</p>
                 </div>
 
-                <!-- TOGGLE TIN ĐĂNG RIÊNG TƯ -->
-                <div class="mt-6 flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-lock text-amber-500 w-5 text-center"></i>
-                        <div>
-                            <p class="font-medium text-gray-800 text-sm">Tin đăng riêng tư</p>
-                            <p class="text-xs text-gray-500 mt-0.5">Chỉ bạn và đội sale nội bộ mới thấy</p>
-                        </div>
-                    </div>
-                    <button type="button"
-                        @click="formData.is_private = !formData.is_private"
-                        :class="formData.is_private ? 'bg-amber-500' : 'bg-gray-300'"
-                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 flex-shrink-0">
-                        <span :class="formData.is_private ? 'translate-x-6' : 'translate-x-1'"
-                              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-sm"></span>
-                    </button>
-                </div>
 
             </div>
 

@@ -25,10 +25,10 @@
   <!-- Status tabs -->
   <div class="sp-tabs">
     <button class="sp-tab active" id="mybdsTabAll"     onclick="mybdsTabSwitch(this,'all')">Tất cả (—)</button>
+    <button class="sp-tab"        id="mybdsTabPrivate" onclick="mybdsTabSwitch(this,'private')">Riêng tư (—)</button>
     <button class="sp-tab"        id="mybdsTabActive"  onclick="mybdsTabSwitch(this,'1')">Hiển thị (—)</button>
     <button class="sp-tab"        id="mybdsTabPending" onclick="mybdsTabSwitch(this,'0')">Chờ duyệt (—)</button>
     <button class="sp-tab"        id="mybdsTabHidden"  onclick="mybdsTabSwitch(this,'2')">Đã ẩn (—)</button>
-    <button class="sp-tab"        id="mybdsTabPrivate" onclick="mybdsTabSwitch(this,'private')">🔒 Riêng tư (—)</button>
   </div>
 
   <div class="sp-scroll">
