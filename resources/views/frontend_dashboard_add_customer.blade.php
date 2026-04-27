@@ -269,15 +269,15 @@
                 <!-- STATE 1: GRID MỞ RỘNG -->
                 <div x-show="isPriceExpanded" x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                    class="grid grid-cols-4 gap-2">
+                    class="grid grid-cols-2 gap-3">
                     <template x-for="range in priceRanges" :key="range.label">
                         <button type="button" @click="setPriceRange(range); isPriceExpanded = false;"
                             :class="isPriceSelected(range)
                                 ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
                                 : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:text-primary'"
-                            class="flex items-center justify-center p-2 border rounded-xl transition-all duration-200 min-h-[50px]">
+                            class="flex items-center justify-center px-4 py-3 border rounded-xl transition-all duration-200 min-h-[52px]">
                             <span x-text="range.label"
-                                class="text-[10px] sm:text-xs font-medium text-center leading-tight"></span>
+                                class="text-sm font-semibold text-center leading-tight"></span>
                         </button>
                     </template>
                 </div>

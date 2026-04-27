@@ -3312,7 +3312,7 @@ function renderLeads(res, append, currentPage, query) {
           </div>
           <div class="lc-body">
             <div class="lc-row"><span class="lc-label">Nhu cầu</span><span class="lc-value">${lead.lead_type || '—'}</span></div>
-            <div class="lc-row"><span class="lc-label">Ngân sách</span><span class="lc-value money">${(lead.budget_min||'?') + ' - ' + (lead.budget_max||'?')}</span></div>
+            <div class="lc-row"><span class="lc-label">Ngân sách</span><span class="lc-value money">${budgetLabel(lead.budget_min_raw||0, lead.budget_max_raw||0) || (lead.budget_min + ' - ' + lead.budget_max)}</span></div>
             <div class="lc-row" style="grid-column: span 2;"><span class="lc-label">Ghi chú</span><span class="lc-value" style="font-weight:400;color:var(--text-secondary);font-style:italic;">${lead.note || '—'}</span></div>
           </div>
           <div class="lc-footer">
