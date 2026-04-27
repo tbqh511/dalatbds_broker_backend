@@ -3355,6 +3355,7 @@ class TelegramWebAppController extends Controller
             $lead->wards = $request->input('wards');
             $lead->demand_rate_min = $request->input('price_min', 0);
             $lead->demand_rate_max = $request->input('price_max', 0);
+            $lead->budget_label    = $request->input('budget_label', '');
             $lead->purpose = $request->input('purpose');
             $lead->source_note = 'telegram_webapp';
 
@@ -3519,8 +3520,13 @@ class TelegramWebAppController extends Controller
         try {
             $notificationService = app(NotificationService::class);
             $leadType = $lead->lead_type === 'rent' ? 'Cần thuê' : 'Cần mua';
-            $budgetMin = number_format((float) ($lead->demand_rate_min ?? 0), 0, ',', '.');
-            $budgetMax = number_format((float) ($lead->demand_rate_max ?? 0), 0, ',', '.');
+            $budgetMin = (float) ($lead->demand_rate_min ?? 0);
+            $budgetMax = (float) ($lead->demand_rate_max ?? 0);
+            $budgetLabel = $lead->budget_label ?: (
+                $budgetMin > 0 && $budgetMax > 0
+                    ? format_vnd($budgetMin) . ' – ' . format_vnd($budgetMax)
+                    : ($budgetMax > 0 ? 'đến ' . format_vnd($budgetMax) : format_vnd($budgetMin))
+            );
             $wards = 'Không giới hạn';
             if (is_array($lead->wards) && count($lead->wards) > 0) {
                 $wardNames = LocationsWard::whereIn('code', $lead->wards)->pluck('full_name')->toArray();
@@ -3542,7 +3548,7 @@ class TelegramWebAppController extends Controller
             $message .= '👤 Khách hàng: '.$this->escapeTelegramText($crmCustomer->full_name ?? 'N/A')."\n";
             //$message .= "📞 SĐT khách: " . $this->escapeTelegramText($crmCustomer->contact ?? 'N/A') . "\n";
             $message .= "🏷️ Nhu cầu: {$leadType}\n";
-            $message .= "💰 Ngân sách: {$budgetMin} - {$budgetMax} VNĐ\n";
+            $message .= "💰 Ngân sách: {$budgetLabel}\n";
             $message .= '📍 Khu vực: '.$this->escapeTelegramText($wards)."\n";
             $message .= '🏠 Loại BĐS: '.$this->escapeTelegramText($categories)."\n";
             $message .= '🧭 Mục đích: '.$this->escapeTelegramText($lead->purpose ?? 'N/A')."\n";

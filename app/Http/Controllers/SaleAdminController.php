@@ -190,6 +190,7 @@ class SaleAdminController extends Controller
                 'budget_max'        => format_vnd($lead->demand_rate_max ?? 0),
                 'budget_min_raw'    => (float) ($lead->demand_rate_min ?? 0),
                 'budget_max_raw'    => (float) ($lead->demand_rate_max ?? 0),
+                'budget_label'      => $lead->budget_label ?? '',
                 'budget_tier'       => $budgetTier,
                 'suggestion'        => $suggestion,
                 'suggestion_reason' => $suggestionReason,

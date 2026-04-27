@@ -505,6 +505,7 @@
                 wards: [],
                 price_min: 0,
                 price_max: 0,
+                budget_label: '',
                 street: '',
                 purpose: ''
             },
@@ -570,6 +571,7 @@
             setPriceRange(range) {
                 this.form.price_min = range.min;
                 this.form.price_max = range.max;
+                this.form.budget_label = range.label;
             },
 
             isPriceSelected(range) {

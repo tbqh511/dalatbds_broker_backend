@@ -21,6 +21,7 @@ class CrmLead extends Model
         'wards',
         'demand_rate_min',
         'demand_rate_max',
+        'budget_label',
         'note',
         'status',
         'assigned_to',

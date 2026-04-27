@@ -2135,10 +2135,13 @@ function renderUnassignedLeadCards(leads){
       ? '<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f3f4f6;color:#374151;">' + escHtml(catStr) + '</span>'
       : '';
 
-    // Ngân sách — lookup label từ bảng priceRanges để đồng bộ với form add_customer
+    // Ngân sách — dùng format_vnd strings đã có từ server (budget_min/budget_max)
     var minRaw = lead.budget_min_raw || 0;
     var maxRaw = lead.budget_max_raw || 0;
-    var budgetText = budgetLabel(minRaw, maxRaw);
+    var budgetText = '';
+    if (minRaw > 0 && maxRaw > 0) budgetText = escHtml(lead.budget_min) + ' – ' + escHtml(lead.budget_max);
+    else if (maxRaw > 0) budgetText = 'đến ' + escHtml(lead.budget_max);
+    else if (minRaw > 0) budgetText = 'từ ' + escHtml(lead.budget_min);
     var budgetHtml = budgetText
       ? '<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:6px 0;">'
           + '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="font-size:11px;color:#6b7280;font-weight:500;">Ngân sách</span></div>'
