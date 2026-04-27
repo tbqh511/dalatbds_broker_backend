@@ -229,10 +229,11 @@ class TelegramWebAppController extends Controller
             $sort = $request->input('sort', 'latest');
 
             // Counts (always from all properties, ignoring current filter)
-            $activeCount = Property::where('added_by', $customer->id)->where('status', 1)->count();
+            $activeCount  = Property::where('added_by', $customer->id)->where('status', 1)->count();
             $pendingCount = Property::where('added_by', $customer->id)->where('status', 0)->count();
-            $hiddenCount = Property::where('added_by', $customer->id)->where('status', 2)->count();
-            $totalViews = Property::where('added_by', $customer->id)->sum('total_click');
+            $hiddenCount  = Property::where('added_by', $customer->id)->where('status', 2)->count();
+            $privateCount = Property::where('added_by', $customer->id)->where('is_private', 1)->count();
+            $totalViews   = Property::where('added_by', $customer->id)->sum('total_click');
 
             // Main query
             $query = Property::where('propertys.added_by', $customer->id)
@@ -240,7 +241,9 @@ class TelegramWebAppController extends Controller
                 ->withCount(['favourite as favourite_count']);
 
             // Status filter
-            if (in_array($statusFilter, ['0', '1', '2'])) {
+            if ($statusFilter === 'private') {
+                $query->where('propertys.is_private', 1);
+            } elseif (in_array($statusFilter, ['0', '1', '2'])) {
                 $query->where('propertys.status', (int) $statusFilter);
             }
 
@@ -351,6 +354,7 @@ class TelegramWebAppController extends Controller
                     'price' => $p->formatted_prices,
                     'price_m2' => $p->formatted_price_m2,
                     'status' => (int) $p->status,
+                    'is_private' => (bool) $p->is_private,
                     'category_name' => $p->category?->category ?? '',
                     'property_type' => (int) $p->property_type,
                     'area' => $p->area,
@@ -374,6 +378,7 @@ class TelegramWebAppController extends Controller
                     'active' => $activeCount,
                     'pending' => $pendingCount,
                     'hidden' => $hiddenCount,
+                    'private' => $privateCount,
                     'total_views' => (int) $totalViews,
                 ],
                 'properties' => $properties,

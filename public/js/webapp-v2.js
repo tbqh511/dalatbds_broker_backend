@@ -5275,6 +5275,7 @@ function loadMyBds(force) {
       setElText('mybdsTabActive',  'Hiển thị (' + (counts.active ?? 0) + ')');
       setElText('mybdsTabPending', 'Chờ duyệt (' + (counts.pending ?? 0) + ')');
       setElText('mybdsTabHidden',  'Đã ẩn (' + (counts.hidden ?? 0) + ')');
+      setElText('mybdsTabPrivate', '🔒 Riêng tư (' + (counts.private ?? 0) + ')');
 
       const props = res.properties || [];
       mybdsAllData = props;
@@ -5357,23 +5358,30 @@ function mybdsBuildCard(p, maxViews, maxFav) {
   const svgEdit     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
   const svgHide     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
   const svgTrash    = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+  const svgLock     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+  const svgUnlock   = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
 
   const editUrl = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes && window.WEBAPP_CONFIG.routes.editListingBase)
     ? window.WEBAPP_CONFIG.routes.editListingBase + p.id
     : '/webapp/edit-listing/' + p.id;
 
+  const privateBtnStyle = p.is_private ? 'color:#f59e0b;' : '';
+  const privateBtn = `<div class="mybds-qbtn" onclick="mybdsTogglePrivate(${p.id})" title="${p.is_private ? 'Bỏ riêng tư' : 'Đặt riêng tư'}" style="${privateBtnStyle}">${p.is_private ? svgLock : svgUnlock}</div>`;
+
   let quickBtns = '';
   if (p.status === 1) {
-    // Active: view, edit, hide, delete
+    // Active: view, edit, toggle-private, hide, delete
     quickBtns = `
       <div class="mybds-qbtn" onclick="mybdsViewProp(${p.id})" title="Xem">${svgEye}</div>
       <div class="mybds-qbtn" onclick="window.location.href='${escHtml(editUrl)}'" title="Chỉnh sửa">${svgEdit}</div>
+      ${privateBtn}
       <div class="mybds-qbtn" onclick="mybdsToggleStatus(${p.id}, 1)" title="Ẩn tin">${svgHide}</div>
       <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
   } else if (p.status === 0) {
-    // Pending: edit, delete
+    // Pending: edit, toggle-private, delete
     quickBtns = `
       <div class="mybds-qbtn" onclick="window.location.href='${escHtml(editUrl)}'" title="Chỉnh sửa">${svgEdit}</div>
+      ${privateBtn}
       <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
   } else if (isRejected) {
     // Rejected by admin: edit + resubmit + delete
@@ -5382,8 +5390,9 @@ function mybdsBuildCard(p, maxViews, maxFav) {
       <button style="padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;" onclick="mybdsResubmit(${p.id})">↩ Gửi lại</button>
       <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
   } else {
-    // Hidden by broker: show again, delete
+    // Hidden by broker: toggle-private, show again, delete
     quickBtns = `
+      ${privateBtn}
       <button style="padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;" onclick="mybdsToggleStatus(${p.id}, 2)">Hiển thị lại</button>
       <div class="mybds-qbtn danger" onclick="mybdsDelete(${p.id})" title="Xóa">${svgTrash}</div>`;
   }
@@ -5405,6 +5414,7 @@ function mybdsBuildCard(p, maxViews, maxFav) {
       <div class="mybds-img-overlay"></div>
       <div class="mybds-img-status">
         <span class="status-pill ${statusInfo.cls}">${statusInfo.label}</span>
+        ${p.is_private ? `<span class="status-pill" style="background:rgba(245,158,11,0.92);color:#fff;margin-left:4px;">🔒 Riêng tư</span>` : ''}
       </div>
     </div>
     <div class="mybds-body">
@@ -5465,6 +5475,28 @@ window.mybdsToggleStatus = function(id, currentStatus) {
         refreshHomeFeed();
       } else {
         showToast(res.message || 'Lỗi cập nhật trạng thái');
+      }
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+};
+
+window.mybdsTogglePrivate = function(id) {
+  const cfg  = window.WEBAPP_CONFIG || {};
+  const base = (cfg.routes && cfg.routes.myListingToggleBase) || '/webapp/listings/';
+  const csrf = cfg.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  fetch(base + id + '/toggle-private', {
+    method:  'PATCH',
+    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(function(res) {
+      if (res.success) {
+        showToast(res.message || (res.is_private ? 'Đã đặt riêng tư' : 'Đã bỏ riêng tư'));
+        mybdsLoaded = false;
+        loadMyBds(true);
+      } else {
+        showToast(res.message || 'Lỗi cập nhật');
       }
     })
     .catch(function() { showToast('Lỗi kết nối'); });
