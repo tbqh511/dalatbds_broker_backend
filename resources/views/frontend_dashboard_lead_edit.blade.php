@@ -51,13 +51,52 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <label>Ngân sách từ (VNĐ) <span class="dec-icon"><i class="far fa-money-bill-wave"></i></span></label>
-                                <input type="number" name="price_min" value="{{ $lead->demand_rate_min }}"/>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Ngân sách đến (VNĐ) <span class="dec-icon"><i class="far fa-money-bill-wave"></i></span></label>
-                                <input type="number" name="price_max" value="{{ $lead->demand_rate_max }}"/>
+                            @php
+                                $budgetRanges = [
+                                    [0, 0, 'Thỏa thuận'],
+                                    [0, 1000000000, 'Dưới 1 tỷ'],
+                                    [1000000000, 3000000000, '1 - 3 tỷ'],
+                                    [3000000000, 5000000000, '3 - 5 tỷ'],
+                                    [5000000000, 10000000000, '5 - 10 tỷ'],
+                                    [10000000000, 20000000000, '10 - 20 tỷ'],
+                                    [20000000000, 50000000000, '20 - 50 tỷ'],
+                                    [50000000000, 999999999999, 'Trên 50 tỷ'],
+                                ];
+                                $leadMin = (float)($lead->demand_rate_min ?? 0);
+                                $leadMax = (float)($lead->demand_rate_max ?? 0);
+                                $selectedBudgetVal = '';
+                                foreach ($budgetRanges as [$rMin, $rMax, $rLabel]) {
+                                    if ($leadMin == $rMin && $leadMax == $rMax) {
+                                        $selectedBudgetVal = $rMin . ':' . $rMax . ':' . $rLabel;
+                                        break;
+                                    }
+                                }
+                            @endphp
+                            <div class="col-md-12">
+                                <label>Ngân sách <span class="dec-icon"><i class="far fa-money-bill-wave"></i></span></label>
+                                <div class="listsearch-input-item">
+                                    <select id="budget-range-select" class="chosen-select no-search-select">
+                                        <option value="" {{ !$selectedBudgetVal ? 'selected' : '' }}>Thỏa thuận</option>
+                                        @foreach ([
+                                            ['0', '1000000000', 'Dưới 1 tỷ'],
+                                            ['1000000000', '3000000000', '1 - 3 tỷ'],
+                                            ['3000000000', '5000000000', '3 - 5 tỷ'],
+                                            ['5000000000', '10000000000', '5 - 10 tỷ'],
+                                            ['10000000000', '20000000000', '10 - 20 tỷ'],
+                                            ['20000000000', '50000000000', '20 - 50 tỷ'],
+                                            ['50000000000', '999999999999', 'Trên 50 tỷ'],
+                                        ] as [$oMin, $oMax, $oLabel])
+                                            @php $oVal = $oMin . ':' . $oMax . ':' . $oLabel; @endphp
+                                            <option value="{{ $oVal }}" {{ $selectedBudgetVal === $oVal ? 'selected' : '' }}>{{ $oLabel }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <input type="hidden" name="price_min" id="price-min-hidden"
+                                    value="{{ number_format((float)($lead->demand_rate_min ?? 0), 0, '.', '') }}">
+                                <input type="hidden" name="price_max" id="price-max-hidden"
+                                    value="{{ number_format((float)($lead->demand_rate_max ?? 0), 0, '.', '') }}">
+                                <input type="hidden" name="budget_label" id="budget-label-hidden"
+                                    value="{{ $lead->budget_label ?? '' }}">
                             </div>
                             <div class="col-md-12">
                                 <label>Ghi chú</label>
@@ -89,5 +128,16 @@
             const tg = window.Telegram.WebApp;
             tg.expand();
         }
+        document.addEventListener('DOMContentLoaded', function () {
+            var sel = document.getElementById('budget-range-select');
+            if (!sel) return;
+            function applyBudgetRange(val) {
+                var parts = val ? val.split(':') : [];
+                document.getElementById('price-min-hidden').value = parts[0] || 0;
+                document.getElementById('price-max-hidden').value = parts[1] || 0;
+                document.getElementById('budget-label-hidden').value = parts.slice(2).join(':') || '';
+            }
+            sel.addEventListener('change', function () { applyBudgetRange(this.value); });
+        });
     </script>
 @endpush

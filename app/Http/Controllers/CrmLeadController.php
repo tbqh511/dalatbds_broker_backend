@@ -411,6 +411,7 @@ class CrmLeadController extends Controller
                 'source_note' => $request->note,
                 'demand_rate_min' => $request->price_min,
                 'demand_rate_max' => $request->price_max,
+                'budget_label'    => $request->budget_label ?? '',
                 'customer' => [
                     'full_name' => $request->name,
                     'contact' => $request->phone,

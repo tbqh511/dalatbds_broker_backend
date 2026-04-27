@@ -2135,13 +2135,24 @@ function renderUnassignedLeadCards(leads){
       ? '<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f3f4f6;color:#374151;">' + escHtml(catStr) + '</span>'
       : '';
 
-    // Ngân sách — dùng format_vnd strings đã có từ server (budget_min/budget_max)
-    var minRaw = lead.budget_min_raw || 0;
-    var maxRaw = lead.budget_max_raw || 0;
+    // Ngân sách — ưu tiên budget_label (nhãn chính xác người dùng đã chọn)
     var budgetText = '';
-    if (minRaw > 0 && maxRaw > 0) budgetText = escHtml(lead.budget_min) + ' – ' + escHtml(lead.budget_max);
-    else if (maxRaw > 0) budgetText = 'đến ' + escHtml(lead.budget_max);
-    else if (minRaw > 0) budgetText = 'từ ' + escHtml(lead.budget_min);
+    if (lead.budget_label) {
+      budgetText = escHtml(lead.budget_label);
+    } else {
+      var minRaw = lead.budget_min_raw || 0;
+      var maxRaw = lead.budget_max_raw || 0;
+      var lookedUp = budgetLabel(minRaw, maxRaw);
+      if (lookedUp) {
+        budgetText = lookedUp;
+      } else if (minRaw > 0 && maxRaw > 0) {
+        budgetText = escHtml(lead.budget_min) + ' – ' + escHtml(lead.budget_max);
+      } else if (maxRaw > 0) {
+        budgetText = 'đến ' + escHtml(lead.budget_max);
+      } else if (minRaw > 0) {
+        budgetText = 'từ ' + escHtml(lead.budget_min);
+      }
+    }
     var budgetHtml = budgetText
       ? '<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:6px 0;">'
           + '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="font-size:11px;color:#6b7280;font-weight:500;">Ngân sách</span></div>'
@@ -2231,16 +2242,23 @@ function renderStatusLeadCards(leads){
       ? '<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f3f4f6;color:#374151;">' + escHtml(catStr) + '</span>'
       : '';
 
-    // Ngân sách — dùng raw để tránh bug "0 đ – X tỷ"
-    var minRaw2 = lead.budget_min_raw || 0;
-    var maxRaw2 = lead.budget_max_raw || 0;
+    // Ngân sách — ưu tiên budget_label (nhãn chính xác người dùng đã chọn)
     var budgetText2 = '';
-    if (minRaw2 > 0 && maxRaw2 > 0) {
-      budgetText2 = escHtml(lead.budget_min) + ' – ' + escHtml(lead.budget_max);
-    } else if (maxRaw2 > 0) {
-      budgetText2 = 'đến ' + escHtml(lead.budget_max);
-    } else if (minRaw2 > 0) {
-      budgetText2 = 'từ ' + escHtml(lead.budget_min);
+    if (lead.budget_label) {
+      budgetText2 = escHtml(lead.budget_label);
+    } else {
+      var minRaw2 = lead.budget_min_raw || 0;
+      var maxRaw2 = lead.budget_max_raw || 0;
+      var lookedUp2 = budgetLabel(minRaw2, maxRaw2);
+      if (lookedUp2) {
+        budgetText2 = lookedUp2;
+      } else if (minRaw2 > 0 && maxRaw2 > 0) {
+        budgetText2 = escHtml(lead.budget_min) + ' – ' + escHtml(lead.budget_max);
+      } else if (maxRaw2 > 0) {
+        budgetText2 = 'đến ' + escHtml(lead.budget_max);
+      } else if (minRaw2 > 0) {
+        budgetText2 = 'từ ' + escHtml(lead.budget_min);
+      }
     }
     var budgetHtml = budgetText2
       ? '<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:6px 0;">'

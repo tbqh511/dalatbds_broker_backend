@@ -21,6 +21,7 @@ class UpdateLeadRequest extends FormRequest
             'status' => 'required|string|in:new,contacted,converted,lost',
             'price_min' => 'nullable|numeric|min:0',
             'price_max' => 'nullable|numeric|min:0',
+            'budget_label' => 'nullable|string|max:50',
             'note' => 'nullable|string',
         ];
     }

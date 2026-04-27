@@ -55,6 +55,7 @@ class CrmLeadService
                 'source_note' => $data['note'] ?? '',
                 'demand_rate_min' => $data['price_min'] ?? 0,
                 'demand_rate_max' => $data['price_max'] ?? 0,
+                'budget_label'    => $data['budget_label'] ?? '',
                 // Add other fields
             ];
 
