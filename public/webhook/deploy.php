@@ -76,6 +76,9 @@ $steps[] = run("$GIT pull origin main", $APP_ROOT);
 // 2. Run database migrations
 $steps[] = run("$PHP artisan migrate --force", $APP_ROOT);
 
+// 2b. Run one-time data backfills
+$steps[] = run("$PHP artisan crm:backfill-budget-labels", $APP_ROOT);
+
 // 3. Clear caches
 foreach (['config:clear', 'cache:clear', 'route:clear', 'view:clear'] as $cmd) {
     $steps[] = run("$PHP artisan $cmd", $APP_ROOT);
