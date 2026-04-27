@@ -2092,6 +2092,29 @@ function loadAssignHistoryOnly(){
   .catch(function(){});
 }
 
+function budgetLabel(minRaw, maxRaw) {
+  var ranges = [
+    { min: 0,            max: 0,            label: 'Thỏa thuận' },
+    { min: 0,            max: 1000000000,   label: 'Dưới 1 tỷ' },
+    { min: 1000000000,   max: 3000000000,   label: '1 - 3 tỷ' },
+    { min: 3000000000,   max: 5000000000,   label: '3 - 5 tỷ' },
+    { min: 5000000000,   max: 10000000000,  label: '5 - 10 tỷ' },
+    { min: 10000000000,  max: 20000000000,  label: '10 - 20 tỷ' },
+    { min: 20000000000,  max: 50000000000,  label: '20 - 50 tỷ' },
+    { min: 50000000000,  max: 999999999999, label: 'Trên 50 tỷ' },
+  ];
+  for (var i = 0; i < ranges.length; i++) {
+    if (ranges[i].min === minRaw && ranges[i].max === maxRaw) {
+      return ranges[i].label;
+    }
+  }
+  // Fallback cho giá trị tùy chỉnh không khớp range nào
+  if (minRaw > 0 && maxRaw > 0) return escHtml(formatPriceToVNText(minRaw)) + ' – ' + escHtml(formatPriceToVNText(maxRaw));
+  if (maxRaw > 0) return 'đến ' + escHtml(formatPriceToVNText(maxRaw));
+  if (minRaw > 0) return 'từ ' + escHtml(formatPriceToVNText(minRaw));
+  return '';
+}
+
 function renderUnassignedLeadCards(leads){
   var svgUser  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
   var svgMoney = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
@@ -2112,17 +2135,10 @@ function renderUnassignedLeadCards(leads){
       ? '<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f3f4f6;color:#374151;">' + escHtml(catStr) + '</span>'
       : '';
 
-    // Ngân sách — dùng raw để tránh bug "0 đ – X tỷ"
+    // Ngân sách — lookup label từ bảng priceRanges để đồng bộ với form add_customer
     var minRaw = lead.budget_min_raw || 0;
     var maxRaw = lead.budget_max_raw || 0;
-    var budgetText = '';
-    if (minRaw > 0 && maxRaw > 0) {
-      budgetText = escHtml(lead.budget_min) + ' – ' + escHtml(lead.budget_max);
-    } else if (maxRaw > 0) {
-      budgetText = 'đến ' + escHtml(lead.budget_max);
-    } else if (minRaw > 0) {
-      budgetText = 'từ ' + escHtml(lead.budget_min);
-    }
+    var budgetText = budgetLabel(minRaw, maxRaw);
     var budgetHtml = budgetText
       ? '<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:6px 0;">'
           + '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="font-size:11px;color:#6b7280;font-weight:500;">Ngân sách</span></div>'
