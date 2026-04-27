@@ -2112,12 +2112,21 @@ function renderUnassignedLeadCards(leads){
       ? '<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f3f4f6;color:#374151;">' + escHtml(catStr) + '</span>'
       : '';
 
-    // Ngân sách — hiển thị lớn
-    var hasBudget = lead.budget_min || lead.budget_max;
-    var budgetHtml = hasBudget
-      ? '<div style="display:flex;align-items:center;gap:5px;margin:8px 0 4px;">'
-          + svgMoney
-          + '<span style="font-size:18px;font-weight:800;color:var(--text-primary);">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span>'
+    // Ngân sách — dùng raw để tránh bug "0 đ – X tỷ"
+    var minRaw = lead.budget_min_raw || 0;
+    var maxRaw = lead.budget_max_raw || 0;
+    var budgetText = '';
+    if (minRaw > 0 && maxRaw > 0) {
+      budgetText = escHtml(lead.budget_min) + ' – ' + escHtml(lead.budget_max);
+    } else if (maxRaw > 0) {
+      budgetText = 'đến ' + escHtml(lead.budget_max);
+    } else if (minRaw > 0) {
+      budgetText = 'từ ' + escHtml(lead.budget_min);
+    }
+    var budgetHtml = budgetText
+      ? '<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:6px 0;">'
+          + '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="font-size:11px;color:#6b7280;font-weight:500;">Ngân sách</span></div>'
+          + '<span style="font-size:15px;font-weight:800;color:var(--primary);">' + budgetText + '</span>'
         + '</div>'
       : '';
 
@@ -2129,17 +2138,21 @@ function renderUnassignedLeadCards(leads){
         + '</div>'
       : '';
 
-    // Gợi ý sale
-    var suggestionHtml = lead.suggestion
-      ? '<div style="font-size:11px;font-style:italic;color:#9ca3af;margin-bottom:6px;">'
-          + escHtml('Gợi ý: ' + lead.suggestion + ' (phù hợp khu vực)')
-        + '</div>'
+    // Gợi ý sale — phân biệt lý do match
+    var suggestionText = '';
+    if (lead.suggestion) {
+      suggestionText = lead.suggestion_reason === 'area'
+        ? 'Gợi ý: ' + lead.suggestion + ' (phù hợp khu vực)'
+        : 'Gợi ý: ' + lead.suggestion + ' (ít việc nhất)';
+    }
+    var suggestionHtml = suggestionText
+      ? '<div style="font-size:11px;font-style:italic;color:#9ca3af;margin-bottom:6px;">' + escHtml(suggestionText) + '</div>'
       : '';
 
     return '<div class="ul-card" id="' + domId + '" onclick="toggleUlSelect(\'' + domId + '\')" style="background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border:1px solid #e5e7eb;margin-bottom:10px;">'
 
       // Header: tên + badge loại + thời gian
-      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">'
         + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
           + '<div class="ul-checkbox" id="' + domId + '-cb" style="font-size:16px;color:#d1d5db;margin-right:2px;">○</div>'
           + '<span style="font-size:15px;font-weight:700;color:var(--text-primary);">' + escHtml(lead.name) + '</span>'
@@ -2149,16 +2162,16 @@ function renderUnassignedLeadCards(leads){
       + '</div>'
 
       // Badge loại BĐS
-      + (catBadge ? '<div style="margin-bottom:4px;">' + catBadge + '</div>' : '')
+      + (catBadge ? '<div style="margin-bottom:2px;">' + catBadge + '</div>' : '')
 
-      // Ngân sách lớn
+      // Ngân sách — label trái, giá phải màu primary
       + budgetHtml
 
       // Khu vực
       + (wardHtml ? '<div style="margin-bottom:8px;">' + wardHtml + '</div>' : '')
 
       // Footer: gợi ý + nút phân công
-      + '<div style="padding-top:10px;margin-top:2px;border-top:1px solid #f3f4f6;">'
+      + '<div style="padding-top:10px;margin-top:4px;border-top:1px solid #f3f4f6;">'
         + suggestionHtml
         + '<button class="lc-btn primary" style="width:100%;height:38px;border-radius:10px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">'
           + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công</span>'
@@ -2199,12 +2212,21 @@ function renderStatusLeadCards(leads){
       ? '<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f3f4f6;color:#374151;">' + escHtml(catStr) + '</span>'
       : '';
 
-    // Ngân sách lớn
-    var hasBudget = lead.budget_min || lead.budget_max;
-    var budgetHtml = hasBudget
-      ? '<div style="display:flex;align-items:center;gap:5px;margin:8px 0 4px;">'
-          + svgMoney
-          + '<span style="font-size:18px;font-weight:800;color:var(--text-primary);">' + escHtml(lead.budget_min + ' – ' + lead.budget_max) + '</span>'
+    // Ngân sách — dùng raw để tránh bug "0 đ – X tỷ"
+    var minRaw2 = lead.budget_min_raw || 0;
+    var maxRaw2 = lead.budget_max_raw || 0;
+    var budgetText2 = '';
+    if (minRaw2 > 0 && maxRaw2 > 0) {
+      budgetText2 = escHtml(lead.budget_min) + ' – ' + escHtml(lead.budget_max);
+    } else if (maxRaw2 > 0) {
+      budgetText2 = 'đến ' + escHtml(lead.budget_max);
+    } else if (minRaw2 > 0) {
+      budgetText2 = 'từ ' + escHtml(lead.budget_min);
+    }
+    var budgetHtml = budgetText2
+      ? '<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:6px 0;">'
+          + '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="font-size:11px;color:#6b7280;font-weight:500;">Ngân sách</span></div>'
+          + '<span style="font-size:15px;font-weight:800;color:var(--primary);">' + budgetText2 + '</span>'
         + '</div>'
       : '';
 
@@ -2231,7 +2253,7 @@ function renderStatusLeadCards(leads){
     return '<div class="ul-card" id="' + domId + '" style="background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border:1px solid #e5e7eb;margin-bottom:10px;">'
 
       // Header: tên + badge loại + thời gian
-      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">'
         + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
           + '<span style="font-size:15px;font-weight:700;color:var(--text-primary);">' + escHtml(lead.name) + '</span>'
           + typeBadge
@@ -2240,9 +2262,9 @@ function renderStatusLeadCards(leads){
       + '</div>'
 
       // Badge loại BĐS
-      + (catBadge ? '<div style="margin-bottom:4px;">' + catBadge + '</div>' : '')
+      + (catBadge ? '<div style="margin-bottom:2px;">' + catBadge + '</div>' : '')
 
-      // Ngân sách lớn
+      // Ngân sách — label trái, giá phải màu primary
       + budgetHtml
 
       // Khu vực

@@ -142,20 +142,23 @@ class SaleAdminController extends Controller
             $saleName   = $lead->sale?->name ?? '';
 
             // Sale suggestion: match work_area with lead wards (only for unassigned)
-            $suggestion = null;
+            $suggestion       = null;
+            $suggestionReason = null;
             if (!$isAssigned && is_iterable($salesTeam)) {
                 foreach ($salesTeam as $s) {
                     $workArea = $s->work_area ?? '';
                     foreach ($wardCodes as $code) {
                         if ($code && str_contains($workArea, (string) $code)) {
-                            $suggestion = $s->name;
+                            $suggestion       = $s->name;
+                            $suggestionReason = 'area';
                             break 2;
                         }
                     }
                 }
                 if (!$suggestion) {
-                    $lightestSale = $salesTeam->sortBy(fn ($s) => $activeLeadCounts[$s->id] ?? 0)->first();
-                    $suggestion   = $lightestSale?->name;
+                    $lightestSale     = $salesTeam->sortBy(fn ($s) => $activeLeadCounts[$s->id] ?? 0)->first();
+                    $suggestion       = $lightestSale?->name;
+                    $suggestionReason = 'workload';
                 }
             }
 
@@ -183,13 +186,16 @@ class SaleAdminController extends Controller
                 'purpose'     => $lead->purpose ?? '',
                 'categories'  => $catNames,
                 'wards'       => $wardNames,
-                'budget_min'  => format_vnd($lead->demand_rate_min ?? 0),
-                'budget_max'  => format_vnd($lead->demand_rate_max ?? 0),
-                'budget_tier' => $budgetTier,
-                'suggestion'  => $suggestion,
-                'status_raw'  => $statusRaw,
-                'is_assigned' => $isAssigned,
-                'sale_name'   => $saleName,
+                'budget_min'        => format_vnd($lead->demand_rate_min ?? 0),
+                'budget_max'        => format_vnd($lead->demand_rate_max ?? 0),
+                'budget_min_raw'    => (float) ($lead->demand_rate_min ?? 0),
+                'budget_max_raw'    => (float) ($lead->demand_rate_max ?? 0),
+                'budget_tier'       => $budgetTier,
+                'suggestion'        => $suggestion,
+                'suggestion_reason' => $suggestionReason,
+                'status_raw'        => $statusRaw,
+                'is_assigned'       => $isAssigned,
+                'sale_name'         => $saleName,
             ];
         })->values()->all();
 
