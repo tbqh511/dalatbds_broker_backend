@@ -115,8 +115,8 @@ class TelegramBotController extends Controller
 
         // Notify assigned sale via private Telegram message
         if ($sale->telegram_id) {
-            $privateMsg = TelegramMessageTemplates::leadAssigned($lead);
-            $this->notificationService->sendToCustomer($sale, $privateMsg);
+            $tpl = TelegramMessageTemplates::leadAssigned($lead);
+            $this->notificationService->sendWithInlineKeyboard($sale->telegram_id, $tpl['text'], $tpl['keyboard']);
         }
     }
 
