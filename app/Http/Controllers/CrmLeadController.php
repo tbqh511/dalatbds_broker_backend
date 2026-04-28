@@ -224,8 +224,8 @@ class CrmLeadController extends Controller
 
         // Notify assigned sale via Telegram (respect their notification settings)
         if ($sale->telegram_id && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
-            $message = TelegramMessageTemplates::leadAssigned($lead);
-            $this->notificationService->sendToCustomer($sale, $message);
+            $tpl = TelegramMessageTemplates::leadAssigned($lead);
+            $this->notificationService->sendWithInlineKeyboard($sale->telegram_id, $tpl['text'], $tpl['keyboard']);
         }
 
         // In-app notification
@@ -305,10 +305,12 @@ class CrmLeadController extends Controller
             $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
             $firstLead = CrmLead::find($assigned[0]);
             if ($firstLead) {
-                $message = count($assigned) === 1
-                    ? TelegramMessageTemplates::leadAssigned($firstLead)
-                    : 'Bạn được phân công ' . count($assigned) . ' lead mới. Vui lòng kiểm tra danh sách lead.';
-                $this->notificationService->sendToCustomer($sale, $message);
+                if (count($assigned) === 1) {
+                    $tpl = TelegramMessageTemplates::leadAssigned($firstLead);
+                    $this->notificationService->sendWithInlineKeyboard($sale->telegram_id, $tpl['text'], $tpl['keyboard']);
+                } else {
+                    $this->notificationService->sendToCustomer($sale, 'Bạn được phân công ' . count($assigned) . ' lead mới. Vui lòng kiểm tra danh sách lead.');
+                }
             }
         }
 
@@ -520,8 +522,8 @@ class CrmLeadController extends Controller
         ]);
 
         if ($sale->telegram_id && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
-            $message = TelegramMessageTemplates::leadAssigned($lead);
-            $this->notificationService->sendToCustomer($sale, $message);
+            $tpl = TelegramMessageTemplates::leadAssigned($lead);
+            $this->notificationService->sendWithInlineKeyboard($sale->telegram_id, $tpl['text'], $tpl['keyboard']);
         }
 
         // In-app notification
