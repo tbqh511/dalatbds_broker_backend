@@ -57,6 +57,22 @@
             <div class="stat-delta">khách đang kết nối</div>
           </div>
 
+          <!-- Khách của tôi: sale, sale_admin -->
+          <div class="stat-card role-sale role-sale_admin" style="--icon-bg:#fef3c7;--icon-color:#d97706;cursor:pointer;"
+               onclick="openSubpage('mycustomers')">
+            <div class="stat-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="stat-label">Khách của tôi</div>
+            <div class="stat-value">{{ $stats['leads_count'] ?? 0 }}</div>
+            <div class="stat-delta">{{ ($stats['leads_count'] ?? 0) == 0 ? 'Chưa có khách nào' : 'khách đang theo dõi' }}</div>
+          </div>
+
           <!-- Lead đang xử lý: sale, sale_admin -->
           <div class="stat-card role-sale role-sale_admin" style="--icon-bg:#d1fae5;--icon-color:#059669;cursor:pointer;"
                onclick="openSubpage('leads')">

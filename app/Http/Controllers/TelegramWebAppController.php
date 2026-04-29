@@ -401,7 +401,10 @@ class TelegramWebAppController extends Controller
             $search = $request->input('search', '');
             $statusFilter = $request->input('status', 'all');
 
-            $baseQuery = CrmLead::where('user_id', $customer->id)->whereNotNull('customer_id');
+            $baseQuery = CrmLead::where(function ($q) use ($customer) {
+                $q->where('user_id', $customer->id)
+                    ->orWhere('sale_id', $customer->id);
+            })->whereNotNull('customer_id');
 
             // Counts (from full dataset, not filtered)
             $countNew = (clone $baseQuery)->where('status', 'new')->count();
@@ -412,7 +415,7 @@ class TelegramWebAppController extends Controller
             // Main query with eager loading
             $query = (clone $baseQuery)->with([
                 'customer',
-                'deal',
+                'deal.products',
                 'activities' => function ($q) {
                     $q->orderBy('created_at', 'desc')->limit(5);
                 },
@@ -475,9 +478,35 @@ class TelegramWebAppController extends Controller
 
                 $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
 
+                $deal = $lead->deal;
+                $dealStatus = $deal ? $deal->getRawOriginal('status') : null;
+                $hasBooking = $deal && $deal->products->contains(function ($p) {
+                    return in_array($p->getRawOriginal('status'), ['booking_created', 'viewed_success', 'viewed_failed']);
+                });
+
+                $unifiedStatus = match (true) {
+                    in_array($rawStatus, ['lost', 'bad-contact']) => 'lost',
+                    $dealStatus === 'closed' => 'closed',
+                    $dealStatus === 'negotiating' => 'negotiating',
+                    $hasBooking => 'viewing',
+                    $deal !== null => 'caring',
+                    $rawStatus === 'contacted' => 'caring',
+                    default => 'new',
+                };
+
+                $nextAction = match ($unifiedStatus) {
+                    'new' => 'Gọi điện tìm hiểu nhu cầu',
+                    'caring' => 'Gửi BĐS phù hợp cho khách',
+                    'viewing' => 'Xác nhận kết quả xem nhà',
+                    'negotiating' => 'Cập nhật kết quả thương lượng',
+                    default => '',
+                };
+
                 return [
                     'id' => $lead->id,
                     'status' => $rawStatus,
+                    'unified_status' => $unifiedStatus,
+                    'next_action' => $nextAction,
                     'lead_type' => $rawType,
                     'customer_name' => optional($lead->customer)->full_name ?? 'Chưa rõ',
                     'customer_phone' => optional($lead->customer)->contact ?? '',
@@ -485,7 +514,8 @@ class TelegramWebAppController extends Controller
                     'wards' => $wardNames,
                     'budget' => $budget,
                     'note' => $lead->note ?? '',
-                    'has_deal' => $lead->deal !== null,
+                    'has_deal' => $deal !== null,
+                    'deal_status' => $dealStatus,
                     'activities' => $activities,
                     'created_at' => $createdAt->format('d/m/Y'),
                     'created_diff' => $createdAt->diffForHumans(),

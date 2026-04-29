@@ -17,7 +17,7 @@
   <div class="sp-summary">
     <div class="sp-sum-item">
       <div class="sp-sum-val" id="mycustCountNew" style="color:var(--danger);">—</div>
-      <div class="sp-sum-lbl">Lead mới</div>
+      <div class="sp-sum-lbl">Mới vào</div>
     </div>
     <div class="sp-sum-item">
       <div class="sp-sum-val" id="mycustCountCare" style="color:var(--primary);">—</div>
@@ -25,11 +25,11 @@
     </div>
     <div class="sp-sum-item">
       <div class="sp-sum-val" id="mycustCountDeal" style="color:var(--purple);">—</div>
-      <div class="sp-sum-lbl">Deal active</div>
+      <div class="sp-sum-lbl">Giao dịch</div>
     </div>
     <div class="sp-sum-item">
       <div class="sp-sum-val" id="mycustCountClosed" style="color:var(--success);">—</div>
-      <div class="sp-sum-lbl">Đã chốt</div>
+      <div class="sp-sum-lbl">Đã hủy</div>
     </div>
   </div>
 
@@ -51,10 +51,10 @@
   <!-- Status tabs — labels populated by JS -->
   <div class="sp-tabs">
     <button class="sp-tab active" id="mycustTabAll"       onclick="mycustTabSwitch(this,'all')">Tất cả (—)</button>
-    <button class="sp-tab"        id="mycustTabNew"       onclick="mycustTabSwitch(this,'new')">Lead mới (—)</button>
-    <button class="sp-tab"        id="mycustTabContacted" onclick="mycustTabSwitch(this,'contacted')">Đã liên hệ (—)</button>
-    <button class="sp-tab"        id="mycustTabConverted" onclick="mycustTabSwitch(this,'converted')">Đang Deal (—)</button>
-    <button class="sp-tab"        id="mycustTabLost"      onclick="mycustTabSwitch(this,'lost')">Đã chốt (—)</button>
+    <button class="sp-tab"        id="mycustTabNew"       onclick="mycustTabSwitch(this,'new')">Mới vào (—)</button>
+    <button class="sp-tab"        id="mycustTabContacted" onclick="mycustTabSwitch(this,'contacted')">Đang chăm (—)</button>
+    <button class="sp-tab"        id="mycustTabConverted" onclick="mycustTabSwitch(this,'converted')">Giao dịch (—)</button>
+    <button class="sp-tab"        id="mycustTabLost"      onclick="mycustTabSwitch(this,'lost')">Đã hủy (—)</button>
   </div>
 
   <div class="sp-scroll">

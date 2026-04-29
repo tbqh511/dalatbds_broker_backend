@@ -5714,11 +5714,11 @@ function loadMyCustomers(force) {
 
       const counts = res.counts || {};
 
-      setElText('mycustTabAll',       'Tất cả ('     + (counts.all     ?? 0) + ')');
-      setElText('mycustTabNew',       'Lead mới ('   + (counts.new     ?? 0) + ')');
-      setElText('mycustTabContacted', 'Đã liên hệ (' + (counts.care    ?? 0) + ')');
-      setElText('mycustTabConverted', 'Đang Deal ('  + (counts.deal    ?? 0) + ')');
-      setElText('mycustTabLost',      'Đã chốt ('    + (counts.closed  ?? 0) + ')');
+      setElText('mycustTabAll',       'Tất cả ('         + (counts.all     ?? 0) + ')');
+      setElText('mycustTabNew',       'Mới vào ('        + (counts.new     ?? 0) + ')');
+      setElText('mycustTabContacted', 'Đang chăm ('      + (counts.care    ?? 0) + ')');
+      setElText('mycustTabConverted', 'Giao dịch ('      + (counts.deal    ?? 0) + ')');
+      setElText('mycustTabLost',      'Đã hủy ('         + (counts.closed  ?? 0) + ')');
 
       const leads = res.leads || [];
       if (!leads.length) { emptyEl.style.display = ''; return; }
@@ -5739,22 +5739,23 @@ function mycustBuildCard(lead) {
     ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
     : ((lead.customer_name || '?')[0] || '?').toUpperCase();
 
-  // Status badge
-  var statusMap = {
-    'new':         { cls: 'badge-red',    label: 'Lead mới' },
-    'contacted':   { cls: 'badge-blue',   label: 'Đã liên hệ' },
-    'converted':   { cls: 'badge-purple', label: 'Đang Deal' },
-    'lost':        { cls: 'badge-gray',   label: 'Đã đóng' },
-    'bad-contact': { cls: 'badge-amber',  label: 'Liên hệ lỗi' },
+  // Status badge — dùng unified_status nếu có
+  var unifiedStatusMap = {
+    'new':          { cls: 'badge-red',    label: 'Mới vào' },
+    'caring':       { cls: 'badge-blue',   label: 'Đang chăm' },
+    'viewing':      { cls: 'badge-purple', label: 'Hẹn xem nhà' },
+    'negotiating':  { cls: 'badge-amber',  label: 'Thương lượng' },
+    'closed':       { cls: 'badge-green',  label: 'Đã chốt' },
+    'lost':         { cls: 'badge-gray',   label: 'Đã hủy' },
   };
-  var si = statusMap[lead.status] || statusMap['new'];
+  var si = unifiedStatusMap[lead.unified_status] || unifiedStatusMap['new'];
 
   var leadTypeLabel = lead.lead_type === 'buy' ? 'Cần mua' : 'Cần thuê';
 
-  // Lead flow stepper
-  var stepByStatus = { 'new': 1, 'contacted': 2, 'converted': 4, 'lost': 5, 'bad-contact': 2 };
-  var activeStep   = stepByStatus[lead.status] || 1;
-  var isLost       = lead.status === 'lost' || lead.status === 'bad-contact';
+  // Lead flow stepper — based on unified_status
+  var stepByUnified = { 'new': 1, 'caring': 2, 'viewing': 3, 'negotiating': 4, 'closed': 5, 'lost': 5 };
+  var activeStep    = stepByUnified[lead.unified_status] || 1;
+  var isLost        = lead.unified_status === 'lost';
 
   function lfDot(n) {
     if (!isLost && n < activeStep) return '<div class="lf-dot done">✓</div>';
@@ -5773,11 +5774,11 @@ function mycustBuildCard(lead) {
   }
 
   var leadFlow = '<div class="lead-flow">'
-    + '<div class="lf-step">' + lfDot(1) + lfLbl(1, 'Lead mới') + '</div>' + lfLine(1)
-    + '<div class="lf-step">' + lfDot(2) + lfLbl(2, 'Đã liên hệ') + '</div>' + lfLine(2)
-    + '<div class="lf-step">' + lfDot(3) + lfLbl(3, 'Tạo Deal') + '</div>' + lfLine(3)
-    + '<div class="lf-step">' + lfDot(4) + lfLbl(4, 'Chăm sóc') + '</div>' + lfLine(4)
-    + '<div class="lf-step">' + lfDot(5) + lfLbl(5, 'Chốt') + '</div>'
+    + '<div class="lf-step">' + lfDot(1) + lfLbl(1, 'Mới vào') + '</div>' + lfLine(1)
+    + '<div class="lf-step">' + lfDot(2) + lfLbl(2, 'Đang chăm') + '</div>' + lfLine(2)
+    + '<div class="lf-step">' + lfDot(3) + lfLbl(3, 'Hẹn xem') + '</div>' + lfLine(3)
+    + '<div class="lf-step">' + lfDot(4) + lfLbl(4, 'Thương lượng') + '</div>' + lfLine(4)
+    + '<div class="lf-step">' + lfDot(5) + lfLbl(5, 'Đã chốt') + '</div>'
     + '</div>';
 
   // Phone
@@ -5836,6 +5837,13 @@ function mycustBuildCard(lead) {
   var svgCalendar = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
   var svgPhone    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
 
+  var nextActionHtml = lead.next_action
+    ? '<div style="margin:8px 0 0;padding:7px 10px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;gap:6px;">'
+      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3270FC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 12 5 19 12"/><polyline points="5 18 12 11 19 18"/></svg>'
+      + '<span style="font-size:11.5px;color:#3270FC;font-weight:500;">' + escHtml(lead.next_action) + '</span>'
+      + '</div>'
+    : '';
+
   return '<div class="cust-card">'
     + '<div class="cust-header">'
     +   '<div class="cust-avatar" style="background:var(--primary);">' + escHtml(initials) + '</div>'
@@ -5851,6 +5859,7 @@ function mycustBuildCard(lead) {
     +   (tagsHtml ? '<div class="cust-tags">' + tagsHtml + '</div>' : '')
     + '</div>'
     + leadFlow
+    + nextActionHtml
     + '<div class="cust-footer">'
     +   '<div class="cust-date">' + svgCalendar + ' Nhận ' + escHtml(lead.created_at) + '</div>'
     +   '<div class="cust-actions">'
