@@ -320,11 +320,11 @@ window.openSubpage = function(id, opts){
     loadDeals(true);
   }
   if(id === 'clients') {
-    clientsCurrentStatus = '';
+    clientsCurrentStatus = 'new';
     clientsCurrentSearch = '';
     document.querySelectorAll('#subpage-clients .sp-tab').forEach(function(t) { t.classList.remove('active'); });
-    var clientsTabAllEl = document.getElementById('clientsTabAll');
-    if (clientsTabAllEl) clientsTabAllEl.classList.add('active');
+    var clientsTabNewEl = document.getElementById('clientsTabNew');
+    if (clientsTabNewEl) clientsTabNewEl.classList.add('active');
     var clientsSearchEl = document.getElementById('clientsSearchInput');
     if (clientsSearchEl) clientsSearchEl.value = '';
     loadClients(true);
@@ -6334,7 +6334,7 @@ window.dealsOnSearchInput = function(val) {
 
 // ============ CLIENTS (Khách hàng) ============
 let clientsLoaded        = false;
-let clientsCurrentStatus = '';
+let clientsCurrentStatus = 'new';
 let clientsCurrentSearch = '';
 let clientsSearchTimer   = null;
 let clientsCurrentPage   = 1;
@@ -6370,12 +6370,15 @@ function loadClients(force) {
       loadingEl.style.display = 'none';
       if (!res.success) { emptyEl.style.display = ''; return; }
 
-      // Update KPI (nếu có)
       if (res.kpi) {
-        ['new', 'care', 'waiting', 'archived'].forEach(function(key) {
-          var el = document.getElementById('clientsKpi' + key.charAt(0).toUpperCase() + key.slice(1));
-          if (el) el.textContent = res.kpi[key] || 0;
-        });
+        setElText('clientsKpiNew',     res.kpi.new     ?? 0);
+        setElText('clientsKpiCaring',  res.kpi.caring  ?? 0);
+        setElText('clientsKpiViewing', res.kpi.viewing ?? 0);
+        setElText('clientsKpiClosed',  res.kpi.closed  ?? 0);
+        setElText('clientsTabNew',     'Mới ('     + (res.kpi.new     ?? 0) + ')');
+        setElText('clientsTabCaring',  'Chăm ('    + (res.kpi.caring  ?? 0) + ')');
+        setElText('clientsTabViewing', 'Hẹn ('     + (res.kpi.viewing ?? 0) + ')');
+        setElText('clientsTabClosed',  'Chốt ('    + (res.kpi.closed  ?? 0) + ')');
       }
 
       if (!res.clients || res.clients.length === 0) {
@@ -6457,45 +6460,120 @@ function renderClientCards(clients) {
 }
 
 function renderClientCard(client) {
-  var statusBadges = {
-    'new': '<span style="background:#FEE2E2;color:#991B1B;font-size:11px;padding:2px 6px;border-radius:4px;">Mới</span>',
-    'care': '<span style="background:#FEF3C7;color:#92400E;font-size:11px;padding:2px 6px;border-radius:4px;">Đang chăm</span>',
-    'waiting': '<span style="background:#FED7AA;color:#9A3412;font-size:11px;padding:2px 6px;border-radius:4px;">Chờ chốt</span>',
-    'contacted': '<span style="background:#FEF3C7;color:#92400E;font-size:11px;padding:2px 6px;border-radius:4px;">Đã liên hệ</span>',
-    'converted': '<span style="background:#D1FAE5;color:#065F46;font-size:11px;padding:2px 6px;border-radius:4px;">Đã chuyển</span>',
-    'lost': '<span style="background:#F3F4F6;color:#4B5563;font-size:11px;padding:2px 6px;border-radius:4px;">Huỷ</span>'
-  };
+  var nameParts = (client.customer_name || '?').trim().split(/\s+/);
+  var initials  = nameParts.length >= 2
+    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+    : ((client.customer_name || '?')[0] || '?').toUpperCase();
 
-  var statusDisplay = client.status ? (statusBadges[client.status.toLowerCase()] || '') : '';
-  var dealStatusDisplay = '';
-  if (client.has_deal && client.deal_status) {
-    dealStatusDisplay = ' / <span style="color:#666;font-size:12px;">' + client.deal_status + '</span>';
+  var unifiedStatusMap = {
+    'new':     { cls: 'badge-red',    label: 'Chưa liên hệ' },
+    'caring':  { cls: 'badge-blue',   label: 'Đang chăm' },
+    'viewing': { cls: 'badge-purple', label: 'Đã hẹn xem' },
+    'closed':  { cls: 'badge-green',  label: 'Đã chốt' },
+  };
+  var si = unifiedStatusMap[client.unified_status] || unifiedStatusMap['new'];
+
+  var leadTypeLabel = client.lead_type === 'buy' ? 'Tìm mua' : 'Tìm thuê';
+
+  var stepByStatus = { 'new': 1, 'caring': 2, 'viewing': 3, 'closed': 4 };
+  var activeStep   = stepByStatus[client.unified_status] || 1;
+  var isClosed     = client.unified_status === 'closed';
+
+  function cfDot(n) {
+    if (!isClosed && n < activeStep) return '<div class="lf-dot done">✓</div>';
+    if (n === activeStep)            return '<div class="lf-dot active">' + n + '</div>';
+    return '<div class="lf-dot">' + n + '</div>';
+  }
+  function cfLbl(n, txt) {
+    if (!isClosed && n < activeStep) return '<div class="lf-label done">' + txt + '</div>';
+    if (n === activeStep)            return '<div class="lf-label active">' + txt + '</div>';
+    return '<div class="lf-label">' + txt + '</div>';
+  }
+  function cfLine(afterN) {
+    return (!isClosed && afterN < activeStep)
+      ? '<div class="lf-line done"></div>'
+      : '<div class="lf-line"></div>';
   }
 
-  var categories = client.categories && client.categories.length > 0
-    ? client.categories.join(', ')
-    : '—';
-  var wards = client.wards && client.wards.length > 0
-    ? client.wards.join(', ')
-    : '—';
-  var budget = client.budget || '—';
+  var leadFlow = '<div class="lead-flow">'
+    + '<div class="lf-step">' + cfDot(1) + cfLbl(1, 'Mới') + '</div>' + cfLine(1)
+    + '<div class="lf-step">' + cfDot(2) + cfLbl(2, 'Chăm') + '</div>' + cfLine(2)
+    + '<div class="lf-step">' + cfDot(3) + cfLbl(3, 'Hẹn xem') + '</div>' + cfLine(3)
+    + '<div class="lf-step">' + cfDot(4) + cfLbl(4, 'Chốt') + '</div>'
+    + '</div>';
 
-  return '<div style="background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #f0f0f0;">'
-    + '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">'
-      + '<div style="flex:1;">'
-        + '<div style="font-weight:600;font-size:14px;color:#333;margin-bottom:4px;">' + (client.customer_name || 'N/A') + '</div>'
-        + '<div style="font-size:12px;color:#666;">' + (client.customer_phone || '') + '</div>'
+  var phoneRaw  = (client.customer_phone || '').replace(/\D/g, '');
+  var phoneHref = phoneRaw
+    ? 'href="tel:' + escHtml(client.customer_phone) + '"'
+    : 'onclick="showToast(\'Không có số điện thoại\')"';
+
+  var line1 = leadTypeLabel;
+  if (client.categories && client.categories.length) {
+    line1 += ' · ' + escHtml(client.categories.slice(0, 3).join(', '));
+  }
+
+  var line2Parts = [];
+  if (client.wards && client.wards.length) line2Parts.push(escHtml(client.wards.slice(0, 2).join(', ')));
+  if (client.purpose)  line2Parts.push('Mục đích: ' + escHtml(client.purpose));
+  else if (client.budget) line2Parts.push('Ngân sách: ' + escHtml(client.budget));
+  var line2 = line2Parts.join(' · ');
+
+  var tagsHtml = '';
+  (client.categories || []).slice(0, 2).forEach(function(c) {
+    tagsHtml += '<span class="cust-tag">' + escHtml(c) + '</span>';
+  });
+  (client.wards || []).slice(0, 1).forEach(function(w) {
+    tagsHtml += '<span class="cust-tag" style="background:var(--bg-secondary);">' + escHtml(w) + '</span>';
+  });
+  tagsHtml += '<span class="badge ' + si.cls + '" style="font-size:10px;padding:2px 7px;">' + si.label + '</span>';
+
+  var svgPhone = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var svgSend  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+
+  var actionBtns = '';
+  if (client.unified_status === 'new') {
+    actionBtns = '<a class="cust-btn" ' + phoneHref + '>' + svgPhone + ' Gọi</a>'
+      + '<div class="cust-btn" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">' + svgSend + ' Gửi BĐS</div>'
+      + '<div class="cust-btn primary" onclick="showToast(\'Chức năng đang phát triển\')">Bắt đầu chăm</div>';
+  } else if (client.unified_status === 'caring') {
+    actionBtns = '<a class="cust-btn" ' + phoneHref + '>' + svgPhone + ' Gọi</a>'
+      + '<div class="cust-btn primary" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">' + svgSend + ' Gửi BĐS</div>';
+  } else if (client.unified_status === 'viewing') {
+    actionBtns = '<a class="cust-btn" ' + phoneHref + '>' + svgPhone + ' Gọi</a>'
+      + '<div class="cust-btn primary" onclick="showToast(\'Chức năng đang phát triển\')">Xác nhận kết quả</div>';
+  } else {
+    actionBtns = '<a class="cust-btn" ' + phoneHref + '>' + svgPhone + ' Gọi</a>';
+  }
+
+  var nextActionHtml = client.next_action
+    ? '<div style="margin:8px 0 0;padding:7px 10px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;gap:6px;">'
+      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3270FC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 12 5 19 12"/><polyline points="5 18 12 11 19 18"/></svg>'
+      + '<span style="font-size:11.5px;color:#3270FC;font-weight:500;">' + escHtml(client.next_action) + '</span>'
       + '</div>'
-      + '<div style="text-align:right;">'
-        + statusDisplay + dealStatusDisplay
-      + '</div>'
+    : '';
+
+  return '<div class="cust-card">'
+    + '<div class="cust-header">'
+    +   '<div class="cust-avatar" style="background:var(--primary);">' + escHtml(initials) + '</div>'
+    +   '<div class="cust-info">'
+    +     '<div class="cust-name">' + escHtml(client.customer_name) + '</div>'
+    +     '<div class="cust-meta">'
+    +       '<span style="color:var(--text-tertiary);font-size:11px;">' + escHtml(client.customer_phone || '') + '</span>'
+    +       '<span style="color:var(--text-tertiary);font-size:11px;margin-left:6px;">' + escHtml(client.created_diff) + '</span>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="cust-status-badge"><span class="badge ' + si.cls + '">' + si.label + '</span></div>'
     + '</div>'
-    + '<div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:6px;">'
-      + '<div><strong>BĐS:</strong> ' + categories + '</div>'
-      + '<div><strong>Khu:</strong> ' + wards + '</div>'
-      + '<div><strong>Giá:</strong> ' + budget + '</div>'
+    + '<div class="cust-body">'
+    +   '<div class="cust-row"><span style="font-size:12px;color:var(--text-secondary);">' + line1 + '</span></div>'
+    +   (line2 ? '<div class="cust-row"><span style="font-size:12px;color:var(--text-tertiary);">' + line2 + '</span></div>' : '')
+    +   (tagsHtml ? '<div class="cust-tags" style="margin-top:6px;">' + tagsHtml + '</div>' : '')
     + '</div>'
-    + (client.note ? '<div style="font-size:11px;color:#999;border-top:1px solid #f0f0f0;padding-top:6px;margin-top:6px;">📝 ' + client.note + '</div>' : '')
+    + leadFlow
+    + nextActionHtml
+    + '<div class="cust-footer">'
+    +   '<div class="cust-actions">' + actionBtns + '</div>'
+    + '</div>'
     + '</div>';
 }
 

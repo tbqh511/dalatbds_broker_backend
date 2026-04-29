@@ -876,21 +876,28 @@ class TelegramWebAppController extends Controller
             $status = trim((string) $request->input('status', ''));
             $page = (int) $request->input('page', 1);
 
-            $baseQuery = CrmLead::with(['customer', 'deal', 'deal.products.property', 'deal.products.bookings'])
-                ->where(function ($q) use ($customer) {
-                    $q->where('sale_id', $customer->id)
-                        ->orWhere('user_id', $customer->id);
-                });
+            $baseQuery = CrmLead::with([
+                'customer',
+                'deal',
+                'deal.products.property',
+                'deal.products.bookings',
+                'activities' => function ($q) {
+                    $q->orderBy('created_at', 'desc')->limit(3);
+                },
+            ])->where(function ($q) use ($customer) {
+                $q->where('sale_id', $customer->id)
+                    ->orWhere('user_id', $customer->id);
+            });
 
             $kpi = [
-                'new' => (clone $baseQuery)->whereRaw("LOWER(crm_leads.status) = 'new'")->count(),
-                'care' => (clone $baseQuery)->where(function ($q) {
+                'new'     => (clone $baseQuery)->whereRaw("LOWER(crm_leads.status) = 'new'")->whereDoesntHave('deal')->count(),
+                'caring'  => (clone $baseQuery)->where(function ($q) {
                     $q->whereRaw("LOWER(crm_leads.status) = 'contacted'")
                         ->orWhereHas('deal', fn ($dq) => $dq->whereIn('status', ['open', 'negotiating']));
                 })->count(),
-                'waiting' => (clone $baseQuery)->whereHas('deal', fn ($dq) => $dq->where('status', 'waiting_finance'))->count(),
-                'archived' => (clone $baseQuery)->where(function ($q) {
-                    $q->whereRaw("LOWER(crm_leads.status) = 'lost'")
+                'viewing' => (clone $baseQuery)->whereHas('deal.products.bookings')->count(),
+                'closed'  => (clone $baseQuery)->where(function ($q) {
+                    $q->whereRaw("LOWER(crm_leads.status) IN ('lost', 'bad-contact')")
                         ->orWhereHas('deal', fn ($dq) => $dq->where('status', 'closed'));
                 })->count(),
             ];
@@ -905,20 +912,20 @@ class TelegramWebAppController extends Controller
             }
 
             if ($status !== '') {
-                if ($status === 'care') {
+                if ($status === 'new') {
+                    $baseQuery->whereRaw("LOWER(crm_leads.status) = 'new'")->whereDoesntHave('deal');
+                } elseif ($status === 'caring') {
                     $baseQuery->where(function ($q) {
                         $q->whereRaw("LOWER(crm_leads.status) = 'contacted'")
                             ->orWhereHas('deal', fn ($dq) => $dq->whereIn('status', ['open', 'negotiating']));
                     });
-                } elseif ($status === 'waiting') {
-                    $baseQuery->whereHas('deal', fn ($dq) => $dq->where('status', 'waiting_finance'));
-                } elseif ($status === 'archived') {
+                } elseif ($status === 'viewing') {
+                    $baseQuery->whereHas('deal.products.bookings');
+                } elseif ($status === 'closed') {
                     $baseQuery->where(function ($q) {
-                        $q->whereRaw("LOWER(crm_leads.status) = 'lost'")
+                        $q->whereRaw("LOWER(crm_leads.status) IN ('lost', 'bad-contact')")
                             ->orWhereHas('deal', fn ($dq) => $dq->where('status', 'closed'));
                     });
-                } elseif ($status === 'new') {
-                    $baseQuery->whereRaw("LOWER(crm_leads.status) = 'new'");
                 }
             }
 
@@ -931,9 +938,28 @@ class TelegramWebAppController extends Controller
                 ->paginate(15, ['*'], 'page', $page);
 
             $clients = $paginator->getCollection()->map(function ($lead) use ($catMap, $wardMap) {
-                $rawStatus = $lead->getRawOriginal('status');
-                $deal = $lead->deal;
+                $rawStatus  = $lead->getRawOriginal('status');
+                $rawType    = $lead->getRawOriginal('lead_type');
+                $deal       = $lead->deal;
                 $dealStatus = $deal ? $deal->getRawOriginal('status') : null;
+
+                $hasBooking = $deal && $deal->products->contains(fn ($p) => $p->bookings->isNotEmpty());
+
+                $unifiedStatus = match (true) {
+                    in_array($rawStatus, ['lost', 'bad-contact']) => 'closed',
+                    $dealStatus === 'closed'                      => 'closed',
+                    $hasBooking || $dealStatus === 'negotiating'  => 'viewing',
+                    $deal !== null                                => 'caring',
+                    $rawStatus === 'contacted'                    => 'caring',
+                    default                                       => 'new',
+                };
+
+                $nextAction = match ($unifiedStatus) {
+                    'new'     => 'Gọi điện và liên hệ khách hàng',
+                    'caring'  => 'Gửi BĐS phù hợp cho khách',
+                    'viewing' => 'Xác nhận kết quả xem nhà',
+                    default   => '',
+                };
 
                 $categoryNames = collect($lead->categories ?? [])
                     ->map(fn ($id) => $catMap[$id] ?? null)->filter()->values()->toArray();
@@ -950,30 +976,44 @@ class TelegramWebAppController extends Controller
                             .($budgetMax > 0 ? format_vnd($budgetMax) : '?');
                 }
 
+                $activities = $lead->activities->map(function ($a) {
+                    return [
+                        'type'       => $a->type,
+                        'type_label' => $a->getTypeLabel(),
+                        'content'    => $a->content ?? '',
+                        'created_at' => Carbon::parse($a->getRawOriginal('created_at'))->format('d/m'),
+                    ];
+                })->values()->toArray();
+
                 $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
 
                 return [
-                    'id' => $lead->id,
-                    'status' => $rawStatus,
-                    'has_deal' => $deal !== null,
-                    'deal_status' => $dealStatus,
-                    'customer_name' => optional($lead->customer)->full_name ?? 'Khách vãng lai',
+                    'id'             => $lead->id,
+                    'status'         => $rawStatus,
+                    'unified_status' => $unifiedStatus,
+                    'next_action'    => $nextAction,
+                    'lead_type'      => $rawType,
+                    'purpose'        => $lead->purpose ?? '',
+                    'has_deal'       => $deal !== null,
+                    'deal_status'    => $dealStatus,
+                    'customer_name'  => optional($lead->customer)->full_name ?? 'Khách vãng lai',
                     'customer_phone' => optional($lead->customer)->contact ?? '',
-                    'categories' => $categoryNames,
-                    'wards' => $wardNames,
-                    'budget' => $budget,
-                    'note' => $lead->note ?? '',
-                    'created_at' => $createdAt->format('d/m/Y'),
-                    'created_diff' => $createdAt->diffForHumans(),
+                    'categories'     => $categoryNames,
+                    'wards'          => $wardNames,
+                    'budget'         => $budget,
+                    'note'           => $lead->note ?? '',
+                    'activities'     => $activities,
+                    'created_at'     => $createdAt->format('d/m/Y'),
+                    'created_diff'   => $createdAt->diffForHumans(),
                 ];
             });
 
             return response()->json([
-                'success' => true,
-                'kpi' => $kpi,
-                'clients' => $clients,
-                'total' => $paginator->total(),
-                'has_more' => $paginator->hasMorePages(),
+                'success'   => true,
+                'kpi'       => $kpi,
+                'clients'   => $clients,
+                'total'     => $paginator->total(),
+                'has_more'  => $paginator->hasMorePages(),
                 'next_page' => $paginator->currentPage() + 1,
             ]);
         } catch (\Exception $e) {
