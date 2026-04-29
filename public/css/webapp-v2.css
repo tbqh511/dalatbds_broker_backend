@@ -9290,6 +9290,15 @@ textarea.form-row-value {
   white-space: nowrap;
 }
 
+.cust-btn.secondary {
+  width: auto;
+  padding: 0 10px;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* lead status flow */
 .lead-flow {
   display: flex;
