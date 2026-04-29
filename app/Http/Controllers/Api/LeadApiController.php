@@ -157,22 +157,8 @@ class LeadApiController extends Controller
     protected function notifySale($sale, $lead)
     {
         if ($sale->telegram_id) {
-            // Dùng template tập trung — chỉ sửa TelegramMessageTemplates.php để thay đổi nội dung
-            $message = TelegramMessageTemplates::leadAssigned($lead);
-
-            $webAppUrl = route('telegram.leads.show', ['id' => $lead->id]);
-
-            $options = [
-                'reply_markup' => json_encode([
-                    'inline_keyboard' => [
-                        [
-                            ['text' => '📂 Xem chi tiết Lead', 'web_app' => ['url' => $webAppUrl]]
-                        ]
-                    ]
-                ])
-            ];
-
-            $this->notificationService->sendToUser($sale, $message, $options);
+            $tpl = TelegramMessageTemplates::leadAssigned($lead);
+            $this->notificationService->sendWithInlineKeyboard($sale->telegram_id, $tpl['text'], $tpl['keyboard']);
         }
     }
 

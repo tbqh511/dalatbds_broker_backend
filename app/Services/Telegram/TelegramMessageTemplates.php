@@ -131,22 +131,32 @@ class TelegramMessageTemplates
 
     /**
      * Lead được gán cho Sale
+     * Trả về ['text' => string, 'keyboard' => array] để dùng với sendWithInlineKeyboard.
+     *
+     * @return array{text: string, keyboard: array}
      */
-    public static function leadAssigned(CrmLead $lead): string
+    public static function leadAssigned(CrmLead $lead): array
     {
         $customerName = self::escape($lead->customer->full_name ?? 'N/A');
-        $phone = self::escape($lead->customer->contact ?? 'N/A');
-        $leadType = ucfirst($lead->lead_type ?? 'N/A');
-        $budget = number_format($lead->demand_rate_min) . ' - ' . number_format($lead->demand_rate_max);
+        $leadType     = ($lead->getRawOriginal('lead_type') ?? '') === 'buy' ? 'Mua' : 'Thuê';
+        $budget       = $lead->budget_label ?: (
+            number_format((float) ($lead->demand_rate_min ?? 0)) . ' – ' . number_format((float) ($lead->demand_rate_max ?? 0)) . ' VNĐ'
+        );
         $note = self::escape($lead->note ?? '');
 
-        return "🔔 *LEAD MỚI ĐƯỢC GIAO*\n" .
-               "----------------\n" .
-               "📋 Khách hàng: {$customerName}\n" .
-               "📞 SĐT: {$phone}\n" .
-               "🏠 Loại: {$leadType}\n" .
-               "💰 Ngân sách: {$budget} VNĐ\n" .
-               "📝 Ghi chú: {$note}";
+        $text = "🔔 *LEAD MỚI ĐƯỢC GIAO*\n" .
+                "────────────────\n" .
+                "📋 Khách hàng: {$customerName}\n" .
+                "🏠 Nhu cầu: {$leadType}\n" .
+                "💰 Ngân sách: {$budget}\n" .
+                "📝 Ghi chú: {$note}";
+
+        $webAppUrl = route('webapp.leads.show', ['id' => $lead->id]);
+        $keyboard  = [[
+            ['text' => '📂 Xem chi tiết Lead', 'web_app' => ['url' => $webAppUrl]],
+        ]];
+
+        return ['text' => $text, 'keyboard' => $keyboard];
     }
 
     /**
