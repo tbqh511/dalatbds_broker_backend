@@ -75,6 +75,14 @@
   <!-- Sale CRM section — hiện với sale, sale_admin, admin -->
   <div class="role-sale">
     <div class="menu-section"><div class="menu-section-title">CRM — Chăm sóc khách hàng</div></div>
+    <div class="menu-item" style="border-left:3px solid var(--primary);" onclick="openSubpage('mycustomers')">
+      <div class="menu-item-icon" style="background:var(--primary-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Khách của tôi</div>
+        <div class="menu-item-sub">{{ $stats['leads_count'] ?? 0 }} khách đang theo dõi</div>
+      </div>
+      <div class="menu-item-right"><span class="badge badge-blue" style="font-size:10px;">Tổng hợp</span> ›</div>
+    </div>
     <div class="menu-item" onclick="openSubpage('clients')">
       <div class="menu-item-icon" style="background:var(--teal-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
       <div class="menu-item-body">
