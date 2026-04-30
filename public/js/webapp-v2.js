@@ -6702,18 +6702,23 @@ function _buildTimelineHtml(client) {
   var html = '<div class="cd-timeline">';
   activities.forEach(function(a, i) {
     var isLast = i === activities.length - 1;
+    // Support both legacy {title,description,time} and API {type_label,content,created_at}
+    var title   = a.title       || a.type_label || '';
+    var desc    = a.description || a.content    || '';
+    var time    = a.time        || a.created_at || '';
+    var dotColor = a.dot_color || '#94a3b8';
     var badgeHtml = a.badge
       ? ' <span class="cd-tl-badge" style="background:' + escHtml(a.badge_bg || '#d1fae5') + ';color:' + escHtml(a.badge_color || '#065f46') + ';">' + escHtml(a.badge) + '</span>'
       : '';
     html += '<div class="cd-tl-item">'
       + '<div class="cd-tl-left">'
-      +   '<div class="cd-tl-dot" style="background:' + escHtml(a.dot_color || '#94a3b8') + ';"></div>'
+      +   '<div class="cd-tl-dot" style="background:' + escHtml(dotColor) + ';"></div>'
       +   (isLast ? '' : '<div class="cd-tl-line"></div>')
       + '</div>'
       + '<div class="cd-tl-content">'
-      +   '<div class="cd-tl-title">' + escHtml(a.title || '') + badgeHtml + '</div>'
-      +   (a.description ? '<div class="cd-tl-desc">' + escHtml(a.description) + '</div>' : '')
-      +   (a.time ? '<div class="cd-tl-time">' + escHtml(a.time) + '</div>' : '')
+      +   '<div class="cd-tl-title">' + escHtml(title) + badgeHtml + '</div>'
+      +   (desc ? '<div class="cd-tl-desc">' + escHtml(desc) + '</div>' : '')
+      +   (time ? '<div class="cd-tl-time">' + escHtml(time) + '</div>' : '')
       + '</div>'
       + '</div>';
   });
