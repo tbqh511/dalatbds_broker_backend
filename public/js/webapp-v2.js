@@ -6582,21 +6582,56 @@ function renderClientCard(client) {
     + '</div>';
 }
 
+var currentClientDetailId = null;
+
 window.openClientDetail = function(id) {
   var client = clientsDataMap[id];
   if (!client) { showToast('Không tìm thấy thông tin khách'); return; }
+  currentClientDetailId = id;
 
+  var leadTypeLabel = client.lead_type === 'buy' ? 'Tìm mua' : 'Tìm thuê';
+
+  // Header title & subtitle
   var titleEl = document.getElementById('cdSpTitle');
-  if (titleEl) titleEl.textContent = (client.customer_name || '?') + ' — Giao dịch';
+  if (titleEl) titleEl.textContent = (client.customer_name || '?') + ' — Giao dịch #' + id;
 
+  var subEl = document.getElementById('cdSpSubtitle');
+  if (subEl) {
+    var parts = [];
+    if (client.created_diff) parts.push('Tạo ' + client.created_diff);
+    parts.push(leadTypeLabel);
+    if (client.purpose) parts.push(client.purpose);
+    subEl.textContent = parts.join(' · ');
+  }
+
+  // Avatar initials
+  var avatarEl = document.getElementById('cdHeaderAvatar');
+  if (avatarEl) {
+    var nameParts = (client.customer_name || '?').trim().split(/\s+/);
+    var initials = nameParts.length >= 2
+      ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+      : ((client.customer_name || '?')[0] || '?').toUpperCase();
+    avatarEl.textContent = initials;
+  }
+
+  // Stepper
   var stepperEl = document.getElementById('cdStepper');
   if (stepperEl) stepperEl.innerHTML = _buildClientStepper(client.unified_status);
 
+  // Nhu cầu
   var needsEl = document.getElementById('cdNeedsGrid');
   if (needsEl) needsEl.innerHTML = _buildClientNeeds(client);
 
+  // Hoạt động
+  var actionsEl = document.getElementById('cdActionsBody');
+  if (actionsEl) actionsEl.innerHTML = _buildActionsHtml(client);
+
+  // Lịch sử tương tác
+  var timelineEl = document.getElementById('cdTimelineBody');
+  if (timelineEl) timelineEl.innerHTML = _buildTimelineHtml(client);
+
   var sp = document.getElementById('subpage-client-detail');
-  if (sp) sp.classList.add('open');
+  if (sp) { sp.classList.add('open'); sp.querySelector('.sp-scroll').scrollTop = 0; }
 };
 
 window.closeClientDetail = function() {
@@ -6606,7 +6641,7 @@ window.closeClientDetail = function() {
 };
 
 function _buildClientStepper(unified_status) {
-  var labels = ['Tiếp nhận', 'Xác nhận', 'Đang chăm', 'Xem nhà', 'Thương lượng'];
+  var labels = ['Tiếp nhận', 'Xác nhận', 'Chăm sóc', 'Xem nhà', 'Thương lượng'];
   var activeMap = { 'new': 1, 'caring': 3, 'viewing': 4, 'closed': 5 };
   var activeStep = activeMap[unified_status] || 1;
   var isClosed = unified_status === 'closed';
@@ -6637,10 +6672,186 @@ function _buildClientNeeds(client) {
   var purpose = client.purpose ? escHtml(client.purpose) : '—';
   var budget  = client.budget  ? escHtml(client.budget)  : 'Chưa xác định';
 
-  function cell(label, value) {
-    return '<div class="cd-need-cell"><div class="cd-need-label">' + label + '</div><div class="cd-need-val">' + value + '</div></div>';
+  var budgetCls = client.budget ? '' : ' style="color:var(--warning);"';
+  function cell(label, value, extra) {
+    return '<div class="cd-need-cell"><div class="cd-need-label">' + label + '</div><div class="cd-need-val"' + (extra || '') + '>' + value + '</div></div>';
   }
-  return cell('Loại BĐS', cats) + cell('Khu vực', wards) + cell('Mục đích', purpose) + cell('Ngân sách', budget);
+  return cell('Loại BĐS', cats) + cell('Khu vực', wards) + cell('Mục đích', purpose) + cell('Ngân sách', budget, budgetCls);
+}
+
+function _maskPhone(phone) {
+  if (!phone) return '—';
+  var d = phone.replace(/\D/g, '');
+  if (d.length < 7) return escHtml(phone);
+  return escHtml(d.slice(0, 3)) + 'x · xxx · ' + escHtml(d.slice(-3));
+}
+
+function _buildActionsHtml(client) {
+  var masked = _maskPhone(client.customer_phone);
+  var id = client.id;
+
+  function row(highlight, iconBg, iconSvg, title, titleCls, sub, onclick) {
+    return '<div class="cd-action-row' + (highlight ? ' highlight' : '') + '" onclick="' + onclick + '">'
+      + '<div class="cd-action-icon" style="background:' + iconBg + ';">' + iconSvg + '</div>'
+      + '<div class="cd-action-text">'
+      +   '<div class="cd-action-title' + (titleCls ? ' ' + titleCls : '') + '">' + title + '</div>'
+      +   '<div class="cd-action-sub">' + sub + '</div>'
+      + '</div>'
+      + '<div class="cd-action-chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>'
+      + '</div>';
+  }
+
+  var phoneIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3270FC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var houseIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+  var locIcon   = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var docIcon   = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+  var calIcon   = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+
+  return row(true,  '#dbeafe', phoneIcon, 'Gọi cho khách',          'blue', masked + ' · Bắt buộc qua app',  'openCallConfirmModal(' + id + ')')
+       + row(false, '#fef3c7', houseIcon, 'Gửi thông tin BĐS',      '',     'Chọn BĐS và nội dung gửi',       'openSendPropSheet(' + id + ')')
+       + row(false, '#ccfbf1', locIcon,   'Gửi vị trí BĐS',         '',     'Gửi link bản đồ cho khách',      'showToast(\'Chức năng đang phát triển\')')
+       + row(false, '#fef9c3', docIcon,   'Gửi giấy tờ pháp lý',    '',     'Hình ảnh sổ, giấy phép',         'showToast(\'Chức năng đang phát triển\')')
+       + row(false, '#ede9fe', calIcon,   'Đặt lịch hẹn xem nhà',   '',     'Chọn ngày, giờ · Gửi xác nhận', 'showToast(\'Chức năng đang phát triển\')');
+}
+
+function _buildTimelineHtml(client) {
+  var activities = client.activities;
+  if (!activities || activities.length === 0) {
+    // Build a fallback entry from the lead creation info
+    var leadTypeLabel = client.lead_type === 'buy' ? 'Tìm mua' : 'Tìm thuê';
+    var desc = '';
+    if (client.categories && client.categories.length) desc += leadTypeLabel + ': ' + escHtml(client.categories.join(', '));
+    if (client.wards && client.wards.length) desc += (desc ? ' · ' : '') + escHtml(client.wards.join(', '));
+    activities = [{
+      dot_color: '#f59e0b',
+      title: 'Lead được tạo',
+      badge: null,
+      description: desc || 'Khách hàng mới',
+      time: client.created_diff || ''
+    }];
+  }
+
+  var html = '<div class="cd-timeline">';
+  activities.forEach(function(a, i) {
+    var isLast = i === activities.length - 1;
+    var badgeHtml = a.badge
+      ? ' <span class="cd-tl-badge" style="background:' + escHtml(a.badge_bg || '#d1fae5') + ';color:' + escHtml(a.badge_color || '#065f46') + ';">' + escHtml(a.badge) + '</span>'
+      : '';
+    html += '<div class="cd-tl-item">'
+      + '<div class="cd-tl-left">'
+      +   '<div class="cd-tl-dot" style="background:' + escHtml(a.dot_color || '#94a3b8') + ';"></div>'
+      +   (isLast ? '' : '<div class="cd-tl-line"></div>')
+      + '</div>'
+      + '<div class="cd-tl-content">'
+      +   '<div class="cd-tl-title">' + escHtml(a.title || '') + badgeHtml + '</div>'
+      +   (a.description ? '<div class="cd-tl-desc">' + escHtml(a.description) + '</div>' : '')
+      +   (a.time ? '<div class="cd-tl-time">' + escHtml(a.time) + '</div>' : '')
+      + '</div>'
+      + '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+/* ── Call confirmation modal ── */
+window.openCallConfirmModal = function(clientId) {
+  var client = clientsDataMap[clientId];
+  if (!client) return;
+  currentClientDetailId = clientId;
+
+  var label = document.getElementById('cdCallLabel');
+  if (label) label.textContent = 'Gọi cho ' + (client.customer_name || 'khách');
+
+  var phoneEl = document.getElementById('cdCallPhone');
+  if (phoneEl) phoneEl.textContent = _maskPhone(client.customer_phone);
+
+  var overlay = document.getElementById('cdCallOverlay');
+  if (overlay) overlay.classList.add('open');
+};
+
+window.closeCallConfirmModal = function() {
+  var overlay = document.getElementById('cdCallOverlay');
+  if (overlay) overlay.classList.remove('open');
+};
+
+window.confirmCall = function() {
+  var client = clientsDataMap[currentClientDetailId];
+  if (client && client.customer_phone) {
+    window.location.href = 'tel:' + client.customer_phone.replace(/\D/g, '');
+  }
+  closeCallConfirmModal();
+};
+
+/* ── Send property bottom sheet ── */
+window.openSendPropSheet = function(clientId) {
+  var client = clientsDataMap[clientId];
+  if (!client) return;
+  currentClientDetailId = clientId;
+
+  var subEl = document.getElementById('cdSendSubtitle');
+  if (subEl) subEl.textContent = (client.customer_name || '') + ' · ' + _maskPhone(client.customer_phone);
+
+  // Reset radio
+  var radios = document.querySelectorAll('input[name="cdSendType"]');
+  radios.forEach(function(r) { r.checked = r.value === 'full'; });
+
+  // Reset note
+  var note = document.getElementById('cdSendNote');
+  if (note) note.value = '';
+
+  // Build demo property list (static placeholder — real list would come from API)
+  var propList = document.getElementById('cdSendPropList');
+  if (propList) {
+    propList.innerHTML = _buildDemoPropList();
+  }
+
+  var overlay = document.getElementById('cdSendOverlay');
+  if (overlay) overlay.classList.add('open');
+};
+
+window.closeSendPropSheet = function() {
+  var overlay = document.getElementById('cdSendOverlay');
+  if (overlay) overlay.classList.remove('open');
+};
+
+window.sendPropToClient = function() {
+  // Check at least one property is selected
+  var checked = document.querySelectorAll('.cd-prop-item.selected');
+  if (checked.length === 0) {
+    showToast('Vui lòng chọn ít nhất 1 BĐS');
+    return;
+  }
+  closeSendPropSheet();
+  showToast('Đã gửi thông tin BĐS qua Telegram');
+};
+
+window.togglePropSelect = function(el) {
+  el.classList.toggle('selected');
+  var check = el.querySelector('.cd-prop-check');
+  if (check) {
+    var isSelected = el.classList.contains('selected');
+    check.classList.toggle('checked', isSelected);
+    check.innerHTML = isSelected
+      ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      : '';
+  }
+};
+
+function _buildDemoPropList() {
+  var items = [
+    { name: 'Villa Cam Ly 4 phòng ngủ', meta: '12 tỷ · Cam Ly · View đồi' },
+    { name: 'Khách sạn mini Yersin', meta: '8.5 tỷ · P.4 · 15 phòng' },
+  ];
+  return items.map(function(p) {
+    return '<div class="cd-prop-item" onclick="togglePropSelect(this)">'
+      + '<div class="cd-prop-thumb">🏠</div>'
+      + '<div class="cd-prop-info">'
+      +   '<div class="cd-prop-name">' + escHtml(p.name) + '</div>'
+      +   '<div class="cd-prop-meta">' + escHtml(p.meta) + '</div>'
+      + '</div>'
+      + '<div class="cd-prop-check"></div>'
+      + '</div>';
+  }).join('');
 }
 
 function renderDealCards(deals) {

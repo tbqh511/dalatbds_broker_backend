@@ -84,9 +84,15 @@
 
 <!-- ========== SUBPAGE: CLIENT DETAIL ========== -->
 <div class="subpage" id="subpage-client-detail" style="z-index:510;">
-  <div class="sp-header">
+
+  <!-- Header: back + title/subtitle block + avatar -->
+  <div class="sp-header" style="gap:10px;">
     <button class="sp-back" onclick="closeClientDetail()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-    <div class="sp-title" id="cdSpTitle">Chi tiết</div>
+    <div class="cd-header-meta">
+      <div class="sp-title" id="cdSpTitle" style="font-size:14px;text-align:left;padding:0;">Chi tiết</div>
+      <div class="cd-sp-subtitle" id="cdSpSubtitle"></div>
+    </div>
+    <div class="cd-header-avatar" id="cdHeaderAvatar"></div>
   </div>
 
   <!-- 5-step progress stepper (populated by JS) -->
@@ -95,7 +101,7 @@
   </div>
 
   <!-- Scrollable body -->
-  <div class="sp-scroll" style="padding-bottom:80px;">
+  <div class="sp-scroll" style="padding-bottom:20px;">
 
     <!-- Section: Nhu cầu khách -->
     <div class="cd-section">
@@ -103,29 +109,89 @@
       <div class="cd-needs-grid" id="cdNeedsGrid"></div>
     </div>
 
-    <!-- Section: BĐS đã gửi khách -->
+    <!-- Section: Hoạt động -->
+    <div class="cd-section" style="padding:0;overflow:hidden;">
+      <div class="cd-section-title" style="padding:14px 14px 10px;">Hoạt động</div>
+      <div id="cdActionsBody"></div>
+    </div>
+
+    <!-- Section: Lịch sử tương tác -->
     <div class="cd-section">
-      <div class="cd-section-title">BĐS đã gửi khách</div>
-      <div id="cdBdsList">
-        <div class="cd-bds-empty">
-          <button class="cd-bds-add-btn" onclick="showToast('Chức năng đang phát triển')">+ Gửi BĐS phù hợp</button>
-          <div class="cd-bds-empty-text">Chưa có BĐS nào được gửi</div>
-        </div>
-      </div>
+      <div class="cd-section-title">Lịch sử tương tác</div>
+      <div id="cdTimelineBody"></div>
     </div>
 
     <div style="height:8px;"></div>
   </div>
+</div>
 
-  <!-- Sticky bottom action bar -->
-  <div class="cd-action-bar">
-    <button class="cd-btn-outline" onclick="showToast('Chức năng chat đang phát triển')">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Chat
-    </button>
-    <button class="cd-btn-primary" onclick="showToast('Chức năng đang phát triển')">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      Gửi BĐS cho khách
-    </button>
+<!-- ========== OVERLAY: CALL CONFIRMATION MODAL ========== -->
+<div class="cd-call-overlay" id="cdCallOverlay" onclick="closeCallConfirmModal()">
+  <div class="cd-call-modal" onclick="event.stopPropagation()">
+    <div class="cd-call-icon-wrap">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    </div>
+    <div class="cd-call-label" id="cdCallLabel">Gọi cho khách</div>
+    <div class="cd-call-phone" id="cdCallPhone">—</div>
+    <div class="cd-call-note">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Cuộc gọi được lưu tự động
+    </div>
+    <div class="cd-call-btns">
+      <button class="cd-call-btn-cancel" onclick="closeCallConfirmModal()">Hủy</button>
+      <button class="cd-call-btn-confirm" id="cdCallConfirmBtn" onclick="confirmCall()">Gọi ngay</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== OVERLAY: GỬI THÔNG TIN BĐS SHEET ========== -->
+<div class="cd-send-overlay" id="cdSendOverlay" onclick="closeSendPropSheet()">
+  <div class="cd-send-sheet" onclick="event.stopPropagation()">
+    <div class="cd-send-handle"></div>
+
+    <div class="cd-send-header">
+      <div class="cd-send-title">Gửi thông tin BĐS cho khách</div>
+      <div class="cd-send-subtitle" id="cdSendSubtitle"></div>
+    </div>
+
+    <div style="overflow-y:auto;max-height:60vh;">
+      <!-- Chọn BĐS -->
+      <div class="cd-send-section-label">Chọn BĐS</div>
+      <div id="cdSendPropList"></div>
+
+      <!-- Nội dung gửi -->
+      <div class="cd-send-section-label" style="margin-top:4px;">Nội dung gửi</div>
+      <div class="cd-send-radios" id="cdSendRadios">
+        <label class="cd-radio-opt">
+          <input type="radio" name="cdSendType" value="full" checked>
+          <span>Toàn bộ thông tin BĐS</span>
+        </label>
+        <label class="cd-radio-opt">
+          <input type="radio" name="cdSendType" value="location">
+          <span>Chỉ gửi vị trí (bản đồ)</span>
+        </label>
+        <label class="cd-radio-opt">
+          <input type="radio" name="cdSendType" value="legal">
+          <span>Hình ảnh giấy tờ pháp lý</span>
+        </label>
+        <label class="cd-radio-opt">
+          <input type="radio" name="cdSendType" value="gallery">
+          <span>Hình ảnh BĐS (thư viện ảnh)</span>
+        </label>
+      </div>
+
+      <!-- Ghi chú -->
+      <div style="padding:0 16px 4px;">
+        <textarea id="cdSendNote" class="cd-send-note" placeholder="Ghi chú gửi kèm (tùy chọn)" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="cd-send-footer">
+      <button class="cd-send-btn-cancel" onclick="closeSendPropSheet()">Hủy</button>
+      <button class="cd-send-btn-confirm" onclick="sendPropToClient()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Gửi qua Telegram
+      </button>
+    </div>
   </div>
 </div>
