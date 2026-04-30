@@ -4,11 +4,11 @@
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app.c1f1a774.css"
+      "assets/app.feacefb4.css"
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app.c1f1a774.css",
+    "file": "assets/app.feacefb4.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },

@@ -6467,92 +6467,64 @@ function renderClientCard(client) {
     : ((client.customer_name || '?')[0] || '?').toUpperCase();
 
   var unifiedStatusMap = {
-    'new':     { cls: 'badge-red',    label: 'Chưa liên hệ' },
-    'caring':  { cls: 'badge-blue',   label: 'Đang chăm' },
-    'viewing': { cls: 'badge-purple', label: 'Đã hẹn xem' },
-    'closed':  { cls: 'badge-green',  label: 'Đã chốt' },
+    'new':     { cls: 'badge-red',   label: 'Chưa liên hệ' },
+    'caring':  { cls: 'badge-amber', label: 'Đã liên hệ' },
+    'viewing': { cls: 'badge-amber', label: 'Đã liên hệ' },
+    'closed':  { cls: 'badge-green', label: 'Đã chốt' },
   };
   var si = unifiedStatusMap[client.unified_status] || unifiedStatusMap['new'];
 
   var leadTypeLabel = client.lead_type === 'buy' ? 'Tìm mua' : 'Tìm thuê';
 
-  var stepByStatus = { 'new': 1, 'caring': 2, 'viewing': 3, 'closed': 4 };
+  // 5-step pipeline: Tiếp nhận(1) → Xác nhận(2) → Chăm sóc(3) → Xem nhà(4) → Thương lượng(5)
+  var stepByStatus = { 'new': 1, 'caring': 3, 'viewing': 4, 'closed': 5 };
   var activeStep   = stepByStatus[client.unified_status] || 1;
   var isClosed     = client.unified_status === 'closed';
 
   function cfDot(n) {
-    if (!isClosed && n < activeStep) return '<div class="lf-dot done">✓</div>';
-    if (n === activeStep)            return '<div class="lf-dot active">' + n + '</div>';
+    if (isClosed || n < activeStep) return '<div class="lf-dot done">✓</div>';
+    if (n === activeStep)           return '<div class="lf-dot active">' + n + '</div>';
     return '<div class="lf-dot">' + n + '</div>';
   }
   function cfLbl(n, txt) {
-    if (!isClosed && n < activeStep) return '<div class="lf-label done">' + txt + '</div>';
-    if (n === activeStep)            return '<div class="lf-label active">' + txt + '</div>';
+    if (isClosed || n < activeStep) return '<div class="lf-label done">' + txt + '</div>';
+    if (n === activeStep)           return '<div class="lf-label active">' + txt + '</div>';
     return '<div class="lf-label">' + txt + '</div>';
   }
   function cfLine(afterN) {
-    return (!isClosed && afterN < activeStep)
+    return (isClosed || afterN < activeStep)
       ? '<div class="lf-line done"></div>'
       : '<div class="lf-line"></div>';
   }
 
-  var leadFlow = '<div class="lead-flow">'
-    + '<div class="lf-step">' + cfDot(1) + cfLbl(1, 'Mới') + '</div>' + cfLine(1)
-    + '<div class="lf-step">' + cfDot(2) + cfLbl(2, 'Chăm') + '</div>' + cfLine(2)
-    + '<div class="lf-step">' + cfDot(3) + cfLbl(3, 'Hẹn xem') + '</div>' + cfLine(3)
-    + '<div class="lf-step">' + cfDot(4) + cfLbl(4, 'Chốt') + '</div>'
-    + '</div>';
+  var lfSteps = [[1,'Tiếp nhận'],[2,'Xác nhận'],[3,'Chăm sóc'],[4,'Xem nhà'],[5,'Thương lượng']];
+  var leadFlow = '<div class="lead-flow">';
+  lfSteps.forEach(function(s, i) {
+    leadFlow += '<div class="lf-step">' + cfDot(s[0]) + cfLbl(s[0], s[1]) + '</div>';
+    if (i < lfSteps.length - 1) leadFlow += cfLine(s[0]);
+  });
+  leadFlow += '</div>';
 
   var phoneRaw  = (client.customer_phone || '').replace(/\D/g, '');
   var phoneHref = phoneRaw
     ? 'href="tel:' + escHtml(client.customer_phone) + '"'
     : 'onclick="showToast(\'Không có số điện thoại\')"';
 
-  var line1 = leadTypeLabel;
-  if (client.categories && client.categories.length) {
-    line1 += ' · ' + escHtml(client.categories.slice(0, 3).join(', '));
-  }
+  // 2×2 info grid
+  var catVal     = (client.categories || []).slice(0, 3).join(', ') || '—';
+  var budgetVal  = client.budget || 'Chưa xác định';
+  var wardVal    = (client.wards || []).slice(0, 2).join(', ') || '—';
+  var purposeVal = client.purpose || '—';
+  var budgetClass = client.budget ? ' budget' : '';
 
-  var line2Parts = [];
-  if (client.wards && client.wards.length) line2Parts.push(escHtml(client.wards.slice(0, 2).join(', ')));
-  if (client.purpose)  line2Parts.push('Mục đích: ' + escHtml(client.purpose));
-  else if (client.budget) line2Parts.push('Ngân sách: ' + escHtml(client.budget));
-  var line2 = line2Parts.join(' · ');
-
-  var tagsHtml = '';
-  (client.categories || []).slice(0, 2).forEach(function(c) {
-    tagsHtml += '<span class="cust-tag">' + escHtml(c) + '</span>';
-  });
-  (client.wards || []).slice(0, 1).forEach(function(w) {
-    tagsHtml += '<span class="cust-tag" style="background:var(--bg-secondary);">' + escHtml(w) + '</span>';
-  });
-  tagsHtml += '<span class="badge ' + si.cls + '" style="font-size:10px;padding:2px 7px;">' + si.label + '</span>';
+  var bodyGrid = '<div class="cust-grid">'
+    + '<div class="cust-grid-cell"><div class="cust-grid-label">' + leadTypeLabel + '</div><div class="cust-grid-val">' + escHtml(catVal) + '</div></div>'
+    + '<div class="cust-grid-cell"><div class="cust-grid-label">Mức tài chính</div><div class="cust-grid-val' + budgetClass + '">' + escHtml(budgetVal) + '</div></div>'
+    + '<div class="cust-grid-cell"><div class="cust-grid-label">Khu vực</div><div class="cust-grid-val">' + escHtml(wardVal) + '</div></div>'
+    + '<div class="cust-grid-cell"><div class="cust-grid-label">Mục đích</div><div class="cust-grid-val">' + escHtml(purposeVal) + '</div></div>'
+    + '</div>';
 
   var svgPhone = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
-  var svgSend  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>';
-
-  var btnCall = '<a class="cust-btn" title="Gọi" ' + phoneHref + '>' + svgPhone + '</a>';
-  var actionBtns = '';
-  if (client.unified_status === 'new') {
-    actionBtns = btnCall
-      + '<div class="cust-btn secondary" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">' + svgSend + ' Gửi BĐS</div>'
-      + '<div class="cust-btn primary" onclick="showToast(\'Chức năng đang phát triển\')">Bắt đầu chăm</div>';
-  } else if (client.unified_status === 'caring') {
-    actionBtns = btnCall
-      + '<div class="cust-btn primary" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">' + svgSend + ' Gửi BĐS</div>';
-  } else if (client.unified_status === 'viewing') {
-    actionBtns = btnCall
-      + '<div class="cust-btn primary" onclick="showToast(\'Chức năng đang phát triển\')">Xác nhận kết quả</div>';
-  } else {
-    actionBtns = btnCall;
-  }
-
-  var nextActionHtml = client.next_action
-    ? '<div style="margin:8px 0 0;padding:7px 10px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;gap:6px;">'
-      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3270FC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 12 5 19 12"/><polyline points="5 18 12 11 19 18"/></svg>'
-      + '<span style="font-size:11.5px;color:#3270FC;font-weight:500;">' + escHtml(client.next_action) + '</span>'
-      + '</div>'
-    : '';
 
   clientsDataMap[client.id] = client;
 
@@ -6562,22 +6534,18 @@ function renderClientCard(client) {
     +   '<div class="cust-info">'
     +     '<div class="cust-name">' + escHtml(client.customer_name) + '</div>'
     +     '<div class="cust-meta">'
-    +       '<span style="color:var(--text-tertiary);font-size:11px;">' + escHtml(client.customer_phone || '') + '</span>'
-    +       '<span style="color:var(--text-tertiary);font-size:11px;margin-left:6px;">' + escHtml(client.created_diff) + '</span>'
+    +       '<span>' + escHtml(client.customer_phone || '') + '</span>'
+    +       '<span>·</span>'
+    +       '<span>' + escHtml(client.created_diff) + '</span>'
     +     '</div>'
     +   '</div>'
     +   '<div class="cust-status-badge"><span class="badge ' + si.cls + '">' + si.label + '</span></div>'
     + '</div>'
-    + '<div class="cust-body">'
-    +   '<div class="cust-row"><span style="font-size:12px;color:var(--text-secondary);">' + line1 + '</span></div>'
-    +   (line2 ? '<div class="cust-row"><span style="font-size:12px;color:var(--text-tertiary);">' + line2 + '</span></div>' : '')
-    +   (tagsHtml ? '<div class="cust-tags" style="margin-top:6px;">' + tagsHtml + '</div>' : '')
-    + '</div>'
+    + bodyGrid
     + leadFlow
-    + nextActionHtml
     + '<div class="cust-footer">'
-    +   '<div class="cust-actions">' + actionBtns + '</div>'
-    +   '<div class="cust-btn secondary" onclick="openClientDetail(' + client.id + ')">Chi tiết</div>'
+    +   '<a class="cust-btn-call" ' + phoneHref + '>' + svgPhone + ' Gọi</a>'
+    +   '<button class="cust-btn-detail" onclick="openClientDetail(' + client.id + ')">Chi tiết</button>'
     + '</div>'
     + '</div>';
 }
