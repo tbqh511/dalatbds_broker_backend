@@ -81,3 +81,51 @@
     <div style="height:16px;"></div>
   </div>
 </div>
+
+<!-- ========== SUBPAGE: CLIENT DETAIL ========== -->
+<div class="subpage" id="subpage-client-detail" style="z-index:510;">
+  <div class="sp-header">
+    <button class="sp-back" onclick="closeClientDetail()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="sp-title" id="cdSpTitle">Chi tiết</div>
+  </div>
+
+  <!-- 5-step progress stepper (populated by JS) -->
+  <div class="cd-stepper-wrap">
+    <div class="cd-stepper" id="cdStepper"></div>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="sp-scroll" style="padding-bottom:80px;">
+
+    <!-- Section: Nhu cầu khách -->
+    <div class="cd-section">
+      <div class="cd-section-title">Nhu cầu khách</div>
+      <div class="cd-needs-grid" id="cdNeedsGrid"></div>
+    </div>
+
+    <!-- Section: BĐS đã gửi khách -->
+    <div class="cd-section">
+      <div class="cd-section-title">BĐS đã gửi khách</div>
+      <div id="cdBdsList">
+        <div class="cd-bds-empty">
+          <button class="cd-bds-add-btn" onclick="showToast('Chức năng đang phát triển')">+ Gửi BĐS phù hợp</button>
+          <div class="cd-bds-empty-text">Chưa có BĐS nào được gửi</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:8px;"></div>
+  </div>
+
+  <!-- Sticky bottom action bar -->
+  <div class="cd-action-bar">
+    <button class="cd-btn-outline" onclick="showToast('Chức năng chat đang phát triển')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Chat
+    </button>
+    <button class="cd-btn-primary" onclick="showToast('Chức năng đang phát triển')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Gửi BĐS cho khách
+    </button>
+  </div>
+</div>

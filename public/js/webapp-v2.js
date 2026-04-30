@@ -6339,6 +6339,7 @@ let clientsCurrentSearch = '';
 let clientsSearchTimer   = null;
 let clientsCurrentPage   = 1;
 let clientsHasMore       = false;
+let clientsDataMap       = {};
 
 function loadClients(force) {
   if (clientsLoaded && !force) return;
@@ -6553,6 +6554,8 @@ function renderClientCard(client) {
       + '</div>'
     : '';
 
+  clientsDataMap[client.id] = client;
+
   return '<div class="cust-card">'
     + '<div class="cust-header">'
     +   '<div class="cust-avatar" style="background:var(--primary);">' + escHtml(initials) + '</div>'
@@ -6574,8 +6577,70 @@ function renderClientCard(client) {
     + nextActionHtml
     + '<div class="cust-footer">'
     +   '<div class="cust-actions">' + actionBtns + '</div>'
+    +   '<div class="cust-btn secondary" onclick="openClientDetail(' + client.id + ')">Chi tiết</div>'
     + '</div>'
     + '</div>';
+}
+
+window.openClientDetail = function(id) {
+  var client = clientsDataMap[id];
+  if (!client) { showToast('Không tìm thấy thông tin khách'); return; }
+
+  var titleEl = document.getElementById('cdSpTitle');
+  if (titleEl) titleEl.textContent = (client.customer_name || '?') + ' — Giao dịch';
+
+  var stepperEl = document.getElementById('cdStepper');
+  if (stepperEl) stepperEl.innerHTML = _buildClientStepper(client.unified_status);
+
+  var needsEl = document.getElementById('cdNeedsGrid');
+  if (needsEl) needsEl.innerHTML = _buildClientNeeds(client);
+
+  var sp = document.getElementById('subpage-client-detail');
+  if (sp) sp.classList.add('open');
+};
+
+window.closeClientDetail = function() {
+  var sp = document.getElementById('subpage-client-detail');
+  if (sp) sp.classList.remove('open');
+  // Do NOT restore bottom-nav — parent clients subpage is still open
+};
+
+function _buildClientStepper(unified_status) {
+  var labels = ['Tiếp nhận', 'Xác nhận', 'Đang chăm', 'Xem nhà', 'Thương lượng'];
+  var activeMap = { 'new': 1, 'caring': 3, 'viewing': 4, 'closed': 5 };
+  var activeStep = activeMap[unified_status] || 1;
+  var isClosed = unified_status === 'closed';
+
+  var html = '';
+  for (var i = 1; i <= 5; i++) {
+    var isDone   = isClosed || i < activeStep;
+    var isActive = !isClosed && i === activeStep;
+    var dotCls   = isDone ? 'done' : (isActive ? 'active' : '');
+    var lblCls   = isDone ? 'done' : (isActive ? 'active' : '');
+    var dotTxt   = isDone ? '✓' : i;
+
+    html += '<div class="cd-st-step">'
+          +   '<div class="cd-st-dot ' + dotCls + '">' + dotTxt + '</div>'
+          +   '<div class="cd-st-lbl ' + lblCls + '">' + labels[i - 1] + '</div>'
+          + '</div>';
+
+    if (i < 5) {
+      html += '<div class="cd-st-line' + (isDone ? ' done' : '') + '"></div>';
+    }
+  }
+  return html;
+}
+
+function _buildClientNeeds(client) {
+  var cats   = (client.categories && client.categories.length) ? escHtml(client.categories.join(', ')) : '—';
+  var wards  = (client.wards && client.wards.length) ? escHtml(client.wards.join(', ')) : '—';
+  var purpose = client.purpose ? escHtml(client.purpose) : '—';
+  var budget  = client.budget  ? escHtml(client.budget)  : 'Chưa xác định';
+
+  function cell(label, value) {
+    return '<div class="cd-need-cell"><div class="cd-need-label">' + label + '</div><div class="cd-need-val">' + value + '</div></div>';
+  }
+  return cell('Loại BĐS', cats) + cell('Khu vực', wards) + cell('Mục đích', purpose) + cell('Ngân sách', budget);
 }
 
 function renderDealCards(deals) {
