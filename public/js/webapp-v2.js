@@ -6392,6 +6392,15 @@ function loadClients(force) {
       clientsHasMore     = res.has_more;
       clientsCurrentPage = 1;
       if (moreEl) moreEl.style.display = res.has_more ? '' : 'none';
+
+      // Auto-open client detail nếu được trigger từ notification
+      if (window._pendingClientDetailId) {
+        var pendId = window._pendingClientDetailId;
+        window._pendingClientDetailId = null;
+        if (clientsDataMap[pendId]) {
+          setTimeout(function() { openClientDetail(pendId); }, 80);
+        }
+      }
     })
     .catch(function() {
       loadingEl.style.display = 'none';
@@ -8473,11 +8482,11 @@ window.activityApp = function() {
   // Action button configs per notification type
   var TYPE_ACTIONS = {
     lead_assigned: [
-      { label: 'Xem Lead', primary: true, icon: 'eye', subpage: 'leads' },
+      { label: 'Chăm sóc ngay', primary: true, icon: 'eye', action: 'open_lead_client' },
       { label: 'Gọi ngay', primary: false, icon: 'phone', action: 'call' }
     ],
     lead_followup: [
-      { label: 'Xem Lead', primary: true, icon: 'eye', subpage: 'leads' }
+      { label: 'Xem khách hàng', primary: true, icon: 'eye', action: 'open_lead_client' }
     ],
     lead_created: [
       { label: 'Phân công', primary: true, icon: 'eye', subpage: 'assignlead' }
@@ -8527,7 +8536,7 @@ window.activityApp = function() {
 
   // Navigation mapping: type → subpage to open on tap
   var TYPE_SUBPAGE = {
-    lead_assigned: 'leads', lead_followup: 'leads', lead_created: 'assignlead',
+    lead_assigned: 'clients', lead_followup: 'clients', lead_created: 'assignlead',
     booking_reminder: 'bookings', booking_result: 'bookings', booking_changed: 'bookings',
     property_submitted: 'mybds', property_approved: 'mybds', property_rejected: 'mybds', property_pending: 'approvebds',
     commission_status: 'commissions', commission_completed: 'commissions',
@@ -8705,6 +8714,11 @@ window.activityApp = function() {
         // Chuyển về trang Assign Lead và focus đúng lead
         if (typeof openSubpage === 'function') openSubpage('assignlead', { lead_id: notif.data.lead_id });
         return;
+      } else if ((notif.type === 'lead_assigned' || notif.type === 'lead_followup') && notif.data && notif.data.lead_id) {
+        // Chuyển thẳng vào trang chi tiết khách hàng
+        window._pendingClientDetailId = notif.data.lead_id;
+        if (typeof openSubpage === 'function') openSubpage('clients');
+        return;
       }
 
       var subpage = TYPE_SUBPAGE[notif.type];
@@ -8791,6 +8805,14 @@ window.activityApp = function() {
     },
 
     handleAction: function(action, notif) {
+      if (action._action === 'open_lead_client') {
+        var leadId = notif.data && notif.data.lead_id;
+        if (leadId) {
+          window._pendingClientDetailId = leadId;
+        }
+        if (typeof openSubpage === 'function') openSubpage('clients');
+        return;
+      }
       if (action._action === 'view_property') {
         var propId = notif.data && notif.data.property_id;
         if (propId) {
