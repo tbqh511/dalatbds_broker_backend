@@ -222,8 +222,9 @@ class CrmLeadController extends Controller
             'content'  => "Phân công cho: {$sale->name}",
         ]);
 
-        // Notify assigned sale via Telegram (respect their notification settings)
-        if ($sale->telegram_id && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
+        // Notify assigned sale via Telegram (requires bot started + notification settings)
+        if ($sale->telegram_id && $sale->telegram_bot_started && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
+            $lead->load('customer');
             $tpl = TelegramMessageTemplates::leadAssigned($lead);
             $this->notificationService->sendWithInlineKeyboard($sale->telegram_id, $tpl['text'], $tpl['keyboard']);
         }
@@ -301,7 +302,7 @@ class CrmLeadController extends Controller
         });
 
         // Send one Telegram notification for the whole batch
-        if (count($assigned) > 0 && $sale->telegram_id &&
+        if (count($assigned) > 0 && $sale->telegram_id && $sale->telegram_bot_started &&
             $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
             $firstLead = CrmLead::find($assigned[0]);
             if ($firstLead) {
@@ -521,7 +522,7 @@ class CrmLeadController extends Controller
             'content'  => "Phân công qua WebApp (Telegram) cho: {$sale->name}",
         ]);
 
-        if ($sale->telegram_id && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
+        if ($sale->telegram_id && $sale->telegram_bot_started && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
             $tpl = TelegramMessageTemplates::leadAssigned($lead);
             $this->notificationService->sendWithInlineKeyboard($sale->telegram_id, $tpl['text'], $tpl['keyboard']);
         }

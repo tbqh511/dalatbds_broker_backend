@@ -160,7 +160,7 @@ class TelegramMessageTemplates
 
         $webAppUrl = route('webapp', [], true) . '?open=clients&lead_id=' . $lead->id;
         $keyboard  = [[
-            ['text' => '👤 Xem thông tin khách', 'web_app' => ['url' => $webAppUrl]],
+            ['text' => '👤 Xem thông tin khách', 'url' => $webAppUrl],
         ]];
 
         return ['text' => $text, 'keyboard' => $keyboard];
