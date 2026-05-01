@@ -996,15 +996,18 @@ class TelegramWebAppController extends Controller
                     'purpose'        => $lead->purpose ?? '',
                     'has_deal'       => $deal !== null,
                     'deal_status'    => $dealStatus,
-                    'customer_name'  => optional($lead->customer)->full_name ?? 'Khách vãng lai',
-                    'customer_phone' => optional($lead->customer)->contact ?? '',
-                    'categories'     => $categoryNames,
-                    'wards'          => $wardNames,
-                    'budget'         => $budget,
-                    'note'           => $lead->note ?? '',
-                    'activities'     => $activities,
-                    'created_at'     => $createdAt->format('d/m/Y'),
-                    'created_diff'   => $createdAt->diffForHumans(),
+                    'customer_name'        => optional($lead->customer)->full_name ?? 'Khách vãng lai',
+                    'customer_phone'       => optional($lead->customer)->contact ?? '',
+                    'customer_telegram_id' => optional($lead->customer)->telegram_id ?? '',
+                    'categories'           => $categoryNames,
+                    'wards'                => $wardNames,
+                    'budget'               => $budget,
+                    'budget_min'           => (float) ($lead->demand_rate_min ?? 0),
+                    'budget_max'           => (float) ($lead->demand_rate_max ?? 0),
+                    'note'                 => $lead->note ?? '',
+                    'activities'           => $activities,
+                    'created_at'           => $createdAt->format('d/m/Y'),
+                    'created_diff'         => $createdAt->diffForHumans(),
                 ];
             });
 
@@ -1015,6 +1018,119 @@ class TelegramWebAppController extends Controller
                 'total'     => $paginator->total(),
                 'has_more'  => $paginator->hasMorePages(),
                 'next_page' => $paginator->currentPage() + 1,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    public function sendPropertyToClientApi(Request $request): JsonResponse
+    {
+        try {
+            $broker = Auth::guard('webapp')->user();
+            if (! $broker) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $leadId      = (int) $request->input('lead_id');
+            $propertyIds = array_filter(array_map('intval', (array) $request->input('property_ids', [])));
+            $contentType = $request->input('content_type', 'full');
+            $note        = trim($request->input('note', ''));
+
+            if (empty($propertyIds)) {
+                return response()->json(['success' => false, 'message' => 'Chưa chọn BĐS'], 422);
+            }
+
+            $lead = CrmLead::with('customer')->where('id', $leadId)->where(function ($q) use ($broker) {
+                $q->where('user_id', $broker->id)->orWhere('sale_id', $broker->id);
+            })->first();
+
+            if (! $lead) {
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy lead'], 404);
+            }
+
+            $crmCustomer    = $lead->customer;
+            $customerTeleId = $crmCustomer ? (string) ($crmCustomer->telegram_id ?? '') : '';
+            $customerName   = $crmCustomer ? ($crmCustomer->full_name ?? 'Khách hàng') : 'Khách hàng';
+            $brokerName     = $broker->name ?? 'Broker';
+
+            $properties = Property::with(['category', 'ward'])->whereIn('id', $propertyIds)->get();
+            if ($properties->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy BĐS'], 404);
+            }
+
+            $notifService = app(NotificationService::class);
+            $sentCount = 0;
+
+            foreach ($properties as $prop) {
+                $title    = $prop->title ?: $prop->title_by_address;
+                $price    = $prop->formatted_prices ?? '';
+                $area     = $prop->area ? $prop->area . ' m²' : '';
+                $location = $prop->address_location ?? '';
+                $shareUrl = url('/') . '/p/' . ($prop->slug ?? $prop->id);
+
+                switch ($contentType) {
+                    case 'location':
+                        if ($prop->latitude && $prop->longitude) {
+                            $mapsUrl = 'https://www.google.com/maps?q=' . $prop->latitude . ',' . $prop->longitude;
+                            $msg = "📍 *VỊ TRÍ BĐS TỪ {$brokerName}*\n\n"
+                                 . "🏠 *{$title}*\n"
+                                 . ($price ? "💰 {$price}\n" : '')
+                                 . "📌 Địa chỉ: {$location}\n\n"
+                                 . "🗺 [Xem trên Google Maps]({$mapsUrl})";
+                        } else {
+                            $msg = "📍 *VỊ TRÍ BĐS TỪ {$brokerName}*\n\n"
+                                 . "🏠 *{$title}*\n"
+                                 . "📌 Địa chỉ: {$location}";
+                        }
+                        break;
+                    case 'legal':
+                        $legal = $prop->legal ?? 'Đang cập nhật';
+                        $msg = "📄 *GIẤY TỜ PHÁP LÝ — {$brokerName}*\n\n"
+                             . "🏠 *{$title}*\n"
+                             . "📌 {$location}\n"
+                             . "📋 Pháp lý: {$legal}\n\n"
+                             . "ℹ️ Liên hệ broker để được cung cấp hồ sơ pháp lý đầy đủ.";
+                        break;
+                    case 'gallery':
+                        $imgCount = $prop->propery_image()->count();
+                        $msg = "🖼 *HÌNH ẢNH BĐS TỪ {$brokerName}*\n\n"
+                             . "🏠 *{$title}*\n"
+                             . ($price ? "💰 {$price}\n" : '')
+                             . ($imgCount ? "📷 {$imgCount} hình thực tế\n\n" : "\n")
+                             . "[Xem thêm]({$shareUrl})";
+                        break;
+                    default: // full
+                        $catName = $prop->category?->category ?? '';
+                        $msg = "🏠 *BĐS PHÙ HỢP TỪ {$brokerName}*\n\n"
+                             . "*{$title}*\n"
+                             . ($catName ? "🏷 {$catName}\n" : '')
+                             . ($price ? "💰 {$price}\n" : '')
+                             . ($area ? "📐 {$area}\n" : '')
+                             . ($location ? "📌 {$location}\n" : '')
+                             . "\n[Xem chi tiết]({$shareUrl})";
+                        break;
+                }
+
+                if ($note !== '') {
+                    $escaped = str_replace(['_', '*', '[', ']', '`'], ['\\_', '\\*', '\\[', '\\]', '\\`'], $note);
+                    $msg .= "\n\n💬 Ghi chú: {$escaped}";
+                }
+
+                if ($customerTeleId !== '') {
+                    $sent = $notifService->sendDirectTo($customerTeleId, $msg);
+                    if ($sent) $sentCount++;
+                }
+            }
+
+            $sentViaTelegram = $sentCount > 0;
+
+            return response()->json([
+                'success'           => true,
+                'sent_via_telegram' => $sentViaTelegram,
+                'count'             => count($propertyIds),
             ]);
         } catch (\Exception $e) {
             Log::error($e);

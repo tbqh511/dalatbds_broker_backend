@@ -174,6 +174,11 @@ class NotificationService
     /**
      * Send raw message to Telegram API with retry logic
      */
+    public function sendDirectTo(string $telegramId, string $message, array $options = []): bool
+    {
+        return $this->sendRaw($telegramId, $message, $options);
+    }
+
     protected function sendRaw(string $chatId, string $message, array $options = []): bool
     {
         if (!$this->botToken) {

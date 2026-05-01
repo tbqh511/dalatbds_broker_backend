@@ -148,45 +148,96 @@
     <div class="cd-send-handle"></div>
 
     <div class="cd-send-header">
-      <div class="cd-send-title">Gửi thông tin BĐS cho khách</div>
-      <div class="cd-send-subtitle" id="cdSendSubtitle"></div>
+      <div class="cd-send-title">Tìm BĐS phù hợp</div>
+      <div class="cd-send-subtitle">Chọn BĐS → chọn nội dung gửi → gửi cho khách</div>
     </div>
 
-    <div style="overflow-y:auto;max-height:60vh;">
-      <!-- Chọn BĐS -->
+    <div style="overflow-y:auto;flex:1;min-height:0;">
+      <!-- Chip thông tin khách -->
+      <div style="padding:10px 12px 0;">
+        <div class="cd-criteria-chip">
+          <div class="cd-criteria-avatar" id="cdSendAvatar"></div>
+          <div class="cd-criteria-body">
+            <div class="cd-criteria-name" id="cdSendCriteriaName"></div>
+            <div class="cd-criteria-tags" id="cdSendCriteriaTags"></div>
+            <div class="cd-criteria-info" id="cdSendCriteriaInfo"></div>
+          </div>
+          <button class="cd-auto-filter-btn" id="cdAutoFilterBtn" onclick="_applySendAutoFilter(this)">Tự động lọc</button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="cd-prop-search-row">
+        <div class="cd-prop-search-wrap">
+          <svg class="cd-prop-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="cdSendSearchInput" class="cd-prop-search-input" placeholder="Tiêu đề, địa chỉ...">
+        </div>
+      </div>
+
+      <!-- Category filter chips -->
+      <div class="cd-prop-type-chips" id="cdSendCatChips">
+        <button class="cd-prop-type-chip active" onclick="_selectSendCatChip(this,'')">Tất cả</button>
+        <button class="cd-prop-type-chip" onclick="_selectSendCatChip(this,'Nhà')">Nhà</button>
+        <button class="cd-prop-type-chip" onclick="_selectSendCatChip(this,'Chung cư')">Chung cư</button>
+        <button class="cd-prop-type-chip" onclick="_selectSendCatChip(this,'Biệt thự')">Biệt thự</button>
+        <button class="cd-prop-type-chip" onclick="_selectSendCatChip(this,'Khách sạn')">Khách sạn</button>
+        <button class="cd-prop-type-chip" onclick="_selectSendCatChip(this,'Đất')">Đất</button>
+      </div>
+
+      <!-- Danh sách BĐS -->
       <div class="cd-send-section-label">Chọn BĐS</div>
       <div id="cdSendPropList"></div>
 
-      <!-- Nội dung gửi -->
-      <div class="cd-send-section-label" style="margin-top:4px;">Nội dung gửi</div>
+      <!-- Nội dung gửi cho khách -->
+      <div class="cd-send-section-label" style="margin-top:4px;">Nội dung gửi cho khách</div>
       <div class="cd-send-radios" id="cdSendRadios">
-        <label class="cd-radio-opt">
-          <input type="radio" name="cdSendType" value="full" checked>
-          <span>Toàn bộ thông tin BĐS</span>
+        <label class="cd-radio-opt selected" onclick="_selectSendRadio(this,'full')">
+          <div class="cd-radio-indicator checked"></div>
+          <div class="cd-radio-icon" style="background:#dbeafe;">🏠</div>
+          <div class="cd-radio-text">
+            <div class="cd-radio-title">Toàn bộ thông tin BĐS</div>
+            <div class="cd-radio-sub">Tên, mô tả, giá, diện tích, hình ảnh</div>
+          </div>
+          <input type="radio" name="cdSendType" value="full" checked style="display:none">
         </label>
-        <label class="cd-radio-opt">
-          <input type="radio" name="cdSendType" value="location">
-          <span>Chỉ gửi vị trí (bản đồ)</span>
+        <label class="cd-radio-opt" onclick="_selectSendRadio(this,'location')">
+          <div class="cd-radio-indicator"></div>
+          <div class="cd-radio-icon" style="background:#d1fae5;">📍</div>
+          <div class="cd-radio-text">
+            <div class="cd-radio-title">Gửi vị trí (bản đồ)</div>
+            <div class="cd-radio-sub">Link Google Maps đến BĐS</div>
+          </div>
+          <input type="radio" name="cdSendType" value="location" style="display:none">
         </label>
-        <label class="cd-radio-opt">
-          <input type="radio" name="cdSendType" value="legal">
-          <span>Hình ảnh giấy tờ pháp lý</span>
+        <label class="cd-radio-opt" onclick="_selectSendRadio(this,'legal')">
+          <div class="cd-radio-indicator"></div>
+          <div class="cd-radio-icon" style="background:#fef3c7;">📄</div>
+          <div class="cd-radio-text">
+            <div class="cd-radio-title">Giấy tờ pháp lý</div>
+            <div class="cd-radio-sub">Số đỏ, giấy phép xây dựng</div>
+          </div>
+          <input type="radio" name="cdSendType" value="legal" style="display:none">
         </label>
-        <label class="cd-radio-opt">
-          <input type="radio" name="cdSendType" value="gallery">
-          <span>Hình ảnh BĐS (thư viện ảnh)</span>
+        <label class="cd-radio-opt" onclick="_selectSendRadio(this,'gallery')">
+          <div class="cd-radio-indicator"></div>
+          <div class="cd-radio-icon" style="background:#ede9fe;">🖼</div>
+          <div class="cd-radio-text">
+            <div class="cd-radio-title">Hình ảnh BĐS</div>
+            <div class="cd-radio-sub">Thư viện ảnh thực tế</div>
+          </div>
+          <input type="radio" name="cdSendType" value="gallery" style="display:none">
         </label>
       </div>
 
       <!-- Ghi chú -->
-      <div style="padding:0 16px 4px;">
-        <textarea id="cdSendNote" class="cd-send-note" placeholder="Ghi chú gửi kèm (tùy chọn)" rows="3"></textarea>
+      <div style="padding:8px 16px 12px;">
+        <textarea id="cdSendNote" class="cd-send-note" placeholder="Ghi chú gửi kèm (tuỳ chọn)..." rows="3"></textarea>
       </div>
     </div>
 
     <div class="cd-send-footer">
-      <button class="cd-send-btn-cancel" onclick="closeSendPropSheet()">Hủy</button>
-      <button class="cd-send-btn-confirm" onclick="sendPropToClient()">
+      <button class="cd-send-btn-cancel" onclick="closeSendPropSheet()">Huỷ</button>
+      <button class="cd-send-btn-confirm" id="cdSendConfirmBtn" onclick="sendPropToClient()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Gửi qua Telegram
       </button>

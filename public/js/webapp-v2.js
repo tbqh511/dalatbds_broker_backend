@@ -6752,30 +6752,85 @@ window.confirmCall = function() {
 };
 
 /* ── Send property bottom sheet ── */
+var _spAvatarPalette = ['#3270FC', '#059669', '#f59e0b', '#8b5cf6', '#ef4444', '#0891b2'];
+function _clientAvatarColor(name) {
+  var code = 0;
+  for (var i = 0; i < (name || '').length; i++) code += (name || '').charCodeAt(i);
+  return _spAvatarPalette[code % _spAvatarPalette.length];
+}
+
+var _sendPropState = { search: '', category: '', autoFiltered: false, loading: false, searchTimer: null };
+
 window.openSendPropSheet = function(clientId) {
   var client = clientsDataMap[clientId];
   if (!client) return;
   currentClientDetailId = clientId;
 
-  var subEl = document.getElementById('cdSendSubtitle');
-  if (subEl) subEl.textContent = (client.customer_name || '') + ' · ' + _maskPhone(client.customer_phone);
+  // Populate criteria chip
+  var avatarEl = document.getElementById('cdSendAvatar');
+  var nameEl   = document.getElementById('cdSendCriteriaName');
+  var tagsEl   = document.getElementById('cdSendCriteriaTags');
+  var infoEl   = document.getElementById('cdSendCriteriaInfo');
+  if (avatarEl) {
+    var initials = (client.customer_name || 'K').split(' ').map(function(w){ return w[0]; }).slice(-2).join('').toUpperCase();
+    avatarEl.textContent = initials;
+    avatarEl.style.background = _clientAvatarColor(client.customer_name);
+  }
+  if (nameEl) nameEl.textContent = client.customer_name || 'Khách';
+  if (tagsEl) {
+    var tags = (client.categories || []).concat(client.wards || []).slice(0, 4);
+    tagsEl.innerHTML = tags.map(function(t){ return '<span class="cd-criteria-tag">' + escHtml(t) + '</span>'; }).join('');
+  }
+  if (infoEl) {
+    var typeLabel = client.lead_type === 'buy' ? 'Định cư' : (client.lead_type === 'rent' ? 'Cho thuê' : '');
+    var budgetStr = client.budget || '';
+    infoEl.textContent = [typeLabel, budgetStr].filter(Boolean).join(' · ');
+  }
 
-  // Reset radio
-  var radios = document.querySelectorAll('input[name="cdSendType"]');
-  radios.forEach(function(r) { r.checked = r.value === 'full'; });
+  // Reset auto-filter button
+  var autoBtn = document.getElementById('cdAutoFilterBtn');
+  if (autoBtn) autoBtn.classList.remove('active');
+
+  // Reset search input
+  var searchIn = document.getElementById('cdSendSearchInput');
+  if (searchIn) searchIn.value = '';
+
+  // Reset category chips to "Tất cả"
+  document.querySelectorAll('.cd-prop-type-chip').forEach(function(c){ c.classList.remove('active'); });
+  var firstChip = document.querySelector('.cd-prop-type-chip');
+  if (firstChip) firstChip.classList.add('active');
+
+  // Reset radio to "full"
+  document.querySelectorAll('.cd-radio-opt').forEach(function(l){ l.classList.remove('selected'); var ind = l.querySelector('.cd-radio-indicator'); if(ind) ind.classList.remove('checked'); });
+  var firstOpt = document.querySelector('.cd-radio-opt');
+  if (firstOpt) { firstOpt.classList.add('selected'); var ind = firstOpt.querySelector('.cd-radio-indicator'); if(ind) ind.classList.add('checked'); }
+  var firstRadio = document.querySelector('input[name="cdSendType"][value="full"]');
+  if (firstRadio) firstRadio.checked = true;
 
   // Reset note
   var note = document.getElementById('cdSendNote');
   if (note) note.value = '';
 
-  // Build demo property list (static placeholder — real list would come from API)
-  var propList = document.getElementById('cdSendPropList');
-  if (propList) {
-    propList.innerHTML = _buildDemoPropList();
+  // Reset state
+  _sendPropState.search = '';
+  _sendPropState.category = '';
+  _sendPropState.autoFiltered = false;
+  _sendPropState.loading = false;
+
+  // Wire up search input
+  if (searchIn && !searchIn._sendWired) {
+    searchIn._sendWired = true;
+    searchIn.addEventListener('input', function() {
+      clearTimeout(_sendPropState.searchTimer);
+      _sendPropState.search = this.value.trim();
+      _sendPropState.searchTimer = setTimeout(function(){ _loadSendPropList(); }, 350);
+    });
   }
 
   var overlay = document.getElementById('cdSendOverlay');
   if (overlay) overlay.classList.add('open');
+
+  _loadSendPropList();
 };
 
 window.closeSendPropSheet = function() {
@@ -6783,15 +6838,119 @@ window.closeSendPropSheet = function() {
   if (overlay) overlay.classList.remove('open');
 };
 
-window.sendPropToClient = function() {
-  // Check at least one property is selected
-  var checked = document.querySelectorAll('.cd-prop-item.selected');
-  if (checked.length === 0) {
-    showToast('Vui lòng chọn ít nhất 1 BĐS');
-    return;
+function _loadSendPropList() {
+  var propList = document.getElementById('cdSendPropList');
+  if (!propList) return;
+  if (_sendPropState.loading) return;
+  _sendPropState.loading = true;
+
+  // Show loading skeletons
+  propList.innerHTML = '<div class="cd-prop-skeleton"></div><div class="cd-prop-skeleton"></div><div class="cd-prop-skeleton"></div>';
+
+  var params = new URLSearchParams({ per_page: 15 });
+  if (_sendPropState.search) params.set('q', _sendPropState.search);
+  if (_sendPropState.category) params.set('categoryName', _sendPropState.category);
+
+  fetch('/webapp/search/results?' + params.toString(), {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      _sendPropState.loading = false;
+      if (!data.success || !data.properties || data.properties.length === 0) {
+        propList.innerHTML = '<div class="cd-prop-empty">Không tìm thấy BĐS</div>';
+        return;
+      }
+      propList.innerHTML = data.properties.map(_renderSendPropItem).join('');
+    })
+    .catch(function() {
+      _sendPropState.loading = false;
+      propList.innerHTML = '<div class="cd-prop-empty">Lỗi tải dữ liệu</div>';
+    });
+}
+
+function _renderSendPropItem(p) {
+  var catEmoji = { 'Nhà': '🏠', 'Biệt thự': '🏡', 'Chung cư': '🏢', 'Khách sạn': '🏨', 'Đất': '🌿' };
+  var emoji = catEmoji[p.category_name] || '🏠';
+  var thumbHtml = p.title_image
+    ? '<img src="' + escAttr(p.title_image) + '" alt="" loading="lazy">'
+    : emoji;
+  var metaParts = [];
+  if (p.location) metaParts.push(p.location.split('·')[0].trim());
+  if (p.area) metaParts.push(p.area + ' m²');
+  if (p.category_name) metaParts.push(p.category_name);
+  return '<div class="cd-prop-item" data-id="' + escAttr(String(p.id)) + '" onclick="togglePropSelect(this)">'
+    + '<div class="cd-prop-thumb">' + thumbHtml + '</div>'
+    + '<div class="cd-prop-info">'
+    +   '<div class="cd-prop-name">' + escHtml(p.title || '') + '</div>'
+    +   '<div class="cd-prop-meta">' + escHtml(metaParts.join(' · ')) + '</div>'
+    +   (p.price ? '<div class="cd-prop-price">' + escHtml(p.price) + '</div>' : '')
+    + '</div>'
+    + '<div class="cd-prop-check"></div>'
+    + '</div>';
+}
+
+window._applySendAutoFilter = function(btn) {
+  var client = clientsDataMap[currentClientDetailId];
+  if (!client) return;
+
+  var isActive = btn.classList.contains('active');
+  if (isActive) {
+    // Toggle off — reset to no filter
+    btn.classList.remove('active');
+    _sendPropState.category = '';
+    _sendPropState.autoFiltered = false;
+    // Reset chips to Tất cả
+    document.querySelectorAll('.cd-prop-type-chip').forEach(function(c){ c.classList.remove('active'); });
+    var firstChip = document.querySelector('.cd-prop-type-chip');
+    if (firstChip) firstChip.classList.add('active');
+  } else {
+    btn.classList.add('active');
+    _sendPropState.autoFiltered = true;
+    // Apply first category from client data
+    var firstCat = (client.categories || [])[0] || '';
+    _sendPropState.category = firstCat;
+    // Highlight matching chip
+    document.querySelectorAll('.cd-prop-type-chip').forEach(function(c){ c.classList.remove('active'); });
+    if (firstCat) {
+      var matched = false;
+      document.querySelectorAll('.cd-prop-type-chip').forEach(function(c) {
+        if (c.textContent.trim() === firstCat) { c.classList.add('active'); matched = true; }
+      });
+      if (!matched) {
+        var firstChip = document.querySelector('.cd-prop-type-chip');
+        if (firstChip) firstChip.classList.add('active');
+      }
+    } else {
+      var firstChip = document.querySelector('.cd-prop-type-chip');
+      if (firstChip) firstChip.classList.add('active');
+    }
   }
-  closeSendPropSheet();
-  showToast('Đã gửi thông tin BĐS qua Telegram');
+  _loadSendPropList();
+};
+
+window._selectSendCatChip = function(chip, cat) {
+  document.querySelectorAll('.cd-prop-type-chip').forEach(function(c){ c.classList.remove('active'); });
+  chip.classList.add('active');
+  _sendPropState.category = cat;
+  // If user manually picks a chip, deactivate auto-filter button
+  var autoBtn = document.getElementById('cdAutoFilterBtn');
+  if (autoBtn) autoBtn.classList.remove('active');
+  _sendPropState.autoFiltered = false;
+  _loadSendPropList();
+};
+
+window._selectSendRadio = function(label, value) {
+  document.querySelectorAll('.cd-radio-opt').forEach(function(l){
+    l.classList.remove('selected');
+    var ind = l.querySelector('.cd-radio-indicator');
+    if (ind) ind.classList.remove('checked');
+  });
+  label.classList.add('selected');
+  var ind = label.querySelector('.cd-radio-indicator');
+  if (ind) ind.classList.add('checked');
+  var radio = label.querySelector('input[type="radio"]');
+  if (radio) radio.checked = true;
 };
 
 window.togglePropSelect = function(el) {
@@ -6806,22 +6965,52 @@ window.togglePropSelect = function(el) {
   }
 };
 
-function _buildDemoPropList() {
-  var items = [
-    { name: 'Villa Cam Ly 4 phòng ngủ', meta: '12 tỷ · Cam Ly · View đồi' },
-    { name: 'Khách sạn mini Yersin', meta: '8.5 tỷ · P.4 · 15 phòng' },
-  ];
-  return items.map(function(p) {
-    return '<div class="cd-prop-item" onclick="togglePropSelect(this)">'
-      + '<div class="cd-prop-thumb">🏠</div>'
-      + '<div class="cd-prop-info">'
-      +   '<div class="cd-prop-name">' + escHtml(p.name) + '</div>'
-      +   '<div class="cd-prop-meta">' + escHtml(p.meta) + '</div>'
-      + '</div>'
-      + '<div class="cd-prop-check"></div>'
-      + '</div>';
-  }).join('');
-}
+window.sendPropToClient = function() {
+  var selected = document.querySelectorAll('.cd-prop-item.selected[data-id]');
+  if (selected.length === 0) {
+    showToast('Vui lòng chọn ít nhất 1 BĐS');
+    return;
+  }
+  var propertyIds = Array.from(selected).map(function(el){ return el.getAttribute('data-id'); });
+  var contentType = (document.querySelector('input[name="cdSendType"]:checked') || {}).value || 'full';
+  var note = (document.getElementById('cdSendNote') || {}).value || '';
+  var confirmBtn = document.getElementById('cdSendConfirmBtn');
+
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.style.opacity = '0.6'; }
+
+  var csrfToken = document.querySelector('meta[name="csrf-token"]');
+  var headers = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+  if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken.getAttribute('content');
+
+  fetch('/webapp/api/send-property-to-client', {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({
+      lead_id: currentClientDetailId,
+      property_ids: propertyIds,
+      content_type: contentType,
+      note: note
+    })
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.style.opacity = ''; }
+      closeSendPropSheet();
+      if (data.success) {
+        if (data.sent_via_telegram) {
+          showToast('Đã gửi ' + (data.count || 1) + ' BĐS qua Telegram ✓');
+        } else {
+          showToast('Đã lưu — khách chưa dùng Telegram, gửi thủ công qua SĐT');
+        }
+      } else {
+        showToast(data.message || 'Lỗi gửi, thử lại sau');
+      }
+    })
+    .catch(function() {
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.style.opacity = ''; }
+      showToast('Lỗi kết nối, thử lại sau');
+    });
+};
 
 function renderDealCards(deals) {
   return deals.map(renderDealCard).join('');
