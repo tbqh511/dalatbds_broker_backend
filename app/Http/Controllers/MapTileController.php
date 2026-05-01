@@ -30,17 +30,23 @@ class MapTileController extends Controller
 
         $tmsRow = (int) ((2 ** $z - 1) - $y);
 
-        $db   = new SQLite3($mbtilesPath, SQLITE3_OPEN_READONLY);
-        $stmt = $db->prepare(
-            'SELECT tile_data FROM tiles WHERE zoom_level = :z AND tile_column = :x AND tile_row = :row LIMIT 1'
-        );
-        $stmt->bindValue(':z',   $z,      SQLITE3_INTEGER);
-        $stmt->bindValue(':x',   $x,      SQLITE3_INTEGER);
-        $stmt->bindValue(':row', $tmsRow, SQLITE3_INTEGER);
+        try {
+            $db = new SQLite3($mbtilesPath, SQLITE3_OPEN_READONLY);
+            $db->busyTimeout(3000);
 
-        $result  = $stmt->execute();
-        $tileRow = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
-        $db->close();
+            $stmt = $db->prepare(
+                'SELECT tile_data FROM tiles WHERE zoom_level = :z AND tile_column = :x AND tile_row = :row LIMIT 1'
+            );
+            $stmt->bindValue(':z',   $z,      SQLITE3_INTEGER);
+            $stmt->bindValue(':x',   $x,      SQLITE3_INTEGER);
+            $stmt->bindValue(':row', $tmsRow, SQLITE3_INTEGER);
+
+            $result  = $stmt->execute();
+            $tileRow = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+            $db->close();
+        } catch (\Exception $e) {
+            return $this->emptyTile();
+        }
 
         if (!$tileRow || empty($tileRow['tile_data'])) {
             return $this->emptyTile();

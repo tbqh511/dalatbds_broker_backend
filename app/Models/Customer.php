@@ -61,7 +61,7 @@ class Customer extends Authenticatable implements JWTSubject
         'property' => ['status' => true, 'interest' => true, 'expiry' => false, 'channels' => ['telegram', 'in_app']],
         'referral' => ['new_signup' => true, 'channels' => ['telegram', 'in_app']],
         'market'   => ['news' => true, 'ai_suggest' => true, 'promotions' => false],
-        'quiet_hours' => ['enabled' => true, 'start' => '22:00', 'end' => '07:00'],
+        'quiet_hours' => ['enabled' => false, 'start' => '22:00', 'end' => '07:00'],
     ];
 
     public function getMergedNotifSettings(): array

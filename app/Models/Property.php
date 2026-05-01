@@ -295,7 +295,7 @@ class Property extends Model
         \Carbon\Carbon::setLocale('vi');
         $formatter = new \NumberFormatter('vi_VN', \NumberFormatter::CURRENCY);
 
-        $price = $this->price;
+        $price = is_numeric($this->price) ? (float) $this->price : 0;
         $ty = 1000000000;
         $trieu = 1000000;
         $suffix = "";
@@ -326,7 +326,7 @@ class Property extends Model
 
         // Calculate formatted price
         if ($price >= $ty) {
-            $formattedPrice = number_format($price / $ty, ($price % $ty == 0) ? 0 : 1) . ' tỷ';
+            $formattedPrice = number_format($price / $ty, (fmod($price, $ty) == 0) ? 0 : 1) . ' tỷ';
         } elseif ($price > 0) {
             $formattedPrice = number_format($price / $trieu, 0) . ' triệu';
         } else {
@@ -346,18 +346,22 @@ class Property extends Model
     public function getFormattedPriceM2Attribute()
     {
         // Kiểm tra nếu diện tích bằng 0 hoặc không có diện tích
-        if ($this->area == 0 || $this->area == null) {
+        if (empty($this->area) || !is_numeric($this->area) || $this->area == 0) {
             return 'Chưa xác định';
         }
 
+        if (empty($this->price) || !is_numeric($this->price)) {
+            return 'Giá thỏa thuận';
+        }
+
         // Tính giá trị price_m2
-        $priceM2 = $this->price / $this->area;
+        $priceM2 = (float) $this->price / (float) $this->area;
 
         // Định dạng giá trị price_m2
         $ty = 1000000000;
         $trieu = 1000000;
         if ($priceM2 > $ty) {
-            if ($priceM2 % $ty == 0) {
+            if (fmod($priceM2, $ty) == 0) {
                 $formattedPriceM2 = number_format($priceM2 / $ty, 0) . ' tỷ/m²';
             } else {
                 $formattedPriceM2 = number_format($priceM2 / $ty, 1) . ' tỷ/m²';
