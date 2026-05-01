@@ -33,6 +33,20 @@ window.toggleSearch = function(){goTo('search');};
   }
 })();
 
+// ============ DEEP-LINK VIA QUERY PARAMS ============
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var openTarget = params.get('open');
+  var leadId = params.get('lead_id');
+  if (openTarget === 'clients' && leadId) {
+    window._pendingClientDetailId = parseInt(leadId, 10);
+    setTimeout(function() {
+      if (typeof openSubpage === 'function') openSubpage('clients');
+    }, 100);
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
+
 // ============ ROLE SYSTEM ============
 let currentRole = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.customerRole) || 'guest';
 const roleHierarchy={

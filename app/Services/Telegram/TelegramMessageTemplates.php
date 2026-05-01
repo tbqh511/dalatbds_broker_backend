@@ -138,22 +138,29 @@ class TelegramMessageTemplates
     public static function leadAssigned(CrmLead $lead): array
     {
         $customerName = self::escape($lead->customer->full_name ?? 'N/A');
-        $leadType     = ($lead->getRawOriginal('lead_type') ?? '') === 'buy' ? 'Mua' : 'Thuê';
+        $leadType     = ($lead->getRawOriginal('lead_type') ?? '') === 'buy' ? 'nhà/đất để mua' : 'nhà/đất để thuê';
         $budget       = $lead->budget_label ?: (
             number_format((float) ($lead->demand_rate_min ?? 0)) . ' – ' . number_format((float) ($lead->demand_rate_max ?? 0)) . ' VNĐ'
         );
-        $note = self::escape($lead->note ?? '');
+        $note    = self::escape($lead->note ?? '');
+        $purpose = self::escape($lead->purpose ?? '');
 
-        $text = "🔔 *LEAD MỚI ĐƯỢC GIAO*\n" .
-                "────────────────\n" .
-                "📋 Khách hàng: {$customerName}\n" .
-                "🏠 Nhu cầu: {$leadType}\n" .
-                "💰 Ngân sách: {$budget}\n" .
-                "📝 Ghi chú: {$note}";
+        $text = "👋 Bạn vừa có một khách hàng mới được giao!\n\n" .
+                "👤 *{$customerName}* – đang tìm {$leadType}\n" .
+                "💰 Ngân sách: {$budget}";
 
-        $webAppUrl = route('webapp.leads.show', ['id' => $lead->id]);
+        if ($purpose) {
+            $text .= "\n🎯 Mục đích: {$purpose}";
+        }
+        if ($note) {
+            $text .= "\n📝 Ghi chú: {$note}";
+        }
+
+        $text .= "\n\nHãy liên hệ sớm để không bỏ lỡ cơ hội nhé! 🚀";
+
+        $webAppUrl = route('webapp', [], true) . '?open=clients&lead_id=' . $lead->id;
         $keyboard  = [[
-            ['text' => '📂 Xem chi tiết Lead', 'web_app' => ['url' => $webAppUrl]],
+            ['text' => '👤 Xem thông tin khách', 'web_app' => ['url' => $webAppUrl]],
         ]];
 
         return ['text' => $text, 'keyboard' => $keyboard];
