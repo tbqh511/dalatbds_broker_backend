@@ -9162,6 +9162,14 @@ window.activityApp = function() {
       sessionStorage.setItem('pending_deeplink', 'property_' + propId);
       setTimeout(function() { openDetail({ id: propId }); }, 500);
     }
+  } else if (param.indexOf('lead_') === 0) {
+    var leadId = parseInt(param.substring(5));
+    if (leadId) {
+      window._pendingClientDetailId = leadId;
+      setTimeout(function() {
+        if (typeof openSubpage === 'function') openSubpage('clients');
+      }, 600);
+    }
   } else if (param.indexOf('ref_') === 0) {
     var refCode = param.substring(4);
     if (refCode) {

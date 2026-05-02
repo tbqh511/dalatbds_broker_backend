@@ -158,7 +158,9 @@ class TelegramMessageTemplates
 
         $text .= "\n\nHãy liên hệ sớm để không bỏ lỡ cơ hội nhé! 🚀";
 
-        $webAppUrl = route('webapp', [], true) . '?open=clients&lead_id=' . $lead->id;
+        $botUsername     = config('services.telegram.bot_username');
+        $webappShortName = config('services.telegram.webapp_short_name');
+        $webAppUrl       = "https://t.me/{$botUsername}/{$webappShortName}?startapp=lead_{$lead->id}";
         $keyboard  = [[
             ['text' => '👤 Xem thông tin khách', 'url' => $webAppUrl],
         ]];
