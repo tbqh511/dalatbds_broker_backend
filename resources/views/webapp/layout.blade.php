@@ -131,6 +131,7 @@
       myCommissionsJson: @json(route('webapp.api.commissions')),
       leadsUpdateStatusBase: '/webapp/leads/',
       leadsCreateDealBase: '/webapp/leads/',
+      leadsActivitiesBase: '/webapp/leads/',
       myListingToggleBase: '/webapp/listings/',
       myListingDeleteBase: '/webapp/listings/',
       editListingBase: '/webapp/edit-listing/',

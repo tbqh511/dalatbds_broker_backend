@@ -882,7 +882,7 @@ class TelegramWebAppController extends Controller
                 'deal.products.property',
                 'deal.products.bookings',
                 'activities' => function ($q) {
-                    $q->orderBy('created_at', 'desc')->limit(3);
+                    $q->orderBy('created_at', 'desc');
                 },
             ])->where(function ($q) use ($customer) {
                 $q->where('sale_id', $customer->id)
@@ -976,7 +976,7 @@ class TelegramWebAppController extends Controller
                             .($budgetMax > 0 ? format_vnd($budgetMax) : '?');
                 }
 
-                $activities = $lead->activities->map(function ($a) {
+                $activities = $lead->activities->take(3)->map(function ($a) {
                     return [
                         'type'       => $a->type,
                         'type_label' => $a->getTypeLabel(),
@@ -984,6 +984,11 @@ class TelegramWebAppController extends Controller
                         'created_at' => Carbon::parse($a->getRawOriginal('created_at'))->format('d/m'),
                     ];
                 })->values()->toArray();
+
+                $noAnswerCount = $lead->activities
+                    ->where('type', 'call')
+                    ->filter(fn ($a) => ($a->metadata['outcome'] ?? '') === 'no_answer')
+                    ->count();
 
                 $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
 
@@ -1006,6 +1011,7 @@ class TelegramWebAppController extends Controller
                     'budget_max'           => (float) ($lead->demand_rate_max ?? 0),
                     'note'                 => $lead->note ?? '',
                     'activities'           => $activities,
+                    'no_answer_count'      => $noAnswerCount,
                     'created_at'           => $createdAt->format('d/m/Y'),
                     'created_diff'         => $createdAt->diffForHumans(),
                 ];

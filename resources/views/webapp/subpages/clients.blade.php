@@ -142,6 +142,120 @@
   </div>
 </div>
 
+<!-- ========== OVERLAY: CALL RESULT SHEET ========== -->
+<div class="cr-overlay" id="crOverlay" onclick="crCloseSheet()">
+  <div class="cr-sheet" id="crSheet" onclick="event.stopPropagation()">
+    <div class="cr-handle"></div>
+
+    <!-- STEP 1: Kết quả cuộc gọi -->
+    <div id="crStep1">
+      <div class="cr-section-eyebrow">Kết quả cuộc gọi</div>
+      <div class="cr-call-info" id="crCallInfo">— · Vừa gọi</div>
+      <div class="cr-opts">
+        <div class="cr-opt" id="crOptAnswered" onclick="crSelectResult('answered')">
+          <div class="cr-opt-icon-wrap green">✓</div>
+          <div class="cr-opt-body">
+            <div class="cr-opt-title">Nghe máy</div>
+            <div class="cr-opt-sub">Đã nói chuyện · Xác nhận nhu cầu</div>
+          </div>
+          <div class="cr-radio" id="crRadioAnswered"></div>
+        </div>
+        <div class="cr-opt" id="crOptNoAnswer" onclick="crSelectResult('no_answer')">
+          <div class="cr-opt-icon-wrap red">✕</div>
+          <div class="cr-opt-body">
+            <div class="cr-opt-title">Không nghe máy</div>
+            <div class="cr-opt-sub" id="crNoAnswerSub">Lần gọi đầu · Sẽ gọi lại sau</div>
+          </div>
+          <div class="cr-radio" id="crRadioNoAnswer"></div>
+        </div>
+      </div>
+      <button class="cr-btn-primary" onclick="crNext()">Tiếp theo →</button>
+    </div>
+
+    <!-- STEP 2A: Nghe máy — xác nhận nhu cầu -->
+    <div id="crStep2A" style="display:none;">
+      <div class="cr-2a-header">
+        <div class="cr-2a-icon">✓</div>
+        <div>
+          <div class="cr-2a-title">Xác nhận nhu cầu khách</div>
+          <div class="cr-2a-sub" id="cr2aSub">Bổ sung thông tin còn thiếu</div>
+        </div>
+      </div>
+      <div class="cr-needs-label">THÔNG TIN NHU CẦU</div>
+      <div class="cr-needs-grid" id="crNeedsGrid"></div>
+      <div class="cr-needs-label" style="margin-top:14px;">KHÁCH CÓ NHU CẦU KHÔNG?</div>
+      <div class="cr-decision-row">
+        <div class="cr-decision-btn cr-decision-yes" id="crDecisionYes" onclick="crSelectDecision('yes')">
+          <div style="font-weight:700;font-size:13px;">✓ Có nhu cầu</div>
+          <div style="font-size:11px;margin-top:2px;color:inherit;opacity:.8;">Tạo giao dịch</div>
+        </div>
+        <div class="cr-decision-btn cr-decision-no" id="crDecisionNo" onclick="crSelectDecision('no')">
+          <div style="font-weight:700;font-size:13px;">✗ Không có</div>
+          <div style="font-size:11px;margin-top:2px;color:inherit;opacity:.8;">Huỷ lead</div>
+        </div>
+      </div>
+      <button class="cr-btn-primary" onclick="crConfirmNeeds()">Xác nhận · Bắt đầu chăm</button>
+    </div>
+
+    <!-- STEP 2B: Không nghe lần 1 -->
+    <div id="crStep2B" style="display:none;">
+      <div class="cr-2b-header">
+        <div class="cr-2b-icon amber">⏰</div>
+        <div>
+          <div class="cr-2b-title">Khách chưa nghe máy</div>
+          <div class="cr-2b-sub">Lần gọi 1/2 · Còn 1 lần trước khi huỷ</div>
+        </div>
+      </div>
+      <div class="cr-tracker-row">
+        <div class="cr-tracker-label">Lịch sử gọi <span>1 / 2 lần</span></div>
+        <div class="cr-tracker-dots">
+          <div class="cr-tdot filled">1</div>
+          <div class="cr-tdot">2</div>
+          <div class="cr-tdot cancel">✕</div>
+          <span class="cr-tdot-hint">Huỷ nếu lần 2 không nghe</span>
+        </div>
+      </div>
+      <div class="cr-reminder-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Nhắc gọi lại lúc</span>
+        <select class="cr-time-select" id="crReminderSelect" onchange="crUpdateReminderBtn()">
+          <option value="today-14:00">Hôm nay · 14:00</option>
+          <option value="today-16:00">Hôm nay · 16:00</option>
+          <option value="today-18:00">Hôm nay · 18:00</option>
+          <option value="tomorrow-09:00">Ngày mai · 09:00</option>
+          <option value="tomorrow-14:00">Ngày mai · 14:00</option>
+        </select>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <button class="cr-btn-amber" id="crSaveReminderBtn" onclick="crSaveReminder()">⏰ Lưu · Nhắc gọi lại lúc 14:00</button>
+      <button class="cr-btn-ghost" onclick="crSkipReminder()">Bỏ qua nhắc nhở</button>
+    </div>
+
+    <!-- STEP 2C: Không nghe lần 2 -->
+    <div id="crStep2C" style="display:none;">
+      <div class="cr-2b-header">
+        <div class="cr-2b-icon red">⊗</div>
+        <div>
+          <div class="cr-2b-title">Đã gọi 2 lần không nghe</div>
+          <div class="cr-2b-sub">Lần gọi 2/2 · Khuyến nghị huỷ lead</div>
+        </div>
+      </div>
+      <div class="cr-tracker-row danger">
+        <div class="cr-tracker-label" style="color:var(--danger);">Lịch sử gọi <span>2 / 2 lần · Không nghe</span></div>
+        <div class="cr-tracker-dots">
+          <div class="cr-tdot filled">1</div>
+          <div class="cr-tdot filled">2</div>
+          <div class="cr-tdot cancel active">✕</div>
+        </div>
+        <div class="cr-2c-warning">Gọi 2 lần không liên lạc được · Lead sẽ được chuyển sang Huỷ</div>
+      </div>
+      <button class="cr-btn-danger" onclick="crCancelLead()">⊗ Huỷ lead · Không liên lạc được</button>
+      <button class="cr-btn-ghost" onclick="crTryAgain()">Thử gọi lần 3 (ngoại lệ)</button>
+    </div>
+
+  </div>
+</div>
+
 <!-- ========== OVERLAY: GỬI THÔNG TIN BĐS SHEET ========== -->
 <div class="cd-send-overlay" id="cdSendOverlay" onclick="closeSendPropSheet()">
   <div class="cd-send-sheet" onclick="event.stopPropagation()">

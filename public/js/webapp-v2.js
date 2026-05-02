@@ -6574,6 +6574,8 @@ function renderClientCard(client) {
 }
 
 var currentClientDetailId = null;
+var crCurrentResult = null;  // 'answered' | 'no_answer'
+var crNeedDecision  = null;  // 'yes' | 'no'
 
 window.openClientDetail = function(id) {
   var client = clientsDataMap[id];
@@ -6772,7 +6774,233 @@ window.confirmCall = function() {
     window.location.href = 'tel:' + client.customer_phone.replace(/\D/g, '');
   }
   closeCallConfirmModal();
+  setTimeout(function() { crOpenSheet(); }, 1500);
 };
+
+/* ── Call Result Sheet ── */
+window.crOpenSheet = function() {
+  var client = clientsDataMap[currentClientDetailId];
+  if (!client) return;
+
+  // Reset state
+  crCurrentResult = null;
+  crNeedDecision  = null;
+
+  ['crOptAnswered', 'crOptNoAnswer'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('selected');
+  });
+  ['crDecisionYes', 'crDecisionNo'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('selected');
+  });
+  ['crStep1', 'crStep2A', 'crStep2B', 'crStep2C'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  var s1 = document.getElementById('crStep1');
+  if (s1) s1.style.display = '';
+
+  // Populate call info
+  var noAnswerCount = client.no_answer_count || 0;
+  var infoEl = document.getElementById('crCallInfo');
+  if (infoEl) infoEl.textContent = (client.customer_name || 'Khách') + ' · ' + _maskPhone(client.customer_phone) + ' · Vừa gọi';
+
+  var subEl = document.getElementById('crNoAnswerSub');
+  if (subEl) {
+    if (noAnswerCount === 0)      subEl.textContent = 'Lần gọi đầu · Sẽ gọi lại sau';
+    else if (noAnswerCount === 1) subEl.textContent = 'Lần gọi 2/2 · Sẽ đề nghị huỷ lead';
+    else                          subEl.textContent = 'Lần gọi ' + (noAnswerCount + 1) + ' · Ngoại lệ';
+  }
+
+  var overlay = document.getElementById('crOverlay');
+  if (overlay) overlay.classList.add('open');
+};
+
+window.crCloseSheet = function() {
+  var overlay = document.getElementById('crOverlay');
+  if (overlay) overlay.classList.remove('open');
+};
+
+window.crSelectResult = function(result) {
+  crCurrentResult = result;
+  var answered = document.getElementById('crOptAnswered');
+  var noAnswer = document.getElementById('crOptNoAnswer');
+  if (answered) answered.classList.toggle('selected', result === 'answered');
+  if (noAnswer) noAnswer.classList.toggle('selected', result === 'no_answer');
+};
+
+window.crNext = function() {
+  if (!crCurrentResult) { showToast('Vui lòng chọn kết quả cuộc gọi'); return; }
+
+  var client = clientsDataMap[currentClientDetailId];
+  var noAnswerCount = client ? (client.no_answer_count || 0) : 0;
+
+  var s1 = document.getElementById('crStep1');
+  if (s1) s1.style.display = 'none';
+
+  if (crCurrentResult === 'answered') {
+    _crRenderNeedsGrid(client);
+    var sub = document.getElementById('cr2aSub');
+    if (sub) sub.textContent = 'Bổ sung thông tin còn thiếu · ' + (client ? client.customer_name || 'khách' : 'khách');
+    var s2a = document.getElementById('crStep2A');
+    if (s2a) s2a.style.display = '';
+  } else {
+    _crLogActivity('call', 'Gọi cho khách — không nghe máy', { outcome: 'no_answer' });
+    if (noAnswerCount === 0) {
+      var s2b = document.getElementById('crStep2B');
+      if (s2b) s2b.style.display = '';
+    } else {
+      var s2c = document.getElementById('crStep2C');
+      if (s2c) s2c.style.display = '';
+    }
+  }
+};
+
+function _crRenderNeedsGrid(client) {
+  var el = document.getElementById('crNeedsGrid');
+  if (!el || !client) return;
+
+  function cell(label, val, cls) {
+    var icon = cls === 'green' ? '✓' : cls === 'amber' ? '⚠' : '✕';
+    return '<div class="cr-needs-cell ' + cls + '">'
+      + '<div class="cr-needs-cell-label">' + icon + ' ' + escHtml(label) + '</div>'
+      + '<div class="cr-needs-cell-val">' + escHtml(val || '') + '</div>'
+      + '</div>';
+  }
+
+  var name    = client.customer_name || '';
+  var type    = client.lead_type === 'buy' ? 'Tìm mua' : (client.lead_type === 'rent' ? 'Tìm thuê' : '');
+  var cats    = (client.categories || []).join(', ');
+  var purpose = client.purpose || '';
+  var wards   = (client.wards || []).join(', ');
+  var budget  = client.budget || '';
+
+  el.innerHTML =
+    cell('Khách hàng',    name,    name    ? 'green' : 'red')
+    + cell('Tìm mua/thuê', (type + (cats ? ' · ' + cats : '')), type ? 'green' : 'red')
+    + cell('Mục đích',    purpose, purpose ? 'green' : 'amber')
+    + cell('Khu vực',     wards,   wards   ? 'green' : 'amber')
+    + cell('Tài chính',   budget,  budget  ? 'green' : 'amber')
+    + cell('Thời gian cọc', 'Chưa có · Nhập...', 'red');
+}
+
+window.crSelectDecision = function(decision) {
+  crNeedDecision = decision;
+  var yes = document.getElementById('crDecisionYes');
+  var no  = document.getElementById('crDecisionNo');
+  if (yes) yes.classList.toggle('selected', decision === 'yes');
+  if (no)  no.classList.toggle('selected',  decision === 'no');
+};
+
+window.crConfirmNeeds = function() {
+  if (!crNeedDecision) { showToast('Vui lòng chọn kết quả'); return; }
+  var cfg  = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+
+  _crLogActivity('call',
+    crNeedDecision === 'yes' ? 'Gọi cho khách — nghe máy · có nhu cầu' : 'Gọi cho khách — nghe máy · không có nhu cầu',
+    { outcome: 'answered' }
+  );
+
+  if (crNeedDecision === 'yes') {
+    var dealUrl = (cfg && cfg.leadsCreateDealBase ? cfg.leadsCreateDealBase : '/webapp/leads/') + currentClientDetailId + '/deal';
+    fetch(dealUrl, {
+      method: 'POST',
+      headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        crCloseSheet();
+        showToast(res.success ? '✓ Đã tạo Giao dịch thành công' : (res.message || 'Lỗi tạo giao dịch'));
+        if (res.success) { clientsLoaded = false; loadClients(true); }
+      })
+      .catch(function() { showToast('Lỗi kết nối'); });
+  } else {
+    _crUpdateLeadStatus('lost', function() {
+      crCloseSheet();
+      showToast('Lead đã huỷ');
+      clientsLoaded = false;
+      loadClients(true);
+    });
+  }
+};
+
+window.crUpdateReminderBtn = function() {
+  var sel = document.getElementById('crReminderSelect');
+  var btn = document.getElementById('crSaveReminderBtn');
+  if (sel && btn) {
+    var text = sel.options[sel.selectedIndex].text;
+    btn.textContent = '⏰ Lưu · Nhắc gọi lại lúc ' + text.replace('·', '').trim().split(' ').pop();
+  }
+};
+
+window.crSaveReminder = function() {
+  var sel  = document.getElementById('crReminderSelect');
+  var val  = sel ? sel.value : '';
+  var note = 'Gọi không nghe máy · Nhắc gọi lại: ' + (sel ? sel.options[sel.selectedIndex].text : '');
+  _crLogActivity('note', note, { reminder: val });
+  _crUpdateLeadStatus('contacted', function() {
+    crCloseSheet();
+    showToast('✓ Đã lưu nhắc nhở gọi lại');
+    clientsLoaded = false;
+    loadClients(true);
+  });
+};
+
+window.crSkipReminder = function() {
+  _crLogActivity('note', 'Gọi không nghe máy · Bỏ qua nhắc nhở', {});
+  crCloseSheet();
+  showToast('Đã ghi nhận · Không nhắc gọi lại');
+  clientsLoaded = false;
+  loadClients(true);
+};
+
+window.crCancelLead = function() {
+  _crUpdateLeadStatus('lost', function() {
+    crCloseSheet();
+    showToast('Lead đã huỷ · Không liên lạc được');
+    clientsLoaded = false;
+    loadClients(true);
+  });
+};
+
+window.crTryAgain = function() {
+  var client = clientsDataMap[currentClientDetailId];
+  var attempt = ((client && client.no_answer_count) || 2) + 1;
+  _crLogActivity('note', 'Thử gọi lần ' + attempt + ' (ngoại lệ)', {});
+  crCloseSheet();
+  showToast('Đã ghi nhận · Thử lại sau');
+};
+
+function _crLogActivity(type, content, metadata) {
+  var cfg  = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  var base = (cfg && cfg.leadsActivitiesBase) || '/webapp/leads/';
+  fetch(base + currentClientDetailId + '/activities', {
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: type, content: content, metadata: metadata }),
+  });
+}
+
+function _crUpdateLeadStatus(status, onSuccess) {
+  var cfg  = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  var base = (cfg && cfg.leadsUpdateStatusBase) || '/webapp/leads/';
+  fetch(base + currentClientDetailId + '/status', {
+    method: 'PATCH',
+    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: status }),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.success && onSuccess) onSuccess();
+      else showToast('Lỗi cập nhật');
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+}
 
 /* ── Send property bottom sheet ── */
 var _spAvatarPalette = ['#3270FC', '#059669', '#f59e0b', '#8b5cf6', '#ef4444', '#0891b2'];
