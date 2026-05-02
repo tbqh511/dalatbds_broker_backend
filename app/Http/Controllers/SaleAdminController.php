@@ -183,7 +183,7 @@ class SaleAdminController extends Controller
                 'priority'    => $priority,
                 'source_note' => $lead->source_note ?? '',
                 'lead_type'   => $lead->getRawOriginal('lead_type') === 'buy' ? 'Mua' : 'Thuê',
-                'purpose'     => $lead->purpose ?? '',
+                'purpose'     => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
                 'categories'  => $catNames,
                 'wards'       => $wardNames,
                 'budget_min'        => format_vnd($lead->demand_rate_min ?? 0),

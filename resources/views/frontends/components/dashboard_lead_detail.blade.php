@@ -62,8 +62,8 @@
                         @if($street)
                         <li><span class="ldi-label">Đường:</span> <span>{{ $street }}</span></li>
                         @endif
-                        @if($lead->purpose)
-                        <li><span class="ldi-label">Mục đích:</span> <span>{{ $lead->purpose }}</span></li>
+                        @if($lead->purpose && count((array) $lead->purpose) > 0)
+                        <li><span class="ldi-label">Mục đích:</span> <span>{{ is_array($lead->purpose) ? implode(', ', $lead->purpose) : $lead->purpose }}</span></li>
                         @endif
                         @if($lead->source_note)
                         <li><span class="ldi-label">Ghi chú:</span> <span>{{ $lead->source_note }}</span></li>

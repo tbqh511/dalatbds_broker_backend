@@ -32,6 +32,7 @@ class CrmLead extends Model
     protected $casts = [
         'categories' => 'array',
         'wards' => 'array',
+        'purpose' => 'array',
         'assigned_at' => 'datetime',
     ];
 

@@ -312,7 +312,7 @@
                 x-transition:enter-end="opacity-100 translate-y-0">
                 <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
                     Mục đích giao dịch
-                    <button type="button" x-show="!isPurposeExpanded && form.purpose"
+                    <button type="button" x-show="!isPurposeExpanded && form.purposes.length > 0"
                         @click="isPurposeExpanded = true"
                         class="text-xs font-normal text-primary hover:underline">
                         Thay đổi
@@ -323,21 +323,29 @@
                 <div x-show="isPurposeExpanded" x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                     class="grid grid-cols-4 gap-2">
-                    <template x-for="p in purposes" :key="p.label">
-                        <button type="button" @click="form.purpose = p.value; isPurposeExpanded = false;"
-                            :class="form.purpose === p.value
+                    <template x-for="p in purposeOptions" :key="p.label">
+                        <button type="button" @click="togglePurpose(p.value)"
+                            :class="form.purposes.includes(p.value)
                                 ? 'bg-primary text-white border-primary shadow-lg shadow-blue-200 transform scale-105'
                                 : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:border-blue-100 hover:text-primary'"
                             class="flex flex-col items-center justify-center p-2 border rounded-xl transition-all duration-200 min-h-[60px] group">
                             <i
-                                :class="['fas', p.icon, form.purpose === p.value ? 'text-white' : 'text-primary group-hover:text-primary', 'text-lg mb-1']"></i>
+                                :class="['fas', p.icon, form.purposes.includes(p.value) ? 'text-white' : 'text-primary group-hover:text-primary', 'text-lg mb-1']"></i>
                             <span x-text="p.label" class="text-[10px] font-medium text-center leading-tight"></span>
                         </button>
                     </template>
                 </div>
 
+                <!-- NÚT XÁC NHẬN CHỌN (hiện khi grid mở và đã chọn ít nhất 1) -->
+                <div x-show="isPurposeExpanded && form.purposes.length > 0" class="mt-3 flex justify-center">
+                    <button type="button" @click="isPurposeExpanded = false"
+                        class="bg-primary/10 text-primary px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors">
+                        <i class="fa-solid fa-check mr-1"></i> Xác nhận (<span x-text="form.purposes.length"></span> mục đích)
+                    </button>
+                </div>
+
                 <!-- STATE 2: THẺ TÓM TẮT -->
-                <div x-show="!isPurposeExpanded && form.purpose"
+                <div x-show="!isPurposeExpanded && form.purposes.length > 0"
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 translate-y-2"
                     x-transition:enter-end="opacity-100 translate-y-0">
@@ -350,7 +358,7 @@
                             </div>
                             <div class="flex flex-col text-left">
                                 <span class="text-xs text-blue-100 font-medium">Mục đích:</span>
-                                <span class="font-bold text-lg leading-tight" x-text="form.purpose"></span>
+                                <span class="font-bold text-sm leading-tight" x-text="getSelectedPurposeNames()"></span>
                             </div>
                         </div>
                         <i class="fa-solid fa-chevron-down text-white/70 group-hover:translate-y-1 transition-transform"></i>
@@ -360,7 +368,7 @@
 
             <!-- ===================== AREA (Khu vực) — Collapsible ===================== -->
             <div class="mb-6"
-                x-show="form.purpose && !isPurposeExpanded"
+                x-show="form.purposes.length > 0 && !isPurposeExpanded"
                 x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0 translate-y-4"
                 x-transition:enter-end="opacity-100 translate-y-0">
@@ -507,7 +515,7 @@
                 price_max: 0,
                 budget_label: '',
                 street: '',
-                purpose: ''
+                purposes: []
             },
             priceRanges: [
                 { min: 0, max: 0, label: 'Thỏa thuận' },
@@ -519,7 +527,7 @@
                 { min: 20000000000, max: 50000000000, label: '20 - 50 tỷ' },
                 { min: 50000000000, max: 999999999999, label: 'Trên 50 tỷ' }
             ],
-            purposes: [
+            purposeOptions: [
                 { label: 'Đầu tư', value: 'Đầu tư', icon: 'fas fa-chart-line' },
                 { label: 'Định cư', value: 'Định cư', icon: 'fas fa-umbrella' },
                 { label: 'Kinh doanh', value: 'Kinh doanh', icon: 'fas fa-store' },
@@ -604,9 +612,22 @@
                 return found ? found.label : '';
             },
 
+            togglePurpose(value) {
+                if (this.form.purposes.includes(value)) {
+                    this.form.purposes = this.form.purposes.filter(v => v !== value);
+                } else {
+                    this.form.purposes.push(value);
+                }
+            },
+
             getSelectedPurposeIcon() {
-                const found = this.purposes.find(p => p.value === this.form.purpose);
-                return found ? found.icon : 'fa-question';
+                if (this.form.purposes.length === 0) return 'fa-question';
+                const first = this.purposeOptions.find(p => p.value === this.form.purposes[0]);
+                return first ? first.icon : 'fa-question';
+            },
+
+            getSelectedPurposeNames() {
+                return this.form.purposes.join(', ');
             },
 
             getSelectedWardNames() {

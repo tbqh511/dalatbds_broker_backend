@@ -95,10 +95,10 @@
                     @endif
 
                     <!-- Mục đích -->
-                    @if($lead->purpose)
+                    @if($lead->purpose && count((array) $lead->purpose) > 0)
                     <div class="flex items-start gap-2 text-sm text-gray-600">
                         <i class="fas fa-bullseye text-primary/50 mt-0.5 w-4 text-center shrink-0 text-xs"></i>
-                        <span>{{ $lead->purpose }}</span>
+                        <span>{{ is_array($lead->purpose) ? implode(', ', $lead->purpose) : $lead->purpose }}</span>
                     </div>
                     @endif
 

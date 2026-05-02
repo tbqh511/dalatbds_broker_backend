@@ -3514,7 +3514,8 @@ class TelegramWebAppController extends Controller
                 'wards' => 'nullable|array',
                 'price_min' => 'nullable|numeric|min:0',
                 'price_max' => 'nullable|numeric|min:0',
-                'purpose' => 'nullable|string',
+                'purposes' => 'nullable|array',
+                'purposes.*' => 'nullable|string|max:100',
             ], [
                 'name.required' => 'Vui lòng nhập tên khách hàng.',
                 'phone.required' => 'Vui lòng nhập số điện thoại.',
@@ -3548,18 +3549,15 @@ class TelegramWebAppController extends Controller
             $lead->demand_rate_min = $request->input('price_min', 0);
             $lead->demand_rate_max = $request->input('price_max', 0);
             $lead->budget_label    = $request->input('budget_label', '');
-            $lead->purpose = $request->input('purpose');
+            $lead->purpose = $request->input('purposes', []);
             $lead->source_note = 'telegram_webapp';
 
-            $note = $request->input('purpose', '');
+            $note = '';
             if ($request->filled('street')) {
                 $streetCode = $request->input('street');
                 $streetObj = LocationsStreet::where('code', $streetCode)->first();
                 if ($streetObj) {
-                    if ($note) {
-                        $note .= ' - ';
-                    }
-                    $note .= 'Tên đường: '.$streetObj->street_name;
+                    $note = 'Tên đường: '.$streetObj->street_name;
                 }
             }
             $lead->note = $note;
@@ -3743,7 +3741,8 @@ class TelegramWebAppController extends Controller
             $message .= "💰 Ngân sách: {$budgetLabel}\n";
             $message .= '📍 Khu vực: '.$this->escapeTelegramText($wards)."\n";
             $message .= '🏠 Loại BĐS: '.$this->escapeTelegramText($categories)."\n";
-            $message .= '🧭 Mục đích: '.$this->escapeTelegramText($lead->purpose ?? 'N/A')."\n";
+            $purposeText = is_array($lead->purpose) && count($lead->purpose) > 0 ? implode(', ', $lead->purpose) : 'N/A';
+            $message .= '🧭 Mục đích: '.$this->escapeTelegramText($purposeText)."\n";
             //$message .= "👨‍💼 Người tạo: " . $this->escapeTelegramText($creatorName) . " - " . $this->escapeTelegramText($creatorPhone) . "\n";
             //$message .= "🔗 [Mở danh sách lead]({$leadUrl})";
 

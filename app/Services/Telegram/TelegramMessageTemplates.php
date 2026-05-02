@@ -143,7 +143,8 @@ class TelegramMessageTemplates
             number_format((float) ($lead->demand_rate_min ?? 0)) . ' – ' . number_format((float) ($lead->demand_rate_max ?? 0)) . ' VNĐ'
         );
         $note    = self::escape($lead->note ?? '');
-        $purpose = self::escape($lead->purpose ?? '');
+        $rawPurpose = is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? '');
+        $purpose = self::escape($rawPurpose);
 
         $text = "👋 Bạn vừa có một khách hàng mới được giao!\n\n" .
                 "👤 *{$customerName}* – đang tìm {$leadType}\n" .
