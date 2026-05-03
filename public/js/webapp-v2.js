@@ -3347,7 +3347,7 @@ function renderLeads(res, append, currentPage, query) {
           </div>
           <div class="lc-body">
             <div class="lc-row"><span class="lc-label">Nhu cầu</span><span class="lc-value">${lead.lead_type || '—'}</span></div>
-            <div class="lc-row"><span class="lc-label">Ngân sách</span><span class="lc-value money">${budgetLabel(lead.budget_min_raw||0, lead.budget_max_raw||0) || (lead.budget_min + ' - ' + lead.budget_max)}</span></div>
+            <div class="lc-row"><span class="lc-label">Ngân sách</span><span class="lc-value money">${lead.budget_label || budgetLabel(lead.budget_min_raw||0, lead.budget_max_raw||0) || (lead.budget_min + ' - ' + lead.budget_max)}</span></div>
             <div class="lc-row" style="grid-column: span 2;"><span class="lc-label">Ghi chú</span><span class="lc-value" style="font-weight:400;color:var(--text-secondary);font-style:italic;">${lead.note || '—'}</span></div>
           </div>
           <div class="lc-footer">
@@ -6537,7 +6537,7 @@ function renderClientCard(client) {
   var catVal     = (client.categories || []).slice(0, 3).join(', ') || '—';
   var budgetVal  = client.budget || 'Chưa xác định';
   var wardVal    = (client.wards || []).slice(0, 2).join(', ') || '—';
-  var purposeVal = client.purpose || '—';
+  var purposeVal = (Array.isArray(client.purpose) ? client.purpose.join(', ') : (client.purpose || '')) || '—';
   var budgetClass = client.budget ? ' budget' : '';
 
   var bodyGrid = '<div class="cust-grid">'
@@ -6593,7 +6593,8 @@ window.openClientDetail = function(id) {
     var parts = [];
     if (client.created_diff) parts.push('Tạo ' + client.created_diff);
     parts.push(leadTypeLabel);
-    if (client.purpose) parts.push(client.purpose);
+    var purposeStr = Array.isArray(client.purpose) ? client.purpose.join(', ') : (client.purpose || '');
+    if (purposeStr) parts.push(purposeStr);
     subEl.textContent = parts.join(' · ');
   }
 
@@ -6662,7 +6663,8 @@ function _buildClientStepper(unified_status) {
 function _buildClientNeeds(client) {
   var cats   = (client.categories && client.categories.length) ? escHtml(client.categories.join(', ')) : '—';
   var wards  = (client.wards && client.wards.length) ? escHtml(client.wards.join(', ')) : '—';
-  var purpose = client.purpose ? escHtml(client.purpose) : '—';
+  var purposeRaw = Array.isArray(client.purpose) ? client.purpose.join(', ') : (client.purpose || '');
+  var purpose = purposeRaw ? escHtml(purposeRaw) : '—';
   var budget  = client.budget  ? escHtml(client.budget)  : 'Chưa xác định';
 
   var budgetCls = client.budget ? '' : ' style="color:var(--warning);"';

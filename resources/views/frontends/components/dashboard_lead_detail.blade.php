@@ -54,7 +54,20 @@
                         <li><span class="ldi-label">Loại BĐS:</span> <span>{{ $catNames }}</span></li>
                         @endif
                         <li><span class="ldi-label">Ngân sách:</span>
-                            <span>{{ format_vnd($lead->demand_rate_min) }} – {{ format_vnd($lead->demand_rate_max) }}</span>
+                            <span>
+                                @php
+                                    $bMin = (float)($lead->demand_rate_min ?? 0);
+                                    $bMax = (float)($lead->demand_rate_max ?? 0);
+                                    $bLabel = $lead->budget_label ?? '';
+                                    if ($bLabel) {
+                                        echo e($bLabel);
+                                    } elseif ($bMin > 0 || $bMax > 0) {
+                                        echo ($bMin > 0 ? format_vnd($bMin) : '?') . ' – ' . ($bMax > 0 ? format_vnd($bMax) : '?');
+                                    } else {
+                                        echo 'Thỏa thuận';
+                                    }
+                                @endphp
+                            </span>
                         </li>
                         @if($wardNames)
                         <li><span class="ldi-label">Khu vực:</span> <span>{{ $wardNames }}</span></li>

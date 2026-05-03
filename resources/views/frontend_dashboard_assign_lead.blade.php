@@ -74,7 +74,18 @@
                         </span>
                         <span class="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
                             <i class="fas fa-wallet text-[10px]"></i>
-                            {{ format_vnd($lead->demand_rate_min) }} – {{ format_vnd($lead->demand_rate_max) }}
+                            @php
+                                $aMin = (float)($lead->demand_rate_min ?? 0);
+                                $aMax = (float)($lead->demand_rate_max ?? 0);
+                                $aLbl = $lead->budget_label ?? '';
+                                if ($aLbl) {
+                                    echo e($aLbl);
+                                } elseif ($aMin > 0 || $aMax > 0) {
+                                    echo ($aMin > 0 ? format_vnd($aMin) : '?') . ' – ' . ($aMax > 0 ? format_vnd($aMax) : '?');
+                                } else {
+                                    echo 'Thỏa thuận';
+                                }
+                            @endphp
                         </span>
                     </div>
 

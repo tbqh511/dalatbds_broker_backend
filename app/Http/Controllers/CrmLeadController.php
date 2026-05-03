@@ -76,7 +76,11 @@ class CrmLeadController extends Controller
                     'status_label'     => $statusLabels[$lead->status] ?? $lead->status,
                     'status_raw'       => $rawStatus,
                     'lead_type'        => $lead->lead_type === 'Buy' ? 'Mua' : 'Thuê',
-                    'budget'           => format_vnd($lead->demand_rate_min) . ' – ' . format_vnd($lead->demand_rate_max),
+                    'budget'           => $lead->budget_label ?: (
+                        ((float)($lead->demand_rate_min ?? 0) > 0 || (float)($lead->demand_rate_max ?? 0) > 0)
+                            ? (((float)($lead->demand_rate_min ?? 0) > 0 ? format_vnd($lead->demand_rate_min) : '?') . ' – ' . ((float)($lead->demand_rate_max ?? 0) > 0 ? format_vnd($lead->demand_rate_max) : '?'))
+                            : 'Thỏa thuận'
+                    ),
                     'categories'       => $catNames,
                     'wards'            => $wardNames,
                     'street'           => $street,

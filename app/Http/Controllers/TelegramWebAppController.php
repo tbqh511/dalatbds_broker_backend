@@ -460,8 +460,11 @@ class TelegramWebAppController extends Controller
 
                 $budgetMin = (float) ($lead->demand_rate_min ?? 0);
                 $budgetMax = (float) ($lead->demand_rate_max ?? 0);
+                $budgetLbl = $lead->budget_label ?? '';
                 $budget = '';
-                if ($budgetMin > 0 || $budgetMax > 0) {
+                if ($budgetLbl) {
+                    $budget = $budgetLbl;
+                } elseif ($budgetMin > 0 || $budgetMax > 0) {
                     $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
                             .' – '
                             .($budgetMax > 0 ? format_vnd($budgetMax) : '?');
@@ -603,8 +606,11 @@ class TelegramWebAppController extends Controller
 
                 $budgetMin = (float) ($lead->demand_rate_min ?? 0);
                 $budgetMax = (float) ($lead->demand_rate_max ?? 0);
+                $budgetLbl = $lead->budget_label ?? '';
                 $budget = '';
-                if ($budgetMin > 0 || $budgetMax > 0) {
+                if ($budgetLbl) {
+                    $budget = $budgetLbl;
+                } elseif ($budgetMin > 0 || $budgetMax > 0) {
                     $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
                             .' – '
                             .($budgetMax > 0 ? format_vnd($budgetMax) : '?');
@@ -748,8 +754,11 @@ class TelegramWebAppController extends Controller
                     ->map(fn ($c) => $wardMap[$c] ?? null)->filter()->implode(', ');
                 $budgetMin = (float) ($lead?->demand_rate_min ?? 0);
                 $budgetMax = (float) ($lead?->demand_rate_max ?? 0);
+                $budgetLbl = $lead?->budget_label ?? '';
                 $budget = '';
-                if ($budgetMin > 0 || $budgetMax > 0) {
+                if ($budgetLbl) {
+                    $budget = $budgetLbl;
+                } elseif ($budgetMin > 0 || $budgetMax > 0) {
                     $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
                             .' – '
                             .($budgetMax > 0 ? format_vnd($budgetMax) : '?');
@@ -969,8 +978,11 @@ class TelegramWebAppController extends Controller
 
                 $budgetMin = (float) ($lead->demand_rate_min ?? 0);
                 $budgetMax = (float) ($lead->demand_rate_max ?? 0);
+                $budgetLbl = $lead->budget_label ?? '';
                 $budget = '';
-                if ($budgetMin > 0 || $budgetMax > 0) {
+                if ($budgetLbl) {
+                    $budget = $budgetLbl;
+                } elseif ($budgetMin > 0 || $budgetMax > 0) {
                     $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
                             .' – '
                             .($budgetMax > 0 ? format_vnd($budgetMax) : '?');
@@ -998,7 +1010,7 @@ class TelegramWebAppController extends Controller
                     'unified_status' => $unifiedStatus,
                     'next_action'    => $nextAction,
                     'lead_type'      => $rawType,
-                    'purpose'        => $lead->purpose ?? '',
+                    'purpose'        => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
                     'has_deal'       => $deal !== null,
                     'deal_status'    => $dealStatus,
                     'customer_name'        => optional($lead->customer)->full_name ?? 'Khách vãng lai',
@@ -1007,8 +1019,9 @@ class TelegramWebAppController extends Controller
                     'categories'           => $categoryNames,
                     'wards'                => $wardNames,
                     'budget'               => $budget,
-                    'budget_min'           => (float) ($lead->demand_rate_min ?? 0),
-                    'budget_max'           => (float) ($lead->demand_rate_max ?? 0),
+                    'budget_label'         => $budgetLbl,
+                    'budget_min_raw'       => $budgetMin,
+                    'budget_max_raw'       => $budgetMax,
                     'note'                 => $lead->note ?? '',
                     'activities'           => $activities,
                     'no_answer_count'      => $noAnswerCount,
