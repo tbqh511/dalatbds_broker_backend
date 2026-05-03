@@ -334,11 +334,16 @@ window.openSubpage = function(id, opts){
     loadDeals(true);
   }
   if(id === 'clients') {
-    clientsCurrentStatus = 'new';
-    clientsCurrentSearch = '';
     document.querySelectorAll('#subpage-clients .sp-tab').forEach(function(t) { t.classList.remove('active'); });
-    var clientsTabNewEl = document.getElementById('clientsTabNew');
-    if (clientsTabNewEl) clientsTabNewEl.classList.add('active');
+    if (window._pendingClientDetailId) {
+      // Load tất cả status để tìm được cả leads đã có deal (chăm/hẹn/chốt)
+      clientsCurrentStatus = '';
+    } else {
+      clientsCurrentStatus = 'new';
+      var clientsTabNewEl = document.getElementById('clientsTabNew');
+      if (clientsTabNewEl) clientsTabNewEl.classList.add('active');
+    }
+    clientsCurrentSearch = '';
     var clientsSearchEl = document.getElementById('clientsSearchInput');
     if (clientsSearchEl) clientsSearchEl.value = '';
     loadClients(true);
