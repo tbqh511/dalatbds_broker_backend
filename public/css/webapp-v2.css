@@ -10239,7 +10239,7 @@ textarea.form-row-value {
 }
 .cd-call-btn-confirm:active { opacity: 0.85; }
 
-/* ── Send property bottom sheet ── */
+/* ── Send property bottom sheet (two-step) ── */
 .cd-send-overlay {
   position: fixed;
   inset: 0;
@@ -10258,20 +10258,38 @@ textarea.form-row-value {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0px);
 }
+
+/* Two-step visibility */
+.cd-send-sheet[data-send-step="1"] .cd-send-step-2 { display: none !important; }
+.cd-send-sheet[data-send-step="2"] .cd-send-step-1 { display: none !important; }
+
 .cd-send-handle {
   width: 36px;
   height: 4px;
   background: var(--border);
   border-radius: 2px;
-  margin: 10px auto 14px;
+  margin: 10px auto 12px;
   flex-shrink: 0;
 }
 .cd-send-header {
-  padding: 0 16px 14px;
+  padding: 0 16px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+}
+.cd-send-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  margin-bottom: 6px;
 }
 .cd-send-title {
   font-size: 16px;
@@ -10283,6 +10301,55 @@ textarea.form-row-value {
   color: var(--text-tertiary);
   margin-top: 3px;
 }
+
+/* Compact client bar */
+.cd-send-client-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.cd-client-bar-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cd-client-bar-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+.cd-client-bar-info {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 96px;
+  flex-shrink: 0;
+}
+
+/* Scrollable body */
+.cd-send-body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
 .cd-send-section-label {
   font-size: 10px;
   font-weight: 700;
@@ -10291,6 +10358,18 @@ textarea.form-row-value {
   letter-spacing: 0.06em;
   padding: 12px 16px 6px;
 }
+
+/* Selected count summary (step 2) */
+.cd-send-selected-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
 .cd-prop-item {
   display: flex;
   align-items: center;
@@ -10346,6 +10425,40 @@ textarea.form-row-value {
   border-color: var(--primary);
   color: #fff;
 }
+
+/* Checkbox options (step 2) */
+.cd-send-checks {
+  padding: 0 16px 8px;
+}
+.cd-check-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+  -webkit-tap-highlight-color: transparent;
+}
+.cd-check-opt:last-child { border-bottom: none; }
+.cd-check-indicator {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  color: transparent;
+}
+.cd-check-indicator.checked {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Legacy .cd-send-radios / .cd-radio-opt kept for backward compat */
 .cd-send-radios {
   padding: 0 16px 8px;
   border-bottom: 1px solid var(--border-light);
@@ -10385,8 +10498,12 @@ textarea.form-row-value {
 .cd-send-footer {
   display: flex;
   gap: 10px;
-  padding: 12px 16px 0;
+  padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
   flex-shrink: 0;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
 }
 .cd-send-btn-cancel {
   flex: 0 0 auto;
@@ -10400,10 +10517,28 @@ textarea.form-row-value {
   color: var(--text-secondary);
   cursor: pointer;
 }
+.cd-send-btn-next {
+  flex: 1;
+  height: 46px;
+  background: linear-gradient(135deg, #3270FC, #5b8fff);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.cd-send-btn-next:disabled { opacity: 0.45; cursor: not-allowed; }
+.cd-send-btn-next:not(:disabled):active { opacity: 0.85; }
 .cd-send-btn-confirm {
   flex: 1;
   height: 46px;
-  background: var(--primary);
+  background: linear-gradient(135deg, #3270FC, #5b8fff);
   color: #fff;
   border: none;
   border-radius: var(--radius-md);
@@ -10418,48 +10553,6 @@ textarea.form-row-value {
 }
 .cd-send-btn-confirm:active { opacity: 0.85; }
 
-/* ── Send Property Sheet — Redesigned (v2) ── */
-.cd-send-sheet { display: flex; flex-direction: column; }
-
-/* Criteria chip */
-.cd-criteria-chip {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-}
-.cd-criteria-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-}
-.cd-criteria-body { flex: 1; min-width: 0; }
-.cd-criteria-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-.cd-criteria-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 3px; }
-.cd-criteria-tag {
-  background: #eff6ff;
-  color: #3270FC;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 20px;
-}
-.cd-criteria-info { font-size: 11px; color: var(--text-tertiary); }
 .cd-auto-filter-btn {
   flex-shrink: 0;
   height: 26px;

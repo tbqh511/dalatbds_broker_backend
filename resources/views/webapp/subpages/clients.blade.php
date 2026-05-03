@@ -256,31 +256,29 @@
   </div>
 </div>
 
-<!-- ========== OVERLAY: GỬI THÔNG TIN BĐS SHEET ========== -->
+<!-- ========== OVERLAY: GỬI THÔNG TIN BĐS SHEET (2-step) ========== -->
 <div class="cd-send-overlay" id="cdSendOverlay" onclick="closeSendPropSheet()">
-  <div class="cd-send-sheet" onclick="event.stopPropagation()">
+  <div class="cd-send-sheet" data-send-step="1" onclick="event.stopPropagation()">
     <div class="cd-send-handle"></div>
 
-    <div class="cd-send-header">
-      <div class="cd-send-title">Tìm BĐS phù hợp</div>
-      <div class="cd-send-subtitle">Chọn BĐS → chọn nội dung gửi → gửi cho khách</div>
+    {{-- ── STEP 1: Chọn BĐS ── --}}
+    <div class="cd-send-header cd-send-step-1">
+      <div class="cd-send-title">Chọn BĐS</div>
+      <div class="cd-send-subtitle">Tìm và chọn bất động sản phù hợp với khách</div>
     </div>
 
-    <div style="overflow-y:auto;flex:1;min-height:0;">
-      <!-- Chip thông tin khách -->
-      <div style="padding:10px 12px 0;">
-        <div class="cd-criteria-chip">
-          <div class="cd-criteria-avatar" id="cdSendAvatar"></div>
-          <div class="cd-criteria-body">
-            <div class="cd-criteria-name" id="cdSendCriteriaName"></div>
-            <div class="cd-criteria-tags" id="cdSendCriteriaTags"></div>
-            <div class="cd-criteria-info" id="cdSendCriteriaInfo"></div>
-          </div>
-          <button class="cd-auto-filter-btn" id="cdAutoFilterBtn" onclick="_applySendAutoFilter(this)">Tự động lọc</button>
-        </div>
-      </div>
+    {{-- Compact client bar (step 1 only) --}}
+    <div class="cd-send-client-bar cd-send-step-1">
+      <div class="cd-client-bar-avatar" id="cdSendAvatar"></div>
+      <div class="cd-client-bar-name" id="cdSendCriteriaName"></div>
+      <div class="cd-client-bar-info" id="cdSendCriteriaInfo"></div>
+      {{-- Hidden tags — still populated by JS, not shown --}}
+      <span id="cdSendCriteriaTags" style="display:none;"></span>
+      <button class="cd-auto-filter-btn" id="cdAutoFilterBtn" onclick="_applySendAutoFilter(this)">Tự động lọc</button>
+    </div>
 
-      <!-- Search -->
+    {{-- Scrollable body step 1 --}}
+    <div class="cd-send-body cd-send-step-1">
       <div class="cd-prop-search-row">
         <div class="cd-prop-search-wrap">
           <svg class="cd-prop-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -288,7 +286,6 @@
         </div>
       </div>
 
-      <!-- Category filter chips -->
       <div class="cd-prop-type-chips" id="cdSendCatChips">
         <button class="cd-prop-type-chip active" onclick="_selectSendCatChip(this,'')">Tất cả</button>
         <button class="cd-prop-type-chip" onclick="_selectSendCatChip(this,'Nhà')">Nhà</button>
@@ -298,59 +295,92 @@
         <button class="cd-prop-type-chip" onclick="_selectSendCatChip(this,'Đất')">Đất</button>
       </div>
 
-      <!-- Danh sách BĐS -->
       <div class="cd-send-section-label">Chọn BĐS</div>
       <div id="cdSendPropList"></div>
+    </div>
 
-      <!-- Nội dung gửi cho khách -->
-      <div class="cd-send-section-label" style="margin-top:4px;">Nội dung gửi cho khách</div>
-      <div class="cd-send-radios" id="cdSendRadios">
-        <label class="cd-radio-opt selected" onclick="_selectSendRadio(this,'full')">
-          <div class="cd-radio-indicator checked"></div>
+    {{-- Footer step 1 --}}
+    <div class="cd-send-footer cd-send-step-1">
+      <button class="cd-send-btn-cancel" onclick="closeSendPropSheet()">Huỷ</button>
+      <button class="cd-send-btn-next" id="cdSendNextBtn" onclick="_sendPropGoStep(2)" disabled>
+        Tiếp tục
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+    {{-- ── STEP 2: Nội dung gửi ── --}}
+    <div class="cd-send-header cd-send-step-2">
+      <button class="cd-send-back-btn" onclick="_sendPropGoStep(1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Quay lại
+      </button>
+      <div class="cd-send-title">Nội dung gửi</div>
+      <div class="cd-send-subtitle">Chọn loại thông tin gửi cho khách</div>
+    </div>
+
+    {{-- Scrollable body step 2 --}}
+    <div class="cd-send-body cd-send-step-2">
+      {{-- Selected count summary --}}
+      <div class="cd-send-selected-summary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span id="cdSendSelectedCount">0 BĐS đã chọn</span>
+      </div>
+
+      <div class="cd-send-section-label">Nội dung gửi cho khách</div>
+      <div class="cd-send-checks" id="cdSendChecks">
+        <label class="cd-check-opt selected" onclick="_toggleSendCheckbox(this,'full')">
+          <div class="cd-check-indicator checked">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
           <div class="cd-radio-icon" style="background:#dbeafe;">🏠</div>
           <div class="cd-radio-text">
             <div class="cd-radio-title">Toàn bộ thông tin BĐS</div>
             <div class="cd-radio-sub">Tên, mô tả, giá, diện tích, hình ảnh</div>
           </div>
-          <input type="radio" name="cdSendType" value="full" checked style="display:none">
+          <input type="checkbox" name="cdSendType" value="full" checked style="display:none">
         </label>
-        <label class="cd-radio-opt" onclick="_selectSendRadio(this,'location')">
-          <div class="cd-radio-indicator"></div>
+        <label class="cd-check-opt" onclick="_toggleSendCheckbox(this,'location')">
+          <div class="cd-check-indicator">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
           <div class="cd-radio-icon" style="background:#d1fae5;">📍</div>
           <div class="cd-radio-text">
             <div class="cd-radio-title">Gửi vị trí (bản đồ)</div>
             <div class="cd-radio-sub">Link Google Maps đến BĐS</div>
           </div>
-          <input type="radio" name="cdSendType" value="location" style="display:none">
+          <input type="checkbox" name="cdSendType" value="location" style="display:none">
         </label>
-        <label class="cd-radio-opt" onclick="_selectSendRadio(this,'legal')">
-          <div class="cd-radio-indicator"></div>
+        <label class="cd-check-opt" onclick="_toggleSendCheckbox(this,'legal')">
+          <div class="cd-check-indicator">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
           <div class="cd-radio-icon" style="background:#fef3c7;">📄</div>
           <div class="cd-radio-text">
             <div class="cd-radio-title">Giấy tờ pháp lý</div>
             <div class="cd-radio-sub">Số đỏ, giấy phép xây dựng</div>
           </div>
-          <input type="radio" name="cdSendType" value="legal" style="display:none">
+          <input type="checkbox" name="cdSendType" value="legal" style="display:none">
         </label>
-        <label class="cd-radio-opt" onclick="_selectSendRadio(this,'gallery')">
-          <div class="cd-radio-indicator"></div>
+        <label class="cd-check-opt" onclick="_toggleSendCheckbox(this,'gallery')">
+          <div class="cd-check-indicator">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
           <div class="cd-radio-icon" style="background:#ede9fe;">🖼</div>
           <div class="cd-radio-text">
             <div class="cd-radio-title">Hình ảnh BĐS</div>
             <div class="cd-radio-sub">Thư viện ảnh thực tế</div>
           </div>
-          <input type="radio" name="cdSendType" value="gallery" style="display:none">
+          <input type="checkbox" name="cdSendType" value="gallery" style="display:none">
         </label>
       </div>
 
-      <!-- Ghi chú -->
-      <div style="padding:8px 16px 12px;">
+      <div style="padding:8px 16px 16px;">
         <textarea id="cdSendNote" class="cd-send-note" placeholder="Ghi chú gửi kèm (tuỳ chọn)..." rows="3"></textarea>
       </div>
     </div>
 
-    <div class="cd-send-footer">
-      <button class="cd-send-btn-cancel" onclick="closeSendPropSheet()">Huỷ</button>
+    {{-- Footer step 2 --}}
+    <div class="cd-send-footer cd-send-step-2">
       <button class="cd-send-btn-confirm" id="cdSendConfirmBtn" onclick="sendPropToClient()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Gửi qua Telegram

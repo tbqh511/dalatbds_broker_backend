@@ -7021,14 +7021,14 @@ function _clientAvatarColor(name) {
   return _spAvatarPalette[code % _spAvatarPalette.length];
 }
 
-var _sendPropState = { search: '', category: '', autoFiltered: false, loading: false, searchTimer: null };
+var _sendPropState = { search: '', category: '', autoFiltered: false, loading: false, searchTimer: null, step: 1, contentTypes: ['full'] };
 
 window.openSendPropSheet = function(clientId) {
   var client = clientsDataMap[clientId];
   if (!client) return;
   currentClientDetailId = clientId;
 
-  // Populate criteria chip
+  // Populate compact client bar
   var avatarEl = document.getElementById('cdSendAvatar');
   var nameEl   = document.getElementById('cdSendCriteriaName');
   var tagsEl   = document.getElementById('cdSendCriteriaTags');
@@ -7062,12 +7062,24 @@ window.openSendPropSheet = function(clientId) {
   var firstChip = document.querySelector('.cd-prop-type-chip');
   if (firstChip) firstChip.classList.add('active');
 
-  // Reset radio to "full"
-  document.querySelectorAll('.cd-radio-opt').forEach(function(l){ l.classList.remove('selected'); var ind = l.querySelector('.cd-radio-indicator'); if(ind) ind.classList.remove('checked'); });
-  var firstOpt = document.querySelector('.cd-radio-opt');
-  if (firstOpt) { firstOpt.classList.add('selected'); var ind = firstOpt.querySelector('.cd-radio-indicator'); if(ind) ind.classList.add('checked'); }
-  var firstRadio = document.querySelector('input[name="cdSendType"][value="full"]');
-  if (firstRadio) firstRadio.checked = true;
+  // Reset checkboxes — only "full" checked
+  document.querySelectorAll('.cd-check-opt').forEach(function(l) {
+    l.classList.remove('selected');
+    var ind = l.querySelector('.cd-check-indicator');
+    if (ind) ind.classList.remove('checked');
+    var cb = l.querySelector('input[type="checkbox"]');
+    if (cb) cb.checked = false;
+  });
+  var fullOpt = document.querySelector('.cd-check-opt input[value="full"]');
+  if (fullOpt) {
+    fullOpt.checked = true;
+    var fullLabel = fullOpt.closest('.cd-check-opt');
+    if (fullLabel) {
+      fullLabel.classList.add('selected');
+      var ind = fullLabel.querySelector('.cd-check-indicator');
+      if (ind) ind.classList.add('checked');
+    }
+  }
 
   // Reset note
   var note = document.getElementById('cdSendNote');
@@ -7078,6 +7090,16 @@ window.openSendPropSheet = function(clientId) {
   _sendPropState.category = '';
   _sendPropState.autoFiltered = false;
   _sendPropState.loading = false;
+  _sendPropState.step = 1;
+  _sendPropState.contentTypes = ['full'];
+
+  // Reset sheet to step 1
+  var sheet = document.querySelector('.cd-send-sheet');
+  if (sheet) sheet.setAttribute('data-send-step', '1');
+
+  // Disable "Tiếp tục" button until a property is selected
+  var nextBtn = document.getElementById('cdSendNextBtn');
+  if (nextBtn) nextBtn.disabled = true;
 
   // Wire up search input
   if (searchIn && !searchIn._sendWired) {
@@ -7202,17 +7224,29 @@ window._selectSendCatChip = function(chip, cat) {
   _loadSendPropList();
 };
 
-window._selectSendRadio = function(label, value) {
-  document.querySelectorAll('.cd-radio-opt').forEach(function(l){
-    l.classList.remove('selected');
-    var ind = l.querySelector('.cd-radio-indicator');
-    if (ind) ind.classList.remove('checked');
-  });
-  label.classList.add('selected');
-  var ind = label.querySelector('.cd-radio-indicator');
-  if (ind) ind.classList.add('checked');
-  var radio = label.querySelector('input[type="radio"]');
-  if (radio) radio.checked = true;
+window._toggleSendCheckbox = function(label, value) {
+  var isSelected = label.classList.toggle('selected');
+  var ind = label.querySelector('.cd-check-indicator');
+  if (ind) ind.classList.toggle('checked', isSelected);
+  var cb = label.querySelector('input[type="checkbox"]');
+  if (cb) cb.checked = isSelected;
+  if (isSelected) {
+    if (_sendPropState.contentTypes.indexOf(value) === -1) _sendPropState.contentTypes.push(value);
+  } else {
+    _sendPropState.contentTypes = _sendPropState.contentTypes.filter(function(v){ return v !== value; });
+  }
+};
+
+window._sendPropGoStep = function(step) {
+  if (step === 2) {
+    var selected = document.querySelectorAll('.cd-prop-item.selected[data-id]');
+    if (selected.length === 0) { showToast('Vui lòng chọn ít nhất 1 BĐS'); return; }
+    var countEl = document.getElementById('cdSendSelectedCount');
+    if (countEl) countEl.textContent = selected.length + ' BĐS đã chọn';
+  }
+  _sendPropState.step = step;
+  var sheet = document.querySelector('.cd-send-sheet');
+  if (sheet) sheet.setAttribute('data-send-step', String(step));
 };
 
 window.togglePropSelect = function(el) {
@@ -7225,6 +7259,9 @@ window.togglePropSelect = function(el) {
       ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
       : '';
   }
+  var anySelected = document.querySelectorAll('.cd-prop-item.selected[data-id]').length > 0;
+  var nextBtn = document.getElementById('cdSendNextBtn');
+  if (nextBtn) nextBtn.disabled = !anySelected;
 };
 
 window.sendPropToClient = function() {
@@ -7234,7 +7271,7 @@ window.sendPropToClient = function() {
     return;
   }
   var propertyIds = Array.from(selected).map(function(el){ return el.getAttribute('data-id'); });
-  var contentType = (document.querySelector('input[name="cdSendType"]:checked') || {}).value || 'full';
+  var contentTypes = _sendPropState.contentTypes.length > 0 ? _sendPropState.contentTypes : ['full'];
   var note = (document.getElementById('cdSendNote') || {}).value || '';
   var confirmBtn = document.getElementById('cdSendConfirmBtn');
 
@@ -7250,7 +7287,7 @@ window.sendPropToClient = function() {
     body: JSON.stringify({
       lead_id: currentClientDetailId,
       property_ids: propertyIds,
-      content_type: contentType,
+      content_types: contentTypes,
       note: note
     })
   })
