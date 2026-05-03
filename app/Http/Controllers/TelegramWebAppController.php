@@ -901,7 +901,7 @@ class TelegramWebAppController extends Controller
             $kpi = [
                 'new'     => (clone $baseQuery)->whereRaw("LOWER(crm_leads.status) = 'new'")->whereDoesntHave('deal')->count(),
                 'caring'  => (clone $baseQuery)->where(function ($q) {
-                    $q->whereRaw("LOWER(crm_leads.status) = 'contacted'")
+                    $q->whereRaw("LOWER(crm_leads.status) IN ('contacted', 'converted')")
                         ->orWhereHas('deal', fn ($dq) => $dq->whereIn('status', ['open', 'negotiating']));
                 })->count(),
                 'viewing' => (clone $baseQuery)->whereHas('deal.products.bookings')->count(),
@@ -925,7 +925,7 @@ class TelegramWebAppController extends Controller
                     $baseQuery->whereRaw("LOWER(crm_leads.status) = 'new'")->whereDoesntHave('deal');
                 } elseif ($status === 'caring') {
                     $baseQuery->where(function ($q) {
-                        $q->whereRaw("LOWER(crm_leads.status) = 'contacted'")
+                        $q->whereRaw("LOWER(crm_leads.status) IN ('contacted', 'converted')")
                             ->orWhereHas('deal', fn ($dq) => $dq->whereIn('status', ['open', 'negotiating']));
                     });
                 } elseif ($status === 'viewing') {

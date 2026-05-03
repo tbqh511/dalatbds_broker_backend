@@ -6915,8 +6915,12 @@ window.crConfirmNeeds = function() {
       .then(function(r) { return r.json(); })
       .then(function(res) {
         crCloseSheet();
-        showToast(res.success ? '✓ Đã tạo Giao dịch thành công' : (res.message || 'Lỗi tạo giao dịch'));
-        if (res.success) { clientsLoaded = false; loadClients(true); }
+        if (res.success) {
+          showToast('✓ Đã tạo Giao dịch thành công');
+          clientsTabSwitch(document.getElementById('clientsTabCaring'), 'caring');
+        } else {
+          showToast(res.message || 'Lỗi tạo giao dịch');
+        }
       })
       .catch(function() { showToast('Lỗi kết nối'); });
   } else {
