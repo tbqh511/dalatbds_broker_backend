@@ -249,6 +249,36 @@ class CrmLeadController extends Controller
             ],
         ]);
 
+        // Notify broker via Telegram + in-app when their lead gets assigned to a sale
+        if ($lead->user_id) {
+            $broker = Customer::find($lead->user_id);
+            if ($broker && $broker->id !== $sale->id) {
+                if (
+                    $broker->telegram_id &&
+                    $broker->telegram_bot_started &&
+                    $this->notificationService->shouldNotify($broker, 'lead', 'assigned', 'telegram')
+                ) {
+                    $lead->setRelation('sale', $sale);
+                    $brokerTpl = TelegramMessageTemplates::leadAssignedToBroker($lead);
+                    $this->notificationService->sendWithInlineKeyboard($broker->telegram_id, $brokerTpl['text'], $brokerTpl['keyboard']);
+                }
+
+                $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
+                    'title' => 'Lead của bạn đã được tiếp nhận',
+                    'body'  => ($lead->customer->full_name ?? 'N/A') . ' — ' . ($lead->lead_type === 'buy' ? 'Mua' : 'Thuê') . ' — Sale: ' . $sale->name,
+                    'notifiable_type' => CrmLead::class,
+                    'notifiable_id'   => $lead->id,
+                    'actor_id'        => $customer->id,
+                    'data'  => [
+                        'lead_id'       => $lead->id,
+                        'customer_name' => $lead->customer->full_name ?? '',
+                        'sale_name'     => $sale->name,
+                        'lead_type'     => $lead->lead_type,
+                    ],
+                ]);
+            }
+        }
+
         return response()->json(['success' => true, 'sale_name' => $sale->name]);
     }
 
@@ -340,6 +370,54 @@ class CrmLeadController extends Controller
                     'actor_id' => $customer->id,
                     'data'  => ['lead_ids' => $assigned, 'count' => count($assigned)],
                 ]);
+            }
+        }
+
+        // Notify each unique broker whose leads were just assigned
+        if (count($assigned) > 0) {
+            $assignedLeads = CrmLead::with('customer')->whereIn('id', $assigned)->get();
+            $leadsByBroker = $assignedLeads->groupBy('user_id');
+
+            foreach ($leadsByBroker as $brokerId => $brokerLeads) {
+                if (!$brokerId) continue;
+                $broker = Customer::find($brokerId);
+                if (!$broker || $broker->id === $sale->id) continue;
+
+                $count = $brokerLeads->count();
+                if ($count === 1) {
+                    $singleLead = $brokerLeads->first();
+                    if (
+                        $broker->telegram_id &&
+                        $broker->telegram_bot_started &&
+                        $this->notificationService->shouldNotify($broker, 'lead', 'assigned', 'telegram')
+                    ) {
+                        $singleLead->setRelation('sale', $sale);
+                        $brokerTpl = TelegramMessageTemplates::leadAssignedToBroker($singleLead);
+                        $this->notificationService->sendWithInlineKeyboard($broker->telegram_id, $brokerTpl['text'], $brokerTpl['keyboard']);
+                    }
+                    $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
+                        'title' => 'Lead của bạn đã được tiếp nhận',
+                        'body'  => ($singleLead->customer->full_name ?? 'N/A') . ' — Sale: ' . $sale->name,
+                        'notifiable_type' => CrmLead::class,
+                        'notifiable_id'   => $singleLead->id,
+                        'actor_id'        => $customer->id,
+                        'data'  => ['lead_id' => $singleLead->id, 'sale_name' => $sale->name],
+                    ]);
+                } else {
+                    if (
+                        $broker->telegram_id &&
+                        $broker->telegram_bot_started &&
+                        $this->notificationService->shouldNotify($broker, 'lead', 'assigned', 'telegram')
+                    ) {
+                        $this->notificationService->sendToCustomer($broker, "{$count} lead của bạn vừa được phân công cho Sale {$sale->name}. Vui lòng theo dõi tiến trình qua ứng dụng.");
+                    }
+                    $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
+                        'title' => "{$count} lead của bạn đã được tiếp nhận",
+                        'body'  => "Sale phụ trách: {$sale->name}",
+                        'actor_id' => $customer->id,
+                        'data'  => ['lead_ids' => $brokerLeads->pluck('id')->toArray(), 'sale_name' => $sale->name, 'count' => $count],
+                    ]);
+                }
             }
         }
 
@@ -544,6 +622,36 @@ class CrmLeadController extends Controller
                 'lead_type'     => $lead->lead_type,
             ],
         ]);
+
+        // Notify broker via Telegram + in-app when their lead gets assigned
+        if ($lead->user_id) {
+            $broker = Customer::find($lead->user_id);
+            if ($broker && $broker->id !== $sale->id) {
+                if (
+                    $broker->telegram_id &&
+                    $broker->telegram_bot_started &&
+                    $this->notificationService->shouldNotify($broker, 'lead', 'assigned', 'telegram')
+                ) {
+                    $lead->setRelation('sale', $sale);
+                    $brokerTpl = TelegramMessageTemplates::leadAssignedToBroker($lead);
+                    $this->notificationService->sendWithInlineKeyboard($broker->telegram_id, $brokerTpl['text'], $brokerTpl['keyboard']);
+                }
+
+                $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
+                    'title' => 'Lead của bạn đã được tiếp nhận',
+                    'body'  => ($lead->customer->full_name ?? 'N/A') . ' — ' . ($lead->lead_type === 'buy' ? 'Mua' : 'Thuê') . ' — Sale: ' . $sale->name,
+                    'notifiable_type' => CrmLead::class,
+                    'notifiable_id'   => $lead->id,
+                    'actor_id'        => null,
+                    'data'  => [
+                        'lead_id'       => $lead->id,
+                        'customer_name' => $lead->customer->full_name ?? '',
+                        'sale_name'     => $sale->name,
+                        'lead_type'     => $lead->lead_type,
+                    ],
+                ]);
+            }
+        }
 
         return response()->json(['success' => true, 'sale_name' => $sale->name]);
     }

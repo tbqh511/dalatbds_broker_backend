@@ -170,6 +170,35 @@ class TelegramMessageTemplates
     }
 
     /**
+     * Thông báo tới broker khi lead của họ được phân công cho Sale.
+     * Yêu cầu: $lead đã load 'customer' và 'sale' trước khi gọi.
+     *
+     * @return array{text: string, keyboard: array}
+     */
+    public static function leadAssignedToBroker(CrmLead $lead): array
+    {
+        $customerName = self::escape($lead->customer->full_name ?? 'N/A');
+        $saleName     = self::escape($lead->sale->name ?? 'N/A');
+        $leadType     = ($lead->getRawOriginal('lead_type') ?? '') === 'buy' ? 'mua' : 'thuê';
+
+        $text = "✅ *Lead của bạn đã được tiếp nhận!*\n\n"
+              . "👤 Khách: *{$customerName}*\n"
+              . "🏠 Nhu cầu: {$leadType}\n"
+              . "💼 Sale phụ trách: *{$saleName}*\n\n"
+              . "Sale sẽ liên hệ và chăm sóc khách hàng của bạn. Bạn có thể theo dõi tiến trình qua ứng dụng.";
+
+        $botUsername     = config('services.telegram.bot_username');
+        $webappShortName = config('services.telegram.webapp_short_name');
+        $webAppUrl       = "https://t.me/{$botUsername}/{$webappShortName}?startapp=lead_{$lead->id}";
+
+        $keyboard = [[
+            ['text' => '👤 Xem khách hàng của tôi', 'url' => $webAppUrl],
+        ]];
+
+        return ['text' => $text, 'keyboard' => $keyboard];
+    }
+
+    /**
      * Deal tạo
      */
     public static function dealCreated(CrmDeal $deal)
