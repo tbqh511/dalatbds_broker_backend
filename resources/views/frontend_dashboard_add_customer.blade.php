@@ -279,8 +279,8 @@
                                 :class="isPriceRangeSelected(range)
                                     ? 'bg-primary text-white border-primary shadow-md shadow-blue-200'
                                     : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'"
-                                class="flex flex-col items-start px-4 py-3 border rounded-xl transition-all duration-150 min-h-[60px]">
-                                <span x-text="range.label" class="text-sm font-semibold leading-tight"></span>
+                                class="flex flex-col items-center justify-center px-4 py-3 border rounded-xl transition-all duration-150 min-h-[60px]">
+                                <span x-text="range.label" class="text-sm font-semibold leading-tight text-center"></span>
                                 <span x-show="isPriceRangeSelected(range)"
                                     class="text-[10px] text-blue-200 mt-0.5">Đang chọn</span>
                                 <span x-show="!isPriceRangeSelected(range) && range.sublabel"
@@ -292,23 +292,41 @@
 
                     <!-- NHẬP KHOẢNG CHÍNH XÁC -->
                     <div class="border-t border-gray-100 pt-3 mb-3">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Hoặc nhập khoảng chính xác</p>
+                        <p class="text-sm font-bold text-gray-800 mb-2">Hoặc nhập khoảng chính xác</p>
                         <div class="flex items-stretch gap-2">
-                            <div class="flex-1 bg-white border rounded-xl px-3 py-2.5 transition-colors"
+                            <!-- Input Từ -->
+                            <div class="flex-1 bg-white border rounded-xl px-3 py-2 transition-colors"
                                 :class="manualFrom ? 'border-primary' : 'border-gray-200'">
-                                <p class="text-[10px] text-gray-400">Từ</p>
-                                <input type="text" x-model="manualFrom" @input="onManualInput()"
-                                    placeholder="3,5"
-                                    class="w-full text-sm font-semibold text-gray-800 outline-none bg-transparent">
-                                <p class="text-[10px] text-gray-400">tỷ</p>
+                                <p class="text-[10px] text-gray-400 mb-0.5">Từ</p>
+                                <div class="flex items-center gap-1">
+                                    <button type="button"
+                                        @click="adjustManual('from', -0.1)"
+                                        class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold flex-shrink-0 transition-colors">–</button>
+                                    <input type="text" x-model="manualFrom" @input="onManualInput()"
+                                        placeholder="0"
+                                        class="w-full text-sm font-semibold text-gray-800 outline-none bg-transparent text-center">
+                                    <button type="button"
+                                        @click="adjustManual('from', 0.1)"
+                                        class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold flex-shrink-0 transition-colors">+</button>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-0.5">tỷ đồng</p>
                             </div>
-                            <div class="flex items-center text-gray-300 font-light text-lg self-center">–</div>
-                            <div class="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2.5">
-                                <p class="text-[10px] text-gray-400">Đến <span class="text-gray-300">(tuỳ chọn)</span></p>
-                                <input type="text" x-model="manualTo" @input="onManualInput()"
-                                    placeholder="Không giới hạn"
-                                    class="w-full text-sm font-semibold text-gray-800 outline-none bg-transparent placeholder:text-gray-300 placeholder:font-normal placeholder:text-xs">
-                                <p class="text-[10px] text-gray-400 invisible">tỷ</p>
+                            <div class="flex items-center text-gray-300 font-light text-lg self-center flex-shrink-0">–</div>
+                            <!-- Input Đến -->
+                            <div class="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2">
+                                <p class="text-[10px] text-gray-400 mb-0.5">Đến <span class="text-gray-300">(tuỳ chọn)</span></p>
+                                <div class="flex items-center gap-1">
+                                    <button type="button"
+                                        @click="adjustManual('to', -0.1)"
+                                        class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold flex-shrink-0 transition-colors">–</button>
+                                    <input type="text" x-model="manualTo" @input="onManualInput()"
+                                        placeholder="∞"
+                                        class="w-full text-sm font-semibold text-gray-800 outline-none bg-transparent text-center placeholder:text-gray-300 placeholder:font-normal">
+                                    <button type="button"
+                                        @click="adjustManual('to', 0.1)"
+                                        class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold flex-shrink-0 transition-colors">+</button>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-0.5">tỷ đồng</p>
                             </div>
                         </div>
                         <!-- Preview bullet -->
@@ -637,8 +655,21 @@
             selectPresetRange(range) {
                 this.selectedPriceRange = range;
                 this.priceMode = 'preset';
-                this.manualFrom = '';
-                this.manualTo = '';
+                // Sync manual inputs với giá trị preset (trừ Thỏa thuận)
+                if (range.min === 0 && range.max === 0) {
+                    this.manualFrom = '';
+                    this.manualTo = '';
+                } else {
+                    this.manualFrom = range.min > 0 ? (range.min / 1000000000).toString() : '0';
+                    this.manualTo = range.max < 999999999999 ? (range.max / 1000000000).toString() : '';
+                }
+            },
+            adjustManual(field, delta) {
+                const key = field === 'from' ? 'manualFrom' : 'manualTo';
+                const current = parseFloat(this[key]) || 0;
+                const next = Math.max(0, Math.round((current + delta) * 10) / 10);
+                this[key] = next === 0 && field === 'to' ? '' : next.toString();
+                this.onManualInput();
             },
             isPriceRangeSelected(range) {
                 return this.priceMode === 'preset' && this.selectedPriceRange && this.selectedPriceRange.label === range.label;
