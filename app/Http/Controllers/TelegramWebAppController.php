@@ -543,6 +543,107 @@ class TelegramWebAppController extends Controller
         }
     }
 
+    public function customerDetailApi(int $id)
+    {
+        try {
+            $customer = Auth::guard('webapp')->user();
+            if (! $customer) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $lead = CrmLead::with(['customer', 'deal.products', 'activities' => function ($q) {
+                $q->orderBy('created_at', 'desc');
+            }])->where('id', $id)
+                ->where(function ($q) use ($customer) {
+                    $q->where('user_id', $customer->id)
+                        ->orWhere('sale_id', $customer->id);
+                })->firstOrFail();
+
+            $categoryNames = collect($lead->categories ?? [])
+                ->map(fn ($cid) => Category::find($cid)?->category)->filter()->values()->toArray();
+
+            $wardNames = collect($lead->wards ?? [])
+                ->map(fn ($code) => LocationsWard::where('code', $code)->value('full_name'))->filter()->values()->toArray();
+
+            $budgetMin = (float) ($lead->demand_rate_min ?? 0);
+            $budgetMax = (float) ($lead->demand_rate_max ?? 0);
+            $budgetLbl = $lead->budget_label ?? '';
+            $budget = '';
+            if ($budgetLbl) {
+                $budget = $budgetLbl;
+            } elseif ($budgetMin > 0 || $budgetMax > 0) {
+                $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
+                        .' – '
+                        .($budgetMax > 0 ? format_vnd($budgetMax) : '?');
+            }
+
+            $activities = $lead->activities->map(function ($a) {
+                return [
+                    'type'       => $a->type,
+                    'type_label' => $a->getTypeLabel(),
+                    'content'    => $a->content ?? '',
+                    'created_at' => Carbon::parse($a->getRawOriginal('created_at'))->format('d/m/Y H:i'),
+                ];
+            })->values()->toArray();
+
+            $rawStatus = $lead->getRawOriginal('status');
+            $rawType   = $lead->getRawOriginal('lead_type');
+
+            $deal       = $lead->deal;
+            $dealStatus = $deal ? $deal->getRawOriginal('status') : null;
+            $hasBooking = $deal && $deal->products->contains(fn ($p) =>
+                in_array($p->getRawOriginal('status'), ['booking_created', 'viewed_success', 'viewed_failed'])
+            );
+
+            $unifiedStatus = match (true) {
+                in_array($rawStatus, ['lost', 'bad-contact']) => 'lost',
+                $dealStatus === 'closed'       => 'closed',
+                $dealStatus === 'negotiating'  => 'negotiating',
+                $hasBooking                    => 'viewing',
+                $deal !== null                 => 'caring',
+                $rawStatus === 'contacted'     => 'caring',
+                default                        => 'new',
+            };
+
+            $nextAction = match ($unifiedStatus) {
+                'new'         => 'Gọi điện tìm hiểu nhu cầu',
+                'caring'      => 'Gửi BĐS phù hợp cho khách',
+                'viewing'     => 'Xác nhận kết quả xem nhà',
+                'negotiating' => 'Cập nhật kết quả thương lượng',
+                default       => '',
+            };
+
+            $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
+
+            return response()->json([
+                'success' => true,
+                'lead' => [
+                    'id'              => $lead->id,
+                    'status'          => $rawStatus,
+                    'unified_status'  => $unifiedStatus,
+                    'next_action'     => $nextAction,
+                    'lead_type'       => $rawType,
+                    'customer_name'   => optional($lead->customer)->full_name ?? 'Chưa rõ',
+                    'customer_phone'  => optional($lead->customer)->contact ?? '',
+                    'categories'      => $categoryNames,
+                    'wards'           => $wardNames,
+                    'budget'          => $budget,
+                    'note'            => $lead->note ?? '',
+                    'purpose'         => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
+                    'has_deal'        => $deal !== null,
+                    'deal_status'     => $dealStatus,
+                    'activities'      => $activities,
+                    'created_at'      => $createdAt->format('d/m/Y'),
+                    'created_diff'    => $createdAt->diffForHumans(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
     public function myLeadsApi(Request $request)
     {
         try {

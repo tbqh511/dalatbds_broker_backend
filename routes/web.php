@@ -108,6 +108,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/favourites/json', [TelegramWebAppController::class, 'likedProperties'])->name('webapp.favourites.json');
     Route::get('/webapp/api/my-properties', [TelegramWebAppController::class, 'myPropertiesApi'])->name('webapp.api.my_properties');
     Route::get('/webapp/api/my-customers', [TelegramWebAppController::class, 'myCustomersApi'])->name('webapp.api.my_customers');
+    Route::get('/webapp/api/customers/{id}', [TelegramWebAppController::class, 'customerDetailApi'])->name('webapp.api.customer_detail');
     Route::get('/webapp/api/leads', [TelegramWebAppController::class, 'myLeadsApi'])->name('webapp.api.leads');
     Route::get('/webapp/api/deals', [TelegramWebAppController::class, 'myDealsApi'])->name('webapp.api.deals');
     Route::get('/webapp/api/my-clients', [TelegramWebAppController::class, 'myClientsApi'])->name('webapp.api.my_clients');

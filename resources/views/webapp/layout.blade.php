@@ -58,6 +58,7 @@
   @if($customer)
   @include('webapp.subpages.mybds')
   @include('webapp.subpages.mycustomers')
+  @include('webapp.subpages.customerdetail')
   @include('webapp.subpages.clients')
   @include('webapp.subpages.leads')
   @include('webapp.subpages.deals')

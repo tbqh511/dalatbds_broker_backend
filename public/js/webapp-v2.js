@@ -426,6 +426,131 @@ window.toggleCustDetail = function(id){
   if(btn) btn.textContent = isOpen ? '▼ Chi tiết' : '▲ Thu gọn';
 };
 
+window.openCustomerDetail = function(leadId) {
+  openSubpage('customerdetail');
+  var loading = document.getElementById('custDetailLoading');
+  var content = document.getElementById('custDetailContent');
+  if(loading) loading.style.display = 'block';
+  if(content) { content.style.display = 'none'; content.innerHTML = ''; }
+
+  var url = (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.apiBase ? '' : '') + '/webapp/api/customers/' + leadId;
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if(loading) loading.style.display = 'none';
+      if(!data.success || !data.lead) { if(content){ content.style.display='block'; content.innerHTML='<div style="padding:32px;text-align:center;color:var(--text-tertiary);">Không tải được dữ liệu.</div>'; } return; }
+      if(content){ content.style.display='block'; content.innerHTML = buildCustomerDetailHtml(data.lead); }
+    })
+    .catch(function() {
+      if(loading) loading.style.display = 'none';
+      if(content){ content.style.display='block'; content.innerHTML='<div style="padding:32px;text-align:center;color:var(--text-tertiary);">Lỗi kết nối.</div>'; }
+    });
+};
+
+function buildCustomerDetailHtml(lead) {
+  var unifiedStatusMap = {
+    'new':         { cls: 'badge-red',    label: 'Mới vào' },
+    'caring':      { cls: 'badge-blue',   label: 'Đang chăm' },
+    'viewing':     { cls: 'badge-purple', label: 'Hẹn xem nhà' },
+    'negotiating': { cls: 'badge-amber',  label: 'Thương lượng' },
+    'closed':      { cls: 'badge-green',  label: 'Đã chốt' },
+    'lost':        { cls: 'badge-gray',   label: 'Đã hủy' },
+  };
+  var si = unifiedStatusMap[lead.unified_status] || unifiedStatusMap['new'];
+  var initials = (lead.customer_name || 'KH').split(' ').map(function(w){ return w[0]; }).slice(-2).join('').toUpperCase();
+  var leadTypeLabel = lead.lead_type === 'buy' ? 'Cần mua' : 'Cần thuê';
+
+  // Status flow stepper
+  var stepByUnified = { 'new':1,'caring':2,'viewing':3,'negotiating':4,'closed':5,'lost':5 };
+  var activeStep = stepByUnified[lead.unified_status] || 1;
+  var isLost = lead.unified_status === 'lost';
+  function lfDot(n){ if(!isLost&&n<activeStep)return '<div class="lf-dot done">✓</div>'; if(n===activeStep)return '<div class="lf-dot active">'+n+'</div>'; return '<div class="lf-dot">'+n+'</div>'; }
+  function lfLbl(n,txt){ if(!isLost&&n<activeStep)return '<div class="lf-label done">'+txt+'</div>'; if(n===activeStep)return '<div class="lf-label active">'+txt+'</div>'; return '<div class="lf-label">'+txt+'</div>'; }
+  function lfLine(n){ return (!isLost&&n<activeStep)?'<div class="lf-line done"></div>':'<div class="lf-line"></div>'; }
+  var leadFlow = '<div class="lead-flow">'
+    +'<div class="lf-step">'+lfDot(1)+lfLbl(1,'Mới vào')+'</div>'+lfLine(1)
+    +'<div class="lf-step">'+lfDot(2)+lfLbl(2,'Đang chăm')+'</div>'+lfLine(2)
+    +'<div class="lf-step">'+lfDot(3)+lfLbl(3,'Hẹn xem')+'</div>'+lfLine(3)
+    +'<div class="lf-step">'+lfDot(4)+lfLbl(4,'Thương lượng')+'</div>'+lfLine(4)
+    +'<div class="lf-step">'+lfDot(5)+lfLbl(5,'Đã chốt')+'</div>'
+    +'</div>';
+
+  // Info rows
+  var bodyHtml = '<div class="cust-row"><span class="cust-row-label">Nhu cầu</span><span class="cust-row-val">'+escHtml(leadTypeLabel)+'</span></div>';
+  if(lead.categories&&lead.categories.length) bodyHtml+='<div class="cust-row"><span class="cust-row-label">Loại BĐS</span><span class="cust-row-val">'+escHtml(lead.categories.join(', '))+'</span></div>';
+  if(lead.budget) bodyHtml+='<div class="cust-row"><span class="cust-row-label">Ngân sách</span><span class="cust-row-val" style="color:var(--success);font-weight:600;">'+escHtml(lead.budget)+'</span></div>';
+  if(lead.wards&&lead.wards.length) bodyHtml+='<div class="cust-row"><span class="cust-row-label">Khu vực</span><span class="cust-row-val">'+escHtml(lead.wards.join(', '))+'</span></div>';
+  if(lead.purpose) bodyHtml+='<div class="cust-row"><span class="cust-row-label">Mục đích</span><span class="cust-row-val">'+escHtml(lead.purpose)+'</span></div>';
+
+  // Tags
+  var tagsHtml = '';
+  (lead.categories||[]).forEach(function(c){ tagsHtml+='<span class="cust-tag">'+escHtml(c)+'</span>'; });
+  (lead.wards||[]).forEach(function(w){ tagsHtml+='<span class="cust-tag" style="background:var(--bg-secondary);">'+escHtml(w)+'</span>'; });
+
+  // Next action
+  var nextActionHtml = lead.next_action
+    ? '<div style="margin:8px 0 0;padding:7px 10px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;gap:6px;">'
+      +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3270FC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 12 5 19 12"/><polyline points="5 18 12 11 19 18"/></svg>'
+      +'<span style="font-size:11.5px;color:#3270FC;font-weight:500;">'+escHtml(lead.next_action)+'</span>'
+      +'</div>' : '';
+
+  // Phone
+  var phoneRaw = (lead.customer_phone||'').replace(/\D/g,'');
+  var phoneHref = phoneRaw ? 'href="tel:'+escHtml(lead.customer_phone)+'"' : 'onclick="showToast(\'Không có số điện thoại\')"';
+  var svgPhone = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.74a16 16 0 0 0 6.29 6.29l1.63-1.63a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var svgCalendar = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+
+  // Activity history (full list)
+  var actHtml = '';
+  if(lead.activities&&lead.activities.length) {
+    actHtml += '<div class="cdp-section-title" style="margin-top:20px;">Lịch sử hoạt động</div><div class="cdp-timeline">';
+    lead.activities.forEach(function(a) {
+      var dotColor = a.type==='call'?'var(--primary)':a.type==='note'?'var(--success)':'var(--text-tertiary)';
+      actHtml += '<div class="cdp-tl-item">'
+        +'<div class="cdp-tl-dot" style="background:'+dotColor+';"></div>'
+        +'<div class="cdp-tl-text">'+escHtml(a.type_label)+': '+escHtml(a.content||'')+'</div>'
+        +'<div class="cdp-tl-time">'+escHtml(a.created_at)+'</div>'
+        +'</div>';
+    });
+    actHtml += '</div>';
+  } else {
+    actHtml += '<div class="cdp-section-title" style="margin-top:20px;">Lịch sử hoạt động</div>'
+      +'<div style="font-size:12px;color:var(--text-tertiary);padding:8px 0 4px;">Chưa có hoạt động nào.</div>';
+  }
+
+  // Notes
+  var noteHtml = lead.note
+    ? '<div class="cdp-section-title" style="margin-top:16px;">Ghi chú</div>'
+      +'<div style="font-size:13px;color:var(--text-secondary);padding:6px 0 4px;line-height:1.6;">'+escHtml(lead.note)+'</div>'
+    : '';
+
+  return '<div class="cust-card" style="border-radius:0;box-shadow:none;margin:0;">'
+    +'<div class="cust-header">'
+    +  '<div class="cust-avatar" style="background:var(--primary);">'+escHtml(initials)+'</div>'
+    +  '<div class="cust-info">'
+    +    '<div class="cust-name">'+escHtml(lead.customer_name)+'</div>'
+    +    '<div class="cust-meta"><span style="color:var(--text-tertiary);">'+escHtml(lead.created_diff)+'</span></div>'
+    +  '</div>'
+    +  '<div class="cust-status-badge"><span class="badge '+si.cls+'">'+si.label+'</span></div>'
+    +'</div>'
+    +'<div class="cust-body">'+bodyHtml
+    +  (tagsHtml?'<div class="cust-tags">'+tagsHtml+'</div>':'')
+    +'</div>'
+    +leadFlow
+    +nextActionHtml
+    +'<div class="cust-footer">'
+    +  '<div class="cust-date">'+svgCalendar+' Nhận '+escHtml(lead.created_at)+'</div>'
+    +  '<div class="cust-actions">'
+    +    '<a class="cust-btn" title="Gọi" '+phoneHref+'>'+svgPhone+'</a>'
+    +  '</div>'
+    +'</div>'
+    +'</div>'
+    +'<div style="padding:0 16px 16px;">'
+    +actHtml
+    +noteHtml
+    +'</div>';
+}
+
 // ============ CRM FUNCTIONS ============
 window.toggleLeadExpand = function(id){
   const el = document.getElementById(id);
@@ -5862,10 +5987,9 @@ function mycustBuildCard(lead) {
     +   '<div class="cust-date">' + svgCalendar + ' Nhận ' + escHtml(lead.created_at) + '</div>'
     +   '<div class="cust-actions">'
     +     '<a class="cust-btn" title="Gọi" ' + phoneHref + '>' + svgPhone + '</a>'
-    +     '<div class="cust-btn primary" onclick="toggleCustDetail(\'' + detailPanelId + '\')">▼ Chi tiết</div>'
+    +     '<div class="cust-btn primary" onclick="openCustomerDetail(' + lead.id + ')">Chi tiết</div>'
     +   '</div>'
     + '</div>'
-    + '<div class="cust-detail-panel" id="' + detailPanelId + '">' + detailContent + '</div>'
     + '</div>';
 }
 
