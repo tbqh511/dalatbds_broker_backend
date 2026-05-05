@@ -59,39 +59,7 @@
         z-index: 1000003 !important;
     }
 
-    /* Dual range slider */
-    .price-range-wrap {
-        position: relative;
-        height: 32px;
-    }
-    .price-range-wrap input[type=range] {
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        width: 100%;
-        height: 100%;
-        appearance: none;
-        -webkit-appearance: none;
-        background: transparent;
-        pointer-events: none;
-        z-index: 2;
-    }
-    .price-range-wrap input[type=range]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 22px; height: 22px;
-        border-radius: 50%;
-        background: white;
-        border: 2.5px solid #3270FC;
-        box-shadow: 0 1px 4px rgba(50,112,252,0.25);
-        cursor: grab;
-        pointer-events: all;
-        position: relative;
-        z-index: 3;
-    }
-    .price-range-wrap input[type=range]::-webkit-slider-runnable-track {
-        height: 0;
-        background: transparent;
-    }
+
 </style>
 @endpush
 
@@ -302,91 +270,66 @@
 
                 <!-- STATE 1: PICKER MỞ RỘNG -->
                 <div x-show="isPriceExpanded" x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                    class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
 
-                    <!-- Hiển thị khoảng đã chọn -->
-                    <div class="text-center mb-1">
-                        <span class="text-2xl font-bold text-gray-800" x-text="getPriceRangeDisplay()"></span>
-                    </div>
-                    <p class="text-center text-xs text-gray-400 mb-4">Kéo 2 đầu để chọn khoảng · hoặc nhập tay bên dưới</p>
-
-                    <!-- Dual range slider -->
-                    <div x-show="!isNegotiable" class="mb-1">
-                        <div class="price-range-wrap mx-1">
-                            <!-- Track nền -->
-                            <div class="absolute bg-gray-200 rounded-full"
-                                style="top: 50%; left: 0; right: 0; height: 5px; transform: translateY(-50%);"></div>
-                            <!-- Track fill -->
-                            <div class="absolute bg-primary rounded-full"
-                                style="top: 50%; height: 5px; transform: translateY(-50%);"
-                                :style="`left: ${sliderMinPct()}%; right: ${100 - sliderMaxPct()}%;`"></div>
-                            <!-- Min handle -->
-                            <input type="range" min="0" :max="sliderPoints.length - 1" step="1"
-                                x-model.number="sliderMinIdx"
-                                @input="if(sliderMinIdx >= sliderMaxIdx) sliderMinIdx = Math.max(0, sliderMaxIdx - 1); syncManualInputs();">
-                            <!-- Max handle -->
-                            <input type="range" min="0" :max="sliderPoints.length - 1" step="1"
-                                x-model.number="sliderMaxIdx"
-                                @input="if(sliderMaxIdx <= sliderMinIdx) sliderMaxIdx = Math.min(sliderPoints.length-1, sliderMinIdx + 1); syncManualInputs();">
-                        </div>
-                        <!-- Tick labels -->
-                        <div class="flex justify-between text-[10px] text-gray-400 mt-1 px-1">
-                            <span>500tr</span>
-                            <span>1 tỷ</span>
-                            <span>5 tỷ</span>
-                            <span>10 tỷ</span>
-                            <span>50 tỷ+</span>
-                        </div>
+                    <!-- Grid preset 2 cột -->
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <template x-for="range in priceRanges" :key="range.label">
+                            <button type="button" @click="selectPresetRange(range)"
+                                :class="isPriceRangeSelected(range)
+                                    ? 'bg-primary text-white border-primary shadow-md shadow-blue-200'
+                                    : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'"
+                                class="flex flex-col items-start px-4 py-3 border rounded-xl transition-all duration-150 min-h-[60px]">
+                                <span x-text="range.label" class="text-sm font-semibold leading-tight"></span>
+                                <span x-show="isPriceRangeSelected(range)"
+                                    class="text-[10px] text-blue-200 mt-0.5">Đang chọn</span>
+                                <span x-show="!isPriceRangeSelected(range) && range.sublabel"
+                                    x-text="range.sublabel"
+                                    class="text-[10px] text-gray-400 mt-0.5"></span>
+                            </button>
+                        </template>
                     </div>
 
-                    <!-- CHỌN NHANH -->
-                    <div class="mt-4 mb-3">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Chọn nhanh</p>
-                        <div class="flex flex-wrap gap-2">
-                            <template x-for="chip in quickChips" :key="chip.label">
-                                <button type="button"
-                                    @click="applyQuickChip(chip)"
-                                    :class="isChipActive(chip)
-                                        ? 'bg-primary/10 text-primary border-primary font-semibold'
-                                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary'"
-                                    class="px-3 py-1.5 text-xs rounded-full border transition-all duration-150">
-                                    <span x-text="chip.label"></span>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- NHẬP CHÍNH XÁC -->
-                    <div x-show="!isNegotiable" class="mb-4">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Nhập chính xác</p>
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2.5">
-                                <p class="text-[10px] text-gray-400 mb-0.5">Từ</p>
-                                <input type="text" x-model="manualFrom"
-                                    @change="parseManualFrom()"
-                                    placeholder="vd: 1.5"
+                    <!-- NHẬP KHOẢNG CHÍNH XÁC -->
+                    <div class="border-t border-gray-100 pt-3 mb-3">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Hoặc nhập khoảng chính xác</p>
+                        <div class="flex items-stretch gap-2">
+                            <div class="flex-1 bg-white border rounded-xl px-3 py-2.5 transition-colors"
+                                :class="manualFrom ? 'border-primary' : 'border-gray-200'">
+                                <p class="text-[10px] text-gray-400">Từ</p>
+                                <input type="text" x-model="manualFrom" @input="onManualInput()"
+                                    placeholder="3,5"
                                     class="w-full text-sm font-semibold text-gray-800 outline-none bg-transparent">
-                                <p class="text-[10px] text-gray-400">tỷ đồng</p>
+                                <p class="text-[10px] text-gray-400">tỷ</p>
                             </div>
-                            <i class="fas fa-arrow-right text-gray-300 text-sm flex-shrink-0"></i>
+                            <div class="flex items-center text-gray-300 font-light text-lg self-center">–</div>
                             <div class="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2.5">
-                                <p class="text-[10px] text-gray-400 mb-0.5">Đến</p>
-                                <input type="text" x-model="manualTo"
-                                    @change="parseManualTo()"
-                                    placeholder="vd: 3.5"
-                                    class="w-full text-sm font-semibold text-gray-800 outline-none bg-transparent">
-                                <p class="text-[10px] text-gray-400">tỷ đồng</p>
+                                <p class="text-[10px] text-gray-400">Đến <span class="text-gray-300">(tuỳ chọn)</span></p>
+                                <input type="text" x-model="manualTo" @input="onManualInput()"
+                                    placeholder="Không giới hạn"
+                                    class="w-full text-sm font-semibold text-gray-800 outline-none bg-transparent placeholder:text-gray-300 placeholder:font-normal placeholder:text-xs">
+                                <p class="text-[10px] text-gray-400 invisible">tỷ</p>
                             </div>
                         </div>
+                        <!-- Preview bullet -->
+                        <div x-show="manualFrom" class="mt-2 flex items-start gap-1.5">
+                            <span class="text-primary text-[8px] mt-1">●</span>
+                            <p class="text-xs text-gray-600">
+                                Khách dự kiến: từ <span class="font-semibold text-primary" x-text="manualFrom + ' tỷ'"></span>
+                                <span x-show="manualTo"> đến <span class="font-semibold text-primary" x-text="manualTo + ' tỷ'"></span></span>
+                                <span x-show="!manualTo"> trở lên</span>
+                            </p>
+                        </div>
                     </div>
 
-                    <!-- NÚT XÁC NHẬN -->
-                    <button type="button" @click="confirmPriceRange()"
-                        class="w-full bg-primary text-white py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-check text-xs"></i>
-                        <span>Xác nhận · <span x-text="getPriceRangeDisplay()"></span></span>
-                    </button>
+                    <!-- NÚT XÁC NHẬN (hiện khi đã chọn preset hoặc nhập tay) -->
+                    <div x-show="canConfirmPrice()" class="flex justify-center">
+                        <button type="button" @click="confirmPriceRange()"
+                            class="bg-primary/10 text-primary px-6 py-2 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors">
+                            <i class="fa-solid fa-check mr-1"></i>
+                            Xác nhận · <span x-text="getPriceConfirmLabel()"></span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- STATE 2: THẺ TÓM TẮT -->
@@ -612,21 +555,21 @@
             isPurposeExpanded: true,
             isWardExpanded: true,
 
-            // Price slider state
-            sliderPoints: [500000000, 1000000000, 2000000000, 3000000000, 5000000000, 10000000000, 20000000000, 50000000000, null],
-            sliderMinIdx: 1,
-            sliderMaxIdx: 4,
-            isNegotiable: false,
+            // Price state
+            selectedPriceRange: null,
+            priceMode: 'preset', // 'preset' | 'manual'
             priceConfirmed: false,
             manualFrom: '',
             manualTo: '',
-            quickChips: [
-                { label: 'Dưới 1 tỷ', minIdx: 0, maxIdx: 1, negotiable: false },
-                { label: '1 - 3 tỷ', minIdx: 1, maxIdx: 3, negotiable: false },
-                { label: '3 - 5 tỷ', minIdx: 3, maxIdx: 4, negotiable: false },
-                { label: '5 - 10 tỷ', minIdx: 4, maxIdx: 5, negotiable: false },
-                { label: 'Trên 10 tỷ', minIdx: 5, maxIdx: 8, negotiable: false },
-                { label: 'Thỏa thuận', minIdx: null, maxIdx: null, negotiable: true },
+            priceRanges: [
+                { min: 0, max: 0, label: 'Thỏa thuận', sublabel: 'Chưa xác định' },
+                { min: 0, max: 1000000000, label: 'Dưới 1 tỷ', sublabel: '< 1 tỷ' },
+                { min: 1000000000, max: 3000000000, label: '1 - 3 tỷ', sublabel: 'Phổ biến nhất' },
+                { min: 3000000000, max: 5000000000, label: '3 - 5 tỷ', sublabel: '' },
+                { min: 5000000000, max: 10000000000, label: '5 - 10 tỷ', sublabel: '' },
+                { min: 10000000000, max: 20000000000, label: '10 - 20 tỷ', sublabel: '' },
+                { min: 20000000000, max: 50000000000, label: '20 - 50 tỷ', sublabel: '' },
+                { min: 50000000000, max: 999999999999, label: 'Trên 50 tỷ', sublabel: '' },
             ],
 
             form: {
@@ -690,78 +633,45 @@
                 }
             },
 
-            // =========== PRICE SLIDER HELPERS ===========
-            sliderMinPct() {
-                return (this.sliderMinIdx / (this.sliderPoints.length - 1)) * 100;
+            // =========== PRICE HELPERS ===========
+            selectPresetRange(range) {
+                this.selectedPriceRange = range;
+                this.priceMode = 'preset';
+                this.manualFrom = '';
+                this.manualTo = '';
             },
-            sliderMaxPct() {
-                return (this.sliderMaxIdx / (this.sliderPoints.length - 1)) * 100;
+            isPriceRangeSelected(range) {
+                return this.priceMode === 'preset' && this.selectedPriceRange && this.selectedPriceRange.label === range.label;
             },
-            formatPrice(val) {
-                if (val === null) return '50 tỷ+';
-                if (val >= 1000000000) {
-                    const t = val / 1000000000;
-                    return (Number.isInteger(t) ? t : t.toFixed(1).replace(/\.0$/, '')) + ' tỷ';
+            onManualInput() {
+                this.priceMode = 'manual';
+                this.selectedPriceRange = null;
+            },
+            canConfirmPrice() {
+                if (this.priceMode === 'preset') return this.selectedPriceRange !== null;
+                return this.manualFrom.trim() !== '';
+            },
+            getPriceConfirmLabel() {
+                if (this.priceMode === 'preset' && this.selectedPriceRange) {
+                    return this.selectedPriceRange.label;
                 }
-                return (val / 1000000) + ' tr';
-            },
-            getPriceRangeDisplay() {
-                if (this.isNegotiable) return 'Thỏa thuận';
-                const minVal = this.sliderPoints[this.sliderMinIdx];
-                const maxVal = this.sliderPoints[this.sliderMaxIdx];
-                if (minVal === maxVal) return this.formatPrice(minVal);
-                return this.formatPrice(minVal) + ' — ' + this.formatPrice(maxVal);
-            },
-            applyQuickChip(chip) {
-                if (chip.negotiable) {
-                    this.isNegotiable = true;
-                } else {
-                    this.isNegotiable = false;
-                    this.sliderMinIdx = chip.minIdx;
-                    this.sliderMaxIdx = chip.maxIdx;
-                    this.syncManualInputs();
+                if (this.manualFrom) {
+                    if (this.manualTo) return 'Từ ' + this.manualFrom + ' đến ' + this.manualTo + ' tỷ';
+                    return 'Từ ' + this.manualFrom + ' tỷ trở lên';
                 }
-            },
-            isChipActive(chip) {
-                if (chip.negotiable) return this.isNegotiable;
-                if (this.isNegotiable) return false;
-                return this.sliderMinIdx === chip.minIdx && this.sliderMaxIdx === chip.maxIdx;
-            },
-            syncManualInputs() {
-                const minVal = this.sliderPoints[this.sliderMinIdx];
-                const maxVal = this.sliderPoints[this.sliderMaxIdx];
-                this.manualFrom = minVal ? (minVal / 1000000000).toString() : '';
-                this.manualTo = maxVal === null ? '50' : (maxVal / 1000000000).toString();
-            },
-            parseManualFrom() {
-                const val = parseFloat(this.manualFrom);
-                if (isNaN(val)) return;
-                const bytes = val * 1000000000;
-                let idx = this.sliderPoints.findIndex(p => p !== null && p >= bytes);
-                if (idx === -1) idx = this.sliderPoints.length - 1;
-                this.sliderMinIdx = Math.min(idx, this.sliderMaxIdx - 1);
-                this.isNegotiable = false;
-            },
-            parseManualTo() {
-                const val = parseFloat(this.manualTo);
-                if (isNaN(val)) return;
-                const bytes = val * 1000000000;
-                let idx = this.sliderPoints.findIndex(p => p !== null && p >= bytes);
-                if (idx === -1) idx = this.sliderPoints.length - 1;
-                this.sliderMaxIdx = Math.max(idx, this.sliderMinIdx + 1);
-                this.isNegotiable = false;
+                return '';
             },
             confirmPriceRange() {
-                if (this.isNegotiable) {
-                    this.form.price_min = 0;
-                    this.form.price_max = 0;
-                    this.form.budget_label = 'Thỏa thuận';
+                if (this.priceMode === 'preset' && this.selectedPriceRange) {
+                    this.form.price_min = this.selectedPriceRange.min;
+                    this.form.price_max = this.selectedPriceRange.max;
+                    this.form.budget_label = this.selectedPriceRange.label;
                 } else {
-                    const minVal = this.sliderPoints[this.sliderMinIdx];
-                    const maxVal = this.sliderPoints[this.sliderMaxIdx];
-                    this.form.price_min = minVal || 0;
-                    this.form.price_max = maxVal === null ? 999999999999 : maxVal;
-                    this.form.budget_label = this.getPriceRangeDisplay();
+                    const from = parseFloat(this.manualFrom) || 0;
+                    const to = parseFloat(this.manualTo) || 0;
+                    this.form.price_min = Math.round(from * 1000000000);
+                    this.form.price_max = to ? Math.round(to * 1000000000) : 999999999999;
+                    this.form.budget_label = this.getPriceConfirmLabel();
                 }
                 this.priceConfirmed = true;
                 this.isPriceExpanded = false;
