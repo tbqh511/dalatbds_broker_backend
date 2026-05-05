@@ -262,7 +262,7 @@
                 <label class="block text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
                     Mức tài chính của khách
                     <button type="button" x-show="!isPriceExpanded && hasPriceSelected()"
-                        @click="isPriceExpanded = true; priceConfirmed = false;"
+                        @click="isPriceExpanded = true; priceConfirmed = false; isPriceGridExpanded = !selectedPriceRange;"
                         class="text-xs font-normal text-primary hover:underline">
                         Thay đổi
                     </button>
@@ -272,10 +272,13 @@
                 <div x-show="isPriceExpanded" x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
 
-                    <!-- Grid preset 2 cột -->
-                    <div class="grid grid-cols-2 gap-2 mb-4">
+                    <!-- Grid preset: full khi chưa chọn, thu gọn còn 1 ô khi đã chọn -->
+                    <div x-show="isPriceGridExpanded" class="grid grid-cols-2 gap-2 mb-4"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0">
                         <template x-for="range in priceRanges" :key="range.label">
-                            <button type="button" @click="selectPresetRange(range)"
+                            <button type="button" @click="selectPresetRange(range); isPriceGridExpanded = false"
                                 :class="isPriceRangeSelected(range)
                                     ? 'bg-primary text-white border-primary shadow-md shadow-blue-200'
                                     : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'"
@@ -288,6 +291,22 @@
                                     class="text-[10px] text-gray-400 mt-0.5"></span>
                             </button>
                         </template>
+                    </div>
+
+                    <!-- Thu gọn: chỉ hiện ô đang chọn + nút đổi -->
+                    <div x-show="!isPriceGridExpanded && selectedPriceRange" class="flex items-center gap-2 mb-4"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0">
+                        <div class="flex-1 flex flex-col items-center justify-center px-4 py-3 border rounded-xl bg-primary text-white border-primary shadow-md shadow-blue-200 min-h-[60px]">
+                            <span x-text="selectedPriceRange.label" class="text-sm font-semibold text-center"></span>
+                            <span class="text-[10px] text-blue-200 mt-0.5">Đang chọn</span>
+                        </div>
+                        <button type="button" @click="isPriceGridExpanded = true"
+                            class="flex flex-col items-center justify-center px-3 py-3 border border-gray-200 rounded-xl bg-white text-gray-500 hover:border-primary hover:text-primary transition-colors min-h-[60px] gap-1">
+                            <i class="fas fa-th text-sm"></i>
+                            <span class="text-[10px] font-medium">Đổi</span>
+                        </button>
                     </div>
 
                     <!-- NHẬP KHOẢNG CHÍNH XÁC -->
@@ -355,7 +374,7 @@
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 translate-y-2"
                     x-transition:enter-end="opacity-100 translate-y-0">
-                    <div @click="isPriceExpanded = true; priceConfirmed = false;"
+                    <div @click="isPriceExpanded = true; priceConfirmed = false; isPriceGridExpanded = false;"
                         class="bg-primary text-white border-primary shadow-lg shadow-blue-200 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-600 transition-colors group">
                         <div class="flex items-center">
                             <div
@@ -576,6 +595,7 @@
             // Price state
             selectedPriceRange: null,
             priceMode: 'preset', // 'preset' | 'manual'
+            isPriceGridExpanded: true,
             priceConfirmed: false,
             manualFrom: '',
             manualTo: '',
