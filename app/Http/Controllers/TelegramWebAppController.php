@@ -3785,10 +3785,20 @@ class TelegramWebAppController extends Controller
                 $brokerMsg .= "🆔 Lead ID: `{$lead->id}`\n";
                 $brokerMsg .= '👤 Khách hàng: '.$this->escapeTelegramText($crmCustomer->full_name ?? 'N/A')."\n";
                 $brokerMsg .= "🏷️ Nhu cầu: {$leadType}\n";
-                $brokerMsg .= "💰 Ngân sách: {$budgetMin} - {$budgetMax} VNĐ\n";
+                $brokerMsg .= "💰 Ngân sách: {$budgetLabel}\n";
                 $brokerMsg .= '📍 Khu vực: '.$this->escapeTelegramText($wards)."\n";
                 $brokerMsg .= '🏠 Loại BĐS: '.$this->escapeTelegramText($categories)."\n";
-                $notificationService->sendToCustomer($creator, $brokerMsg);
+                $botUsername     = config('services.telegram.bot_username');
+                $webappShortName = config('services.telegram.webapp_short_name');
+                $webAppUrl       = "https://t.me/{$botUsername}/{$webappShortName}?startapp=lead_{$lead->id}";
+                $brokerKeyboard  = [[
+                    ['text' => '👤 Xem chi tiết khách hàng', 'url' => $webAppUrl],
+                ]];
+                $notificationService->sendWithInlineKeyboard(
+                    (string) $creator->telegram_id,
+                    $brokerMsg,
+                    $brokerKeyboard
+                );
             }
 
             // In-app: notify sale_admin about new lead to assign
