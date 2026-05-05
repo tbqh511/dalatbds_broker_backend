@@ -253,11 +253,7 @@ class CrmLeadController extends Controller
         if ($lead->user_id) {
             $broker = Customer::find($lead->user_id);
             if ($broker && $broker->id !== $sale->id) {
-                if (
-                    $broker->telegram_id &&
-                    $broker->telegram_bot_started &&
-                    $this->notificationService->shouldNotify($broker, 'lead', 'assigned', 'telegram')
-                ) {
+                if ($broker->telegram_id) {
                     $lead->setRelation('sale', $sale);
                     $brokerTpl = TelegramMessageTemplates::leadAssignedToBroker($lead);
                     $this->notificationService->sendWithInlineKeyboard($broker->telegram_id, $brokerTpl['text'], $brokerTpl['keyboard']);
@@ -386,11 +382,7 @@ class CrmLeadController extends Controller
                 $count = $brokerLeads->count();
                 if ($count === 1) {
                     $singleLead = $brokerLeads->first();
-                    if (
-                        $broker->telegram_id &&
-                        $broker->telegram_bot_started &&
-                        $this->notificationService->shouldNotify($broker, 'lead', 'assigned', 'telegram')
-                    ) {
+                    if ($broker->telegram_id) {
                         $singleLead->setRelation('sale', $sale);
                         $brokerTpl = TelegramMessageTemplates::leadAssignedToBroker($singleLead);
                         $this->notificationService->sendWithInlineKeyboard($broker->telegram_id, $brokerTpl['text'], $brokerTpl['keyboard']);
@@ -404,11 +396,7 @@ class CrmLeadController extends Controller
                         'data'  => ['lead_id' => $singleLead->id, 'sale_name' => $sale->name],
                     ]);
                 } else {
-                    if (
-                        $broker->telegram_id &&
-                        $broker->telegram_bot_started &&
-                        $this->notificationService->shouldNotify($broker, 'lead', 'assigned', 'telegram')
-                    ) {
+                    if ($broker->telegram_id) {
                         $this->notificationService->sendToCustomer($broker, "{$count} lead của bạn vừa được phân công cho Sale {$sale->name}. Vui lòng theo dõi tiến trình qua ứng dụng.");
                     }
                     $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
@@ -627,11 +615,7 @@ class CrmLeadController extends Controller
         if ($lead->user_id) {
             $broker = Customer::find($lead->user_id);
             if ($broker && $broker->id !== $sale->id) {
-                if (
-                    $broker->telegram_id &&
-                    $broker->telegram_bot_started &&
-                    $this->notificationService->shouldNotify($broker, 'lead', 'assigned', 'telegram')
-                ) {
+                if ($broker->telegram_id) {
                     $lead->setRelation('sale', $sale);
                     $brokerTpl = TelegramMessageTemplates::leadAssignedToBroker($lead);
                     $this->notificationService->sendWithInlineKeyboard($broker->telegram_id, $brokerTpl['text'], $brokerTpl['keyboard']);
