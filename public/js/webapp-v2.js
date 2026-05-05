@@ -2178,10 +2178,12 @@ function renderUnassignedLeadCards(leads){
         + '</div>'
       : '';
 
-    // Khu vực
-    var wardStr  = (lead.wards || []).join(', ');
-    var wardHtml = wardStr
-      ? '<div class="ul-ward-row">' + svgPin + '<span>' + escHtml(wardStr) + '</span></div>'
+    // Khu vực + đường
+    var wardStr     = (lead.wards || []).join(', ');
+    var streetStr   = lead.street || '';
+    var locationStr = [streetStr, wardStr].filter(Boolean).join(' · ');
+    var wardHtml = locationStr
+      ? '<div class="ul-ward-row">' + svgPin + '<span>' + escHtml(locationStr) + '</span></div>'
       : '';
 
     // Gợi ý sale
@@ -2269,20 +2271,21 @@ function renderStatusLeadCards(leads){
         + '</div>'
       : '';
 
-    // Khu vực
-    var wardStr  = (lead.wards || []).join(', ');
-    var wardHtml = wardStr
-      ? '<div class="ul-ward-row">' + svgPin + '<span>' + escHtml(wardStr) + '</span></div>'
+    // Khu vực + đường
+    var wardStr2    = (lead.wards || []).join(', ');
+    var streetStr2  = lead.street || '';
+    var location2   = [streetStr2, wardStr2].filter(Boolean).join(' · ');
+    var wardHtml = location2
+      ? '<div class="ul-ward-row">' + svgPin + '<span>' + escHtml(location2) + '</span></div>'
       : '';
 
-    // Footer: sale đã assign (chip với avatar) hoặc nút Phân công
+    // Footer: sale đã assign (canh phải) hoặc nút Phân công
     var footerSection;
     if (lead.is_assigned && lead.sale_name) {
-      var initials = lead.sale_name.split(' ').filter(Boolean).slice(-2).map(function(w){ return w[0]; }).join('').toUpperCase();
-      footerSection = '<div class="ul-footer">'
+      footerSection = '<div class="ul-footer" style="justify-content:flex-end;">'
         + '<div class="ul-sale-chip">'
-          + '<div class="ul-sale-chip-avatar">' + escHtml(initials) + '</div>'
-          + '<div><span class="ul-sale-chip-label">Đã assign · </span><span class="ul-sale-chip-name">' + escHtml(lead.sale_name) + '</span></div>'
+          + '<span class="ul-sale-chip-label">Đã assign · </span>'
+          + '<span class="ul-sale-chip-name">' + escHtml(lead.sale_name) + '</span>'
         + '</div>'
         + '</div>';
     } else {

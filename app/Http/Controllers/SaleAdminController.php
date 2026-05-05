@@ -186,6 +186,7 @@ class SaleAdminController extends Controller
                 'purpose'     => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
                 'categories'  => $catNames,
                 'wards'       => $wardNames,
+                'street'      => ($lead->note && str_contains($lead->note, 'Tên đường:')) ? trim(substr($lead->note, strpos($lead->note, 'Tên đường:') + strlen('Tên đường:'))) : '',
                 'budget_min'        => format_vnd($lead->demand_rate_min ?? 0),
                 'budget_max'        => format_vnd($lead->demand_rate_max ?? 0),
                 'budget_min_raw'    => (float) ($lead->demand_rate_min ?? 0),

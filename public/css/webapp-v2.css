@@ -4702,7 +4702,7 @@ img {
 .ul-sale-chip-name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--primary);
 }
 .ul-sale-chip-label {
   font-size: 11px;
