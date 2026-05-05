@@ -1729,16 +1729,13 @@ let selectedSale = null;
 
 window.toggleUlSelect = function(id){
   const card = document.getElementById(id);
-  const cb = document.getElementById(id+'-cb');
-  if(!card || !cb) return;
+  if(!card) return;
   const isSelected = card.classList.contains('selected');
   if(isSelected){
     card.classList.remove('selected');
-    cb.textContent = '○';
     selectedLeads.delete(id);
   } else {
     card.classList.add('selected');
-    cb.textContent = '✓';
     selectedLeads.add(id);
   }
   updateAssignCta();
@@ -1864,7 +1861,7 @@ window.confirmAssign = function(){
       var countEl = document.getElementById('unassignedCount');
       if (countEl) countEl.textContent = remain + ' lead';
       var tabEl = document.getElementById('tabUnassigned');
-      if (tabEl) tabEl.textContent = 'Chờ assign (' + remain + ')';
+      if (tabEl) tabEl.innerHTML = remain ? 'Chờ assign<span class="sp-tab-badge">' + remain + '</span>' : 'Chờ assign';
 
       // Decrement budget counts in cache
       if (_assignLeadData) {
@@ -2013,11 +2010,12 @@ function loadAssignLeadData(){
     var tabContacted  = document.getElementById('tabContacted');
     var tabConverted  = document.getElementById('tabConverted');
     var tabFailed     = document.getElementById('tabFailed');
-    if (tabUnassigned) tabUnassigned.textContent = 'Chờ assign' + (unassignedCount ? ' (' + unassignedCount + ')' : '');
-    if (tabNew)        tabNew.textContent        = 'Mới'        + (sc.new       ? ' (' + sc.new       + ')' : '');
-    if (tabContacted)  tabContacted.textContent  = 'Đang xử lý' + (sc.contacted ? ' (' + sc.contacted + ')' : '');
-    if (tabConverted)  tabConverted.textContent  = 'Đã tạo Deal'+ (sc.converted ? ' (' + sc.converted + ')' : '');
-    if (tabFailed)     tabFailed.textContent     = 'Thất bại'   + (sc.failed    ? ' (' + sc.failed    + ')' : '');
+    function tabLabel(text, count){ return count ? text + '<span class="sp-tab-badge">' + count + '</span>' : text; }
+    if (tabUnassigned) tabUnassigned.innerHTML = tabLabel('Chờ assign', unassignedCount);
+    if (tabNew)        tabNew.innerHTML        = tabLabel('Mới',        sc.new);
+    if (tabContacted)  tabContacted.innerHTML  = tabLabel('Đang xử lý', sc.contacted);
+    if (tabConverted)  tabConverted.innerHTML  = tabLabel('Đã tạo Deal', sc.converted);
+    if (tabFailed)     tabFailed.innerHTML     = tabLabel('Thất bại',   sc.failed);
 
     if (loadingEl) loadingEl.style.display = 'none';
 
@@ -2136,25 +2134,26 @@ function budgetLabel(minRaw, maxRaw) {
 
 function renderUnassignedLeadCards(leads){
   var svgUser  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-  var svgMoney = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
-  var svgPin   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var svgMoney = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+  var svgPin   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var svgBulb  = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.7-3.5 6H8.5C6.5 13.7 5 11.5 5 9a7 7 0 0 1 7-7z"/></svg>';
+  var svgCheck = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
   return leads.map(function(lead){
     var domId = 'ull-' + lead.id;
 
-    // Badge Mua/Thuê
+    // Badge Mua/Thuê — pill style
     var isBuy = lead.lead_type === 'Mua';
     var typeBadge = lead.lead_type
-      ? '<span style="display:inline-block;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;background:' + (isBuy ? '#dbeafe' : '#fef3c7') + ';color:' + (isBuy ? '#1d4ed8' : '#d97706') + ';">' + escHtml(lead.lead_type) + '</span>'
+      ? '<span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:' + (isBuy ? '#dbeafe' : '#fef3c7') + ';color:' + (isBuy ? '#1d4ed8' : '#d97706') + ';">' + escHtml(lead.lead_type) + '</span>'
       : '';
 
-    // Loại BĐS badge
-    var catStr   = (lead.categories || []).join(', ');
-    var catBadge = catStr
-      ? '<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f3f4f6;color:#374151;">' + escHtml(catStr) + '</span>'
-      : '';
+    // Loại BĐS badges — dùng ul-tag class
+    var catBadges = (lead.categories || []).map(function(c){
+      return '<span class="ul-tag">' + escHtml(c) + '</span>';
+    }).join('');
 
-    // Ngân sách — ưu tiên budget_label (nhãn chính xác người dùng đã chọn)
+    // Ngân sách
     var budgetText = '';
     if (lead.budget_label) {
       budgetText = escHtml(lead.budget_label);
@@ -2173,60 +2172,42 @@ function renderUnassignedLeadCards(leads){
       }
     }
     var budgetHtml = budgetText
-      ? '<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:6px 0;">'
-          + '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="font-size:11px;color:#6b7280;font-weight:500;">Ngân sách</span></div>'
-          + '<span style="font-size:15px;font-weight:800;color:var(--primary);">' + budgetText + '</span>'
+      ? '<div class="ul-budget-block">'
+          + '<div class="ul-budget-label">' + svgMoney + 'Ngân sách</div>'
+          + '<span class="ul-budget-value">' + budgetText + '</span>'
         + '</div>'
       : '';
 
     // Khu vực
     var wardStr  = (lead.wards || []).join(', ');
     var wardHtml = wardStr
-      ? '<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280;">'
-          + svgPin + '<span>' + escHtml(wardStr) + '</span>'
-        + '</div>'
+      ? '<div class="ul-ward-row">' + svgPin + '<span>' + escHtml(wardStr) + '</span></div>'
       : '';
 
-    // Gợi ý sale — phân biệt lý do match
-    var suggestionText = '';
+    // Gợi ý sale
+    var suggestionHtml = '';
     if (lead.suggestion) {
-      suggestionText = lead.suggestion_reason === 'area'
-        ? 'Gợi ý: ' + lead.suggestion + ' (phù hợp khu vực)'
-        : 'Gợi ý: ' + lead.suggestion + ' (ít việc nhất)';
+      var reason = lead.suggestion_reason === 'area' ? 'phù hợp khu vực' : 'ít việc nhất';
+      suggestionHtml = '<div class="ul-suggestion">' + svgBulb + escHtml(lead.suggestion) + ' · ' + reason + '</div>';
     }
-    var suggestionHtml = suggestionText
-      ? '<div style="font-size:11px;font-style:italic;color:#9ca3af;margin-bottom:6px;">' + escHtml(suggestionText) + '</div>'
-      : '';
 
-    return '<div class="ul-card" id="' + domId + '" onclick="toggleUlSelect(\'' + domId + '\')" style="background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border:1px solid #e5e7eb;margin-bottom:10px;">'
-
-      // Header: tên + badge loại + thời gian
-      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">'
-        + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
-          + '<div class="ul-checkbox" id="' + domId + '-cb" style="font-size:16px;color:#d1d5db;margin-right:2px;">○</div>'
-          + '<span style="font-size:15px;font-weight:700;color:var(--text-primary);">' + escHtml(lead.name) + '</span>'
-          + typeBadge
+    return '<div class="ul-card" id="' + domId + '" onclick="toggleUlSelect(\'' + domId + '\')">'
+      + '<div class="ul-head">'
+        + '<div class="ul-checkbox" id="' + domId + '-cb">' + svgCheck + '</div>'
+        + '<div class="ul-info">'
+          + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
+          + '<div class="ul-meta">' + typeBadge + '<span style="color:var(--text-tertiary);font-size:11px;">' + escHtml(lead.time_ago || '') + '</span></div>'
         + '</div>'
-        + '<span style="font-size:11px;color:#9ca3af;white-space:nowrap;flex-shrink:0;">' + escHtml(lead.time_ago || '') + '</span>'
       + '</div>'
-
-      // Badge loại BĐS
-      + (catBadge ? '<div style="margin-bottom:2px;">' + catBadge + '</div>' : '')
-
-      // Ngân sách — label trái, giá phải màu primary
+      + (catBadges ? '<div class="ul-tags">' + catBadges + '</div>' : '')
       + budgetHtml
-
-      // Khu vực
-      + (wardHtml ? '<div style="margin-bottom:8px;">' + wardHtml + '</div>' : '')
-
-      // Footer: gợi ý + nút phân công
-      + '<div style="padding-top:10px;margin-top:4px;border-top:1px solid #f3f4f6;">'
+      + wardHtml
+      + '<div class="ul-footer">'
         + suggestionHtml
         + '<button class="lc-btn primary" style="width:100%;height:38px;border-radius:10px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'' + domId + '\'])">'
           + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công</span>'
         + '</button>'
       + '</div>'
-
       + '</div>';
   }).join('');
 }
@@ -2234,8 +2215,8 @@ function renderUnassignedLeadCards(leads){
 // Render lead cards cho các tab theo trạng thái (không có checkbox, read-only; nút assign chỉ hiện nếu chưa phân công)
 function renderStatusLeadCards(leads){
   var svgUser  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-  var svgMoney = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
-  var svgPin   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var svgMoney = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+  var svgPin   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 
   var statusConfig = {
     'new':         { label: 'Mới',         style: 'background:#dbeafe;color:#1d4ed8;' },
@@ -2249,19 +2230,21 @@ function renderStatusLeadCards(leads){
     var domId = 'sll-' + lead.id;
     var sCfg  = statusConfig[lead.status_raw] || { label: lead.status_raw, style: 'background:#f3f4f6;color:#6b7280;' };
 
-    // Badge Mua/Thuê
+    // Badge Mua/Thuê — pill style
     var isBuy = lead.lead_type === 'Mua';
     var typeBadge = lead.lead_type
-      ? '<span style="display:inline-block;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;background:' + (isBuy ? '#dbeafe' : '#fef3c7') + ';color:' + (isBuy ? '#1d4ed8' : '#d97706') + ';">' + escHtml(lead.lead_type) + '</span>'
+      ? '<span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:' + (isBuy ? '#dbeafe' : '#fef3c7') + ';color:' + (isBuy ? '#1d4ed8' : '#d97706') + ';">' + escHtml(lead.lead_type) + '</span>'
       : '';
 
-    // Loại BĐS badge
-    var catStr   = (lead.categories || []).join(', ');
-    var catBadge = catStr
-      ? '<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f3f4f6;color:#374151;">' + escHtml(catStr) + '</span>'
-      : '';
+    // Status badge — pill style
+    var statusBadge = '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;flex-shrink:0;' + sCfg.style + '">' + sCfg.label + '</span>';
 
-    // Ngân sách — ưu tiên budget_label (nhãn chính xác người dùng đã chọn)
+    // Loại BĐS badges — dùng ul-tag class
+    var catBadges = (lead.categories || []).map(function(c){
+      return '<span class="ul-tag">' + escHtml(c) + '</span>';
+    }).join('');
+
+    // Ngân sách
     var budgetText2 = '';
     if (lead.budget_label) {
       budgetText2 = escHtml(lead.budget_label);
@@ -2280,55 +2263,48 @@ function renderStatusLeadCards(leads){
       }
     }
     var budgetHtml = budgetText2
-      ? '<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:6px 0;">'
-          + '<div style="display:flex;align-items:center;gap:4px;">' + svgMoney + '<span style="font-size:11px;color:#6b7280;font-weight:500;">Ngân sách</span></div>'
-          + '<span style="font-size:15px;font-weight:800;color:var(--primary);">' + budgetText2 + '</span>'
+      ? '<div class="ul-budget-block">'
+          + '<div class="ul-budget-label">' + svgMoney + 'Ngân sách</div>'
+          + '<span class="ul-budget-value">' + budgetText2 + '</span>'
         + '</div>'
       : '';
 
     // Khu vực
     var wardStr  = (lead.wards || []).join(', ');
     var wardHtml = wardStr
-      ? '<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280;">'
-          + svgPin + '<span>' + escHtml(wardStr) + '</span>'
-        + '</div>'
+      ? '<div class="ul-ward-row">' + svgPin + '<span>' + escHtml(wardStr) + '</span></div>'
       : '';
 
-    // Footer: sale đã assign hoặc nút Phân công
-    var footerSection = lead.is_assigned
-      ? '<div style="padding-top:10px;margin-top:6px;border-top:1px solid #f3f4f6;display:flex;align-items:center;gap:5px;">'
-          + svgUser
-          + '<span style="font-size:12px;color:var(--text-secondary);">Đã assign: <strong>' + escHtml(lead.sale_name) + '</strong></span>'
+    // Footer: sale đã assign (chip với avatar) hoặc nút Phân công
+    var footerSection;
+    if (lead.is_assigned && lead.sale_name) {
+      var initials = lead.sale_name.split(' ').filter(Boolean).slice(-2).map(function(w){ return w[0]; }).join('').toUpperCase();
+      footerSection = '<div class="ul-footer">'
+        + '<div class="ul-sale-chip">'
+          + '<div class="ul-sale-chip-avatar">' + escHtml(initials) + '</div>'
+          + '<div><span class="ul-sale-chip-label">Đã assign · </span><span class="ul-sale-chip-name">' + escHtml(lead.sale_name) + '</span></div>'
         + '</div>'
-      : '<div style="padding-top:10px;margin-top:6px;border-top:1px solid #f3f4f6;">'
-          + '<button class="lc-btn primary" style="width:100%;height:38px;border-radius:10px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'ull-' + lead.id + '\'])">'
-            + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công</span>'
-          + '</button>'
         + '</div>';
+    } else {
+      footerSection = '<div class="ul-footer">'
+        + '<button class="lc-btn primary" style="width:100%;height:38px;border-radius:10px;font-size:13px;font-weight:600;justify-content:center;" onclick="event.stopPropagation();openSalePicker([\'ull-' + lead.id + '\'])">'
+          + '<span style="display:inline-flex;align-items:center;gap:5px;">' + svgUser + ' Phân công</span>'
+        + '</button>'
+        + '</div>';
+    }
 
-    return '<div class="ul-card" id="' + domId + '" style="background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border:1px solid #e5e7eb;margin-bottom:10px;">'
-
-      // Header: tên + badge loại + thời gian
-      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">'
-        + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
-          + '<span style="font-size:15px;font-weight:700;color:var(--text-primary);">' + escHtml(lead.name) + '</span>'
-          + typeBadge
+    return '<div class="ul-card" id="' + domId + '">'
+      + '<div class="ul-head">'
+        + '<div class="ul-info">'
+          + '<div class="ul-name">' + escHtml(lead.name) + '</div>'
+          + '<div class="ul-meta">' + typeBadge + '<span style="color:var(--text-tertiary);font-size:11px;">' + escHtml(lead.time_ago || '') + '</span></div>'
         + '</div>'
-        + '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;' + sCfg.style + '">' + sCfg.label + '</span>'
+        + statusBadge
       + '</div>'
-
-      // Badge loại BĐS
-      + (catBadge ? '<div style="margin-bottom:2px;">' + catBadge + '</div>' : '')
-
-      // Ngân sách — label trái, giá phải màu primary
+      + (catBadges ? '<div class="ul-tags">' + catBadges + '</div>' : '')
       + budgetHtml
-
-      // Khu vực
-      + (wardHtml ? '<div style="margin-bottom:8px;">' + wardHtml + '</div>' : '')
-
-      // Footer
+      + wardHtml
       + footerSection
-
       + '</div>';
   }).join('');
 }

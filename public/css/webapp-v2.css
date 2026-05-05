@@ -4289,6 +4289,8 @@ img {
   border-color: var(--primary);
   color: #fff;
 }
+.ul-checkbox svg { opacity: 0; }
+.ul-card.selected .ul-checkbox svg { opacity: 1; }
 
 .ul-info {
   flex: 1;
@@ -4641,6 +4643,103 @@ img {
 .assign-cta-btn:disabled {
   opacity: .4;
   cursor: default;
+}
+
+/* Lead card budget block */
+.ul-budget-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--primary-light);
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin: 8px 13px 4px;
+}
+.ul-budget-label {
+  font-size: 11px;
+  color: var(--primary-dark);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ul-budget-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.3px;
+}
+
+/* Lead card ward/location row */
+.ul-ward-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 0 13px 8px;
+}
+
+/* Sale assignment chip in footer */
+.ul-sale-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ul-sale-chip-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ul-sale-chip-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.ul-sale-chip-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-right: 2px;
+}
+
+/* Suggestion row */
+.ul-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+/* Tab count badge */
+.sp-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.sp-tab.active .sp-tab-badge {
+  background: var(--primary);
+  color: #fff;
 }
 
 /* ============ NOTIFICATION DETAIL PAGE ============ */
