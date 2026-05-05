@@ -3439,7 +3439,7 @@ function renderLeads(res, append, currentPage, query) {
         const expandId = `lead-${lead.id}-expand`;
 
         html += `
-        <div class="lead-card ${sClass}">
+        <div class="lead-card ${sClass}" id="broker-lead-${lead.id}">
           <div class="lc-head">
             <div class="lc-avatar" style="background:${avatarBg};">${initials}</div>
             <div class="lc-info">
@@ -3494,6 +3494,20 @@ function renderLeads(res, append, currentPage, query) {
         container.insertAdjacentHTML('beforeend', html);
     } else {
         container.innerHTML = html;
+    }
+
+    if (window._pendingBrokerLeadId) {
+        var pendId = window._pendingBrokerLeadId;
+        window._pendingBrokerLeadId = null;
+        setTimeout(function() {
+            var el = document.getElementById('broker-lead-' + pendId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.style.transition = 'box-shadow 0.3s';
+                el.style.boxShadow = '0 0 0 2px var(--primary)';
+                setTimeout(function() { el.style.boxShadow = ''; }, 2500);
+            }
+        }, 100);
     }
 }
 
@@ -9312,6 +9326,14 @@ window.activityApp = function() {
     if (propId) {
       sessionStorage.setItem('pending_deeplink', 'property_' + propId);
       setTimeout(function() { openDetail({ id: propId }); }, 500);
+    }
+  } else if (param.indexOf('brokerlead_') === 0) {
+    var leadId = parseInt(param.substring(11));
+    if (leadId) {
+      window._pendingBrokerLeadId = leadId;
+      setTimeout(function() {
+        if (typeof openSubpage === 'function') openSubpage('leads');
+      }, 600);
     }
   } else if (param.indexOf('lead_') === 0) {
     var leadId = parseInt(param.substring(5));
