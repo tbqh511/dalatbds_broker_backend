@@ -22,6 +22,7 @@ class CrmLead extends Model
         'demand_rate_min',
         'demand_rate_max',
         'budget_label',
+        'expected_deposit_date',
         'note',
         'status',
         'assigned_to',
@@ -34,6 +35,7 @@ class CrmLead extends Model
         'wards' => 'array',
         'purpose' => 'array',
         'assigned_at' => 'datetime',
+        'expected_deposit_date' => 'date',
     ];
 
     // Accessors
@@ -47,11 +49,11 @@ class CrmLead extends Model
         return ucfirst(str_replace('-', ' ', $value));
     }
 
-   // Quan hệ: Một lead thuộc về người dùng
+    // Quan hệ: Một lead thuộc về người dùng
     public function user()
     {
         return $this->belongsTo(Customer::class, 'user_id', 'id')
-                    ->select(['id', 'name', 'email', 'profile']);
+            ->select(['id', 'name', 'email', 'profile']);
     }
 
     // Quan hệ: Một lead được assign cho sale
@@ -84,4 +86,3 @@ class CrmLead extends Model
         return $this->hasMany(CrmLeadActivity::class, 'lead_id')->orderBy('created_at', 'asc');
     }
 }
-

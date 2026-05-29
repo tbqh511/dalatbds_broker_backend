@@ -133,6 +133,7 @@
       leadsUpdateStatusBase: '/webapp/leads/',
       leadsCreateDealBase: '/webapp/leads/',
       leadsActivitiesBase: '/webapp/leads/',
+      leadsUpdateNeedsBase: '/webapp/leads/',
       myListingToggleBase: '/webapp/listings/',
       myListingDeleteBase: '/webapp/listings/',
       editListingBase: '/webapp/edit-listing/',
@@ -156,6 +157,21 @@
       adminReportsJson: @json(app('router')->has('webapp.admin.reports') ? route('webapp.admin.reports') : null),
       adminMarketPricesJson: @json(app('router')->has('webapp.admin.market-prices.index') ? route('webapp.admin.market-prices.index') : null),
       adminMarketPricesBase: '/webapp/api/admin/market-prices/',
+    },
+    crmOptions: {
+      categories: @json(($categories ?? collect())->map(fn ($c) => ['id' => $c->id, 'label' => $c->category])->values()),
+      wards: @json(($crmWards ?? collect())->map(fn ($w) => ['code' => $w->code, 'label' => $w->full_name])->values()),
+      purposes: ['Đầu tư', 'Định cư', 'Kinh doanh', 'Nghỉ dưỡng', 'Canh tác', 'Khác'],
+      budgetPresets: [
+        { min: 0,            max: 0,            label: 'Thỏa thuận' },
+        { min: 0,            max: 1000000000,   label: 'Dưới 1 tỷ' },
+        { min: 1000000000,   max: 3000000000,  label: '1 - 3 tỷ' },
+        { min: 3000000000,   max: 5000000000,  label: '3 - 5 tỷ' },
+        { min: 5000000000,   max: 10000000000, label: '5 - 10 tỷ' },
+        { min: 10000000000,  max: 20000000000, label: '10 - 20 tỷ' },
+        { min: 20000000000,  max: 50000000000, label: '20 - 50 tỷ' },
+        { min: 50000000000,  max: 999999999999, label: 'Trên 50 tỷ' }
+      ]
     },
     notifSettings: @json($notifSettings ?? \App\Models\Customer::DEFAULT_NOTIFICATION_SETTINGS),
     customerProfile: {

@@ -11053,6 +11053,117 @@ textarea.form-row-value {
 .cr-decision-no  { color: var(--danger); }
 .cr-decision-no.selected  { background: #fee2e2; border-color: var(--danger); }
 
+/* ── Step 2A: editable needs form ── */
+.cr-edit-form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cr-field { display: flex; flex-direction: column; gap: 7px; }
+.cr-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.cr-req { color: var(--danger); }
+
+/* Segmented control (lead type) */
+.cr-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: var(--bg-secondary);
+  padding: 4px;
+  border-radius: 12px;
+}
+.cr-seg-btn {
+  padding: 9px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.cr-seg-btn.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(50,112,252,.3);
+}
+
+/* Multi-select chips */
+.cr-chip-wrap { display: flex; flex-wrap: wrap; gap: 7px; }
+.cr-chip {
+  padding: 7px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-card);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.cr-chip.active {
+  background: #e8f0ff;
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Budget manual inputs */
+.cr-budget-manual {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.cr-budget-input {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg-card);
+}
+.cr-budget-input span {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.cr-budget-input input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.cr-budget-dash { color: var(--text-tertiary); font-weight: 600; }
+
+/* Date input */
+.cr-date-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg-card);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  outline: none;
+}
+.cr-date-input:focus { border-color: var(--primary); }
+
 /* ── Steps 2B/2C header ── */
 .cr-2b-header {
   display: flex;

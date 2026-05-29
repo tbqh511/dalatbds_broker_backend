@@ -172,7 +172,7 @@
       <button class="cr-btn-primary" onclick="crNext()">Tiếp theo →</button>
     </div>
 
-    <!-- STEP 2A: Nghe máy — xác nhận nhu cầu -->
+    <!-- STEP 2A: Nghe máy — xác nhận & cập nhật nhu cầu -->
     <div id="crStep2A" style="display:none;">
       <div class="cr-2a-header">
         <div class="cr-2a-icon">✓</div>
@@ -181,20 +181,78 @@
           <div class="cr-2a-sub" id="cr2aSub">Bổ sung thông tin còn thiếu</div>
         </div>
       </div>
-      <div class="cr-needs-label">THÔNG TIN NHU CẦU</div>
+
+      <!-- Quick read-only summary (đánh dấu trường còn thiếu) -->
+      <div class="cr-needs-label">TÓM TẮT NHU CẦU</div>
       <div class="cr-needs-grid" id="crNeedsGrid"></div>
+
+      <!-- Editable needs form -->
+      <div class="cr-edit-form" id="crEditForm">
+        <!-- Loại giao dịch -->
+        <div class="cr-field">
+          <div class="cr-field-label">Nhu cầu giao dịch <span class="cr-req">*</span></div>
+          <div class="cr-seg" id="crLeadTypeSeg">
+            <button type="button" class="cr-seg-btn" data-val="buy"  onclick="crSetLeadType('buy', this)">Tìm mua</button>
+            <button type="button" class="cr-seg-btn" data-val="rent" onclick="crSetLeadType('rent', this)">Tìm thuê</button>
+          </div>
+        </div>
+
+        <!-- Loại BĐS -->
+        <div class="cr-field">
+          <div class="cr-field-label">Loại BĐS</div>
+          <div class="cr-chip-wrap" id="crCatChips"></div>
+        </div>
+
+        <!-- Khu vực -->
+        <div class="cr-field">
+          <div class="cr-field-label">Khu vực ưu tiên</div>
+          <div class="cr-chip-wrap" id="crWardChips"></div>
+        </div>
+
+        <!-- Mục đích -->
+        <div class="cr-field">
+          <div class="cr-field-label">Mục đích</div>
+          <div class="cr-chip-wrap" id="crPurposeChips"></div>
+        </div>
+
+        <!-- Ngân sách -->
+        <div class="cr-field">
+          <div class="cr-field-label">Mức tài chính</div>
+          <div class="cr-chip-wrap" id="crBudgetChips"></div>
+          <div class="cr-budget-manual">
+            <div class="cr-budget-input">
+              <span>Từ</span>
+              <input type="number" inputmode="decimal" id="crBudgetMin" min="0" step="0.1" placeholder="0" oninput="crOnBudgetManualInput()">
+              <span>tỷ</span>
+            </div>
+            <span class="cr-budget-dash">–</span>
+            <div class="cr-budget-input">
+              <span>Đến</span>
+              <input type="number" inputmode="decimal" id="crBudgetMax" min="0" step="0.1" placeholder="—" oninput="crOnBudgetManualInput()">
+              <span>tỷ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ngày dự kiến cọc -->
+        <div class="cr-field">
+          <div class="cr-field-label">Thời gian cọc dự kiến</div>
+          <input type="date" id="crDepositDate" class="cr-date-input">
+        </div>
+      </div>
+
       <div class="cr-needs-label" style="margin-top:14px;">KHÁCH CÓ NHU CẦU KHÔNG?</div>
       <div class="cr-decision-row">
         <div class="cr-decision-btn cr-decision-yes" id="crDecisionYes" onclick="crSelectDecision('yes')">
           <div style="font-weight:700;font-size:13px;">✓ Có nhu cầu</div>
-          <div style="font-size:11px;margin-top:2px;color:inherit;opacity:.8;">Tạo giao dịch</div>
+          <div style="font-size:11px;margin-top:2px;color:inherit;opacity:.8;">Lưu nhu cầu · Tạo giao dịch</div>
         </div>
         <div class="cr-decision-btn cr-decision-no" id="crDecisionNo" onclick="crSelectDecision('no')">
           <div style="font-weight:700;font-size:13px;">✗ Không có</div>
           <div style="font-size:11px;margin-top:2px;color:inherit;opacity:.8;">Huỷ lead</div>
         </div>
       </div>
-      <button class="cr-btn-primary" onclick="crConfirmNeeds()">Xác nhận · Bắt đầu chăm</button>
+      <button class="cr-btn-primary" id="crConfirmNeedsBtn" onclick="crConfirmNeeds()">Xác nhận · Bắt đầu chăm</button>
     </div>
 
     <!-- STEP 2B: Không nghe lần 1 -->

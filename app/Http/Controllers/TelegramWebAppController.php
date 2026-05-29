@@ -156,9 +156,15 @@ class TelegramWebAppController extends Controller
 
         $categories = Category::where('status', 1)->orderBy('order')->get(['id', 'category']);
 
+        // Khu vực (phường/xã) cho form sửa nhu cầu khách ở subpage CRM
+        $districtCode = config('location.district_code');
+        $crmWards = LocationsWard::where('district_code', $districtCode)
+            ->orderBy('full_name')
+            ->get(['code', 'full_name']);
+
         $notifSettings = $customer ? $customer->getMergedNotifSettings() : Customer::DEFAULT_NOTIFICATION_SETTINGS;
 
-        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices', 'likedIds', 'categories', 'notifSettings'));
+        return view('webapp.layout', compact('customer', 'stats', 'properties', 'marketPrices', 'likedIds', 'categories', 'crmWards', 'notifSettings'));
         //return view('frontend_dashboard', compact('customer', 'stats', 'properties'));
     }
 
@@ -1135,6 +1141,10 @@ class TelegramWebAppController extends Controller
                     'budget_label' => $budgetLbl,
                     'budget_min_raw' => $budgetMin,
                     'budget_max_raw' => $budgetMax,
+                    'category_ids' => array_values($lead->categories ?? []),
+                    'ward_codes' => array_values($lead->wards ?? []),
+                    'purposes' => is_array($lead->purpose) ? array_values($lead->purpose) : (filled($lead->purpose) ? [$lead->purpose] : []),
+                    'expected_deposit_date' => optional($lead->expected_deposit_date)->format('Y-m-d'),
                     'note' => $lead->note ?? '',
                     'activities' => $activities,
                     'no_answer_count' => $noAnswerCount,

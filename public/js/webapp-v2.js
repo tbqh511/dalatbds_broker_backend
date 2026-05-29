@@ -6909,6 +6909,10 @@ window.crOpenSheet = function() {
   // Reset state
   crCurrentResult = null;
   crNeedDecision  = null;
+  crNeedsState    = null;
+
+  var confirmBtn = document.getElementById('crConfirmNeedsBtn');
+  if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Xác nhận · Bắt đầu chăm'; }
 
   ['crOptAnswered', 'crOptNoAnswer'].forEach(function(id) {
     var el = document.getElementById(id);
@@ -6964,6 +6968,7 @@ window.crNext = function() {
   if (s1) s1.style.display = 'none';
 
   if (crCurrentResult === 'answered') {
+    _crInitNeedsForm(client);
     _crRenderNeedsGrid(client);
     var sub = document.getElementById('cr2aSub');
     if (sub) sub.textContent = 'Bổ sung thông tin còn thiếu · ' + (client ? client.customer_name || 'khách' : 'khách');
@@ -6981,24 +6986,181 @@ window.crNext = function() {
   }
 };
 
+/* ── Editable needs form state ── */
+// crNeedsState mirrors the lead's needs while the Sale edits them in Step 2A.
+var crNeedsState = null;
+
+function _crOpts() {
+  return (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.crmOptions) || { categories: [], wards: [], purposes: [], budgetPresets: [] };
+}
+
+// Build initial editable state from the loaded client (uses raw ids/codes from API).
+function _crInitNeedsForm(client) {
+  if (!client) return;
+  crNeedsState = {
+    lead_type: client.lead_type || '',
+    categories: (client.category_ids || []).map(Number),
+    wards: (client.ward_codes || []).map(String),
+    purposes: (client.purposes || []).slice(),
+    price_min: Number(client.budget_min_raw || 0),
+    price_max: Number(client.budget_max_raw || 0),
+    budget_label: client.budget_label || '',
+    expected_deposit_date: client.expected_deposit_date || '',
+  };
+
+  // Lead type segmented control
+  document.querySelectorAll('#crLeadTypeSeg .cr-seg-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-val') === crNeedsState.lead_type);
+  });
+
+  _crRenderCatChips();
+  _crRenderWardChips();
+  _crRenderPurposeChips();
+  _crRenderBudgetChips();
+
+  var minEl = document.getElementById('crBudgetMin');
+  var maxEl = document.getElementById('crBudgetMax');
+  if (minEl) minEl.value = crNeedsState.price_min > 0 ? (crNeedsState.price_min / 1e9) : '';
+  if (maxEl) maxEl.value = crNeedsState.price_max > 0 ? (crNeedsState.price_max / 1e9) : '';
+
+  var dateEl = document.getElementById('crDepositDate');
+  if (dateEl) dateEl.value = crNeedsState.expected_deposit_date || '';
+}
+
+function _crRenderCatChips() {
+  var el = document.getElementById('crCatChips');
+  if (!el) return;
+  el.innerHTML = _crOpts().categories.map(function(c) {
+    var on = crNeedsState.categories.indexOf(Number(c.id)) !== -1;
+    return '<button type="button" class="cr-chip' + (on ? ' active' : '') + '" onclick="crToggleChip(\'categories\',' + Number(c.id) + ',this)">' + escHtml(c.label) + '</button>';
+  }).join('');
+}
+
+function _crRenderWardChips() {
+  var el = document.getElementById('crWardChips');
+  if (!el) return;
+  el.innerHTML = _crOpts().wards.map(function(w) {
+    var on = crNeedsState.wards.indexOf(String(w.code)) !== -1;
+    return '<button type="button" class="cr-chip' + (on ? ' active' : '') + '" onclick="crToggleChip(\'wards\',\'' + String(w.code) + '\',this)">' + escHtml(w.label) + '</button>';
+  }).join('');
+}
+
+function _crRenderPurposeChips() {
+  var el = document.getElementById('crPurposeChips');
+  if (!el) return;
+  el.innerHTML = _crOpts().purposes.map(function(p) {
+    var on = crNeedsState.purposes.indexOf(p) !== -1;
+    return '<button type="button" class="cr-chip' + (on ? ' active' : '') + '" onclick="crTogglePurpose(\'' + escHtml(p).replace(/'/g, "\\'") + '\',this)">' + escHtml(p) + '</button>';
+  }).join('');
+}
+
+function _crRenderBudgetChips() {
+  var el = document.getElementById('crBudgetChips');
+  if (!el) return;
+  el.innerHTML = _crOpts().budgetPresets.map(function(b) {
+    var on = (crNeedsState.budget_label === b.label) ||
+             (!crNeedsState.budget_label && Number(crNeedsState.price_min) === Number(b.min) && Number(crNeedsState.price_max) === Number(b.max));
+    return '<button type="button" class="cr-chip' + (on ? ' active' : '') + '" onclick="crSelectBudgetPreset(' + b.min + ',' + b.max + ',\'' + escHtml(b.label).replace(/'/g, "\\'") + '\',this)">' + escHtml(b.label) + '</button>';
+  }).join('');
+}
+
+window.crSetLeadType = function(val, btn) {
+  if (!crNeedsState) return;
+  crNeedsState.lead_type = val;
+  document.querySelectorAll('#crLeadTypeSeg .cr-seg-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  _crSyncSummary();
+};
+
+window.crToggleChip = function(field, value, btn) {
+  if (!crNeedsState) return;
+  var arr = crNeedsState[field];
+  var idx = arr.indexOf(value);
+  if (idx === -1) { arr.push(value); btn && btn.classList.add('active'); }
+  else            { arr.splice(idx, 1); btn && btn.classList.remove('active'); }
+  _crSyncSummary();
+};
+
+window.crTogglePurpose = function(value, btn) {
+  if (!crNeedsState) return;
+  var arr = crNeedsState.purposes;
+  var idx = arr.indexOf(value);
+  if (idx === -1) { arr.push(value); btn && btn.classList.add('active'); }
+  else            { arr.splice(idx, 1); btn && btn.classList.remove('active'); }
+  _crSyncSummary();
+};
+
+window.crSelectBudgetPreset = function(min, max, label, btn) {
+  if (!crNeedsState) return;
+  crNeedsState.price_min = Number(min);
+  crNeedsState.price_max = Number(max);
+  crNeedsState.budget_label = label;
+  document.querySelectorAll('#crBudgetChips .cr-chip').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var minEl = document.getElementById('crBudgetMin');
+  var maxEl = document.getElementById('crBudgetMax');
+  if (minEl) minEl.value = min > 0 ? (min / 1e9) : '';
+  if (maxEl) maxEl.value = (max > 0 && max < 999999999999) ? (max / 1e9) : '';
+  _crSyncSummary();
+};
+
+window.crOnBudgetManualInput = function() {
+  if (!crNeedsState) return;
+  var minEl = document.getElementById('crBudgetMin');
+  var maxEl = document.getElementById('crBudgetMax');
+  crNeedsState.price_min = minEl && minEl.value ? Math.round(parseFloat(minEl.value) * 1e9) : 0;
+  crNeedsState.price_max = maxEl && maxEl.value ? Math.round(parseFloat(maxEl.value) * 1e9) : 0;
+  crNeedsState.budget_label = ''; // manual override clears preset label
+  document.querySelectorAll('#crBudgetChips .cr-chip').forEach(function(b) { b.classList.remove('active'); });
+  _crSyncSummary();
+};
+
+// Format the live budget for the summary cell.
+function _crBudgetText() {
+  if (crNeedsState.budget_label) return crNeedsState.budget_label;
+  var lo = crNeedsState.price_min, hi = crNeedsState.price_max;
+  if (lo <= 0 && hi <= 0) return '';
+  function f(v) { return (v / 1e9) % 1 === 0 ? (v / 1e9) + ' tỷ' : (v / 1e9).toFixed(1) + ' tỷ'; }
+  return (lo > 0 ? f(lo) : '?') + ' – ' + (hi > 0 ? f(hi) : '?');
+}
+
+// Map raw category ids / ward codes to display labels for the summary cells.
+function _crLabelsFor(field, ids) {
+  var opts = _crOpts();
+  var src = field === 'categories' ? opts.categories : opts.wards;
+  var key = field === 'categories' ? 'id' : 'code';
+  return (ids || []).map(function(v) {
+    var hit = src.find(function(o) { return String(o[key]) === String(v); });
+    return hit ? hit.label : null;
+  }).filter(Boolean);
+}
+
+// Re-render the read-only summary grid from the live edit state.
+function _crSyncSummary() {
+  var client = clientsDataMap[currentClientDetailId];
+  _crRenderNeedsGrid(client);
+}
+
 function _crRenderNeedsGrid(client) {
   var el = document.getElementById('crNeedsGrid');
-  if (!el || !client) return;
+  if (!el) return;
+  var st = crNeedsState || {};
 
   function cell(label, val, cls) {
     var icon = cls === 'green' ? '✓' : cls === 'amber' ? '⚠' : '✕';
     return '<div class="cr-needs-cell ' + cls + '">'
       + '<div class="cr-needs-cell-label">' + icon + ' ' + escHtml(label) + '</div>'
-      + '<div class="cr-needs-cell-val">' + escHtml(val || '') + '</div>'
+      + '<div class="cr-needs-cell-val">' + escHtml(val || 'Chưa có') + '</div>'
       + '</div>';
   }
 
-  var name    = client.customer_name || '';
-  var type    = client.lead_type === 'buy' ? 'Tìm mua' : (client.lead_type === 'rent' ? 'Tìm thuê' : '');
-  var cats    = (client.categories || []).join(', ');
-  var purpose = client.purpose || '';
-  var wards   = (client.wards || []).join(', ');
-  var budget  = client.budget || '';
+  var name    = (client && client.customer_name) || '';
+  var type    = st.lead_type === 'buy' ? 'Tìm mua' : (st.lead_type === 'rent' ? 'Tìm thuê' : '');
+  var cats    = _crLabelsFor('categories', st.categories).join(', ');
+  var purpose = (st.purposes || []).join(', ');
+  var wards   = _crLabelsFor('wards', st.wards).join(', ');
+  var budget  = _crBudgetText();
+  var deposit = st.expected_deposit_date ? _crFmtDate(st.expected_deposit_date) : '';
 
   el.innerHTML =
     cell('Khách hàng',    name,    name    ? 'green' : 'red')
@@ -7006,7 +7168,12 @@ function _crRenderNeedsGrid(client) {
     + cell('Mục đích',    purpose, purpose ? 'green' : 'amber')
     + cell('Khu vực',     wards,   wards   ? 'green' : 'amber')
     + cell('Tài chính',   budget,  budget  ? 'green' : 'amber')
-    + cell('Thời gian cọc', 'Chưa có · Nhập...', 'red');
+    + cell('Thời gian cọc', deposit, deposit ? 'green' : 'amber');
+}
+
+function _crFmtDate(ymd) {
+  var p = String(ymd).split('-');
+  return p.length === 3 ? (p[2] + '/' + p[1] + '/' + p[0]) : ymd;
 }
 
 window.crSelectDecision = function(decision) {
@@ -7017,10 +7184,65 @@ window.crSelectDecision = function(decision) {
   if (no)  no.classList.toggle('selected',  decision === 'no');
 };
 
+// Persist the edited needs to the lead, then run onDone() (create deal / cancel).
+function _crSaveNeeds(onDone) {
+  if (!crNeedsState || !crNeedsState.lead_type) {
+    showToast('Vui lòng chọn nhu cầu giao dịch (Mua/Thuê)');
+    return;
+  }
+  // Sync deposit date input
+  var dateEl = document.getElementById('crDepositDate');
+  if (dateEl) crNeedsState.expected_deposit_date = dateEl.value || '';
+
+  var cfg  = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
+  var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+  var base = (cfg && cfg.leadsUpdateNeedsBase) || '/webapp/leads/';
+
+  fetch(base + currentClientDetailId + '/needs', {
+    method: 'PATCH',
+    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      lead_type: crNeedsState.lead_type,
+      categories: crNeedsState.categories,
+      wards: crNeedsState.wards,
+      purposes: crNeedsState.purposes,
+      price_min: crNeedsState.price_min,
+      price_max: crNeedsState.price_max,
+      budget_label: crNeedsState.budget_label,
+      expected_deposit_date: crNeedsState.expected_deposit_date || null,
+    }),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (!res.success) { showToast(res.message || 'Lỗi lưu nhu cầu'); return; }
+      // Update cached client so the card reflects the new needs without reload.
+      var client = clientsDataMap[currentClientDetailId];
+      if (client && res.lead) {
+        client.lead_type = res.lead.lead_type;
+        client.categories = res.lead.categories;
+        client.wards = res.lead.wards;
+        client.purpose = res.lead.purpose;
+        client.budget = res.lead.budget;
+        client.budget_label = res.lead.budget_label;
+        client.budget_min_raw = res.lead.budget_min_raw;
+        client.budget_max_raw = res.lead.budget_max_raw;
+        client.expected_deposit_date = res.lead.expected_deposit_date;
+        client.category_ids = crNeedsState.categories;
+        client.ward_codes = crNeedsState.wards;
+        client.purposes = crNeedsState.purposes;
+      }
+      onDone && onDone();
+    })
+    .catch(function() { showToast('Lỗi kết nối'); });
+}
+
 window.crConfirmNeeds = function() {
   if (!crNeedDecision) { showToast('Vui lòng chọn kết quả'); return; }
   var cfg  = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.routes;
   var csrf = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.csrfToken;
+
+  var btn = document.getElementById('crConfirmNeedsBtn');
+  function resetBtn() { if (btn) { btn.disabled = false; btn.textContent = 'Xác nhận · Bắt đầu chăm'; } }
 
   _crLogActivity('call',
     crNeedDecision === 'yes' ? 'Gọi cho khách — nghe máy · có nhu cầu' : 'Gọi cho khách — nghe máy · không có nhu cầu',
@@ -7028,25 +7250,33 @@ window.crConfirmNeeds = function() {
   );
 
   if (crNeedDecision === 'yes') {
-    var dealUrl = (cfg && cfg.leadsCreateDealBase ? cfg.leadsCreateDealBase : '/webapp/leads/') + currentClientDetailId + '/deal';
-    fetch(dealUrl, {
-      method: 'POST',
-      headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    })
-      .then(function(r) { return r.json(); })
-      .then(function(res) {
-        crCloseSheet();
-        if (res.success) {
-          showToast('✓ Đã tạo Giao dịch thành công');
-          clientsTabSwitch(document.getElementById('clientsTabCaring'), 'caring');
-        } else {
-          showToast(res.message || 'Lỗi tạo giao dịch');
-        }
+    if (btn) { btn.disabled = true; btn.textContent = 'Đang lưu...'; }
+    // Save needs first, then create the deal.
+    _crSaveNeeds(function() {
+      var dealUrl = (cfg && cfg.leadsCreateDealBase ? cfg.leadsCreateDealBase : '/webapp/leads/') + currentClientDetailId + '/deal';
+      fetch(dealUrl, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
       })
-      .catch(function() { showToast('Lỗi kết nối'); });
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          resetBtn();
+          crCloseSheet();
+          if (res.success) {
+            showToast('✓ Đã lưu nhu cầu · Tạo giao dịch thành công');
+            clientsTabSwitch(document.getElementById('clientsTabCaring'), 'caring');
+          } else {
+            showToast(res.message || 'Lỗi tạo giao dịch');
+          }
+        })
+        .catch(function() { resetBtn(); showToast('Lỗi kết nối'); });
+    });
+    // _crSaveNeeds short-circuits (no onDone) on validation/network failure → re-enable.
+    setTimeout(function() { if (btn && btn.disabled && btn.textContent === 'Đang lưu...') resetBtn(); }, 8000);
   } else {
     _crUpdateLeadStatus('lost', function() {
+      resetBtn();
       crCloseSheet();
       showToast('Lead đã huỷ');
       clientsLoaded = false;

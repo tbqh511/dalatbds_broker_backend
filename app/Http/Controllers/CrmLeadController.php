@@ -4,26 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Crm\Lead\StoreLeadRequest;
 use App\Http\Requests\Crm\Lead\UpdateLeadRequest;
+use App\Models\Category;
 use App\Models\CrmDeal;
+use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
 use App\Models\Customer;
+use App\Models\LocationsWard;
 use App\Services\CrmLeadService;
 use App\Services\InAppNotificationService;
 use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Carbon;
-use App\Models\CrmLead;
-use App\Models\Category;
-use App\Models\LocationsWard;
 
 class CrmLeadController extends Controller
 {
     protected $leadService;
+
     protected $notificationService;
+
     protected $inAppNotifService;
 
     public function __construct(CrmLeadService $leadService, NotificationService $notificationService, InAppNotificationService $inAppNotifService)
@@ -36,65 +38,67 @@ class CrmLeadController extends Controller
     public function index(Request $request)
     {
         $customer = Auth::guard('webapp')->user();
-        if (!$customer) {
+        if (! $customer) {
             return redirect()->route('webapp');
         }
 
         $filters = [
-            'search'    => $request->input('search'),
-            'status'    => $request->input('status'),
+            'search' => $request->input('search'),
+            'status' => $request->input('status'),
             'lead_type' => $request->input('lead_type'),
         ];
 
         $leads = $this->leadService->getLeads($customer->id, 10, $filters);
 
-        $categoryMap  = Category::where('status', '1')->pluck('category', 'id');
+        $categoryMap = Category::where('status', '1')->pluck('category', 'id');
         $districtCode = config('location.district_code');
-        $wardMap      = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
+        $wardMap = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
 
         if ($request->ajax()) {
             $statusLabels = [
-                'New'       => 'Mới',
+                'New' => 'Mới',
                 'Contacted' => 'Đã liên hệ',
                 'Converted' => 'Chuyển đổi',
-                'Lost'      => 'Thất bại',
+                'Lost' => 'Thất bại',
             ];
             $data = $leads->map(function ($lead) use ($categoryMap, $wardMap, $statusLabels) {
-                $catNames  = collect($lead->categories ?? [])
-                    ->map(fn($id) => $categoryMap[$id] ?? null)->filter()->implode(', ');
+                $catNames = collect($lead->categories ?? [])
+                    ->map(fn ($id) => $categoryMap[$id] ?? null)->filter()->implode(', ');
                 $wardNames = collect($lead->wards ?? [])
-                    ->map(fn($c) => $wardMap[$c] ?? null)->filter()->implode(', ');
+                    ->map(fn ($c) => $wardMap[$c] ?? null)->filter()->implode(', ');
                 $street = '';
                 if ($lead->note && str_contains($lead->note, 'Tên đường:')) {
                     $street = trim(substr($lead->note, strpos($lead->note, 'Tên đường:') + strlen('Tên đường:')));
                 }
                 $rawStatus = strtolower($lead->getRawOriginal('status'));
+
                 return [
-                    'id'               => $lead->id,
-                    'customer_name'    => $lead->customer?->full_name ?? 'Khách vãng lai',
+                    'id' => $lead->id,
+                    'customer_name' => $lead->customer?->full_name ?? 'Khách vãng lai',
                     'customer_contact' => $lead->customer?->contact ?? '',
-                    'status_label'     => $statusLabels[$lead->status] ?? $lead->status,
-                    'status_raw'       => $rawStatus,
-                    'lead_type'        => $lead->lead_type === 'Buy' ? 'Mua' : 'Thuê',
-                    'budget'           => $lead->budget_label ?: (
-                        ((float)($lead->demand_rate_min ?? 0) > 0 || (float)($lead->demand_rate_max ?? 0) > 0)
-                            ? (((float)($lead->demand_rate_min ?? 0) > 0 ? format_vnd($lead->demand_rate_min) : '?') . ' – ' . ((float)($lead->demand_rate_max ?? 0) > 0 ? format_vnd($lead->demand_rate_max) : '?'))
+                    'status_label' => $statusLabels[$lead->status] ?? $lead->status,
+                    'status_raw' => $rawStatus,
+                    'lead_type' => $lead->lead_type === 'Buy' ? 'Mua' : 'Thuê',
+                    'budget' => $lead->budget_label ?: (
+                        ((float) ($lead->demand_rate_min ?? 0) > 0 || (float) ($lead->demand_rate_max ?? 0) > 0)
+                            ? (((float) ($lead->demand_rate_min ?? 0) > 0 ? format_vnd($lead->demand_rate_min) : '?').' – '.((float) ($lead->demand_rate_max ?? 0) > 0 ? format_vnd($lead->demand_rate_max) : '?'))
                             : 'Thỏa thuận'
                     ),
-                    'categories'       => $catNames,
-                    'wards'            => $wardNames,
-                    'street'           => $street,
-                    'date'             => $lead->created_at->format('d/m/Y'),
-                    'show_url'         => route('webapp.leads.show', $lead->id),
-                    'edit_url'         => route('webapp.leads.edit', $lead->id),
-                    'delete_url'       => route('webapp.leads.destroy', $lead->id),
+                    'categories' => $catNames,
+                    'wards' => $wardNames,
+                    'street' => $street,
+                    'date' => $lead->created_at->format('d/m/Y'),
+                    'show_url' => route('webapp.leads.show', $lead->id),
+                    'edit_url' => route('webapp.leads.edit', $lead->id),
+                    'delete_url' => route('webapp.leads.destroy', $lead->id),
                 ];
             });
+
             return response()->json([
-                'leads'     => $data,
-                'has_more'  => $leads->hasMorePages(),
+                'leads' => $data,
+                'has_more' => $leads->hasMorePages(),
                 'next_page' => $leads->currentPage() + 1,
-                'total'     => $leads->total(),
+                'total' => $leads->total(),
             ]);
         }
 
@@ -104,24 +108,27 @@ class CrmLeadController extends Controller
     public function create()
     {
         $customer = Auth::guard('webapp')->user();
+
         return view('frontend_dashboard_lead_create', compact('customer'));
     }
 
     public function store(StoreLeadRequest $request)
     {
         $customer = Auth::guard('webapp')->user();
-        
+
         try {
             $this->leadService->createLead($request->validated(), $customer->id);
-            
+
             if ($request->ajax()) {
                 return response()->json(['success' => true, 'redirect_url' => route('webapp.leads')]);
             }
+
             return redirect()->route('webapp.leads')->with('success', 'Lead created successfully');
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
             }
+
             return back()->with('error', $e->getMessage());
         }
     }
@@ -137,15 +144,15 @@ class CrmLeadController extends Controller
             $customer->isSaleAdmin()
         );
 
-        if (!$canView) {
+        if (! $canView) {
             return redirect()->route('webapp.leads')->with('error', 'Lead not found or unauthorized');
         }
 
         $lead->load(['customer', 'sale', 'deal.products.property', 'deal.products.bookings', 'activities.actor']);
 
-        $categoryMap  = Category::where('status', '1')->pluck('category', 'id');
+        $categoryMap = Category::where('status', '1')->pluck('category', 'id');
         $districtCode = config('location.district_code');
-        $wardMap      = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
+        $wardMap = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
 
         $salesList = $customer->isSaleAdmin()
             ? Customer::query()
@@ -167,34 +174,120 @@ class CrmLeadController extends Controller
             $customer->isSaleAdmin()
         );
 
-        if (!$canEdit) {
+        if (! $canEdit) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $newStatus  = $request->input('status');
+        $newStatus = $request->input('status');
         $actionType = $request->input('action_type', 'status_change');
-        $note       = trim($request->input('note', ''));
-        $oldStatus  = $lead->getRawOriginal('status');
+        $note = trim($request->input('note', ''));
+        $oldStatus = $lead->getRawOriginal('status');
         $lead->status = $newStatus;
         $lead->save();
 
         CrmLeadActivity::create([
-            'lead_id'  => $lead->id,
+            'lead_id' => $lead->id,
             'actor_id' => $customer->id,
-            'type'     => 'status_change',
-            'content'  => "Đổi trạng thái: {$oldStatus} → {$newStatus}",
+            'type' => 'status_change',
+            'content' => "Đổi trạng thái: {$oldStatus} → {$newStatus}",
         ]);
 
         if ($note !== '') {
             CrmLeadActivity::create([
-                'lead_id'  => $lead->id,
+                'lead_id' => $lead->id,
                 'actor_id' => $customer->id,
-                'type'     => $actionType,
-                'content'  => $note,
+                'type' => $actionType,
+                'content' => $note,
             ]);
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Cập nhật nhu cầu khách (loại GD, loại BĐS, khu vực, mục đích, ngân sách, ngày cọc dự kiến).
+     * Dùng ở bước "Xác nhận nhu cầu — Bắt đầu chăm" trên WebApp (JSON response).
+     * PATCH /webapp/leads/{id}/needs
+     */
+    public function updateNeeds(Request $request, $id)
+    {
+        $customer = Auth::guard('webapp')->user();
+        $lead = $this->leadService->getLead($id);
+
+        $canEdit = $lead && (
+            $lead->user_id == $customer->id ||
+            $lead->sale_id == $customer->id ||
+            $customer->isSaleAdmin()
+        );
+
+        if (! $canEdit) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'lead_type' => 'required|in:buy,rent',
+            'categories' => 'nullable|array',
+            'categories.*' => 'integer',
+            'wards' => 'nullable|array',
+            'wards.*' => 'string',
+            'purposes' => 'nullable|array',
+            'purposes.*' => 'string|max:100',
+            'price_min' => 'nullable|numeric|min:0',
+            'price_max' => 'nullable|numeric|min:0',
+            'budget_label' => 'nullable|string|max:255',
+            'expected_deposit_date' => 'nullable|date',
+        ]);
+
+        $lead->lead_type = $validated['lead_type'];
+        $lead->categories = $validated['categories'] ?? [];
+        $lead->wards = $validated['wards'] ?? [];
+        $lead->purpose = $validated['purposes'] ?? [];
+        $lead->demand_rate_min = $validated['price_min'] ?? 0;
+        $lead->demand_rate_max = $validated['price_max'] ?? 0;
+        $lead->budget_label = $validated['budget_label'] ?? '';
+        $lead->expected_deposit_date = $validated['expected_deposit_date'] ?? null;
+        $lead->save();
+
+        CrmLeadActivity::create([
+            'lead_id' => $lead->id,
+            'actor_id' => $customer->id,
+            'type' => 'note',
+            'content' => 'Cập nhật nhu cầu khách (xác nhận chăm sóc)',
+        ]);
+
+        // Resolve tên hiển thị để client refresh card mà không cần load lại
+        $categoryMap = Category::whereIn('id', $lead->categories ?: [0])->pluck('category', 'id');
+        $districtCode = config('location.district_code');
+        $wardMap = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
+
+        $categoryNames = collect($lead->categories ?? [])
+            ->map(fn ($cid) => $categoryMap[$cid] ?? null)->filter()->values()->all();
+        $wardNames = collect($lead->wards ?? [])
+            ->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->all();
+
+        $budgetMin = (float) $lead->demand_rate_min;
+        $budgetMax = (float) $lead->demand_rate_max;
+        $budget = $lead->budget_label;
+        if (! $budget && ($budgetMin > 0 || $budgetMax > 0)) {
+            $budget = ($budgetMin > 0 ? format_vnd($budgetMin) : '?')
+                    .' – '.($budgetMax > 0 ? format_vnd($budgetMax) : '?');
+        }
+
+        return response()->json([
+            'success' => true,
+            'lead' => [
+                'id' => $lead->id,
+                'lead_type' => $lead->getRawOriginal('lead_type'),
+                'categories' => $categoryNames,
+                'wards' => $wardNames,
+                'purpose' => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
+                'budget' => $budget,
+                'budget_label' => $lead->budget_label,
+                'budget_min_raw' => $budgetMin,
+                'budget_max_raw' => $budgetMax,
+                'expected_deposit_date' => optional($lead->expected_deposit_date)->format('Y-m-d'),
+            ],
+        ]);
     }
 
     public function assignSale(Request $request, $id)
@@ -202,7 +295,7 @@ class CrmLeadController extends Controller
         $customer = Auth::guard('webapp')->user();
         $lead = $this->leadService->getLead($id);
 
-        if (!$lead || (!$customer->isSaleAdmin() && !$customer->hasRole('bds_admin'))) {
+        if (! $lead || (! $customer->isSaleAdmin() && ! $customer->hasRole('bds_admin'))) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -211,19 +304,19 @@ class CrmLeadController extends Controller
             ->where('id', $saleId)
             ->where(fn ($q) => $q->where('role', 'sale')->orWhere('role', 'sale_admin'))
             ->first();
-        if (!$sale) {
+        if (! $sale) {
             return response()->json(['success' => false, 'message' => 'Sale không hợp lệ'], 422);
         }
 
-        $lead->sale_id     = $sale->id;
+        $lead->sale_id = $sale->id;
         $lead->assigned_at = Carbon::now();
         $lead->save();
 
         CrmLeadActivity::create([
-            'lead_id'  => $lead->id,
+            'lead_id' => $lead->id,
             'actor_id' => $customer->id,
-            'type'     => 'assignment',
-            'content'  => "Phân công cho: {$sale->name}",
+            'type' => 'assignment',
+            'content' => "Phân công cho: {$sale->name}",
         ]);
 
         // Notify assigned sale via Telegram (requires bot started + notification settings)
@@ -237,15 +330,15 @@ class CrmLeadController extends Controller
         $lead->load('customer');
         $this->inAppNotifService->notify($sale, 'lead_assigned', 'lead', 'assigned', [
             'title' => 'Lead mới được assign cho bạn',
-            'body'  => ($lead->customer->full_name ?? 'N/A') . ' — ' . ($lead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
+            'body' => ($lead->customer->full_name ?? 'N/A').' — '.($lead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
             'notifiable_type' => CrmLead::class,
-            'notifiable_id'   => $lead->id,
-            'actor_id'        => $customer->id,
-            'data'  => [
-                'lead_id'       => $lead->id,
+            'notifiable_id' => $lead->id,
+            'actor_id' => $customer->id,
+            'data' => [
+                'lead_id' => $lead->id,
                 'customer_name' => $lead->customer->full_name ?? '',
                 'customer_phone' => $lead->customer->contact ?? '',
-                'lead_type'     => $lead->lead_type,
+                'lead_type' => $lead->lead_type,
             ],
         ]);
 
@@ -261,15 +354,15 @@ class CrmLeadController extends Controller
 
                 $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
                     'title' => 'Lead của bạn đã được tiếp nhận',
-                    'body'  => ($lead->customer->full_name ?? 'N/A') . ' — ' . ($lead->lead_type === 'buy' ? 'Mua' : 'Thuê') . ' — Sale: ' . $sale->name,
+                    'body' => ($lead->customer->full_name ?? 'N/A').' — '.($lead->lead_type === 'buy' ? 'Mua' : 'Thuê').' — Sale: '.$sale->name,
                     'notifiable_type' => CrmLead::class,
-                    'notifiable_id'   => $lead->id,
-                    'actor_id'        => $customer->id,
-                    'data'  => [
-                        'lead_id'       => $lead->id,
+                    'notifiable_id' => $lead->id,
+                    'actor_id' => $customer->id,
+                    'data' => [
+                        'lead_id' => $lead->id,
                         'customer_name' => $lead->customer->full_name ?? '',
-                        'sale_name'     => $sale->name,
-                        'lead_type'     => $lead->lead_type,
+                        'sale_name' => $sale->name,
+                        'lead_type' => $lead->lead_type,
                     ],
                 ]);
             }
@@ -281,14 +374,14 @@ class CrmLeadController extends Controller
     public function bulkAssign(Request $request)
     {
         $customer = Auth::guard('webapp')->user();
-        if (!$customer || (!$customer->isSaleAdmin() && !$customer->hasRole('bds_admin'))) {
+        if (! $customer || (! $customer->isSaleAdmin() && ! $customer->hasRole('bds_admin'))) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
         $leadIds = $request->input('lead_ids');
-        $saleId  = (int) $request->input('sale_id');
+        $saleId = (int) $request->input('sale_id');
 
-        if (!is_array($leadIds) || count($leadIds) === 0) {
+        if (! is_array($leadIds) || count($leadIds) === 0) {
             return response()->json(['success' => false, 'message' => 'Không có lead nào được chọn'], 422);
         }
         if (count($leadIds) > 50) {
@@ -300,31 +393,32 @@ class CrmLeadController extends Controller
             ->where(fn ($q) => $q->where('role', 'sale')->orWhere('role', 'sale_admin'))
             ->first();
 
-        if (!$sale) {
+        if (! $sale) {
             return response()->json(['success' => false, 'message' => 'Sale không hợp lệ'], 422);
         }
 
-        $now      = Carbon::now();
+        $now = Carbon::now();
         $assigned = [];
-        $skipped  = [];
+        $skipped = [];
 
         DB::transaction(function () use ($leadIds, $sale, $customer, $now, &$assigned, &$skipped) {
             foreach ($leadIds as $leadId) {
                 $lead = CrmLead::find((int) $leadId);
-                if (!$lead || $lead->sale_id) {
+                if (! $lead || $lead->sale_id) {
                     $skipped[] = (int) $leadId;
+
                     continue;
                 }
 
-                $lead->sale_id     = $sale->id;
+                $lead->sale_id = $sale->id;
                 $lead->assigned_at = $now;
                 $lead->save();
 
                 CrmLeadActivity::create([
-                    'lead_id'  => $lead->id,
+                    'lead_id' => $lead->id,
                     'actor_id' => $customer->id,
-                    'type'     => 'assignment',
-                    'content'  => "Phân công cho: {$sale->name}",
+                    'type' => 'assignment',
+                    'content' => "Phân công cho: {$sale->name}",
                 ]);
 
                 $assigned[] = $lead->id;
@@ -340,7 +434,7 @@ class CrmLeadController extends Controller
                     $tpl = TelegramMessageTemplates::leadAssigned($firstLead);
                     $this->notificationService->sendWithInlineKeyboard($sale->telegram_id, $tpl['text'], $tpl['keyboard']);
                 } else {
-                    $this->notificationService->sendToCustomer($sale, 'Bạn được phân công ' . count($assigned) . ' lead mới. Vui lòng kiểm tra danh sách lead.');
+                    $this->notificationService->sendToCustomer($sale, 'Bạn được phân công '.count($assigned).' lead mới. Vui lòng kiểm tra danh sách lead.');
                 }
             }
         }
@@ -352,19 +446,19 @@ class CrmLeadController extends Controller
                 if ($firstLead) {
                     $this->inAppNotifService->notify($sale, 'lead_assigned', 'lead', 'assigned', [
                         'title' => 'Lead mới được assign cho bạn',
-                        'body'  => ($firstLead->customer->full_name ?? 'N/A') . ' — ' . ($firstLead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
+                        'body' => ($firstLead->customer->full_name ?? 'N/A').' — '.($firstLead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
                         'notifiable_type' => CrmLead::class,
-                        'notifiable_id'   => $firstLead->id,
-                        'actor_id'        => $customer->id,
-                        'data'  => ['lead_id' => $firstLead->id, 'customer_name' => $firstLead->customer->full_name ?? ''],
+                        'notifiable_id' => $firstLead->id,
+                        'actor_id' => $customer->id,
+                        'data' => ['lead_id' => $firstLead->id, 'customer_name' => $firstLead->customer->full_name ?? ''],
                     ]);
                 }
             } else {
                 $this->inAppNotifService->notify($sale, 'lead_assigned', 'lead', 'assigned', [
-                    'title' => 'Bạn được phân công ' . count($assigned) . ' lead mới',
-                    'body'  => 'Vui lòng kiểm tra danh sách lead để xử lý.',
+                    'title' => 'Bạn được phân công '.count($assigned).' lead mới',
+                    'body' => 'Vui lòng kiểm tra danh sách lead để xử lý.',
                     'actor_id' => $customer->id,
-                    'data'  => ['lead_ids' => $assigned, 'count' => count($assigned)],
+                    'data' => ['lead_ids' => $assigned, 'count' => count($assigned)],
                 ]);
             }
         }
@@ -375,9 +469,13 @@ class CrmLeadController extends Controller
             $leadsByBroker = $assignedLeads->groupBy('user_id');
 
             foreach ($leadsByBroker as $brokerId => $brokerLeads) {
-                if (!$brokerId) continue;
+                if (! $brokerId) {
+                    continue;
+                }
                 $broker = Customer::find($brokerId);
-                if (!$broker || $broker->id === $sale->id) continue;
+                if (! $broker || $broker->id === $sale->id) {
+                    continue;
+                }
 
                 $count = $brokerLeads->count();
                 if ($count === 1) {
@@ -389,11 +487,11 @@ class CrmLeadController extends Controller
                     }
                     $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
                         'title' => 'Lead của bạn đã được tiếp nhận',
-                        'body'  => ($singleLead->customer->full_name ?? 'N/A') . ' — Sale: ' . $sale->name,
+                        'body' => ($singleLead->customer->full_name ?? 'N/A').' — Sale: '.$sale->name,
                         'notifiable_type' => CrmLead::class,
-                        'notifiable_id'   => $singleLead->id,
-                        'actor_id'        => $customer->id,
-                        'data'  => ['lead_id' => $singleLead->id, 'sale_name' => $sale->name],
+                        'notifiable_id' => $singleLead->id,
+                        'actor_id' => $customer->id,
+                        'data' => ['lead_id' => $singleLead->id, 'sale_name' => $sale->name],
                     ]);
                 } else {
                     if ($broker->telegram_id) {
@@ -401,20 +499,20 @@ class CrmLeadController extends Controller
                     }
                     $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
                         'title' => "{$count} lead của bạn đã được tiếp nhận",
-                        'body'  => "Sale phụ trách: {$sale->name}",
+                        'body' => "Sale phụ trách: {$sale->name}",
                         'actor_id' => $customer->id,
-                        'data'  => ['lead_ids' => $brokerLeads->pluck('id')->toArray(), 'sale_name' => $sale->name, 'count' => $count],
+                        'data' => ['lead_ids' => $brokerLeads->pluck('id')->toArray(), 'sale_name' => $sale->name, 'count' => $count],
                     ]);
                 }
             }
         }
 
         return response()->json([
-            'success'        => true,
+            'success' => true,
             'assigned_count' => count($assigned),
-            'assigned_ids'   => $assigned,
-            'skipped_ids'    => $skipped,
-            'sale_name'      => $sale->name,
+            'assigned_ids' => $assigned,
+            'skipped_ids' => $skipped,
+            'sale_name' => $sale->name,
         ]);
     }
 
@@ -428,7 +526,7 @@ class CrmLeadController extends Controller
             $customer->isSaleAdmin()
         );
 
-        if (!$canCreate) {
+        if (! $canCreate) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -437,20 +535,20 @@ class CrmLeadController extends Controller
         }
 
         $deal = CrmDeal::create([
-            'lead_id'     => $lead->id,
+            'lead_id' => $lead->id,
             'customer_id' => $lead->customer_id,
-            'status'      => 'open',
-            'amount'      => 0,
+            'status' => 'open',
+            'amount' => 0,
         ]);
 
         $lead->status = 'converted';
         $lead->save();
 
         CrmLeadActivity::create([
-            'lead_id'  => $lead->id,
+            'lead_id' => $lead->id,
             'actor_id' => $customer->id,
-            'type'     => 'status_change',
-            'content'  => 'Tạo Deal từ Lead, trạng thái chuyển sang Chuyển đổi',
+            'type' => 'status_change',
+            'content' => 'Tạo Deal từ Lead, trạng thái chuyển sang Chuyển đổi',
         ]);
 
         return response()->json(['success' => true, 'deal_id' => $deal->id]);
@@ -461,7 +559,7 @@ class CrmLeadController extends Controller
         $customer = Auth::guard('webapp')->user();
         $lead = $this->leadService->getLead($id);
 
-        if (!$lead || $lead->user_id != $customer->id) {
+        if (! $lead || $lead->user_id != $customer->id) {
             return redirect()->route('webapp.leads')->with('error', 'Lead not found or unauthorized');
         }
 
@@ -471,9 +569,9 @@ class CrmLeadController extends Controller
     public function update(UpdateLeadRequest $request, $id)
     {
         $customer = Auth::guard('webapp')->user();
-        
+
         $lead = $this->leadService->getLead($id);
-        if (!$lead || $lead->user_id != $customer->id) {
+        if (! $lead || $lead->user_id != $customer->id) {
             return back()->with('error', 'Unauthorized');
         }
 
@@ -484,15 +582,15 @@ class CrmLeadController extends Controller
                 'source_note' => $request->note,
                 'demand_rate_min' => $request->price_min,
                 'demand_rate_max' => $request->price_max,
-                'budget_label'    => $request->budget_label ?? '',
+                'budget_label' => $request->budget_label ?? '',
                 'customer' => [
                     'full_name' => $request->name,
                     'contact' => $request->phone,
-                ]
+                ],
             ];
 
             $this->leadService->updateLead($id, $updateData);
-            
+
             return redirect()->route('webapp.leads')->with('success', 'Lead updated successfully');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -503,19 +601,21 @@ class CrmLeadController extends Controller
     {
         $customer = Auth::guard('webapp')->user();
         $lead = $this->leadService->getLead($id);
-        
-        if (!$lead || $lead->user_id != $customer->id) {
-             if (request()->ajax()) {
+
+        if (! $lead || $lead->user_id != $customer->id) {
+            if (request()->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
+
             return back()->with('error', 'Unauthorized');
         }
 
         $this->leadService->deleteLead($id);
-        
+
         if (request()->ajax()) {
             return response()->json(['success' => true, 'message' => 'Lead deleted']);
         }
+
         return redirect()->route('webapp.leads')->with('success', 'Lead deleted');
     }
 
@@ -527,7 +627,7 @@ class CrmLeadController extends Controller
     {
         $lead = CrmLead::with(['customer', 'sale'])->find($id);
 
-        if (!$lead) {
+        if (! $lead) {
             abort(404, 'Lead không tồn tại');
         }
 
@@ -541,11 +641,11 @@ class CrmLeadController extends Controller
             ['id' => $id]
         );
 
-        $districtCode  = config('location.district_code');
-        $categoryMap   = Category::where('status', '1')->pluck('category', 'id');
-        $wardMap       = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
+        $districtCode = config('location.district_code');
+        $categoryMap = Category::where('status', '1')->pluck('category', 'id');
+        $wardMap = LocationsWard::where('district_code', $districtCode)->pluck('full_name', 'code');
         $categoryNames = collect($lead->categories ?? [])->map(fn ($id) => $categoryMap[$id] ?? null)->filter()->values()->all();
-        $wardNames     = collect($lead->wards ?? [])->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->all();
+        $wardNames = collect($lead->wards ?? [])->map(fn ($c) => $wardMap[$c] ?? null)->filter()->values()->all();
 
         return view('frontend_dashboard_assign_lead', compact('lead', 'salesList', 'postUrl', 'categoryNames', 'wardNames'));
     }
@@ -558,16 +658,17 @@ class CrmLeadController extends Controller
     {
         $lead = CrmLead::with(['customer'])->find($id);
 
-        if (!$lead) {
+        if (! $lead) {
             return response()->json(['success' => false, 'message' => 'Lead không tồn tại'], 404);
         }
 
         if ($lead->sale_id) {
             $existingSale = Customer::find($lead->sale_id);
+
             return response()->json([
-                'success'          => false,
+                'success' => false,
                 'already_assigned' => true,
-                'sale_name'        => $existingSale?->name ?? 'N/A',
+                'sale_name' => $existingSale?->name ?? 'N/A',
             ], 409);
         }
 
@@ -577,19 +678,19 @@ class CrmLeadController extends Controller
             ->where(fn ($q) => $q->where('role', 'sale')->orWhere('role', 'sale_admin'))
             ->first();
 
-        if (!$sale) {
+        if (! $sale) {
             return response()->json(['success' => false, 'message' => 'Sale không hợp lệ'], 422);
         }
 
-        $lead->sale_id     = $sale->id;
+        $lead->sale_id = $sale->id;
         $lead->assigned_at = Carbon::now();
         $lead->save();
 
         CrmLeadActivity::create([
-            'lead_id'  => $lead->id,
+            'lead_id' => $lead->id,
             'actor_id' => null,
-            'type'     => 'assignment',
-            'content'  => "Phân công qua WebApp (Telegram) cho: {$sale->name}",
+            'type' => 'assignment',
+            'content' => "Phân công qua WebApp (Telegram) cho: {$sale->name}",
         ]);
 
         if ($sale->telegram_id && $sale->telegram_bot_started && $this->notificationService->shouldNotify($sale, 'lead', 'assigned', 'telegram')) {
@@ -600,14 +701,14 @@ class CrmLeadController extends Controller
         // In-app notification
         $this->inAppNotifService->notify($sale, 'lead_assigned', 'lead', 'assigned', [
             'title' => 'Lead mới được assign cho bạn',
-            'body'  => ($lead->customer->full_name ?? 'N/A') . ' — ' . ($lead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
+            'body' => ($lead->customer->full_name ?? 'N/A').' — '.($lead->lead_type === 'buy' ? 'Mua' : 'Thuê'),
             'notifiable_type' => CrmLead::class,
-            'notifiable_id'   => $lead->id,
-            'data'  => [
-                'lead_id'       => $lead->id,
+            'notifiable_id' => $lead->id,
+            'data' => [
+                'lead_id' => $lead->id,
                 'customer_name' => $lead->customer->full_name ?? '',
                 'customer_phone' => $lead->customer->contact ?? '',
-                'lead_type'     => $lead->lead_type,
+                'lead_type' => $lead->lead_type,
             ],
         ]);
 
@@ -623,15 +724,15 @@ class CrmLeadController extends Controller
 
                 $this->inAppNotifService->notify($broker, 'lead_assigned', 'lead', 'assigned', [
                     'title' => 'Lead của bạn đã được tiếp nhận',
-                    'body'  => ($lead->customer->full_name ?? 'N/A') . ' — ' . ($lead->lead_type === 'buy' ? 'Mua' : 'Thuê') . ' — Sale: ' . $sale->name,
+                    'body' => ($lead->customer->full_name ?? 'N/A').' — '.($lead->lead_type === 'buy' ? 'Mua' : 'Thuê').' — Sale: '.$sale->name,
                     'notifiable_type' => CrmLead::class,
-                    'notifiable_id'   => $lead->id,
-                    'actor_id'        => null,
-                    'data'  => [
-                        'lead_id'       => $lead->id,
+                    'notifiable_id' => $lead->id,
+                    'actor_id' => null,
+                    'data' => [
+                        'lead_id' => $lead->id,
                         'customer_name' => $lead->customer->full_name ?? '',
-                        'sale_name'     => $sale->name,
-                        'lead_type'     => $lead->lead_type,
+                        'sale_name' => $sale->name,
+                        'lead_type' => $lead->lead_type,
                     ],
                 ]);
             }

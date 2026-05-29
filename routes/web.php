@@ -195,6 +195,7 @@ Route::group(['middleware' => 'telegram.webapp'], function () {
         Route::put('/webapp/leads/{id}', [CrmLeadController::class , 'update'])->name('webapp.leads.update');
         Route::delete('/webapp/leads/{id}', [CrmLeadController::class , 'destroy'])->name('webapp.leads.destroy');
         Route::patch('/webapp/leads/{id}/status', [CrmLeadController::class , 'updateStatus'])->name('webapp.leads.update-status');
+        Route::patch('/webapp/leads/{id}/needs', [CrmLeadController::class , 'updateNeeds'])->name('webapp.leads.update-needs');
 
         // Sale routes (sale + sale_admin only)
         Route::middleware(['webapp.role:sale,sale_admin'])->group(function () {
