@@ -47,6 +47,7 @@ class TelegramWebAppController extends Controller
         \Illuminate\Support\Facades\Auth::guard('webapp')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/webapp');
     }
 
@@ -229,11 +230,11 @@ class TelegramWebAppController extends Controller
             $sort = $request->input('sort', 'latest');
 
             // Counts (always from all properties, ignoring current filter)
-            $activeCount  = Property::where('added_by', $customer->id)->where('status', 1)->count();
+            $activeCount = Property::where('added_by', $customer->id)->where('status', 1)->count();
             $pendingCount = Property::where('added_by', $customer->id)->where('status', 0)->count();
-            $hiddenCount  = Property::where('added_by', $customer->id)->where('status', 2)->count();
+            $hiddenCount = Property::where('added_by', $customer->id)->where('status', 2)->count();
             $privateCount = Property::where('added_by', $customer->id)->where('is_private', 1)->count();
-            $totalViews   = Property::where('added_by', $customer->id)->sum('total_click');
+            $totalViews = Property::where('added_by', $customer->id)->sum('total_click');
 
             // Main query
             $query = Property::where('propertys.added_by', $customer->id)
@@ -258,13 +259,17 @@ class TelegramWebAppController extends Controller
             // Advanced Filters
             $type = $request->input('property_type');
             if ($type !== null && $type !== '') {
-                if ($type === 'rent') $query->where('propertys.property_type', 1);
-                elseif ($type === 'sale') $query->where('propertys.property_type', 0);
-                else $query->where('propertys.property_type', (int) $type);
+                if ($type === 'rent') {
+                    $query->where('propertys.property_type', 1);
+                } elseif ($type === 'sale') {
+                    $query->where('propertys.property_type', 0);
+                } else {
+                    $query->where('propertys.property_type', (int) $type);
+                }
             }
 
             $categoryName = $request->input('categoryName');
-            if (!empty($categoryName)) {
+            if (! empty($categoryName)) {
                 $query->whereHas('category', function ($cq) use ($categoryName) {
                     $cq->where('category', $categoryName);
                 });
@@ -272,13 +277,21 @@ class TelegramWebAppController extends Controller
 
             $priceLabel = $request->input('price');
             if ($priceLabel) {
-                if ($priceLabel === 'Dưới 1 tỷ') $query->where('propertys.price', '<', 1000000000);
-                elseif ($priceLabel === '1–2 tỷ') $query->whereBetween('propertys.price', [1000000000, 2000000000]);
-                elseif ($priceLabel === '2–3 tỷ') $query->whereBetween('propertys.price', [2000000000, 3000000000]);
-                elseif ($priceLabel === '3–5 tỷ') $query->whereBetween('propertys.price', [3000000000, 5000000000]);
-                elseif ($priceLabel === '5–7 tỷ') $query->whereBetween('propertys.price', [5000000000, 7000000000]);
-                elseif ($priceLabel === '7–10 tỷ') $query->whereBetween('propertys.price', [7000000000, 10000000000]);
-                elseif ($priceLabel === 'Trên 10 tỷ') $query->where('propertys.price', '>', 10000000000);
+                if ($priceLabel === 'Dưới 1 tỷ') {
+                    $query->where('propertys.price', '<', 1000000000);
+                } elseif ($priceLabel === '1–2 tỷ') {
+                    $query->whereBetween('propertys.price', [1000000000, 2000000000]);
+                } elseif ($priceLabel === '2–3 tỷ') {
+                    $query->whereBetween('propertys.price', [2000000000, 3000000000]);
+                } elseif ($priceLabel === '3–5 tỷ') {
+                    $query->whereBetween('propertys.price', [3000000000, 5000000000]);
+                } elseif ($priceLabel === '5–7 tỷ') {
+                    $query->whereBetween('propertys.price', [5000000000, 7000000000]);
+                } elseif ($priceLabel === '7–10 tỷ') {
+                    $query->whereBetween('propertys.price', [7000000000, 10000000000]);
+                } elseif ($priceLabel === 'Trên 10 tỷ') {
+                    $query->where('propertys.price', '>', 10000000000);
+                }
             }
 
             $areaRange = $request->input('area');
@@ -579,38 +592,37 @@ class TelegramWebAppController extends Controller
 
             $activities = $lead->activities->map(function ($a) {
                 return [
-                    'type'       => $a->type,
+                    'type' => $a->type,
                     'type_label' => $a->getTypeLabel(),
-                    'content'    => $a->content ?? '',
+                    'content' => $a->content ?? '',
                     'created_at' => Carbon::parse($a->getRawOriginal('created_at'))->format('d/m/Y H:i'),
                 ];
             })->values()->toArray();
 
             $rawStatus = $lead->getRawOriginal('status');
-            $rawType   = $lead->getRawOriginal('lead_type');
+            $rawType = $lead->getRawOriginal('lead_type');
 
-            $deal       = $lead->deal;
+            $deal = $lead->deal;
             $dealStatus = $deal ? $deal->getRawOriginal('status') : null;
-            $hasBooking = $deal && $deal->products->contains(fn ($p) =>
-                in_array($p->getRawOriginal('status'), ['booking_created', 'viewed_success', 'viewed_failed'])
+            $hasBooking = $deal && $deal->products->contains(fn ($p) => in_array($p->getRawOriginal('status'), ['booking_created', 'viewed_success', 'viewed_failed'])
             );
 
             $unifiedStatus = match (true) {
                 in_array($rawStatus, ['lost', 'bad-contact']) => 'lost',
-                $dealStatus === 'closed'       => 'closed',
-                $dealStatus === 'negotiating'  => 'negotiating',
-                $hasBooking                    => 'viewing',
-                $deal !== null                 => 'caring',
-                $rawStatus === 'contacted'     => 'caring',
-                default                        => 'new',
+                $dealStatus === 'closed' => 'closed',
+                $dealStatus === 'negotiating' => 'negotiating',
+                $hasBooking => 'viewing',
+                $deal !== null => 'caring',
+                $rawStatus === 'contacted' => 'caring',
+                default => 'new',
             };
 
             $nextAction = match ($unifiedStatus) {
-                'new'         => 'Gọi điện tìm hiểu nhu cầu',
-                'caring'      => 'Gửi BĐS phù hợp cho khách',
-                'viewing'     => 'Xác nhận kết quả xem nhà',
+                'new' => 'Gọi điện tìm hiểu nhu cầu',
+                'caring' => 'Gửi BĐS phù hợp cho khách',
+                'viewing' => 'Xác nhận kết quả xem nhà',
                 'negotiating' => 'Cập nhật kết quả thương lượng',
-                default       => '',
+                default => '',
             };
 
             $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
@@ -618,23 +630,23 @@ class TelegramWebAppController extends Controller
             return response()->json([
                 'success' => true,
                 'lead' => [
-                    'id'              => $lead->id,
-                    'status'          => $rawStatus,
-                    'unified_status'  => $unifiedStatus,
-                    'next_action'     => $nextAction,
-                    'lead_type'       => $rawType,
-                    'customer_name'   => optional($lead->customer)->full_name ?? 'Chưa rõ',
-                    'customer_phone'  => optional($lead->customer)->contact ?? '',
-                    'categories'      => $categoryNames,
-                    'wards'           => $wardNames,
-                    'budget'          => $budget,
-                    'note'            => $lead->note ?? '',
-                    'purpose'         => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
-                    'has_deal'        => $deal !== null,
-                    'deal_status'     => $dealStatus,
-                    'activities'      => $activities,
-                    'created_at'      => $createdAt->format('d/m/Y'),
-                    'created_diff'    => $createdAt->diffForHumans(),
+                    'id' => $lead->id,
+                    'status' => $rawStatus,
+                    'unified_status' => $unifiedStatus,
+                    'next_action' => $nextAction,
+                    'lead_type' => $rawType,
+                    'customer_name' => optional($lead->customer)->full_name ?? 'Chưa rõ',
+                    'customer_phone' => optional($lead->customer)->contact ?? '',
+                    'categories' => $categoryNames,
+                    'wards' => $wardNames,
+                    'budget' => $budget,
+                    'note' => $lead->note ?? '',
+                    'purpose' => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
+                    'has_deal' => $deal !== null,
+                    'deal_status' => $dealStatus,
+                    'activities' => $activities,
+                    'created_at' => $createdAt->format('d/m/Y'),
+                    'created_diff' => $createdAt->diffForHumans(),
                 ],
             ]);
         } catch (\Exception $e) {
@@ -1000,13 +1012,13 @@ class TelegramWebAppController extends Controller
             });
 
             $kpi = [
-                'new'     => (clone $baseQuery)->whereRaw("LOWER(crm_leads.status) = 'new'")->whereDoesntHave('deal')->count(),
-                'caring'  => (clone $baseQuery)->where(function ($q) {
+                'new' => (clone $baseQuery)->whereRaw("LOWER(crm_leads.status) = 'new'")->whereDoesntHave('deal')->count(),
+                'caring' => (clone $baseQuery)->where(function ($q) {
                     $q->whereRaw("LOWER(crm_leads.status) IN ('contacted', 'converted')")
                         ->orWhereHas('deal', fn ($dq) => $dq->whereIn('status', ['open', 'negotiating']));
                 })->count(),
                 'viewing' => (clone $baseQuery)->whereHas('deal.products.bookings')->count(),
-                'closed'  => (clone $baseQuery)->where(function ($q) {
+                'closed' => (clone $baseQuery)->where(function ($q) {
                     $q->whereRaw("LOWER(crm_leads.status) IN ('lost', 'bad-contact')")
                         ->orWhereHas('deal', fn ($dq) => $dq->where('status', 'closed'));
                 })->count(),
@@ -1048,27 +1060,27 @@ class TelegramWebAppController extends Controller
                 ->paginate(15, ['*'], 'page', $page);
 
             $clients = $paginator->getCollection()->map(function ($lead) use ($catMap, $wardMap) {
-                $rawStatus  = $lead->getRawOriginal('status');
-                $rawType    = $lead->getRawOriginal('lead_type');
-                $deal       = $lead->deal;
+                $rawStatus = $lead->getRawOriginal('status');
+                $rawType = $lead->getRawOriginal('lead_type');
+                $deal = $lead->deal;
                 $dealStatus = $deal ? $deal->getRawOriginal('status') : null;
 
                 $hasBooking = $deal && $deal->products->contains(fn ($p) => $p->bookings->isNotEmpty());
 
                 $unifiedStatus = match (true) {
                     in_array($rawStatus, ['lost', 'bad-contact']) => 'closed',
-                    $dealStatus === 'closed'                      => 'closed',
-                    $hasBooking || $dealStatus === 'negotiating'  => 'viewing',
-                    $deal !== null                                => 'caring',
-                    $rawStatus === 'contacted'                    => 'caring',
-                    default                                       => 'new',
+                    $dealStatus === 'closed' => 'closed',
+                    $hasBooking || $dealStatus === 'negotiating' => 'viewing',
+                    $deal !== null => 'caring',
+                    $rawStatus === 'contacted' => 'caring',
+                    default => 'new',
                 };
 
                 $nextAction = match ($unifiedStatus) {
-                    'new'     => 'Gọi điện và liên hệ khách hàng',
-                    'caring'  => 'Gửi BĐS phù hợp cho khách',
+                    'new' => 'Gọi điện và liên hệ khách hàng',
+                    'caring' => 'Gửi BĐS phù hợp cho khách',
                     'viewing' => 'Xác nhận kết quả xem nhà',
-                    default   => '',
+                    default => '',
                 };
 
                 $categoryNames = collect($lead->categories ?? [])
@@ -1091,9 +1103,9 @@ class TelegramWebAppController extends Controller
 
                 $activities = $lead->activities->take(3)->map(function ($a) {
                     return [
-                        'type'       => $a->type,
+                        'type' => $a->type,
                         'type_label' => $a->getTypeLabel(),
-                        'content'    => $a->content ?? '',
+                        'content' => $a->content ?? '',
                         'created_at' => Carbon::parse($a->getRawOriginal('created_at'))->format('d/m'),
                     ];
                 })->values()->toArray();
@@ -1106,37 +1118,37 @@ class TelegramWebAppController extends Controller
                 $createdAt = Carbon::parse($lead->getRawOriginal('created_at'));
 
                 return [
-                    'id'             => $lead->id,
-                    'status'         => $rawStatus,
+                    'id' => $lead->id,
+                    'status' => $rawStatus,
                     'unified_status' => $unifiedStatus,
-                    'next_action'    => $nextAction,
-                    'lead_type'      => $rawType,
-                    'purpose'        => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
-                    'has_deal'       => $deal !== null,
-                    'deal_status'    => $dealStatus,
-                    'customer_name'        => optional($lead->customer)->full_name ?? 'Khách vãng lai',
-                    'customer_phone'       => optional($lead->customer)->contact ?? '',
+                    'next_action' => $nextAction,
+                    'lead_type' => $rawType,
+                    'purpose' => is_array($lead->purpose) ? implode(', ', $lead->purpose) : ($lead->purpose ?? ''),
+                    'has_deal' => $deal !== null,
+                    'deal_status' => $dealStatus,
+                    'customer_name' => optional($lead->customer)->full_name ?? 'Khách vãng lai',
+                    'customer_phone' => optional($lead->customer)->contact ?? '',
                     'customer_telegram_id' => optional($lead->customer)->telegram_id ?? '',
-                    'categories'           => $categoryNames,
-                    'wards'                => $wardNames,
-                    'budget'               => $budget,
-                    'budget_label'         => $budgetLbl,
-                    'budget_min_raw'       => $budgetMin,
-                    'budget_max_raw'       => $budgetMax,
-                    'note'                 => $lead->note ?? '',
-                    'activities'           => $activities,
-                    'no_answer_count'      => $noAnswerCount,
-                    'created_at'           => $createdAt->format('d/m/Y'),
-                    'created_diff'         => $createdAt->diffForHumans(),
+                    'categories' => $categoryNames,
+                    'wards' => $wardNames,
+                    'budget' => $budget,
+                    'budget_label' => $budgetLbl,
+                    'budget_min_raw' => $budgetMin,
+                    'budget_max_raw' => $budgetMax,
+                    'note' => $lead->note ?? '',
+                    'activities' => $activities,
+                    'no_answer_count' => $noAnswerCount,
+                    'created_at' => $createdAt->format('d/m/Y'),
+                    'created_diff' => $createdAt->diffForHumans(),
                 ];
             });
 
             return response()->json([
-                'success'   => true,
-                'kpi'       => $kpi,
-                'clients'   => $clients,
-                'total'     => $paginator->total(),
-                'has_more'  => $paginator->hasMorePages(),
+                'success' => true,
+                'kpi' => $kpi,
+                'clients' => $clients,
+                'total' => $paginator->total(),
+                'has_more' => $paginator->hasMorePages(),
                 'next_page' => $paginator->currentPage() + 1,
             ]);
         } catch (\Exception $e) {
@@ -1154,10 +1166,10 @@ class TelegramWebAppController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            $leadId      = (int) $request->input('lead_id');
+            $leadId = (int) $request->input('lead_id');
             $propertyIds = array_filter(array_map('intval', (array) $request->input('property_ids', [])));
             $contentType = $request->input('content_type', 'full');
-            $note        = trim($request->input('note', ''));
+            $note = trim($request->input('note', ''));
 
             if (empty($propertyIds)) {
                 return response()->json(['success' => false, 'message' => 'Chưa chọn BĐS'], 422);
@@ -1171,10 +1183,10 @@ class TelegramWebAppController extends Controller
                 return response()->json(['success' => false, 'message' => 'Không tìm thấy lead'], 404);
             }
 
-            $crmCustomer    = $lead->customer;
+            $crmCustomer = $lead->customer;
             $customerTeleId = $crmCustomer ? (string) ($crmCustomer->telegram_id ?? '') : '';
-            $customerName   = $crmCustomer ? ($crmCustomer->full_name ?? 'Khách hàng') : 'Khách hàng';
-            $brokerName     = $broker->name ?? 'Broker';
+            $customerName = $crmCustomer ? ($crmCustomer->full_name ?? 'Khách hàng') : 'Khách hàng';
+            $brokerName = $broker->name ?? 'Broker';
 
             $properties = Property::with(['category', 'ward'])->whereIn('id', $propertyIds)->get();
             if ($properties->isEmpty()) {
@@ -1185,52 +1197,52 @@ class TelegramWebAppController extends Controller
             $sentCount = 0;
 
             foreach ($properties as $prop) {
-                $title    = $prop->title ?: $prop->title_by_address;
-                $price    = $prop->formatted_prices ?? '';
-                $area     = $prop->area ? $prop->area . ' m²' : '';
+                $title = $prop->title ?: $prop->title_by_address;
+                $price = $prop->formatted_prices ?? '';
+                $area = $prop->area ? $prop->area.' m²' : '';
                 $location = $prop->address_location ?? '';
-                $shareUrl = url('/') . '/p/' . ($prop->slug ?? $prop->id);
+                $shareUrl = url('/').'/p/'.($prop->slug ?? $prop->id);
 
                 switch ($contentType) {
                     case 'location':
                         if ($prop->latitude && $prop->longitude) {
-                            $mapsUrl = 'https://www.google.com/maps?q=' . $prop->latitude . ',' . $prop->longitude;
+                            $mapsUrl = 'https://www.google.com/maps?q='.$prop->latitude.','.$prop->longitude;
                             $msg = "📍 *VỊ TRÍ BĐS TỪ {$brokerName}*\n\n"
-                                 . "🏠 *{$title}*\n"
-                                 . ($price ? "💰 {$price}\n" : '')
-                                 . "📌 Địa chỉ: {$location}\n\n"
-                                 . "🗺 [Xem trên Google Maps]({$mapsUrl})";
+                                 ."🏠 *{$title}*\n"
+                                 .($price ? "💰 {$price}\n" : '')
+                                 ."📌 Địa chỉ: {$location}\n\n"
+                                 ."🗺 [Xem trên Google Maps]({$mapsUrl})";
                         } else {
                             $msg = "📍 *VỊ TRÍ BĐS TỪ {$brokerName}*\n\n"
-                                 . "🏠 *{$title}*\n"
-                                 . "📌 Địa chỉ: {$location}";
+                                 ."🏠 *{$title}*\n"
+                                 ."📌 Địa chỉ: {$location}";
                         }
                         break;
                     case 'legal':
                         $legal = $prop->legal ?? 'Đang cập nhật';
                         $msg = "📄 *GIẤY TỜ PHÁP LÝ — {$brokerName}*\n\n"
-                             . "🏠 *{$title}*\n"
-                             . "📌 {$location}\n"
-                             . "📋 Pháp lý: {$legal}\n\n"
-                             . "ℹ️ Liên hệ broker để được cung cấp hồ sơ pháp lý đầy đủ.";
+                             ."🏠 *{$title}*\n"
+                             ."📌 {$location}\n"
+                             ."📋 Pháp lý: {$legal}\n\n"
+                             .'ℹ️ Liên hệ broker để được cung cấp hồ sơ pháp lý đầy đủ.';
                         break;
                     case 'gallery':
                         $imgCount = $prop->propery_image()->count();
                         $msg = "🖼 *HÌNH ẢNH BĐS TỪ {$brokerName}*\n\n"
-                             . "🏠 *{$title}*\n"
-                             . ($price ? "💰 {$price}\n" : '')
-                             . ($imgCount ? "📷 {$imgCount} hình thực tế\n\n" : "\n")
-                             . "[Xem thêm]({$shareUrl})";
+                             ."🏠 *{$title}*\n"
+                             .($price ? "💰 {$price}\n" : '')
+                             .($imgCount ? "📷 {$imgCount} hình thực tế\n\n" : "\n")
+                             ."[Xem thêm]({$shareUrl})";
                         break;
                     default: // full
                         $catName = $prop->category?->category ?? '';
                         $msg = "🏠 *BĐS PHÙ HỢP TỪ {$brokerName}*\n\n"
-                             . "*{$title}*\n"
-                             . ($catName ? "🏷 {$catName}\n" : '')
-                             . ($price ? "💰 {$price}\n" : '')
-                             . ($area ? "📐 {$area}\n" : '')
-                             . ($location ? "📌 {$location}\n" : '')
-                             . "\n[Xem chi tiết]({$shareUrl})";
+                             ."*{$title}*\n"
+                             .($catName ? "🏷 {$catName}\n" : '')
+                             .($price ? "💰 {$price}\n" : '')
+                             .($area ? "📐 {$area}\n" : '')
+                             .($location ? "📌 {$location}\n" : '')
+                             ."\n[Xem chi tiết]({$shareUrl})";
                         break;
                 }
 
@@ -1241,16 +1253,18 @@ class TelegramWebAppController extends Controller
 
                 if ($customerTeleId !== '') {
                     $sent = $notifService->sendDirectTo($customerTeleId, $msg);
-                    if ($sent) $sentCount++;
+                    if ($sent) {
+                        $sentCount++;
+                    }
                 }
             }
 
             $sentViaTelegram = $sentCount > 0;
 
             return response()->json([
-                'success'           => true,
+                'success' => true,
                 'sent_via_telegram' => $sentViaTelegram,
-                'count'             => count($propertyIds),
+                'count' => count($propertyIds),
             ]);
         } catch (\Exception $e) {
             Log::error($e);
@@ -1927,8 +1941,8 @@ class TelegramWebAppController extends Controller
                 'status_label' => $lead->status,
                 'categories' => $lead->categories,
                 'wards' => $lead->wards,
-                'budget_min'     => format_vnd($lead->demand_rate_min ?? 0),
-                'budget_max'     => format_vnd($lead->demand_rate_max ?? 0),
+                'budget_min' => format_vnd($lead->demand_rate_min ?? 0),
+                'budget_max' => format_vnd($lead->demand_rate_max ?? 0),
                 'budget_min_raw' => (float) ($lead->demand_rate_min ?? 0),
                 'budget_max_raw' => (float) ($lead->demand_rate_max ?? 0),
                 'note' => $lead->note,
@@ -2123,22 +2137,22 @@ class TelegramWebAppController extends Controller
 
             // Count per tab (before applying tab filter, after applying search)
             $counts = [
-                'all'     => (clone $baseQuery)->count(),
-                'active'  => (clone $baseQuery)->where('propertys.status', 1)->where('propertys.is_private', 0)->count(),
+                'all' => (clone $baseQuery)->count(),
+                'active' => (clone $baseQuery)->where('propertys.status', 1)->where('propertys.is_private', 0)->count(),
                 'pending' => (clone $baseQuery)->where('propertys.status', 0)->count(),
-                'hidden'  => (clone $baseQuery)->where('propertys.status', 2)->count(),
+                'hidden' => (clone $baseQuery)->where('propertys.status', 2)->count(),
                 'private' => (clone $baseQuery)->where('propertys.is_private', 1)->count(),
             ];
 
             $query = $baseQuery->with(['category'])->select('propertys.*');
 
             // Apply tab filter
-            match($activeTab) {
-                'active'  => $query->where('propertys.status', 1)->where('propertys.is_private', 0),
+            match ($activeTab) {
+                'active' => $query->where('propertys.status', 1)->where('propertys.is_private', 0),
                 'pending' => $query->where('propertys.status', 0),
-                'hidden'  => $query->where('propertys.status', 2),
+                'hidden' => $query->where('propertys.status', 2),
                 'private' => $query->where('propertys.is_private', 1),
-                default   => null,
+                default => null,
             };
 
             if (! empty($data['sort'])) {
@@ -2177,6 +2191,7 @@ class TelegramWebAppController extends Controller
 
             if ($request->ajax()) {
                 $html = view('frontends.components.dashboard_listings_items', compact('properties'))->render();
+
                 return response()->json(['html' => $html, 'counts' => $counts, 'activeTab' => $activeTab]);
             }
 
@@ -3648,7 +3663,12 @@ class TelegramWebAppController extends Controller
                 $phone = '84'.substr($phone, 1);
             }
 
-            $crmCustomer = CrmCustomer::firstOrNew(['contact' => $phone]);
+            // Scope theo broker đang đăng nhập để không ghi đè khách của broker khác (cùng SĐT).
+            $crmCustomer = CrmCustomer::firstOrNew([
+                'user_id' => $customer->id,
+                'contact' => $phone,
+            ]);
+            $crmCustomer->user_id = $customer->id;
             $crmCustomer->full_name = $request->input('name');
             $crmCustomer->contact = $phone;
             $crmCustomer->save();
@@ -3662,7 +3682,7 @@ class TelegramWebAppController extends Controller
             $lead->wards = $request->input('wards');
             $lead->demand_rate_min = $request->input('price_min', 0);
             $lead->demand_rate_max = $request->input('price_max', 0);
-            $lead->budget_label    = $request->input('budget_label', '');
+            $lead->budget_label = $request->input('budget_label', '');
             $lead->purpose = $request->input('purposes', []);
             $lead->source_note = 'telegram_webapp';
 
@@ -3710,10 +3730,10 @@ class TelegramWebAppController extends Controller
             $posterPhone = $customer->mobile ?? $customer->phone ?? 'N/A';
             $propertyUrl = route('bds.show', $property->slug);
 
-            $botUsername     = config('services.telegram.bot_username', 'dalatbds_telegram_bot');
+            $botUsername = config('services.telegram.bot_username', 'dalatbds_telegram_bot');
             $webappShortName = config('services.telegram.webapp_short_name', 'dangtin');
-            $webappUrl       = "https://t.me/{$botUsername}/{$webappShortName}?startapp=property_{$property->id}";
-            $keyboard        = [[['text' => '🏠 Xem trong App', 'url' => $webappUrl]]];
+            $webappUrl = "https://t.me/{$botUsername}/{$webappShortName}?startapp=property_{$property->id}";
+            $keyboard = [[['text' => '🏠 Xem trong App', 'url' => $webappUrl]]];
 
             $message = "🏠 *BĐS MỚI TỪ WEBAPP*\n";
             $message .= "----------------\n";
@@ -3724,13 +3744,13 @@ class TelegramWebAppController extends Controller
             $message .= "💰 Giá: {$price} VNĐ\n";
             $message .= '👤 Người đăng: '.$this->escapeTelegramText($posterName)."\n";
             $message .= '📞 Liên hệ: '.$this->escapeTelegramText($posterPhone)."\n";
-            $message .= "📊 Trạng thái: Chờ duyệt";
+            $message .= '📊 Trạng thái: Chờ duyệt';
 
             $publicChatId = config('services.telegram.groups.public_channel');
             $notificationService->sendWithInlineKeyboard((string) $publicChatId, $message, $keyboard);
 
             // Telegram DM to the broker who submitted the listing (transactional — always send)
-            Log::info("notifyNewListingToTelegram: customer_id={$customer->id}, telegram_id=" . ($customer->telegram_id ?? 'NULL'));
+            Log::info("notifyNewListingToTelegram: customer_id={$customer->id}, telegram_id=".($customer->telegram_id ?? 'NULL'));
             if ($customer->telegram_id) {
                 // Plain text — no parse_mode to avoid Markdown errors from property title special chars
                 $brokerMessage = "📬 TIN ĐĂNG ĐÃ GỬI ĐI\n";
@@ -3739,12 +3759,12 @@ class TelegramWebAppController extends Controller
                 $brokerMessage .= "📌 Loại tin: {$type}\n";
                 $brokerMessage .= "💰 Giá: {$price} VNĐ\n";
                 $brokerMessage .= "⏳ Trạng thái: Chờ duyệt\n";
-                $brokerMessage .= "📝 Tin sẽ hiển thị công khai sau khi admin duyệt.";
+                $brokerMessage .= '📝 Tin sẽ hiển thị công khai sau khi admin duyệt.';
 
                 // Inline Keyboard button mở thẳng BĐS trong Web App
-                $botUsername   = config('services.telegram.bot_username');
-                $webappShort   = config('services.telegram.webapp_short_name');
-                $webappUrl     = "https://t.me/{$botUsername}/{$webappShort}?startapp=property_{$property->id}";
+                $botUsername = config('services.telegram.bot_username');
+                $webappShort = config('services.telegram.webapp_short_name');
+                $webappUrl = "https://t.me/{$botUsername}/{$webappShort}?startapp=property_{$property->id}";
                 $brokerKeyboard = [[
                     ['text' => '🔍 Xem BĐS của bạn', 'url' => $webappUrl],
                 ]];
@@ -3807,7 +3827,7 @@ class TelegramWebAppController extends Controller
                 $adminMessage .= "💰 Giá: {$price} VNĐ\n";
                 $adminMessage .= '👤 Người đăng: '.$this->escapeTelegramText($customer->name ?? 'N/A')."\n";
                 $adminMessage .= '📞 Liên hệ: '.$this->escapeTelegramText($customer->mobile ?? $customer->phone ?? 'N/A')."\n";
-                $adminMessage .= "📊 Trạng thái: Chờ duyệt";
+                $adminMessage .= '📊 Trạng thái: Chờ duyệt';
 
                 $adminChatId = config('services.telegram.groups.bds_admin');
                 $notificationService->sendWithInlineKeyboard((string) $adminChatId, $adminMessage, $keyboard);
@@ -3828,8 +3848,8 @@ class TelegramWebAppController extends Controller
             $budgetMax = (float) ($lead->demand_rate_max ?? 0);
             $budgetLabel = $lead->budget_label ?: (
                 $budgetMin > 0 && $budgetMax > 0
-                    ? format_vnd($budgetMin) . ' – ' . format_vnd($budgetMax)
-                    : ($budgetMax > 0 ? 'đến ' . format_vnd($budgetMax) : format_vnd($budgetMin))
+                    ? format_vnd($budgetMin).' – '.format_vnd($budgetMax)
+                    : ($budgetMax > 0 ? 'đến '.format_vnd($budgetMax) : format_vnd($budgetMin))
             );
             $wards = 'Không giới hạn';
             if (is_array($lead->wards) && count($lead->wards) > 0) {
@@ -3889,10 +3909,10 @@ class TelegramWebAppController extends Controller
                 $brokerMsg .= "💰 Ngân sách: {$budgetLabel}\n";
                 $brokerMsg .= '📍 Khu vực: '.$this->escapeTelegramText($wards)."\n";
                 $brokerMsg .= '🏠 Loại BĐS: '.$this->escapeTelegramText($categories)."\n";
-                $botUsername     = config('services.telegram.bot_username');
+                $botUsername = config('services.telegram.bot_username');
                 $webappShortName = config('services.telegram.webapp_short_name');
-                $webAppUrl       = "https://t.me/{$botUsername}/{$webappShortName}?startapp=brokerlead_{$lead->id}";
-                $brokerKeyboard  = [[
+                $webAppUrl = "https://t.me/{$botUsername}/{$webappShortName}?startapp=brokerlead_{$lead->id}";
+                $brokerKeyboard = [[
                     ['text' => '👤 Xem chi tiết khách hàng', 'url' => $webAppUrl],
                 ]];
                 $notificationService->sendWithInlineKeyboard(
@@ -4250,7 +4270,7 @@ class TelegramWebAppController extends Controller
 
     public function adminUsersApi(Request $request)
     {
-        $tab    = $request->input('tab', 'brokers');
+        $tab = $request->input('tab', 'brokers');
         $search = trim($request->input('search', ''));
 
         // Roles cũ dùng trong nhiều nơi — giữ nguyên để không phá backward compat
@@ -4264,25 +4284,25 @@ class TelegramWebAppController extends Controller
             // Gom: customer (Flutter App cũ) + broker (WebApp mới) → cùng nhóm
             // Không hiển thị guest/null (chưa có SĐT)
             $query->whereNotNull('mobile')
-                  ->where(function ($q) {
-                      $q->whereIn('role', ['customer', 'broker'])
+                ->where(function ($q) {
+                    $q->whereIn('role', ['customer', 'broker'])
                         ->orWhere(function ($q2) {
                             // role=NULL nhưng đã có SĐT → cũng xếp vào Brokers
                             $q2->whereNull('role');
                         });
-                  });
+                });
         } elseif ($tab === 'sales') {
             $query->whereIn('role', ['sale', 'sale_admin']);
         } elseif ($tab === 'management') {
             $query->whereIn('role', ['admin', 'bds_admin']);
 
-        // ── 6 TABS CŨ (backward compat) ──────────────────────────────────
+            // ── 6 TABS CŨ (backward compat) ──────────────────────────────────
         } elseif ($tab === 'pending') {
             $query->whereNotNull('mobile')
-                  ->where(function ($q) use ($approvedRoles) {
-                      $q->whereNotIn('role', $approvedRoles)
+                ->where(function ($q) use ($approvedRoles) {
+                    $q->whereNotIn('role', $approvedRoles)
                         ->orWhereNull('role');
-                  });
+                });
         } elseif ($tab === 'broker') {
             $query->where('role', 'broker');
         } elseif ($tab === 'sale') {
@@ -4321,42 +4341,42 @@ class TelegramWebAppController extends Controller
             $propCount = Property::where('added_by', $c->id)->count();
 
             return [
-                'id'               => $c->id,
-                'name'             => $c->name,
-                'mobile'           => $c->mobile ?? '',
-                'email'            => $c->email ?? '',
-                'role'             => $c->role ?? 'customer',
-                'effective_role'   => $c->getEffectiveRole(),
-                'source'           => $c->telegram_id ? 'webapp' : 'flutter',
-                'isActive'         => (int) $c->isActive,
-                'initials'         => $this->adminUserInitials($c->name),
-                'avatar_color'     => $this->adminUserAvatarColor($c->id),
+                'id' => $c->id,
+                'name' => $c->name,
+                'mobile' => $c->mobile ?? '',
+                'email' => $c->email ?? '',
+                'role' => $c->role ?? 'customer',
+                'effective_role' => $c->getEffectiveRole(),
+                'source' => $c->telegram_id ? 'webapp' : 'flutter',
+                'isActive' => (int) $c->isActive,
+                'initials' => $this->adminUserInitials($c->name),
+                'avatar_color' => $this->adminUserAvatarColor($c->id),
                 'created_at_human' => $c->created_at ? $c->created_at->diffForHumans() : '',
-                'property_count'   => $propCount,
-                'profile'          => $c->getRawOriginal('profile') ?? '',
+                'property_count' => $propCount,
+                'profile' => $c->getRawOriginal('profile') ?? '',
             ];
         });
 
         // ── STATS — trả về cả 2 bộ key (3 tabs mới + 6 tabs cũ) ───────────
         $stats = [
             // 3 tabs mới
-            'brokers'    => Customer::whereNotNull('mobile')
+            'brokers' => Customer::whereNotNull('mobile')
                 ->where(function ($q) {
                     $q->whereIn('role', ['customer', 'broker'])->orWhereNull('role');
                 })->count(),
-            'sales'      => Customer::whereIn('role', ['sale', 'sale_admin'])->count(),
+            'sales' => Customer::whereIn('role', ['sale', 'sale_admin'])->count(),
             'management' => Customer::whereIn('role', ['admin', 'bds_admin'])->count(),
 
             // 6 tabs cũ (vẫn trả về để không phá caller cũ nếu có)
-            'pending'    => Customer::whereNotNull('mobile')
+            'pending' => Customer::whereNotNull('mobile')
                 ->where(function ($q) use ($approvedRoles) {
                     $q->whereNotIn('role', $approvedRoles)->orWhereNull('role');
                 })->count(),
-            'broker'     => Customer::where('role', 'broker')->count(),
-            'sale'       => Customer::where('role', 'sale')->count(),
+            'broker' => Customer::where('role', 'broker')->count(),
+            'sale' => Customer::where('role', 'sale')->count(),
             'sale_admin' => Customer::where('role', 'sale_admin')->count(),
-            'bds_admin'  => Customer::where('role', 'bds_admin')->count(),
-            'admin'      => Customer::where('role', 'admin')->count(),
+            'bds_admin' => Customer::where('role', 'bds_admin')->count(),
+            'admin' => Customer::where('role', 'admin')->count(),
         ];
 
         return response()->json(['stats' => $stats, 'users' => $mappedUsers]);
@@ -4375,10 +4395,10 @@ class TelegramWebAppController extends Controller
             $search = $request->input('search', '');
             $sort = $request->input('sort', 'latest');
 
-            $activeCount  = Property::where('added_by', $userId)->where('status', 1)->count();
+            $activeCount = Property::where('added_by', $userId)->where('status', 1)->count();
             $pendingCount = Property::where('added_by', $userId)->where('status', 0)->count();
-            $hiddenCount  = Property::where('added_by', $userId)->where('status', 2)->count();
-            $totalViews   = Property::where('added_by', $userId)->sum('total_click');
+            $hiddenCount = Property::where('added_by', $userId)->where('status', 2)->count();
+            $totalViews = Property::where('added_by', $userId)->sum('total_click');
 
             $query = Property::where('propertys.added_by', $userId)
                 ->with(['category', 'ward', 'street', 'parameters'])
@@ -4414,29 +4434,29 @@ class TelegramWebAppController extends Controller
 
             $properties = $query->get()->map(function ($p) {
                 return [
-                    'id'               => $p->id,
-                    'title'            => $p->title ?: $p->title_by_address,
-                    'price'            => $p->formatted_prices,
-                    'status'           => (int) $p->status,
-                    'category_name'    => $p->category?->category ?? '',
-                    'property_type'    => (int) $p->property_type,
-                    'area'             => $p->area,
+                    'id' => $p->id,
+                    'title' => $p->title ?: $p->title_by_address,
+                    'price' => $p->formatted_prices,
+                    'status' => (int) $p->status,
+                    'category_name' => $p->category?->category ?? '',
+                    'property_type' => (int) $p->property_type,
+                    'area' => $p->area,
                     'address_location' => $p->address_location,
-                    'total_click'      => (int) $p->total_click,
-                    'favourite_count'  => (int) $p->favourite_count,
-                    'created_at'       => $p->created_at ? $p->created_at->format('d/m/Y') : '',
-                    'title_image'      => $p->title_image,
+                    'total_click' => (int) $p->total_click,
+                    'favourite_count' => (int) $p->favourite_count,
+                    'created_at' => $p->created_at ? $p->created_at->format('d/m/Y') : '',
+                    'title_image' => $p->title_image,
                 ];
             });
 
             return response()->json([
-                'success'    => true,
-                'user_name'  => $target->name,
-                'counts'     => [
-                    'all'         => $activeCount + $pendingCount + $hiddenCount,
-                    'active'      => $activeCount,
-                    'pending'     => $pendingCount,
-                    'hidden'      => $hiddenCount,
+                'success' => true,
+                'user_name' => $target->name,
+                'counts' => [
+                    'all' => $activeCount + $pendingCount + $hiddenCount,
+                    'active' => $activeCount,
+                    'pending' => $pendingCount,
+                    'hidden' => $hiddenCount,
                     'total_views' => (int) $totalViews,
                 ],
                 'properties' => $properties,
@@ -4490,7 +4510,7 @@ class TelegramWebAppController extends Controller
             return response()->json(['success' => false, 'message' => 'Role không hợp lệ.'], 422);
         }
 
-        $target  = Customer::findOrFail($id);
+        $target = Customer::findOrFail($id);
         $oldRole = $target->role;
         $target->update(['role' => $role]);
 
@@ -4520,10 +4540,10 @@ class TelegramWebAppController extends Controller
         $validRoles = ['broker', 'sale', 'sale_admin', 'bds_admin', 'admin'];
 
         $validated = $request->validate([
-            'name'   => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'mobile' => 'nullable|string|max:20',
-            'email'  => 'nullable|email|max:255',
-            'role'   => 'nullable|in:' . implode(',', $validRoles),
+            'email' => 'nullable|email|max:255',
+            'role' => 'nullable|in:'.implode(',', $validRoles),
         ]);
 
         $target = Customer::findOrFail($id);
@@ -4532,9 +4552,9 @@ class TelegramWebAppController extends Controller
         $me = Auth::guard('webapp')->user();
         $oldRole = $target->role;
         $updateData = [
-            'name'   => $validated['name'],
+            'name' => $validated['name'],
             'mobile' => $validated['mobile'] ?? $target->mobile,
-            'email'  => $validated['email'] ?? $target->email,
+            'email' => $validated['email'] ?? $target->email,
         ];
         if (isset($validated['role']) && $me->isAdmin()) {
             $updateData['role'] = $validated['role'];
@@ -4549,11 +4569,11 @@ class TelegramWebAppController extends Controller
         return response()->json([
             'success' => true,
             'user' => [
-                'id'     => $target->id,
-                'name'   => $target->name,
+                'id' => $target->id,
+                'name' => $target->name,
                 'mobile' => $target->mobile,
-                'email'  => $target->email,
-                'role'   => $target->role,
+                'email' => $target->email,
+                'role' => $target->role,
             ],
         ]);
     }
@@ -4582,18 +4602,18 @@ class TelegramWebAppController extends Controller
         $tab = $request->input('tab', 'pending');
 
         // Stats (always across all properties)
-        $pendingCount       = Property::where('status', 0)->count();
+        $pendingCount = Property::where('status', 0)->count();
         $approvedTodayCount = Property::where('status', 1)->whereDate('updated_at', today())->count();
-        $totalApproved      = Property::where('status', 1)->count();
-        $rejectedCount      = Property::where('status', 2)->count();
-        $hiddenCount        = Property::where('status', 3)->count();
+        $totalApproved = Property::where('status', 1)->count();
+        $rejectedCount = Property::where('status', 2)->count();
+        $hiddenCount = Property::where('status', 3)->count();
 
         $stats = [
-            'pending'        => $pendingCount,
+            'pending' => $pendingCount,
             'approved_today' => $approvedTodayCount,
             'total_approved' => $totalApproved,
-            'rejected'       => $rejectedCount,
-            'hidden'         => $hiddenCount,
+            'rejected' => $rejectedCount,
+            'hidden' => $hiddenCount,
         ];
 
         // Build query per tab
@@ -4601,11 +4621,11 @@ class TelegramWebAppController extends Controller
 
         $refSlug = $request->input('ref_slug');
 
-        if (!empty($refSlug)) {
+        if (! empty($refSlug)) {
             // Khi có ref_slug, chúng ta sẽ bắt đích danh BĐS đó bất kể tab hiện tại là gì
             $query->where(function ($q) use ($refSlug) {
                 $q->where('slug', $refSlug)
-                  ->orWhere('id', $refSlug);
+                    ->orWhere('id', $refSlug);
             });
         } else {
             if ($tab === 'approved_today') {
@@ -4625,7 +4645,7 @@ class TelegramWebAppController extends Controller
 
         // Lọc theo người đăng (added_by) — dùng khi admin xem BĐS của 1 user cụ thể
         $addedBy = $request->input('added_by');
-        if (!empty($addedBy)) {
+        if (! empty($addedBy)) {
             $query->where('propertys.added_by', (int) $addedBy);
         }
 
@@ -4641,13 +4661,17 @@ class TelegramWebAppController extends Controller
         // Advanced Filters
         $type = $request->input('property_type');
         if ($type !== null && $type !== '') {
-            if ($type === 'rent') $query->where('propertys.property_type', 1);
-            elseif ($type === 'sale') $query->where('propertys.property_type', 0);
-            else $query->where('propertys.property_type', (int) $type);
+            if ($type === 'rent') {
+                $query->where('propertys.property_type', 1);
+            } elseif ($type === 'sale') {
+                $query->where('propertys.property_type', 0);
+            } else {
+                $query->where('propertys.property_type', (int) $type);
+            }
         }
 
         $categoryName = $request->input('categoryName');
-        if (!empty($categoryName)) {
+        if (! empty($categoryName)) {
             $query->whereHas('category', function ($cq) use ($categoryName) {
                 $cq->where('category', $categoryName);
             });
@@ -4655,13 +4679,21 @@ class TelegramWebAppController extends Controller
 
         $priceLabel = $request->input('price');
         if ($priceLabel) {
-            if ($priceLabel === 'Dưới 1 tỷ') $query->where('propertys.price', '<', 1000000000);
-            elseif ($priceLabel === '1–2 tỷ') $query->whereBetween('propertys.price', [1000000000, 2000000000]);
-            elseif ($priceLabel === '2–3 tỷ') $query->whereBetween('propertys.price', [2000000000, 3000000000]);
-            elseif ($priceLabel === '3–5 tỷ') $query->whereBetween('propertys.price', [3000000000, 5000000000]);
-            elseif ($priceLabel === '5–7 tỷ') $query->whereBetween('propertys.price', [5000000000, 7000000000]);
-            elseif ($priceLabel === '7–10 tỷ') $query->whereBetween('propertys.price', [7000000000, 10000000000]);
-            elseif ($priceLabel === 'Trên 10 tỷ') $query->where('propertys.price', '>', 10000000000);
+            if ($priceLabel === 'Dưới 1 tỷ') {
+                $query->where('propertys.price', '<', 1000000000);
+            } elseif ($priceLabel === '1–2 tỷ') {
+                $query->whereBetween('propertys.price', [1000000000, 2000000000]);
+            } elseif ($priceLabel === '2–3 tỷ') {
+                $query->whereBetween('propertys.price', [2000000000, 3000000000]);
+            } elseif ($priceLabel === '3–5 tỷ') {
+                $query->whereBetween('propertys.price', [3000000000, 5000000000]);
+            } elseif ($priceLabel === '5–7 tỷ') {
+                $query->whereBetween('propertys.price', [5000000000, 7000000000]);
+            } elseif ($priceLabel === '7–10 tỷ') {
+                $query->whereBetween('propertys.price', [7000000000, 10000000000]);
+            } elseif ($priceLabel === 'Trên 10 tỷ') {
+                $query->where('propertys.price', '>', 10000000000);
+            }
         }
 
         $areaRange = $request->input('area');
@@ -4738,7 +4770,7 @@ class TelegramWebAppController extends Controller
 
             $brokerAvatar = null;
             if ($broker && $broker->getRawOriginal('profile')) {
-                $brokerAvatar = url('images' . config('global.USER_IMG_PATH') . $broker->getRawOriginal('profile'));
+                $brokerAvatar = url('images'.config('global.USER_IMG_PATH').$broker->getRawOriginal('profile'));
             }
 
             $createdAt = Carbon::parse($p->getRawOriginal('created_at'));
@@ -4768,20 +4800,20 @@ class TelegramWebAppController extends Controller
                 'broker_id' => $broker?->id,
                 'broker_phone' => $broker?->mobile ?? '',
                 'commission_raw' => (float) $p->getRawOriginal('commission'),
-                'host_name'      => $p->host?->name ?? null,
-                'host_contact'   => $p->host?->contact ?? null,
+                'host_name' => $p->host?->name ?? null,
+                'host_contact' => $p->host?->contact ?? null,
                 'checks' => $checks,
                 'all_checks_pass' => ! in_array(false, $checks, true),
-                'rejection_reason'  => $p->rejection_reason,
-                'rejection_note'    => $p->rejection_note,
-                'approved_by_id'    => $p->approved_by,
-                'approved_by_name'  => $p->approvedBy?->name,
+                'rejection_reason' => $p->rejection_reason,
+                'rejection_note' => $p->rejection_note,
+                'approved_by_id' => $p->approved_by,
+                'approved_by_name' => $p->approvedBy?->name,
                 'approved_at_human' => $p->approved_at?->diffForHumans(),
-                'approved_at_full'  => $p->approved_at?->format('d/m/Y H:i'),
-                'rejected_by_id'    => $p->rejected_by,
-                'rejected_by_name'  => $p->rejectedBy?->name,
+                'approved_at_full' => $p->approved_at?->format('d/m/Y H:i'),
+                'rejected_by_id' => $p->rejected_by,
+                'rejected_by_name' => $p->rejectedBy?->name,
                 'rejected_at_human' => $p->rejected_at?->diffForHumans(),
-                'rejected_at_full'  => $p->rejected_at?->format('d/m/Y H:i'),
+                'rejected_at_full' => $p->rejected_at?->format('d/m/Y H:i'),
             ];
         });
 
@@ -4804,10 +4836,10 @@ class TelegramWebAppController extends Controller
             $galleryImages = $p->gallery ?? [];
 
             $checks = [
-                'has_legal_docs'    => count($legalImages) > 0,
+                'has_legal_docs' => count($legalImages) > 0,
                 'has_enough_photos' => count($galleryImages) >= 1,
-                'location_valid'    => ! empty($ward) && ! empty($street),
-                'price_reasonable'  => ! empty($p->price),
+                'location_valid' => ! empty($ward) && ! empty($street),
+                'price_reasonable' => ! empty($p->price),
             ];
 
             $broker = $p->agent;
@@ -4820,40 +4852,40 @@ class TelegramWebAppController extends Controller
 
             $brokerAvatar = null;
             if ($broker && $broker->getRawOriginal('profile')) {
-                $brokerAvatar = url('images' . config('global.USER_IMG_PATH') . $broker->getRawOriginal('profile'));
+                $brokerAvatar = url('images'.config('global.USER_IMG_PATH').$broker->getRawOriginal('profile'));
             }
 
             return response()->json([
                 'success' => true,
                 'property' => [
-                    'id'                => $p->id,
-                    'title'             => $p->title ?? '',
-                    'price'             => $p->price ?? '',
-                    'area'              => $p->area ? $p->area.' m²' : null,
-                    'category_name'     => $p->category?->category ?? 'BĐS',
-                    'property_type'     => $p->property_type,
-                    'ward'              => $ward,
-                    'street'            => $street,
-                    'title_image'       => $p->title_image ?: null,
-                    'created_at_diff'   => Carbon::parse($p->getRawOriginal('created_at'))->diffForHumans(),
-                    'created_at_fmt'    => Carbon::parse($p->getRawOriginal('created_at'))->format('d/m/Y H:i'),
-                    'status'            => (int) $p->status,
-                    'broker_name'       => $brokerName,
-                    'broker_initials'   => $initials ?: 'BK',
-                    'broker_avatar'     => $brokerAvatar,
-                    'broker_id'         => $broker?->id,
-                    'checks'            => $checks,
-                    'all_checks_pass'   => ! in_array(false, $checks, true),
-                    'rejection_reason'  => $p->rejection_reason,
-                    'rejection_note'    => $p->rejection_note,
-                    'approved_by_id'    => $p->approved_by,
-                    'approved_by_name'  => $p->approvedBy?->name,
+                    'id' => $p->id,
+                    'title' => $p->title ?? '',
+                    'price' => $p->price ?? '',
+                    'area' => $p->area ? $p->area.' m²' : null,
+                    'category_name' => $p->category?->category ?? 'BĐS',
+                    'property_type' => $p->property_type,
+                    'ward' => $ward,
+                    'street' => $street,
+                    'title_image' => $p->title_image ?: null,
+                    'created_at_diff' => Carbon::parse($p->getRawOriginal('created_at'))->diffForHumans(),
+                    'created_at_fmt' => Carbon::parse($p->getRawOriginal('created_at'))->format('d/m/Y H:i'),
+                    'status' => (int) $p->status,
+                    'broker_name' => $brokerName,
+                    'broker_initials' => $initials ?: 'BK',
+                    'broker_avatar' => $brokerAvatar,
+                    'broker_id' => $broker?->id,
+                    'checks' => $checks,
+                    'all_checks_pass' => ! in_array(false, $checks, true),
+                    'rejection_reason' => $p->rejection_reason,
+                    'rejection_note' => $p->rejection_note,
+                    'approved_by_id' => $p->approved_by,
+                    'approved_by_name' => $p->approvedBy?->name,
                     'approved_at_human' => $p->approved_at?->diffForHumans(),
-                    'approved_at_full'  => $p->approved_at?->format('d/m/Y H:i'),
-                    'rejected_by_id'    => $p->rejected_by,
-                    'rejected_by_name'  => $p->rejectedBy?->name,
+                    'approved_at_full' => $p->approved_at?->format('d/m/Y H:i'),
+                    'rejected_by_id' => $p->rejected_by,
+                    'rejected_by_name' => $p->rejectedBy?->name,
                     'rejected_at_human' => $p->rejected_at?->diffForHumans(),
-                    'rejected_at_full'  => $p->rejected_at?->format('d/m/Y H:i'),
+                    'rejected_at_full' => $p->rejected_at?->format('d/m/Y H:i'),
                 ],
             ]);
         } catch (\Exception $e) {
@@ -4875,13 +4907,13 @@ class TelegramWebAppController extends Controller
             $approver = Auth::guard('webapp')->user();
 
             $property->update([
-                'status'           => 1,
-                'approved_by'      => $approver->id,
-                'approved_at'      => now(),
-                'rejected_by'      => null,
-                'rejected_at'      => null,
+                'status' => 1,
+                'approved_by' => $approver->id,
+                'approved_at' => now(),
+                'rejected_by' => null,
+                'rejected_at' => null,
                 'rejection_reason' => null,
-                'rejection_note'   => null,
+                'rejection_note' => null,
             ]);
 
             // Mark all property_pending notifications for this listing as handled
@@ -4901,36 +4933,36 @@ class TelegramWebAppController extends Controller
                 $inApp = app(InAppNotificationService::class);
                 $updated = $inApp->updatePropertyNotification($property->id, $broker->id, [
                     'title' => 'Đăng tin thành công — Đã duyệt',
-                    'body'  => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
-                    'type'  => 'property_approved',
-                    'data'  => [
-                        'status'           => 1,
-                        'status_label'     => 'Đã duyệt',
-                        'approved_by_id'   => $approver->id,
+                    'body' => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
+                    'type' => 'property_approved',
+                    'data' => [
+                        'status' => 1,
+                        'status_label' => 'Đã duyệt',
+                        'approved_by_id' => $approver->id,
                         'approved_by_name' => $approver->name,
-                        'approved_at'      => now()->format('d/m/Y H:i'),
-                        'property_url'     => route('bds.show', ['slug' => $property->slug]),
+                        'approved_at' => now()->format('d/m/Y H:i'),
+                        'property_url' => route('bds.show', ['slug' => $property->slug]),
                     ],
                 ]);
 
                 // Fallback: nếu không tìm thấy record cũ, tạo mới
-                if (!$updated) {
+                if (! $updated) {
                     $inApp->notifyDirect($broker, 'property_approved', 'property', [
                         'title' => 'Đăng tin thành công — Đã duyệt',
-                        'body'  => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
+                        'body' => ($property->title ?? 'BĐS').' — đang hiển thị công khai',
                         'notifiable_type' => Property::class,
-                        'notifiable_id'   => $property->id,
-                        'actor_id'        => $approver->id,
+                        'notifiable_id' => $property->id,
+                        'actor_id' => $approver->id,
                         'data' => [
-                            'property_id'      => $property->id,
-                            'title'            => $property->title,
-                            'slug'             => $property->slug,
-                            'status'           => 1,
-                            'status_label'     => 'Đã duyệt',
-                            'approved_by_id'   => $approver->id,
+                            'property_id' => $property->id,
+                            'title' => $property->title,
+                            'slug' => $property->slug,
+                            'status' => 1,
+                            'status_label' => 'Đã duyệt',
+                            'approved_by_id' => $approver->id,
                             'approved_by_name' => $approver->name,
-                            'approved_at'      => now()->format('d/m/Y H:i'),
-                            'property_url'     => route('bds.show', ['slug' => $property->slug]),
+                            'approved_at' => now()->format('d/m/Y H:i'),
+                            'property_url' => route('bds.show', ['slug' => $property->slug]),
                         ],
                     ]);
                 }
@@ -4965,13 +4997,13 @@ class TelegramWebAppController extends Controller
             $rejecter = Auth::guard('webapp')->user();
 
             $property->update([
-                'status'           => 2,
-                'rejected_by'      => $rejecter->id,
-                'rejected_at'      => now(),
+                'status' => 2,
+                'rejected_by' => $rejecter->id,
+                'rejected_at' => now(),
                 'rejection_reason' => $reason,
-                'rejection_note'   => $note ?: null,
-                'approved_by'      => null,
-                'approved_at'      => null,
+                'rejection_note' => $note ?: null,
+                'approved_by' => null,
+                'approved_at' => null,
             ]);
 
             // Mark all property_pending notifications for this listing as handled
@@ -4998,13 +5030,13 @@ class TelegramWebAppController extends Controller
                     'notifiable_id' => $property->id,
                     'actor_id' => $rejecter->id,
                     'data' => [
-                        'property_id'      => $property->id,
-                        'title'            => $property->title,
-                        'reason'           => $reason,
-                        'note'             => $note ?: null,
-                        'rejected_by_id'   => $rejecter->id,
+                        'property_id' => $property->id,
+                        'title' => $property->title,
+                        'reason' => $reason,
+                        'note' => $note ?: null,
+                        'rejected_by_id' => $rejecter->id,
                         'rejected_by_name' => $rejecter->name,
-                        'rejected_at'      => now()->format('d/m/Y H:i'),
+                        'rejected_at' => now()->format('d/m/Y H:i'),
                     ],
                 ]);
             }
@@ -5040,10 +5072,10 @@ class TelegramWebAppController extends Controller
             $property->update(['status' => 3]);
 
             return response()->json([
-                'success'        => true,
-                'message'        => 'BĐS đã được ẩn thành công.',
+                'success' => true,
+                'message' => 'BĐS đã được ẩn thành công.',
                 'total_approved' => Property::where('status', 1)->count(),
-                'total_hidden'   => Property::where('status', 3)->count(),
+                'total_hidden' => Property::where('status', 3)->count(),
             ]);
         } catch (\Exception $e) {
             Log::error('adminHideProperty error: '.$e->getMessage());
@@ -5072,10 +5104,10 @@ class TelegramWebAppController extends Controller
             $property->update(['status' => 1]);
 
             return response()->json([
-                'success'        => true,
-                'message'        => 'BĐS đã được khôi phục thành công.',
+                'success' => true,
+                'message' => 'BĐS đã được khôi phục thành công.',
                 'total_approved' => Property::where('status', 1)->count(),
-                'total_hidden'   => Property::where('status', 3)->count(),
+                'total_hidden' => Property::where('status', 3)->count(),
             ]);
         } catch (\Exception $e) {
             Log::error('adminRestoreProperty error: '.$e->getMessage());
@@ -5618,7 +5650,7 @@ class TelegramWebAppController extends Controller
         if (! $telegramUserData) {
             \Log::warning('WebApp authRedirect: Telegram initData validation failed', [
                 'has_bot_token' => ! empty(config('services.telegram.bot_token')),
-                'initData_len'  => strlen($initData),
+                'initData_len' => strlen($initData),
             ]);
 
             return redirect('/webapp?login_status=error&reason=invalid_initdata');
@@ -5627,19 +5659,19 @@ class TelegramWebAppController extends Controller
         $telegramId = $telegramUserData['id'];
         \Log::info('[authRedirect] lookup', [
             'telegram_id' => $telegramId,
-            'tg_username'  => $telegramUserData['username'] ?? null,
-            'retry'        => $retry,
-            'session_id'   => $request->session()->getId(),
+            'tg_username' => $telegramUserData['username'] ?? null,
+            'retry' => $retry,
+            'session_id' => $request->session()->getId(),
             'session_customer' => $request->session()->get(\Auth::guard('webapp')->getName()),
         ]);
 
         $customer = \App\Models\Customer::where('telegram_id', (string) $telegramId)->orderBy('id', 'desc')->first();
 
         \Log::info('[authRedirect] customer lookup result', [
-            'telegram_id'    => $telegramId,
-            'found'          => $customer ? true : false,
-            'customer_id'    => $customer->id ?? null,
-            'customer_role'  => $customer->role ?? null,
+            'telegram_id' => $telegramId,
+            'found' => $customer ? true : false,
+            'customer_id' => $customer->id ?? null,
+            'customer_role' => $customer->role ?? null,
             'customer_phone' => $customer->mobile ?? null,
         ]);
 
@@ -5662,8 +5694,8 @@ class TelegramWebAppController extends Controller
                     ]);
                 } else {
                     \Log::warning('[authRedirect] refused to link telegram_id: already linked to another customer', [
-                        'telegram_id'       => $telegramId,
-                        'session_customer'  => $sessionCustomer->id,
+                        'telegram_id' => $telegramId,
+                        'session_customer' => $sessionCustomer->id,
                     ]);
                 }
             }
@@ -5701,7 +5733,7 @@ class TelegramWebAppController extends Controller
             \Log::info('[authRedirect] session set, rendering index', [
                 'customer_id' => $customer->id,
                 'session_key' => \Auth::guard('webapp')->getName(),
-                'session_id'  => $request->session()->getId(),
+                'session_id' => $request->session()->getId(),
             ]);
             try {
                 return $this->index($request);
@@ -5723,21 +5755,21 @@ class TelegramWebAppController extends Controller
         // mobile dùng placeholder "tg_{id}" — bot webhook sẽ cập nhật số thật khi đến sau.
         if ($retry >= 3 && $telegramId) {
             $firstName = $telegramUserData['first_name'] ?? '';
-            $lastName  = $telegramUserData['last_name'] ?? '';
-            $fullName  = trim($firstName . ' ' . $lastName) ?: 'Thành viên mới';
+            $lastName = $telegramUserData['last_name'] ?? '';
+            $fullName = trim($firstName.' '.$lastName) ?: 'Thành viên mới';
             try {
                 $customer = \App\Models\Customer::create([
-                    'name'                 => $fullName,
-                    'mobile'               => 'tg_' . $telegramId,
-                    'telegram_id'          => (string) $telegramId,
+                    'name' => $fullName,
+                    'mobile' => 'tg_'.$telegramId,
+                    'telegram_id' => (string) $telegramId,
                     'telegram_bot_started' => false,
-                    'role'                 => 'broker',
-                    'isActive'             => 1,
+                    'role' => 'broker',
+                    'isActive' => 1,
                 ]);
                 \Log::info('[authRedirect] fallback: created customer from initData (bot webhook missed)', [
                     'customer_id' => $customer->id,
                     'telegram_id' => $telegramId,
-                    'name'        => $fullName,
+                    'name' => $fullName,
                 ]);
             } catch (\Throwable $e) {
                 // Có thể bị duplicate nếu có race condition — tìm lại lần cuối
@@ -5745,10 +5777,10 @@ class TelegramWebAppController extends Controller
                 if ($customer) {
                     \Log::info('[authRedirect] fallback: found customer after create error (race condition)', [
                         'customer_id' => $customer->id,
-                        'error'       => $e->getMessage(),
+                        'error' => $e->getMessage(),
                     ]);
                 } else {
-                    \Log::error('[authRedirect] fallback create failed: ' . $e->getMessage(), [
+                    \Log::error('[authRedirect] fallback create failed: '.$e->getMessage(), [
                         'telegram_id' => $telegramId,
                     ]);
                 }
@@ -5761,20 +5793,21 @@ class TelegramWebAppController extends Controller
             $request->session()->save();
             \Log::info('[authRedirect] fallback session set, rendering index', [
                 'customer_id' => $customer->id,
-                'session_id'  => $request->session()->getId(),
+                'session_id' => $request->session()->getId(),
             ]);
             try {
                 return $this->index($request);
             } catch (\Throwable $e) {
-                \Log::error('WebApp authRedirect fallback: index() threw: ' . $e->getMessage());
+                \Log::error('WebApp authRedirect fallback: index() threw: '.$e->getMessage());
+
                 return redirect('/webapp?login_status=ok');
             }
         }
 
         \Log::warning('[authRedirect] no customer found, returning guest', [
-            'telegram_id'      => $telegramId,
+            'telegram_id' => $telegramId,
             'telegram_id_type' => gettype($telegramId),
-            'retry'            => $retry,
+            'retry' => $retry,
             'total_with_tg_id' => \App\Models\Customer::whereNotNull('telegram_id')->count(),
         ]);
 
@@ -5950,10 +5983,10 @@ class TelegramWebAppController extends Controller
 
         // In-app notification (dùng notifyDirect để bỏ qua preference check — đây là thông báo hệ thống)
         app(InAppNotificationService::class)->notifyDirect($target, 'role_changed', 'system', [
-            'title'    => 'Vai trò của bạn đã được cập nhật',
-            'body'     => "{$oldRoleLabel} → {$newRoleLabel}",
+            'title' => 'Vai trò của bạn đã được cập nhật',
+            'body' => "{$oldRoleLabel} → {$newRoleLabel}",
             'actor_id' => $actor->id,
-            'data'     => [
+            'data' => [
                 'old_role' => $oldRole,
                 'new_role' => $newRole,
             ],

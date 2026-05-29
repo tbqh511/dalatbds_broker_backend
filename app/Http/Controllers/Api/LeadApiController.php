@@ -8,10 +8,10 @@ use App\Models\CrmLead;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
 
 class LeadApiController extends Controller
 {
@@ -41,23 +41,17 @@ class LeadApiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         DB::beginTransaction();
         try {
-            // 1. Create or Find Customer
-            $customer = CrmCustomer::firstOrCreate(
-            ['contact' => $request->phone],
-            ['full_name' => $request->name]
-            );
-
-            // 2. Create Lead
-            // If user_id is not provided, we might need a fallback. 
+            // 1. Resolve Broker (user_id)
+            // If user_id is not provided, we might need a fallback.
             // For now, if no user_id is provided, we might need to define a "System" customer or similar.
-            // However, based on schema, user_id is required. 
-            // I'll assume for now that if it's a manual lead from operator, we might assign it to a specific system user/customer account 
+            // However, based on schema, user_id is required.
+            // I'll assume for now that if it's a manual lead from operator, we might assign it to a specific system user/customer account
             // OR the request MUST provide a user_id (Broker).
             // Let's assume for now we need a user_id. If null, we'll try to find a default one or fail.
             // But wait, if this is an API called by an app, maybe the caller is authenticated?
@@ -66,17 +60,23 @@ class LeadApiController extends Controller
             // Let's require it for now, or check if the migration allows null (it doesn't).
 
             $brokerId = $request->user_id;
-            if (!$brokerId) {
+            if (! $brokerId) {
                 // Temporary fallback: try to find a "System" customer or just the first one
                 // Ideally this should be configured.
                 $systemBroker = CrmCustomer::first();
                 if ($systemBroker) {
                     $brokerId = $systemBroker->id;
-                }
-                else {
+                } else {
                     throw new \Exception('No Broker (user_id) available to assign as creator.');
                 }
             }
+
+            // 2. Create or Find Customer — scoped per broker (user_id) để không
+            // ghi đè / dùng chung khách của broker khác (cùng SĐT).
+            $customer = CrmCustomer::firstOrCreate(
+                ['user_id' => $brokerId, 'contact' => $request->phone],
+                ['user_id' => $brokerId, 'full_name' => $request->name]
+            );
 
             $lead = CrmLead::create([
                 'user_id' => $brokerId,
@@ -94,15 +94,15 @@ class LeadApiController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Lead created successfully',
-                'data' => $lead
+                'data' => $lead,
             ], 201);
 
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating lead: ' . $e->getMessage()
+                'message' => 'Error creating lead: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -121,7 +121,7 @@ class LeadApiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -138,15 +138,14 @@ class LeadApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Lead assigned successfully to ' . $sale->name,
-                'data' => $lead
+                'message' => 'Lead assigned successfully to '.$sale->name,
+                'data' => $lead,
             ]);
 
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error assigning lead: ' . $e->getMessage()
+                'message' => 'Error assigning lead: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -174,7 +173,7 @@ class LeadApiController extends Controller
 
         $saleId = $request->user()->id ?? $request->sale_id;
 
-        if (!$saleId) {
+        if (! $saleId) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
@@ -185,7 +184,7 @@ class LeadApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $leads
+            'data' => $leads,
         ]);
     }
 
@@ -217,7 +216,7 @@ class LeadApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Status updated',
-            'data' => $lead
+            'data' => $lead,
         ]);
     }
 }

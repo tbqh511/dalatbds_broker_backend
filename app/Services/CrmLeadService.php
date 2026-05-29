@@ -2,25 +2,25 @@
 
 namespace App\Services;
 
-use App\Repositories\CrmLeadRepositoryInterface;
 use App\Models\CrmCustomer;
-use App\Services\NotificationService;
+use App\Repositories\CrmLeadRepositoryInterface;
 use App\Services\Telegram\TelegramMessageTemplates;
+use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
-use Exception;
 
 class CrmLeadService
 {
     protected $leadRepository;
+
     protected NotificationService $notificationService;
 
     public function __construct(
         CrmLeadRepositoryInterface $leadRepository,
         NotificationService $notificationService
     ) {
-        $this->leadRepository      = $leadRepository;
+        $this->leadRepository = $leadRepository;
         $this->notificationService = $notificationService;
     }
 
@@ -36,14 +36,16 @@ class CrmLeadService
             // Check if customer exists or create new one
             // Assuming data contains customer info: name, phone
             $customerData = [
+                'user_id' => $userId,
                 'full_name' => $data['name'] ?? 'Unknown',
                 'contact' => $data['phone'],
                 // Add other customer fields if available
             ];
-            
-            // Simple logic to find or create customer by phone
+
+            // Find or create customer by phone, scoped per broker (user_id)
+            // để không ghi đè / dùng chung khách của broker khác.
             $customer = CrmCustomer::firstOrCreate(
-                ['contact' => $data['phone']],
+                ['user_id' => $userId, 'contact' => $data['phone']],
                 $customerData
             );
 
@@ -55,7 +57,7 @@ class CrmLeadService
                 'source_note' => $data['note'] ?? '',
                 'demand_rate_min' => $data['price_min'] ?? 0,
                 'demand_rate_max' => $data['price_max'] ?? 0,
-                'budget_label'    => $data['budget_label'] ?? '',
+                'budget_label' => $data['budget_label'] ?? '',
                 // Add other fields
             ];
 
@@ -78,7 +80,9 @@ class CrmLeadService
         DB::beginTransaction();
         try {
             $lead = $this->leadRepository->find($id);
-            if (!$lead) return null;
+            if (! $lead) {
+                return null;
+            }
 
             // Update Customer if data provided
             if (isset($data['customer'])) {
@@ -90,8 +94,9 @@ class CrmLeadService
 
             // Update Lead
             $updatedLead = $this->leadRepository->update($id, $data);
-            
+
             DB::commit();
+
             return $updatedLead;
         } catch (Exception $e) {
             DB::rollBack();
@@ -103,7 +108,7 @@ class CrmLeadService
     {
         return $this->leadRepository->delete($id);
     }
-    
+
     public function getLead($id)
     {
         return $this->leadRepository->find($id);
@@ -115,7 +120,9 @@ class CrmLeadService
     protected function notifyGroupForAssignment(\App\Models\CrmLead $lead): void
     {
         $groupChatId = config('services.telegram.groups.sale_admin');
-        if (!$groupChatId) return;
+        if (! $groupChatId) {
+            return;
+        }
 
         $assignUrl = URL::temporarySignedRoute(
             'webapp.leads.assign-page',

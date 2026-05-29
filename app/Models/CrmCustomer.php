@@ -12,6 +12,7 @@ class CrmCustomer extends Model
     protected $table = 'crm_customers';
 
     protected $fillable = [
+        'user_id',
         'full_name',
         'gender',
         'age',
@@ -32,12 +33,16 @@ class CrmCustomer extends Model
         return $value ? "$value" : 'N/A';
     }
 
+    // Quan hệ: Khách hàng thuộc về một broker (Customer) sở hữu
+    public function broker()
+    {
+        return $this->belongsTo(Customer::class, 'user_id', 'id');
+    }
 
     public function leads()
     {
         return $this->hasMany(CrmLead::class, 'customer_id', 'id');
     }
-
 
     public function deals()
     {
