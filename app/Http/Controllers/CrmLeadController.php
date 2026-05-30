@@ -537,7 +537,7 @@ class CrmLeadController extends Controller
         $deal = CrmDeal::create([
             'lead_id' => $lead->id,
             'customer_id' => $lead->customer_id,
-            'status' => 'open',
+            'status' => 'new',
             'amount' => 0,
         ]);
 

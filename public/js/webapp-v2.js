@@ -7778,11 +7778,7 @@ window.sendPropToClient = function() {
       if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.style.opacity = ''; }
       closeSendPropSheet();
       if (data.success) {
-        if (data.sent_via_telegram) {
-          showToast('Đã gửi ' + (data.count || 1) + ' BĐS qua Telegram ✓');
-        } else {
-          showToast('Đã lưu — khách chưa dùng Telegram, gửi thủ công qua SĐT');
-        }
+        showZaloResult(data);
       } else {
         showToast(data.message || 'Lỗi gửi, thử lại sau');
       }
@@ -7793,14 +7789,124 @@ window.sendPropToClient = function() {
     });
 };
 
+// ── Màn kết quả "Gửi qua Zalo" ────────────────────────────────────────────
+window.showZaloResult = function(data) {
+  var overlay = document.getElementById('zaloResultOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'zaloResultOverlay';
+    overlay.className = 'cd-send-overlay';
+    overlay.onclick = function(e){ if (e.target === overlay) closeZaloResult(); };
+    document.body.appendChild(overlay);
+  }
+
+  var images = data.images || [];
+  var zaloText = data.zalo_text || '';
+  var shareUrl = data.share_url || '';
+  var dealId = data.deal_id || '';
+  var count = data.count || images.length || 1;
+
+  var imgGrid = images.length
+    ? '<div class="zr-img-grid">' + images.map(function(u){
+        return '<a class="zr-img" href="' + escAttr(u) + '" target="_blank" rel="noopener" download>'
+             + '<img src="' + escAttr(u) + '" loading="lazy" alt="">'
+             + '<span class="zr-img-dl">⤓</span></a>';
+      }).join('') + '</div>'
+    : '<div class="zr-empty">Không có ảnh đính kèm</div>';
+
+  overlay.innerHTML =
+    '<div class="cd-send-sheet" onclick="event.stopPropagation()" style="max-height:90vh;">'
+    + '<div class="cd-send-handle"></div>'
+    + '<div class="cd-send-header" style="display:block;">'
+    +   '<div class="cd-send-title">✅ Đã ghi vào CRM — Deal #' + escHtml(String(dealId)) + '</div>'
+    +   '<div class="cd-send-subtitle">Copy nội dung & tải ảnh để gửi cho khách qua Zalo</div>'
+    + '</div>'
+    + '<div class="cd-send-body" style="display:block;overflow-y:auto;">'
+    +   '<div class="zr-section-label">Nội dung gửi (' + count + ' BĐS)</div>'
+    +   '<textarea id="zrText" class="cd-send-note" rows="7" readonly>' + escHtml(zaloText) + '</textarea>'
+    +   '<button class="zr-action-btn" onclick="zrCopy(\'zrText\', this)">📋 Copy nội dung</button>'
+    +   '<div class="zr-section-label">Link cho khách xem</div>'
+    +   '<div class="zr-link-row"><input id="zrLink" class="zr-link-input" value="' + escAttr(shareUrl) + '" readonly>'
+    +     '<button class="zr-action-btn zr-link-btn" onclick="zrCopy(\'zrLink\', this)">Copy</button></div>'
+    +   '<a class="zr-open-link" href="' + escAttr(shareUrl) + '" target="_blank" rel="noopener">Mở thử trang khách →</a>'
+    +   '<div class="zr-section-label">Ảnh đính kèm (' + images.length + ')</div>'
+    +   imgGrid
+    + '</div>'
+    + '<div class="cd-send-footer" style="display:flex;">'
+    +   (shareUrl ? '<a class="cd-send-btn-confirm" href="https://zalo.me/" target="_blank" rel="noopener" style="text-decoration:none;text-align:center;">Mở Zalo</a>' : '')
+    +   '<button class="cd-send-btn-cancel" onclick="closeZaloResult()">Đóng</button>'
+    + '</div>'
+    + '</div>';
+
+  overlay.classList.add('open');
+  _injectZaloResultStyles();
+};
+
+window.closeZaloResult = function() {
+  var overlay = document.getElementById('zaloResultOverlay');
+  if (overlay) overlay.classList.remove('open');
+};
+
+window.zrCopy = function(elId, btn) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  var text = el.value || el.textContent || '';
+  var done = function(){ var t = btn.textContent; btn.textContent = '✓ Đã copy'; setTimeout(function(){ btn.textContent = t; }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(function(){ el.select(); document.execCommand('copy'); done(); });
+  } else {
+    el.select(); document.execCommand('copy'); done();
+  }
+};
+
+function _injectZaloResultStyles() {
+  if (document.getElementById('zaloResultStyles')) return;
+  var s = document.createElement('style');
+  s.id = 'zaloResultStyles';
+  s.textContent =
+    '.zr-section-label{padding:14px 0 6px;font-size:11px;font-weight:700;color:var(--text-tertiary,#888);text-transform:uppercase;letter-spacing:.04em;}'
+    + '.zr-action-btn{width:100%;margin-top:8px;padding:11px;border:1px solid var(--primary,#2563eb);background:#fff;color:var(--primary,#2563eb);border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;}'
+    + '.zr-action-btn:active{opacity:.7;}'
+    + '.zr-link-row{display:flex;gap:8px;align-items:center;}'
+    + '.zr-link-input{flex:1;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:#f9fafb;color:#374151;}'
+    + '.zr-link-btn{width:auto;margin-top:0;padding:10px 16px;}'
+    + '.zr-open-link{display:inline-block;margin-top:8px;font-size:13px;color:var(--primary,#2563eb);text-decoration:none;}'
+    + '.zr-img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px;}'
+    + '.zr-img{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#f3f4f6;}'
+    + '.zr-img img{width:100%;height:100%;object-fit:cover;display:block;}'
+    + '.zr-img-dl{position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:1px 6px;font-size:13px;}'
+    + '.zr-empty{padding:12px;text-align:center;color:var(--text-tertiary,#888);font-size:13px;}';
+  document.head.appendChild(s);
+}
+
+var dealsDataMap = {};
+
 function renderDealCards(deals) {
   return deals.map(renderDealCard).join('');
 }
 
+// Mở sheet gửi BĐS từ một deal (deals page) — đảm bảo có lead trong clientsDataMap.
+window.openSendForDeal = function(dealId) {
+  var deal = dealsDataMap[dealId];
+  if (!deal || !deal.lead_id) { showToast('Thiếu thông tin lead của deal'); return; }
+  if (!clientsDataMap[deal.lead_id]) {
+    clientsDataMap[deal.lead_id] = {
+      id: deal.lead_id,
+      customer_name: deal.customer_name,
+      lead_type: deal.lead_type === 'Mua' ? 'buy' : (deal.lead_type === 'Thuê' ? 'rent' : ''),
+      budget: deal.budget || '',
+      categories: deal.categories ? String(deal.categories).split(', ') : [],
+      wards: deal.wards ? String(deal.wards).split(', ') : []
+    };
+  }
+  openSendPropSheet(deal.lead_id);
+};
+
 function renderDealCard(deal) {
+  dealsDataMap[deal.id] = deal;
   // Badge by status
   var statusBadge = '';
-  if (deal.status === 'open') {
+  if (deal.status === 'open' || deal.status === 'new') {
     if (deal.products_count === 0) {
       statusBadge = '<span class="badge badge-blue">Mới tạo</span>';
     } else {
@@ -7879,17 +7985,30 @@ function renderDealCard(deal) {
         + '</div>';
     }).join('');
 
+    var st = deal.share_stats || {};
+    var statsRow = '';
+    if (st.views || st.interested || st.not_suitable || st.booked) {
+      var parts = [];
+      if (st.views) parts.push('👁 ' + st.views + ' lượt xem' + (st.last_viewed ? ' · ' + st.last_viewed : ''));
+      if (st.interested) parts.push('❤️ ' + st.interested + ' quan tâm');
+      if (st.booked) parts.push('📅 ' + st.booked + ' đặt lịch');
+      if (st.not_suitable) parts.push('👎 ' + st.not_suitable + ' không hợp');
+      statsRow = '<div style="padding:4px 13px 8px;font-size:11px;color:var(--text-tertiary);display:flex;flex-wrap:wrap;gap:4px 10px;">'
+        + parts.map(function(p){ return '<span>' + escHtml(p) + '</span>'; }).join('') + '</div>';
+    }
+
     productsHtml = '<div class="dc-bds-list">'
       + '<div style="padding:6px 13px;font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;">BĐS đã gửi (' + deal.products_count + ')</div>'
+      + statsRow
       + negotiationBanner
       + productItems
-      + '<div class="dc-add-bds" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">'
+      + '<div class="dc-add-bds" onclick="openSendForDeal(' + deal.id + ')">'
       + '<div class="dc-add-icon">＋</div>'
       + '<div class="dc-add-text">Gửi thêm BĐS phù hợp cho khách</div>'
       + '</div>'
       + '</div>';
   } else {
-    productsHtml = '<div class="dc-add-bds" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">'
+    productsHtml = '<div class="dc-add-bds" onclick="openSendForDeal(' + deal.id + ')">'
       + '<div class="dc-add-icon">＋</div>'
       + '<div class="dc-add-text">Bắt đầu gửi BĐS phù hợp cho khách</div>'
       + '</div>';
@@ -7910,7 +8029,7 @@ function renderDealCard(deal) {
   } else if (deal.status === 'negotiating') {
     actionBtn = '<button class="dc-footer-btn success" onclick="showToast(\'Chức năng chốt deal đang phát triển\')">✓ Chốt!</button>';
   } else if (deal.products_count === 0) {
-    actionBtn = '<button class="dc-footer-btn primary" onclick="showToast(\'Chức năng gửi BĐS đang phát triển\')">'
+    actionBtn = '<button class="dc-footer-btn primary" onclick="openSendForDeal(' + deal.id + ')">'
       + '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> Gửi BĐS</span></button>';
   } else {
     actionBtn = '<button class="dc-footer-btn primary" onclick="showToast(\'Chức năng cập nhật đang phát triển\')">Cập nhật</button>';

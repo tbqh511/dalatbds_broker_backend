@@ -25,6 +25,7 @@ use App\Models\Property;
 use App\Models\PropertyImages;
 use App\Models\PropertyLegalImage;
 use App\Models\PropertysInquiry;
+use App\Services\CrmSendPropertyService;
 use App\Services\InAppNotificationService;
 use App\Services\NotificationService;
 use App\Services\Telegram\TelegramMessageTemplates;
@@ -836,6 +837,15 @@ class TelegramWebAppController extends Controller
             $catMap = \App\Models\Category::whereIn('id', $allCatIds)->pluck('category', 'id');
             $wardMap = \App\Models\LocationsWard::whereIn('code', $allWardCodes)->pluck('full_name', 'code');
 
+            // Batch: số lượt khách mở link share theo lead_id (analytics nhẹ).
+            $leadIds = $paginator->getCollection()->pluck('lead_id')->filter()->unique()->values();
+            $shareViewMap = \App\Models\CrmLeadActivity::whereIn('lead_id', $leadIds)
+                ->where('type', 'share_viewed')
+                ->selectRaw('lead_id, COUNT(*) as c, MAX(created_at) as last_at')
+                ->groupBy('lead_id')
+                ->get()
+                ->keyBy('lead_id');
+
             $avatarColors = ['#6366f1', '#0ea5e9', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
             $productStatusMap = [
@@ -852,7 +862,7 @@ class TelegramWebAppController extends Controller
 
             $viewedStatuses = ['booking_created', 'viewed_success', 'viewed_failed', 'negotiating', 'waiting_finance'];
 
-            $deals = $paginator->getCollection()->map(function ($deal) use ($catMap, $wardMap, $avatarColors, $productStatusMap, $viewedStatuses) {
+            $deals = $paginator->getCollection()->map(function ($deal) use ($catMap, $wardMap, $avatarColors, $productStatusMap, $viewedStatuses, $shareViewMap) {
                 $rawStatus = $deal->getRawOriginal('status');
                 $lead = $deal->lead;
                 $cust = $deal->customer;
@@ -954,8 +964,25 @@ class TelegramWebAppController extends Controller
 
                 $createdAt = Carbon::parse($deal->getRawOriginal('created_at'));
 
+                // Share analytics: lượt xem link + breakdown phản hồi theo product status.
+                $viewRow = $shareViewMap[$deal->lead_id] ?? null;
+                $shareStats = [
+                    'views' => $viewRow ? (int) $viewRow->c : 0,
+                    'last_viewed' => $viewRow && $viewRow->last_at
+                        ? Carbon::parse($viewRow->last_at)->diffForHumans()
+                        : null,
+                    'sent' => $products->count(),
+                    'interested' => $products->filter(fn ($p) => in_array($p->getRawOriginal('status'), ['customer_feedback', 'viewed_success', 'negotiating', 'waiting_finance'], true))->count(),
+                    'not_suitable' => $products->filter(fn ($p) => $p->getRawOriginal('status') === 'viewed_failed')->count(),
+                    'booked' => $products->filter(fn ($p) => $p->getRawOriginal('status') === 'booking_created')->count(),
+                ];
+
                 return [
                     'id' => $deal->id,
+                    'lead_id' => $deal->lead_id,
+                    'share_code' => $deal->share_code,
+                    'share_url' => $deal->share_code ? url('/s/'.$deal->share_code) : null,
+                    'share_stats' => $shareStats,
                     'status' => $rawStatus,
                     'customer_name' => $name,
                     'customer_phone' => optional($cust)->contact ?? '',
@@ -1168,7 +1195,7 @@ class TelegramWebAppController extends Controller
         }
     }
 
-    public function sendPropertyToClientApi(Request $request): JsonResponse
+    public function sendPropertyToClientApi(Request $request, CrmSendPropertyService $svc): JsonResponse
     {
         try {
             $broker = Auth::guard('webapp')->user();
@@ -1177,15 +1204,17 @@ class TelegramWebAppController extends Controller
             }
 
             $leadId = (int) $request->input('lead_id');
-            $propertyIds = array_filter(array_map('intval', (array) $request->input('property_ids', [])));
-            $contentType = $request->input('content_type', 'full');
-            $note = trim($request->input('note', ''));
+            $propertyIds = array_values(array_unique(array_filter(array_map('intval', (array) $request->input('property_ids', [])))));
+            // FE gửi mảng content_types; vẫn nhận content_type (số ít) làm fallback.
+            $contentTypes = (array) $request->input('content_types', $request->input('content_type', ['full']));
+            $contentTypes = $svc->normalizeContentTypes($contentTypes);
+            $note = trim((string) $request->input('note', ''));
 
             if (empty($propertyIds)) {
                 return response()->json(['success' => false, 'message' => 'Chưa chọn BĐS'], 422);
             }
 
-            $lead = CrmLead::with('customer')->where('id', $leadId)->where(function ($q) use ($broker) {
+            $lead = CrmLead::with(['customer', 'deal'])->where('id', $leadId)->where(function ($q) use ($broker) {
                 $q->where('user_id', $broker->id)->orWhere('sale_id', $broker->id);
             })->first();
 
@@ -1193,93 +1222,80 @@ class TelegramWebAppController extends Controller
                 return response()->json(['success' => false, 'message' => 'Không tìm thấy lead'], 404);
             }
 
-            $crmCustomer = $lead->customer;
-            $customerTeleId = $crmCustomer ? (string) ($crmCustomer->telegram_id ?? '') : '';
-            $customerName = $crmCustomer ? ($crmCustomer->full_name ?? 'Khách hàng') : 'Khách hàng';
-            $brokerName = $broker->name ?? 'Broker';
-
-            $properties = Property::with(['category', 'ward'])->whereIn('id', $propertyIds)->get();
+            $properties = Property::with(['category', 'ward', 'street'])->whereIn('id', $propertyIds)->get();
             if ($properties->isEmpty()) {
                 return response()->json(['success' => false, 'message' => 'Không tìm thấy BĐS'], 404);
             }
 
-            $notifService = app(NotificationService::class);
-            $sentCount = 0;
+            $result = DB::transaction(function () use ($svc, $lead, $broker, $properties, $contentTypes, $note) {
+                $deal = $svc->getOrCreateDealForLead($lead, $broker);
+                $code = $svc->ensureShareCode($deal);
 
-            foreach ($properties as $prop) {
-                $title = $prop->title ?: $prop->title_by_address;
-                $price = $prop->formatted_prices ?? '';
-                $area = $prop->area ? $prop->area.' m²' : '';
-                $location = $prop->address_location ?? '';
-                $shareUrl = url('/').'/p/'.($prop->slug ?? $prop->id);
-
-                switch ($contentType) {
-                    case 'location':
-                        if ($prop->latitude && $prop->longitude) {
-                            $mapsUrl = 'https://www.google.com/maps?q='.$prop->latitude.','.$prop->longitude;
-                            $msg = "📍 *VỊ TRÍ BĐS TỪ {$brokerName}*\n\n"
-                                 ."🏠 *{$title}*\n"
-                                 .($price ? "💰 {$price}\n" : '')
-                                 ."📌 Địa chỉ: {$location}\n\n"
-                                 ."🗺 [Xem trên Google Maps]({$mapsUrl})";
-                        } else {
-                            $msg = "📍 *VỊ TRÍ BĐS TỪ {$brokerName}*\n\n"
-                                 ."🏠 *{$title}*\n"
-                                 ."📌 Địa chỉ: {$location}";
-                        }
-                        break;
-                    case 'legal':
-                        $legal = $prop->legal ?? 'Đang cập nhật';
-                        $msg = "📄 *GIẤY TỜ PHÁP LÝ — {$brokerName}*\n\n"
-                             ."🏠 *{$title}*\n"
-                             ."📌 {$location}\n"
-                             ."📋 Pháp lý: {$legal}\n\n"
-                             .'ℹ️ Liên hệ broker để được cung cấp hồ sơ pháp lý đầy đủ.';
-                        break;
-                    case 'gallery':
-                        $imgCount = $prop->propery_image()->count();
-                        $msg = "🖼 *HÌNH ẢNH BĐS TỪ {$brokerName}*\n\n"
-                             ."🏠 *{$title}*\n"
-                             .($price ? "💰 {$price}\n" : '')
-                             .($imgCount ? "📷 {$imgCount} hình thực tế\n\n" : "\n")
-                             ."[Xem thêm]({$shareUrl})";
-                        break;
-                    default: // full
-                        $catName = $prop->category?->category ?? '';
-                        $msg = "🏠 *BĐS PHÙ HỢP TỪ {$brokerName}*\n\n"
-                             ."*{$title}*\n"
-                             .($catName ? "🏷 {$catName}\n" : '')
-                             .($price ? "💰 {$price}\n" : '')
-                             .($area ? "📐 {$area}\n" : '')
-                             .($location ? "📌 {$location}\n" : '')
-                             ."\n[Xem chi tiết]({$shareUrl})";
-                        break;
+                $recorded = [];
+                foreach ($properties as $prop) {
+                    $product = $svc->recordSend($deal, $prop, $contentTypes, $note, $broker, $code);
+                    $recorded[] = [
+                        'product_id'   => $product->id,
+                        'property_id'  => $prop->id,
+                        'status'       => $product->getRawOriginal('status'),
+                        'status_label' => $product->status instanceof \App\Enums\DealsProductStatus
+                            ? $product->status->label()
+                            : (string) $product->status,
+                    ];
                 }
 
-                if ($note !== '') {
-                    $escaped = str_replace(['_', '*', '[', ']', '`'], ['\\_', '\\*', '\\[', '\\]', '\\`'], $note);
-                    $msg .= "\n\n💬 Ghi chú: {$escaped}";
-                }
+                return ['deal' => $deal, 'code' => $code, 'recorded' => $recorded];
+            });
 
-                if ($customerTeleId !== '') {
-                    $sent = $notifService->sendDirectTo($customerTeleId, $msg);
-                    if ($sent) {
-                        $sentCount++;
-                    }
-                }
-            }
+            $payload = $svc->buildZaloPayload($properties, $contentTypes, $note, $result['code']);
 
-            $sentViaTelegram = $sentCount > 0;
+            // Gửi cho chính sale (broker có telegram_id) bản tóm tắt + album ảnh để lưu vết.
+            $this->notifyBrokerSentSummary($broker, $lead, $properties->count(), $payload);
 
             return response()->json([
-                'success' => true,
-                'sent_via_telegram' => $sentViaTelegram,
-                'count' => count($propertyIds),
+                'success'    => true,
+                'deal_id'    => $result['deal']->id,
+                'share_code' => $result['code'],
+                'share_url'  => $payload['share_url'],
+                'zalo_text'  => $payload['zalo_text'],
+                'images'     => $payload['images'],
+                'recorded'   => $result['recorded'],
+                'count'      => count($propertyIds),
             ]);
         } catch (\Exception $e) {
             Log::error($e);
 
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống.'], 500);
+        }
+    }
+
+    /**
+     * Gửi cho sale (broker) bản tóm tắt "đã gửi gì cho khách" + album ảnh để lưu vết.
+     * Sale là Customer có telegram_id; bỏ qua nếu không có.
+     */
+    protected function notifyBrokerSentSummary(Customer $broker, CrmLead $lead, int $count, array $payload): void
+    {
+        try {
+            if (empty($broker->telegram_id)) {
+                return;
+            }
+
+            $notif = app(NotificationService::class);
+            $customerName = optional($lead->customer)->full_name ?? 'khách';
+            $msg = "✅ Đã chuẩn bị {$count} BĐS gửi cho {$customerName}.\n"
+                 ."Link khách xem: {$payload['share_url']}\n\n"
+                 ."Bạn có thể copy nội dung + tải ảnh trong app để gửi qua Zalo.";
+
+            $images = array_slice($payload['images'], 0, 10);
+            if (count($images) >= 2) {
+                $notif->sendMediaGroup((string) $broker->telegram_id, $images, $msg);
+            } elseif (count($images) === 1) {
+                $notif->sendPhoto((string) $broker->telegram_id, $images[0], $msg);
+            } else {
+                $notif->sendDirectTo((string) $broker->telegram_id, $msg, ['parse_mode' => '']);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('notifyBrokerSentSummary failed: '.$e->getMessage());
         }
     }
 

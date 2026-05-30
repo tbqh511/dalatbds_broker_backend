@@ -13,12 +13,106 @@ class NotificationService
     protected string $botToken;
     protected string $apiUrl;
     protected string $editUrl;
+    protected string $photoUrl;
+    protected string $mediaGroupUrl;
 
     public function __construct()
     {
         $this->botToken = Config::get('services.telegram.bot_token');
         $this->apiUrl = "https://api.telegram.org/bot{$this->botToken}/sendMessage";
         $this->editUrl = "https://api.telegram.org/bot{$this->botToken}/editMessageText";
+        $this->photoUrl = "https://api.telegram.org/bot{$this->botToken}/sendPhoto";
+        $this->mediaGroupUrl = "https://api.telegram.org/bot{$this->botToken}/sendMediaGroup";
+    }
+
+    /**
+     * Send a single photo with optional caption (plain text caption to avoid Markdown errors).
+     */
+    public function sendPhoto(string $chatId, string $photoUrl, string $caption = '', array $options = []): bool
+    {
+        if (! $this->botToken) {
+            Log::error('NotificationService: Telegram Bot Token is not configured.');
+
+            return false;
+        }
+
+        try {
+            $payload = array_merge([
+                'chat_id' => $chatId,
+                'photo'   => $photoUrl,
+                'caption' => mb_substr($caption, 0, 1024),
+            ], $options);
+
+            $response = Http::retry(3, 100, function (\Exception $e, $response) {
+                return ! $response || $response->status() >= 500;
+            }, false)->post($this->photoUrl, $payload);
+
+            if ($response->successful()) {
+                return true;
+            }
+            Log::error("NotificationService: sendPhoto failed to {$chatId}. Response: ".$response->body());
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error("NotificationService: Exception sendPhoto to {$chatId}. Error: ".$e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
+     * Send an album of photos. Telegram allows max 10 per group; chunks are sent sequentially.
+     * Caption (plain text) is attached to the first photo of the first chunk only.
+     */
+    public function sendMediaGroup(string $chatId, array $photoUrls, string $caption = ''): bool
+    {
+        if (! $this->botToken) {
+            Log::error('NotificationService: Telegram Bot Token is not configured.');
+
+            return false;
+        }
+
+        $photoUrls = array_values(array_filter($photoUrls));
+        if (empty($photoUrls)) {
+            return false;
+        }
+        // Single photo → use sendPhoto (sendMediaGroup requires >= 2).
+        if (count($photoUrls) === 1) {
+            return $this->sendPhoto($chatId, $photoUrls[0], $caption);
+        }
+
+        $ok = true;
+        $first = true;
+        foreach (array_chunk($photoUrls, 10) as $chunk) {
+            $media = [];
+            foreach ($chunk as $i => $url) {
+                $item = ['type' => 'photo', 'media' => $url];
+                if ($first && $i === 0 && $caption !== '') {
+                    $item['caption'] = mb_substr($caption, 0, 1024);
+                }
+                $media[] = $item;
+            }
+            $first = false;
+
+            try {
+                $response = Http::retry(3, 100, function (\Exception $e, $response) {
+                    return ! $response || $response->status() >= 500;
+                }, false)->post($this->mediaGroupUrl, [
+                    'chat_id' => $chatId,
+                    'media'   => json_encode($media),
+                ]);
+
+                if (! $response->successful()) {
+                    $ok = false;
+                    Log::error("NotificationService: sendMediaGroup failed to {$chatId}. Response: ".$response->body());
+                }
+            } catch (\Throwable $e) {
+                $ok = false;
+                Log::error("NotificationService: Exception sendMediaGroup to {$chatId}. Error: ".$e->getMessage());
+            }
+        }
+
+        return $ok;
     }
 
     /**

@@ -14,6 +14,7 @@ class CrmDeal extends Model
     protected $fillable = [
         'lead_id',
         'customer_id',
+        'share_code',
         'notes',
         'status',
         'amount',
@@ -24,6 +25,15 @@ class CrmDeal extends Model
     public function getStatusAttribute($value)
     {
         return ucfirst(str_replace('_', ' ', $value));
+    }
+
+    /**
+     * Raw (un-humanized) status value as stored in DB.
+     * Use this for comparisons/logic — the `status` accessor mutates the value.
+     */
+    public function rawStatus(): ?string
+    {
+        return $this->getRawOriginal('status');
     }
 
     public function getAmountAttribute($value)

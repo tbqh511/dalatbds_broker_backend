@@ -38,22 +38,28 @@ class CrmLeadActivity extends Model
     public function getTypeLabel(): string
     {
         return match ($this->type) {
-            'call'          => 'Gọi điện',
-            'note'          => 'Ghi chú',
-            'assignment'    => 'Phân công',
-            'status_change' => 'Cập nhật trạng thái',
-            default         => $this->type,
+            'call'             => 'Gọi điện',
+            'note'             => 'Ghi chú',
+            'assignment'       => 'Phân công',
+            'status_change'    => 'Cập nhật trạng thái',
+            'property_sent'    => 'Gửi BĐS cho khách',
+            'share_viewed'     => 'Khách xem link BĐS',
+            'customer_feedback' => 'Phản hồi của khách',
+            default            => $this->type,
         };
     }
 
     public function getTypeIcon(): string
     {
         return match ($this->type) {
-            'call'          => 'fa-phone',
-            'note'          => 'fa-sticky-note',
-            'assignment'    => 'fa-user-plus',
-            'status_change' => 'fa-exchange-alt',
-            default         => 'fa-circle',
+            'call'             => 'fa-phone',
+            'note'             => 'fa-sticky-note',
+            'assignment'       => 'fa-user-plus',
+            'status_change'    => 'fa-exchange-alt',
+            'property_sent'    => 'fa-paper-plane',
+            'share_viewed'     => 'fa-eye',
+            'customer_feedback' => 'fa-comment-dots',
+            default            => 'fa-circle',
         };
     }
 }

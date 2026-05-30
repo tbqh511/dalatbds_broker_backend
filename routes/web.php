@@ -15,6 +15,7 @@ use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PropertController;
+use App\Http\Controllers\PropertyShareController;
 use App\Http\Controllers\PropertysInquiryController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SliderController;
@@ -228,6 +229,14 @@ Route::get('/ref/{code}', [TelegramWebAppController::class, 'referralLanding'])-
 
 // Smart property share redirect
 Route::get('/share/p/{id}', [TelegramWebAppController::class, 'propertyShareRedirect'])->name('property.share.redirect');
+
+// Public "gói BĐS" theo Deal (mã share). KHÔNG auth.
+Route::get('/s/{code}', [PropertyShareController::class, 'show'])
+    ->name('property.share.public')->middleware('throttle:60,1');
+Route::post('/s/{code}/seen', [PropertyShareController::class, 'seen'])
+    ->name('property.share.seen')->middleware('throttle:120,1');
+Route::post('/s/{code}/feedback', [PropertyShareController::class, 'feedback'])
+    ->name('property.share.feedback')->middleware('throttle:20,1');
 
 //property controller
 Route::get('/property/{id}', [FrontEndPropertiesController::class , 'getPropertyById'])->name('property.showid')->where('id', '[0-9]+');
