@@ -73,9 +73,27 @@
                                 }
                             @endphp
                             @php
+                                // Tự sửa hiển thị khi số raw lệch với budget_label (dữ liệu cũ sai đơn vị):
+                                // ưu tiên khoảng suy từ label để ô Từ/Đến khớp với nhãn.
+                                $bMin = $leadMin; $bMax = $leadMax;
+                                $bLabel = $lead->budget_label ?? '';
+                                if ($bLabel && mb_stripos($bLabel, 'thỏa thuận') === false) {
+                                    preg_match_all('/\d+(?:[.,]\d+)?/u', $bLabel, $m);
+                                    $lnums = array_map(fn ($n) => (float) str_replace(',', '.', $n), $m[0] ?? []);
+                                    $lUncapped = mb_stripos($bLabel, 'trở lên') !== false || mb_stripos($bLabel, 'trên') !== false;
+                                    $lBelow = mb_stripos($bLabel, 'dưới') !== false;
+                                    $lMin = $lMax = null;
+                                    if (count($lnums) >= 2) { $lMin = $lnums[0] * 1e9; $lMax = $lnums[1] * 1e9; }
+                                    elseif (count($lnums) === 1 && $lBelow) { $lMin = 0; $lMax = $lnums[0] * 1e9; }
+                                    elseif (count($lnums) === 1 && $lUncapped) { $lMin = $lnums[0] * 1e9; $lMax = 999999999999; }
+                                    elseif (count($lnums) === 1) { $lMin = $lnums[0] * 1e9; $lMax = 0; }
+                                    if ($lMin !== null && (abs($leadMin - $lMin) >= 1e6 || abs($leadMax - $lMax) >= 1e6)) {
+                                        $bMin = $lMin; $bMax = $lMax;
+                                    }
+                                }
                                 // Quy đổi VND -> tỷ "sạch" để seed input (10000000000 -> 10, 11500000000 -> 11.5)
-                                $tyMin = $leadMin > 0 ? rtrim(rtrim(number_format($leadMin / 1000000000, 3, '.', ''), '0'), '.') : '';
-                                $tyMax = ($leadMax > 0 && $leadMax < 999999999999) ? rtrim(rtrim(number_format($leadMax / 1000000000, 3, '.', ''), '0'), '.') : '';
+                                $tyMin = $bMin > 0 ? rtrim(rtrim(number_format($bMin / 1000000000, 3, '.', ''), '0'), '.') : '';
+                                $tyMax = ($bMax > 0 && $bMax < 999999999999) ? rtrim(rtrim(number_format($bMax / 1000000000, 3, '.', ''), '0'), '.') : '';
                             @endphp
                             <div class="col-md-12">
                                 <label>Ngân sách <span class="dec-icon"><i class="far fa-money-bill-wave"></i></span></label>
@@ -109,10 +127,11 @@
                                             value="{{ $tyMax }}" oninput="onBudgetManualInput()">
                                     </div>
                                 </div>
+                                {{-- Dùng giá trị đã reconcile để re-save ghi đúng VND, không lưu lại số raw sai --}}
                                 <input type="hidden" name="price_min" id="price-min-hidden"
-                                    value="{{ number_format((float)($lead->demand_rate_min ?? 0), 0, '.', '') }}">
+                                    value="{{ number_format((float) $bMin, 0, '.', '') }}">
                                 <input type="hidden" name="price_max" id="price-max-hidden"
-                                    value="{{ number_format((float)($lead->demand_rate_max ?? 0), 0, '.', '') }}">
+                                    value="{{ number_format((float) $bMax, 0, '.', '') }}">
                                 <input type="hidden" name="budget_label" id="budget-label-hidden"
                                     value="{{ $lead->budget_label ?? '' }}">
                             </div>

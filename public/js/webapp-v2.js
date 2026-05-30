@@ -2277,6 +2277,48 @@ function budgetMatchesPreset(min, max, preset) {
          Math.abs(Number(max) - Number(preset.max)) < 1;
 }
 
+// Tách khoảng (VND) từ chuỗi budget_label, vd:
+//   "Từ 3 đến 4.5 tỷ" -> {min:3e9, max:4.5e9}
+//   "Từ 5 tỷ trở lên"  -> {min:5e9, max:UNCAPPED}
+//   "3 - 5 tỷ" / "1 - 3 tỷ" -> {min:3e9|1e9, max:5e9|3e9}
+//   "Dưới 1 tỷ" -> {min:0, max:1e9};  "Trên 50 tỷ" -> {min:50e9, max:UNCAPPED}
+//   "Thỏa thuận" / không parse được -> null
+// Cho phép dấu phẩy thập phân kiểu VN ("4,5"). Dùng để tự sửa hiển thị khi
+// số raw trong DB lệch với label (dữ liệu cũ sai đơn vị).
+function parseBudgetLabel(label) {
+  if (!label) return null;
+  var s = String(label).toLowerCase().trim();
+  if (s.indexOf('thỏa thuận') !== -1 || s.indexOf('thoa thuan') !== -1) return null;
+  // Lấy mọi số (cho phép , hoặc . làm thập phân)
+  var nums = (s.match(/\d+(?:[.,]\d+)?/g) || []).map(function (n) {
+    return parseFloat(n.replace(',', '.'));
+  }).filter(function (n) { return isFinite(n); });
+  var uncapped = s.indexOf('trở lên') !== -1 || s.indexOf('tro len') !== -1 || s.indexOf('trên') !== -1 || s.indexOf('tren') !== -1;
+  var below    = s.indexOf('dưới') !== -1 || s.indexOf('duoi') !== -1;
+  if (!nums.length) return null;
+  if (below) {
+    return { min: 0, max: Math.round(nums[0] * 1e9) };
+  }
+  if (nums.length >= 2) {
+    return { min: Math.round(nums[0] * 1e9), max: Math.round(nums[1] * 1e9) };
+  }
+  // 1 số: "Trên 50 tỷ" / "Từ 5 tỷ trở lên" -> cận dưới, không giới hạn trên
+  if (uncapped) return { min: Math.round(nums[0] * 1e9), max: BUDGET_UNCAPPED };
+  return { min: Math.round(nums[0] * 1e9), max: 0 };
+}
+
+// Trả về cặp {min,max} đáng tin để hiển thị. Nếu raw min/max khớp (xấp xỉ) với
+// khoảng suy từ label thì giữ raw; nếu lệch (dữ liệu cũ sai đơn vị) thì ưu tiên label.
+function reconcileBudget(minRaw, maxRaw, label) {
+  var lo = Number(minRaw) || 0, hi = Number(maxRaw) || 0;
+  var fromLabel = parseBudgetLabel(label);
+  if (!fromLabel) return { min: lo, max: hi };
+  var matchMin = Math.abs(lo - fromLabel.min) < 1e6; // sai số < 1 triệu
+  var matchMax = Math.abs(hi - fromLabel.max) < 1e6;
+  if (matchMin && matchMax) return { min: lo, max: hi };
+  return { min: fromLabel.min, max: fromLabel.max };
+}
+
 function budgetLabel(minRaw, maxRaw) {
   var ranges = budgetPresets();
   for (var i = 0; i < ranges.length; i++) {
@@ -7036,13 +7078,16 @@ function _crOpts() {
 // Build initial editable state from the loaded client (uses raw ids/codes from API).
 function _crInitNeedsForm(client) {
   if (!client) return;
+  // Tự sửa hiển thị khi số raw lệch với budget_label (dữ liệu cũ sai đơn vị):
+  // ưu tiên khoảng suy từ label để ô Từ/Đến khớp với nhãn sale đang thấy.
+  var rb = reconcileBudget(client.budget_min_raw || 0, client.budget_max_raw || 0, client.budget_label || '');
   crNeedsState = {
     lead_type: client.lead_type || '',
     categories: (client.category_ids || []).map(Number),
     wards: (client.ward_codes || []).map(String),
     purposes: (client.purposes || []).slice(),
-    price_min: Number(client.budget_min_raw || 0),
-    price_max: Number(client.budget_max_raw || 0),
+    price_min: rb.min,
+    price_max: rb.max,
     budget_label: client.budget_label || '',
     expected_deposit_date: client.expected_deposit_date || '',
   };
