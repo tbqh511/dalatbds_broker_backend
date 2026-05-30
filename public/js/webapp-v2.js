@@ -6910,6 +6910,7 @@ window.crOpenSheet = function() {
   crCurrentResult = null;
   crNeedDecision  = null;
   crNeedsState    = null;
+  crOpenField     = null;
 
   var confirmBtn = document.getElementById('crConfirmNeedsBtn');
   if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Xác nhận · Bắt đầu chăm'; }
@@ -6969,7 +6970,6 @@ window.crNext = function() {
 
   if (crCurrentResult === 'answered') {
     _crInitNeedsForm(client);
-    _crRenderNeedsGrid(client);
     var sub = document.getElementById('cr2aSub');
     if (sub) sub.textContent = 'Bổ sung thông tin còn thiếu · ' + (client ? client.customer_name || 'khách' : 'khách');
     var s2a = document.getElementById('crStep2A');
@@ -6989,6 +6989,11 @@ window.crNext = function() {
 /* ── Editable needs form state ── */
 // crNeedsState mirrors the lead's needs while the Sale edits them in Step 2A.
 var crNeedsState = null;
+// crOpenField is the accordion field currently expanded (single-open), or null.
+var crOpenField = null;
+
+// All accordion fields in Step 2A, in display order.
+var CR_ACC_FIELDS = ['leadtype', 'category', 'ward', 'purpose', 'budget', 'deposit'];
 
 function _crOpts() {
   return (window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.crmOptions) || { categories: [], wards: [], purposes: [], budgetPresets: [] };
@@ -7025,7 +7030,37 @@ function _crInitNeedsForm(client) {
 
   var dateEl = document.getElementById('crDepositDate');
   if (dateEl) dateEl.value = crNeedsState.expected_deposit_date || '';
+
+  // Render the summary headers, collapse all rows, then auto-open the
+  // required field if it's still missing so the Sale can fill it right away.
+  _crSyncSummary();
+  _crResetAccordion();
+  if (!crNeedsState.lead_type) crToggleField('leadtype');
 }
+
+// Collapse every accordion row and clear the open-field marker.
+function _crResetAccordion() {
+  crOpenField = null;
+  CR_ACC_FIELDS.forEach(function(f) {
+    var body = document.getElementById('crAccBody_' + f);
+    if (body) body.hidden = true;
+    var item = document.querySelector('.cr-acc-item[data-field="' + f + '"]');
+    if (item) item.classList.remove('open');
+  });
+}
+
+// Toggle one accordion row open; closes any other open row (single-open).
+window.crToggleField = function(field) {
+  var willOpen = crOpenField !== field;
+  CR_ACC_FIELDS.forEach(function(f) {
+    var body = document.getElementById('crAccBody_' + f);
+    var item = document.querySelector('.cr-acc-item[data-field="' + f + '"]');
+    var open = willOpen && f === field;
+    if (body) body.hidden = !open;
+    if (item) item.classList.toggle('open', open);
+  });
+  crOpenField = willOpen ? field : null;
+};
 
 function _crRenderCatChips() {
   var el = document.getElementById('crCatChips');
@@ -7137,24 +7172,14 @@ function _crLabelsFor(field, ids) {
 
 // Re-render the read-only summary grid from the live edit state.
 function _crSyncSummary() {
-  var client = clientsDataMap[currentClientDetailId];
-  _crRenderNeedsGrid(client);
+  _crRenderAccHeaders();
 }
 
-function _crRenderNeedsGrid(client) {
-  var el = document.getElementById('crNeedsGrid');
-  if (!el) return;
+// Update each accordion row's summary value + status icon/colour from live state.
+// 'ok' (green) = has value, 'miss' (red) = required & empty, 'warn' (amber) = optional & empty.
+function _crRenderAccHeaders() {
   var st = crNeedsState || {};
 
-  function cell(label, val, cls) {
-    var icon = cls === 'green' ? '✓' : cls === 'amber' ? '⚠' : '✕';
-    return '<div class="cr-needs-cell ' + cls + '">'
-      + '<div class="cr-needs-cell-label">' + icon + ' ' + escHtml(label) + '</div>'
-      + '<div class="cr-needs-cell-val">' + escHtml(val || 'Chưa có') + '</div>'
-      + '</div>';
-  }
-
-  var name    = (client && client.customer_name) || '';
   var type    = st.lead_type === 'buy' ? 'Tìm mua' : (st.lead_type === 'rent' ? 'Tìm thuê' : '');
   var cats    = _crLabelsFor('categories', st.categories).join(', ');
   var purpose = (st.purposes || []).join(', ');
@@ -7162,14 +7187,40 @@ function _crRenderNeedsGrid(client) {
   var budget  = _crBudgetText();
   var deposit = st.expected_deposit_date ? _crFmtDate(st.expected_deposit_date) : '';
 
-  el.innerHTML =
-    cell('Khách hàng',    name,    name    ? 'green' : 'red')
-    + cell('Tìm mua/thuê', (type + (cats ? ' · ' + cats : '')), type ? 'green' : 'red')
-    + cell('Mục đích',    purpose, purpose ? 'green' : 'amber')
-    + cell('Khu vực',     wards,   wards   ? 'green' : 'amber')
-    + cell('Tài chính',   budget,  budget  ? 'green' : 'amber')
-    + cell('Thời gian cọc', deposit, deposit ? 'green' : 'amber');
+  // field -> { value, required }
+  var rows = {
+    leadtype: { val: (type + (cats ? ' · ' + cats : '')) || (type), required: true },
+    category: { val: cats,    required: false },
+    ward:     { val: wards,   required: false },
+    purpose:  { val: purpose, required: false },
+    budget:   { val: budget,  required: false },
+    deposit:  { val: deposit, required: false },
+  };
+  // leadtype cell only depends on the transaction type for its status.
+  rows.leadtype.has = !!type;
+
+  CR_ACC_FIELDS.forEach(function(f) {
+    var r = rows[f];
+    var has = r.has !== undefined ? r.has : !!r.val;
+    var cls = has ? 'ok' : (r.required ? 'miss' : 'warn');
+    var icon = has ? '✓' : (r.required ? '✕' : '⚠');
+
+    var valEl  = document.getElementById('crAccVal_' + f);
+    var iconEl = document.getElementById('crAccIcon_' + f);
+    var item   = document.querySelector('.cr-acc-item[data-field="' + f + '"]');
+    if (valEl)  valEl.textContent = r.val || 'Chưa có';
+    if (iconEl) iconEl.textContent = icon;
+    if (item) { item.classList.remove('ok', 'warn', 'miss'); item.classList.add(cls); }
+  });
 }
+
+// Deposit-date input changes the summary live (date control lives inside the accordion body).
+window.crOnDepositInput = function() {
+  if (!crNeedsState) return;
+  var dateEl = document.getElementById('crDepositDate');
+  crNeedsState.expected_deposit_date = dateEl ? (dateEl.value || '') : '';
+  _crSyncSummary();
+};
 
 function _crFmtDate(ymd) {
   var p = String(ymd).split('-');

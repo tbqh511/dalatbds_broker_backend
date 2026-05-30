@@ -182,63 +182,116 @@
         </div>
       </div>
 
-      <!-- Quick read-only summary (đánh dấu trường còn thiếu) -->
-      <div class="cr-needs-label">TÓM TẮT NHU CẦU</div>
-      <div class="cr-needs-grid" id="crNeedsGrid"></div>
+      <!-- Tóm tắt nhu cầu — mỗi ô bấm để bung control sửa riêng (per-field accordion) -->
+      <div class="cr-needs-label">TÓM TẮT NHU CẦU · bấm để sửa</div>
+      <div class="cr-acc" id="crNeedsAccordion">
 
-      <!-- Editable needs form -->
-      <div class="cr-edit-form" id="crEditForm">
-        <!-- Loại giao dịch -->
-        <div class="cr-field">
-          <div class="cr-field-label">Nhu cầu giao dịch <span class="cr-req">*</span></div>
-          <div class="cr-seg" id="crLeadTypeSeg">
-            <button type="button" class="cr-seg-btn" data-val="buy"  onclick="crSetLeadType('buy', this)">Tìm mua</button>
-            <button type="button" class="cr-seg-btn" data-val="rent" onclick="crSetLeadType('rent', this)">Tìm thuê</button>
+        <!-- Loại giao dịch (bắt buộc) -->
+        <div class="cr-acc-item" data-field="leadtype">
+          <button type="button" class="cr-acc-head" onclick="crToggleField('leadtype')">
+            <span class="cr-acc-icon" id="crAccIcon_leadtype">✕</span>
+            <span class="cr-acc-text">
+              <span class="cr-acc-label">Tìm mua/thuê <span class="cr-req">*</span></span>
+              <span class="cr-acc-val" id="crAccVal_leadtype">Chưa có</span>
+            </span>
+            <span class="cr-acc-caret">›</span>
+          </button>
+          <div class="cr-acc-body" id="crAccBody_leadtype" hidden>
+            <div class="cr-seg" id="crLeadTypeSeg">
+              <button type="button" class="cr-seg-btn" data-val="buy"  onclick="crSetLeadType('buy', this)">Tìm mua</button>
+              <button type="button" class="cr-seg-btn" data-val="rent" onclick="crSetLeadType('rent', this)">Tìm thuê</button>
+            </div>
           </div>
         </div>
 
         <!-- Loại BĐS -->
-        <div class="cr-field">
-          <div class="cr-field-label">Loại BĐS</div>
-          <div class="cr-chip-wrap" id="crCatChips"></div>
+        <div class="cr-acc-item" data-field="category">
+          <button type="button" class="cr-acc-head" onclick="crToggleField('category')">
+            <span class="cr-acc-icon" id="crAccIcon_category">⚠</span>
+            <span class="cr-acc-text">
+              <span class="cr-acc-label">Loại BĐS</span>
+              <span class="cr-acc-val" id="crAccVal_category">Chưa có</span>
+            </span>
+            <span class="cr-acc-caret">›</span>
+          </button>
+          <div class="cr-acc-body" id="crAccBody_category" hidden>
+            <div class="cr-chip-wrap" id="crCatChips"></div>
+          </div>
         </div>
 
         <!-- Khu vực -->
-        <div class="cr-field">
-          <div class="cr-field-label">Khu vực ưu tiên</div>
-          <div class="cr-chip-wrap" id="crWardChips"></div>
+        <div class="cr-acc-item" data-field="ward">
+          <button type="button" class="cr-acc-head" onclick="crToggleField('ward')">
+            <span class="cr-acc-icon" id="crAccIcon_ward">⚠</span>
+            <span class="cr-acc-text">
+              <span class="cr-acc-label">Khu vực ưu tiên</span>
+              <span class="cr-acc-val" id="crAccVal_ward">Chưa có</span>
+            </span>
+            <span class="cr-acc-caret">›</span>
+          </button>
+          <div class="cr-acc-body" id="crAccBody_ward" hidden>
+            <div class="cr-chip-wrap" id="crWardChips"></div>
+          </div>
         </div>
 
         <!-- Mục đích -->
-        <div class="cr-field">
-          <div class="cr-field-label">Mục đích</div>
-          <div class="cr-chip-wrap" id="crPurposeChips"></div>
+        <div class="cr-acc-item" data-field="purpose">
+          <button type="button" class="cr-acc-head" onclick="crToggleField('purpose')">
+            <span class="cr-acc-icon" id="crAccIcon_purpose">⚠</span>
+            <span class="cr-acc-text">
+              <span class="cr-acc-label">Mục đích</span>
+              <span class="cr-acc-val" id="crAccVal_purpose">Chưa có</span>
+            </span>
+            <span class="cr-acc-caret">›</span>
+          </button>
+          <div class="cr-acc-body" id="crAccBody_purpose" hidden>
+            <div class="cr-chip-wrap" id="crPurposeChips"></div>
+          </div>
         </div>
 
-        <!-- Ngân sách -->
-        <div class="cr-field">
-          <div class="cr-field-label">Mức tài chính</div>
-          <div class="cr-chip-wrap" id="crBudgetChips"></div>
-          <div class="cr-budget-manual">
-            <div class="cr-budget-input">
-              <span>Từ</span>
-              <input type="number" inputmode="decimal" id="crBudgetMin" min="0" step="0.1" placeholder="0" oninput="crOnBudgetManualInput()">
-              <span>tỷ</span>
-            </div>
-            <span class="cr-budget-dash">–</span>
-            <div class="cr-budget-input">
-              <span>Đến</span>
-              <input type="number" inputmode="decimal" id="crBudgetMax" min="0" step="0.1" placeholder="—" oninput="crOnBudgetManualInput()">
-              <span>tỷ</span>
+        <!-- Tài chính -->
+        <div class="cr-acc-item" data-field="budget">
+          <button type="button" class="cr-acc-head" onclick="crToggleField('budget')">
+            <span class="cr-acc-icon" id="crAccIcon_budget">⚠</span>
+            <span class="cr-acc-text">
+              <span class="cr-acc-label">Mức tài chính</span>
+              <span class="cr-acc-val" id="crAccVal_budget">Chưa có</span>
+            </span>
+            <span class="cr-acc-caret">›</span>
+          </button>
+          <div class="cr-acc-body" id="crAccBody_budget" hidden>
+            <div class="cr-chip-wrap" id="crBudgetChips"></div>
+            <div class="cr-budget-manual">
+              <div class="cr-budget-input">
+                <span>Từ</span>
+                <input type="number" inputmode="decimal" id="crBudgetMin" min="0" step="0.1" placeholder="0" oninput="crOnBudgetManualInput()">
+                <span>tỷ</span>
+              </div>
+              <span class="cr-budget-dash">–</span>
+              <div class="cr-budget-input">
+                <span>Đến</span>
+                <input type="number" inputmode="decimal" id="crBudgetMax" min="0" step="0.1" placeholder="—" oninput="crOnBudgetManualInput()">
+                <span>tỷ</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Ngày dự kiến cọc -->
-        <div class="cr-field">
-          <div class="cr-field-label">Thời gian cọc dự kiến</div>
-          <input type="date" id="crDepositDate" class="cr-date-input">
+        <!-- Thời gian cọc dự kiến -->
+        <div class="cr-acc-item" data-field="deposit">
+          <button type="button" class="cr-acc-head" onclick="crToggleField('deposit')">
+            <span class="cr-acc-icon" id="crAccIcon_deposit">⚠</span>
+            <span class="cr-acc-text">
+              <span class="cr-acc-label">Thời gian cọc dự kiến</span>
+              <span class="cr-acc-val" id="crAccVal_deposit">Chưa có</span>
+            </span>
+            <span class="cr-acc-caret">›</span>
+          </button>
+          <div class="cr-acc-body" id="crAccBody_deposit" hidden>
+            <input type="date" id="crDepositDate" class="cr-date-input" onchange="crOnDepositInput()">
+          </div>
         </div>
+
       </div>
 
       <div class="cr-needs-label" style="margin-top:14px;">KHÁCH CÓ NHU CẦU KHÔNG?</div>
