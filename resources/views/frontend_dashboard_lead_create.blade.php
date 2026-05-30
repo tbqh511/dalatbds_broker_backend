@@ -50,11 +50,17 @@
                                     </select>
                                 </div>
                             </div>
+                            @php
+                                $oldMin = (float) old('price_min', 0);
+                                $oldMax = (float) old('price_max', 0);
+                                $tyMin = $oldMin > 0 ? rtrim(rtrim(number_format($oldMin / 1000000000, 3, '.', ''), '0'), '.') : '';
+                                $tyMax = ($oldMax > 0 && $oldMax < 999999999999) ? rtrim(rtrim(number_format($oldMax / 1000000000, 3, '.', ''), '0'), '.') : '';
+                            @endphp
                             <div class="col-md-12">
                                 <label>Ngân sách <span class="dec-icon"><i class="far fa-money-bill-wave"></i></span></label>
                                 <div class="listsearch-input-item">
                                     <select id="budget-range-select" class="chosen-select no-search-select">
-                                        <option value="">Thỏa thuận</option>
+                                        <option value="">Thỏa thuận / Tùy chỉnh</option>
                                         <option value="0:1000000000:Dưới 1 tỷ" {{ old('budget_label') === 'Dưới 1 tỷ' ? 'selected' : '' }}>Dưới 1 tỷ</option>
                                         <option value="1000000000:3000000000:1 - 3 tỷ" {{ old('budget_label') === '1 - 3 tỷ' ? 'selected' : '' }}>1 - 3 tỷ</option>
                                         <option value="3000000000:5000000000:3 - 5 tỷ" {{ old('budget_label') === '3 - 5 tỷ' ? 'selected' : '' }}>3 - 5 tỷ</option>
@@ -63,6 +69,19 @@
                                         <option value="20000000000:50000000000:20 - 50 tỷ" {{ old('budget_label') === '20 - 50 tỷ' ? 'selected' : '' }}>20 - 50 tỷ</option>
                                         <option value="50000000000:999999999999:Trên 50 tỷ" {{ old('budget_label') === 'Trên 50 tỷ' ? 'selected' : '' }}>Trên 50 tỷ</option>
                                     </select>
+                                </div>
+                                {{-- Nhập khoảng chính xác (tỷ) — đồng bộ với preset --}}
+                                <div class="row" style="margin-top:8px;">
+                                    <div class="col-md-6">
+                                        <label style="font-weight:400;font-size:13px;">Từ (tỷ)</label>
+                                        <input type="number" id="budget-ty-min" min="0" step="0.1" placeholder="0"
+                                            value="{{ $tyMin }}" oninput="onBudgetManualInput()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label style="font-weight:400;font-size:13px;">Đến (tỷ) <span style="color:#aaa;">(tuỳ chọn)</span></label>
+                                        <input type="number" id="budget-ty-max" min="0" step="0.1" placeholder="—"
+                                            value="{{ $tyMax }}" oninput="onBudgetManualInput()">
+                                    </div>
                                 </div>
                                 <input type="hidden" name="price_min" id="price-min-hidden" value="{{ old('price_min', 0) }}">
                                 <input type="hidden" name="price_max" id="price-max-hidden" value="{{ old('price_max', 0) }}">
@@ -98,17 +117,47 @@
             const tg = window.Telegram.WebApp;
             tg.expand();
         }
+        var UNCAPPED = 999999999999;
+        function vndToTy(vnd) {
+            var v = Number(vnd) || 0;
+            if (v <= 0) return '';
+            return parseFloat((v / 1e9).toFixed(3));
+        }
+        function tyToVnd(str) {
+            if (str === '' || str == null) return 0;
+            var n = parseFloat(String(str).replace(',', '.'));
+            return (isFinite(n) && n > 0) ? Math.round(n * 1e9) : 0;
+        }
+        // Chọn preset -> set hidden + fill ô Từ/Đến + giữ label
+        function applyBudgetRange(val) {
+            var parts = val ? val.split(':') : [];
+            var min = Number(parts[0]) || 0;
+            var max = Number(parts[1]) || 0;
+            document.getElementById('price-min-hidden').value = min;
+            document.getElementById('price-max-hidden').value = max;
+            document.getElementById('budget-label-hidden').value = parts.slice(2).join(':') || '';
+            var minTy = document.getElementById('budget-ty-min');
+            var maxTy = document.getElementById('budget-ty-max');
+            if (minTy) minTy.value = min > 0 ? vndToTy(min) : '';
+            if (maxTy) maxTy.value = (max > 0 && max < UNCAPPED) ? vndToTy(max) : '';
+        }
+        // Gõ tay -> set hidden, xóa label + bỏ chọn dropdown
+        function onBudgetManualInput() {
+            var minTy = document.getElementById('budget-ty-min');
+            var maxTy = document.getElementById('budget-ty-max');
+            document.getElementById('price-min-hidden').value = minTy ? tyToVnd(minTy.value) : 0;
+            document.getElementById('price-max-hidden').value = maxTy ? tyToVnd(maxTy.value) : 0;
+            document.getElementById('budget-label-hidden').value = '';
+            var sel = document.getElementById('budget-range-select');
+            if (sel) { sel.value = ''; if (window.jQuery && jQuery(sel).trigger) jQuery(sel).trigger('chosen:updated'); }
+        }
         document.addEventListener('DOMContentLoaded', function () {
             var sel = document.getElementById('budget-range-select');
-            if (!sel) return;
-            function applyBudgetRange(val) {
-                var parts = val ? val.split(':') : [];
-                document.getElementById('price-min-hidden').value = parts[0] || 0;
-                document.getElementById('price-max-hidden').value = parts[1] || 0;
-                document.getElementById('budget-label-hidden').value = parts.slice(2).join(':') || '';
+            if (sel) {
+                sel.addEventListener('change', function () { applyBudgetRange(this.value); });
+                // Chỉ áp preset khi đang chọn 1 preset; nếu trống thì giữ giá trị nhập tay (old input).
+                if (sel.value) applyBudgetRange(sel.value);
             }
-            sel.addEventListener('change', function () { applyBudgetRange(this.value); });
-            applyBudgetRange(sel.value);
         });
     </script>
 @endpush

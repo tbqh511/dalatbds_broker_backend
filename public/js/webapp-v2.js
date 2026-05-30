@@ -2234,19 +2234,53 @@ function loadAssignHistoryOnly(){
   .catch(function(){});
 }
 
-function budgetLabel(minRaw, maxRaw) {
-  var ranges = [
+// ============ MỨC TÀI CHÍNH (BUDGET) — helper dùng chung ============
+// Quy ước: giá trị lưu = VND tuyệt đối (vd 10000000000 = 10 tỷ).
+// 999999999999 là mốc "không giới hạn trên" (Trên 50 tỷ / trở lên).
+var BUDGET_UNCAPPED = 999999999999;
+
+// Preset nguồn duy nhất cho V2 — đọc từ WEBAPP_CONFIG, fallback bảng cứng nếu chưa load.
+function budgetPresets() {
+  var p = window.WEBAPP_CONFIG && window.WEBAPP_CONFIG.crmOptions && window.WEBAPP_CONFIG.crmOptions.budgetPresets;
+  if (p && p.length) return p;
+  return [
     { min: 0,            max: 0,            label: 'Thỏa thuận' },
     { min: 0,            max: 1000000000,   label: 'Dưới 1 tỷ' },
-    { min: 1000000000,   max: 3000000000,   label: '1 - 3 tỷ' },
-    { min: 3000000000,   max: 5000000000,   label: '3 - 5 tỷ' },
-    { min: 5000000000,   max: 10000000000,  label: '5 - 10 tỷ' },
-    { min: 10000000000,  max: 20000000000,  label: '10 - 20 tỷ' },
-    { min: 20000000000,  max: 50000000000,  label: '20 - 50 tỷ' },
-    { min: 50000000000,  max: 999999999999, label: 'Trên 50 tỷ' },
+    { min: 1000000000,   max: 3000000000,  label: '1 - 3 tỷ' },
+    { min: 3000000000,   max: 5000000000,  label: '3 - 5 tỷ' },
+    { min: 5000000000,   max: 10000000000, label: '5 - 10 tỷ' },
+    { min: 10000000000,  max: 20000000000, label: '10 - 20 tỷ' },
+    { min: 20000000000,  max: 50000000000, label: '20 - 50 tỷ' },
+    { min: 50000000000,  max: BUDGET_UNCAPPED, label: 'Trên 50 tỷ' },
   ];
+}
+
+// VND -> số tỷ "sạch" (bỏ đuôi lẻ do double): 10000000000 -> 10, 11500000000 -> 11.5.
+// Dùng làm value cho input "Từ/Đến" và text hiển thị.
+function budgetToTy(vnd) {
+  var v = Number(vnd) || 0;
+  if (v <= 0) return 0;
+  return parseFloat((v / 1e9).toFixed(3));
+}
+
+// Số tỷ người dùng nhập (chấp nhận dấu phẩy "11,5") -> VND tuyệt đối.
+function tyToVnd(str) {
+  if (str === '' || str == null) return 0;
+  var n = parseFloat(String(str).replace(',', '.'));
+  if (!isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 1e9);
+}
+
+// So khớp 1 cặp (min,max) với 1 preset — dùng chênh lệch nhỏ để tránh lệch do double.
+function budgetMatchesPreset(min, max, preset) {
+  return Math.abs(Number(min) - Number(preset.min)) < 1 &&
+         Math.abs(Number(max) - Number(preset.max)) < 1;
+}
+
+function budgetLabel(minRaw, maxRaw) {
+  var ranges = budgetPresets();
   for (var i = 0; i < ranges.length; i++) {
-    if (ranges[i].min === minRaw && ranges[i].max === maxRaw) {
+    if (budgetMatchesPreset(minRaw, maxRaw, ranges[i])) {
       return ranges[i].label;
     }
   }
@@ -7025,8 +7059,10 @@ function _crInitNeedsForm(client) {
 
   var minEl = document.getElementById('crBudgetMin');
   var maxEl = document.getElementById('crBudgetMax');
-  if (minEl) minEl.value = crNeedsState.price_min > 0 ? (crNeedsState.price_min / 1e9) : '';
-  if (maxEl) maxEl.value = crNeedsState.price_max > 0 ? (crNeedsState.price_max / 1e9) : '';
+  // Hiển thị số tỷ "sạch" (bỏ đuôi lẻ do double). Ô "Đến" để trống khi không giới hạn trên.
+  if (minEl) minEl.value = crNeedsState.price_min > 0 ? budgetToTy(crNeedsState.price_min) : '';
+  if (maxEl) maxEl.value = (crNeedsState.price_max > 0 && crNeedsState.price_max < BUDGET_UNCAPPED)
+    ? budgetToTy(crNeedsState.price_max) : '';
 
   var dateEl = document.getElementById('crDepositDate');
   if (dateEl) dateEl.value = crNeedsState.expected_deposit_date || '';
@@ -7093,8 +7129,9 @@ function _crRenderBudgetChips() {
   var el = document.getElementById('crBudgetChips');
   if (!el) return;
   el.innerHTML = _crOpts().budgetPresets.map(function(b) {
-    var on = (crNeedsState.budget_label === b.label) ||
-             (!crNeedsState.budget_label && Number(crNeedsState.price_min) === Number(b.min) && Number(crNeedsState.price_max) === Number(b.max));
+    // Ưu tiên khớp theo label; nếu không có label thì khớp khoảng (dung sai nhỏ tránh lệch double).
+    var on = (crNeedsState.budget_label && crNeedsState.budget_label === b.label) ||
+             (!crNeedsState.budget_label && budgetMatchesPreset(crNeedsState.price_min, crNeedsState.price_max, b));
     return '<button type="button" class="cr-chip' + (on ? ' active' : '') + '" onclick="crSelectBudgetPreset(' + b.min + ',' + b.max + ',\'' + escHtml(b.label).replace(/'/g, "\\'") + '\',this)">' + escHtml(b.label) + '</button>';
   }).join('');
 }
@@ -7134,8 +7171,8 @@ window.crSelectBudgetPreset = function(min, max, label, btn) {
   if (btn) btn.classList.add('active');
   var minEl = document.getElementById('crBudgetMin');
   var maxEl = document.getElementById('crBudgetMax');
-  if (minEl) minEl.value = min > 0 ? (min / 1e9) : '';
-  if (maxEl) maxEl.value = (max > 0 && max < 999999999999) ? (max / 1e9) : '';
+  if (minEl) minEl.value = min > 0 ? budgetToTy(min) : '';
+  if (maxEl) maxEl.value = (max > 0 && max < BUDGET_UNCAPPED) ? budgetToTy(max) : '';
   _crSyncSummary();
 };
 
@@ -7143,8 +7180,9 @@ window.crOnBudgetManualInput = function() {
   if (!crNeedsState) return;
   var minEl = document.getElementById('crBudgetMin');
   var maxEl = document.getElementById('crBudgetMax');
-  crNeedsState.price_min = minEl && minEl.value ? Math.round(parseFloat(minEl.value) * 1e9) : 0;
-  crNeedsState.price_max = maxEl && maxEl.value ? Math.round(parseFloat(maxEl.value) * 1e9) : 0;
+  // Chấp nhận số thập phân, kể cả dấu phẩy (vd "11,5").
+  crNeedsState.price_min = minEl ? tyToVnd(minEl.value) : 0;
+  crNeedsState.price_max = maxEl ? tyToVnd(maxEl.value) : 0;
   crNeedsState.budget_label = ''; // manual override clears preset label
   document.querySelectorAll('#crBudgetChips .cr-chip').forEach(function(b) { b.classList.remove('active'); });
   _crSyncSummary();
@@ -7155,8 +7193,9 @@ function _crBudgetText() {
   if (crNeedsState.budget_label) return crNeedsState.budget_label;
   var lo = crNeedsState.price_min, hi = crNeedsState.price_max;
   if (lo <= 0 && hi <= 0) return '';
-  function f(v) { return (v / 1e9) % 1 === 0 ? (v / 1e9) + ' tỷ' : (v / 1e9).toFixed(1) + ' tỷ'; }
-  return (lo > 0 ? f(lo) : '?') + ' – ' + (hi > 0 ? f(hi) : '?');
+  // hi vô cực (BUDGET_UNCAPPED) -> "từ X tỷ trở lên"
+  if (lo > 0 && (hi <= 0 || hi >= BUDGET_UNCAPPED)) return budgetToTy(lo) + ' tỷ trở lên';
+  return (lo > 0 ? budgetToTy(lo) + ' tỷ' : '?') + ' – ' + (hi > 0 ? budgetToTy(hi) + ' tỷ' : '?');
 }
 
 // Map raw category ids / ward codes to display labels for the summary cells.

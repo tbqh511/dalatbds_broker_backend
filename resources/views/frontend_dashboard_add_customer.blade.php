@@ -684,9 +684,15 @@
                     this.manualTo = range.max < 999999999999 ? (range.max / 1000000000).toString() : '';
                 }
             },
+            // Số tỷ người dùng nhập (chấp nhận dấu phẩy "11,5") -> số
+            parseTy(str) {
+                if (str === '' || str == null) return 0;
+                const n = parseFloat(String(str).replace(',', '.'));
+                return (isFinite(n) && n > 0) ? n : 0;
+            },
             adjustManual(field, delta) {
                 const key = field === 'from' ? 'manualFrom' : 'manualTo';
-                const current = parseFloat(this[key]) || 0;
+                const current = this.parseTy(this[key]);
                 const next = Math.max(0, Math.round((current + delta) * 10) / 10);
                 this[key] = next === 0 && field === 'to' ? '' : next.toString();
                 this.onManualInput();
@@ -718,8 +724,8 @@
                     this.form.price_max = this.selectedPriceRange.max;
                     this.form.budget_label = this.selectedPriceRange.label;
                 } else {
-                    const from = parseFloat(this.manualFrom) || 0;
-                    const to = parseFloat(this.manualTo) || 0;
+                    const from = this.parseTy(this.manualFrom);
+                    const to = this.parseTy(this.manualTo);
                     this.form.price_min = Math.round(from * 1000000000);
                     this.form.price_max = to ? Math.round(to * 1000000000) : 999999999999;
                     this.form.budget_label = this.getPriceConfirmLabel();
@@ -749,7 +755,13 @@
             },
 
             getSelectedPriceLabel() {
-                return this.form.budget_label || this.getPriceRangeDisplay();
+                if (this.form.budget_label) return this.form.budget_label;
+                const min = Number(this.form.price_min) || 0;
+                const max = Number(this.form.price_max) || 0;
+                if (min <= 0 && max <= 0) return 'Thỏa thuận';
+                const ty = v => parseFloat((v / 1000000000).toFixed(3));
+                if (min > 0 && (max <= 0 || max >= 999999999999)) return 'Từ ' + ty(min) + ' tỷ trở lên';
+                return (min > 0 ? ty(min) + ' tỷ' : '?') + ' – ' + (max > 0 ? ty(max) + ' tỷ' : '?');
             },
 
             togglePurpose(value) {
