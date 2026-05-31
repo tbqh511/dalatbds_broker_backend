@@ -121,7 +121,7 @@
       </div>
       <div class="menu-item-right"><span class="badge badge-blue" style="font-size:10px;">Tổng hợp</span> ›</div>
     </div>
-    <div class="menu-item" onclick="openSubpage('leads')">
+    {{-- <div class="menu-item" onclick="openSubpage('leads')">
       <div class="menu-item-icon"
         style="background:var(--danger-light);display:flex;align-items:center;justify-content:center;"><svg width="18"
           height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
@@ -185,7 +185,7 @@
         </div>
       </div>
       <div class="menu-item-right">›</div>
-    </div>
+    </div> --}}
 
   </div>
 
