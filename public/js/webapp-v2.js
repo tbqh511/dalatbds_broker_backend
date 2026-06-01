@@ -7544,24 +7544,14 @@ window.openSendPropSheet = function(clientId) {
   var firstChip = document.querySelector('.cd-prop-type-chip');
   if (firstChip) firstChip.classList.add('active');
 
-  // Reset checkboxes — only "full" checked
-  document.querySelectorAll('.cd-check-opt').forEach(function(l) {
-    l.classList.remove('selected');
+  // Reset checkboxes — only the first option ("full") checked
+  var checkOpts = document.querySelectorAll('#cdSendChecks .cd-check-opt');
+  checkOpts.forEach(function(l, i) {
+    var on = (i === 0);
+    l.classList.toggle('selected', on);
     var ind = l.querySelector('.cd-check-indicator');
-    if (ind) ind.classList.remove('checked');
-    var cb = l.querySelector('input[type="checkbox"]');
-    if (cb) cb.checked = false;
+    if (ind) ind.classList.toggle('checked', on);
   });
-  var fullOpt = document.querySelector('.cd-check-opt input[value="full"]');
-  if (fullOpt) {
-    fullOpt.checked = true;
-    var fullLabel = fullOpt.closest('.cd-check-opt');
-    if (fullLabel) {
-      fullLabel.classList.add('selected');
-      var ind = fullLabel.querySelector('.cd-check-indicator');
-      if (ind) ind.classList.add('checked');
-    }
-  }
 
   // Reset note
   var note = document.getElementById('cdSendNote');
@@ -7706,12 +7696,10 @@ window._selectSendCatChip = function(chip, cat) {
   _loadSendPropList();
 };
 
-window._toggleSendCheckbox = function(label, value) {
-  var isSelected = label.classList.toggle('selected');
-  var ind = label.querySelector('.cd-check-indicator');
+window._toggleSendCheckbox = function(el, value) {
+  var isSelected = el.classList.toggle('selected');
+  var ind = el.querySelector('.cd-check-indicator');
   if (ind) ind.classList.toggle('checked', isSelected);
-  var cb = label.querySelector('input[type="checkbox"]');
-  if (cb) cb.checked = isSelected;
   if (isSelected) {
     if (_sendPropState.contentTypes.indexOf(value) === -1) _sendPropState.contentTypes.push(value);
   } else {

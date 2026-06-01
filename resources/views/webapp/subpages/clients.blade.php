@@ -439,7 +439,7 @@
 
       <div class="cd-send-section-label">Nội dung gửi cho khách</div>
       <div class="cd-send-checks" id="cdSendChecks">
-        <label class="cd-check-opt selected" onclick="_toggleSendCheckbox(this,'full')">
+        <div class="cd-check-opt selected" onclick="_toggleSendCheckbox(this,'full')">
           <div class="cd-check-indicator checked">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
@@ -448,9 +448,8 @@
             <div class="cd-radio-title">Toàn bộ thông tin BĐS</div>
             <div class="cd-radio-sub">Tên, mô tả, giá, diện tích, hình ảnh</div>
           </div>
-          <input type="checkbox" name="cdSendType" value="full" checked style="display:none">
-        </label>
-        <label class="cd-check-opt" onclick="_toggleSendCheckbox(this,'location')">
+        </div>
+        <div class="cd-check-opt" onclick="_toggleSendCheckbox(this,'location')">
           <div class="cd-check-indicator">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
@@ -459,9 +458,8 @@
             <div class="cd-radio-title">Gửi vị trí (bản đồ)</div>
             <div class="cd-radio-sub">Link Google Maps đến BĐS</div>
           </div>
-          <input type="checkbox" name="cdSendType" value="location" style="display:none">
-        </label>
-        <label class="cd-check-opt" onclick="_toggleSendCheckbox(this,'legal')">
+        </div>
+        <div class="cd-check-opt" onclick="_toggleSendCheckbox(this,'legal')">
           <div class="cd-check-indicator">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
@@ -470,9 +468,8 @@
             <div class="cd-radio-title">Giấy tờ pháp lý</div>
             <div class="cd-radio-sub">Số đỏ, giấy phép xây dựng</div>
           </div>
-          <input type="checkbox" name="cdSendType" value="legal" style="display:none">
-        </label>
-        <label class="cd-check-opt" onclick="_toggleSendCheckbox(this,'gallery')">
+        </div>
+        <div class="cd-check-opt" onclick="_toggleSendCheckbox(this,'gallery')">
           <div class="cd-check-indicator">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
@@ -481,8 +478,7 @@
             <div class="cd-radio-title">Hình ảnh BĐS</div>
             <div class="cd-radio-sub">Thư viện ảnh thực tế</div>
           </div>
-          <input type="checkbox" name="cdSendType" value="gallery" style="display:none">
-        </label>
+        </div>
       </div>
 
       <div style="padding:8px 16px 16px;">
