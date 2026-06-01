@@ -31,7 +31,7 @@ class PropertyShareController extends Controller
      */
     public function show(string $code)
     {
-        $deal = CrmDeal::with(['products.property.category', 'products.property.ward', 'products.property.street', 'lead', 'customer'])
+        $deal = CrmDeal::with(['products.property.category', 'products.property.ward', 'products.property.street', 'products.property.parameters', 'lead', 'customer'])
             ->where('share_code', $code)
             ->firstOrFail();
 
@@ -46,11 +46,28 @@ class PropertyShareController extends Controller
 
         $customerName = optional($deal->customer)->full_name ?? 'Quý khách';
 
+        // Payload gọn cho bản đồ (share-map.js). idx (1-based) khớp id="prop-N" của card.
+        $fallbackImg = asset('images/all/1.jpg');
+        $mapMarkers = $properties->values()->map(function ($p, $i) use ($fallbackImg) {
+            return [
+                'idx'      => $i + 1,
+                'title'    => $p['title'],
+                'location' => $p['location'],
+                'price'    => $p['price'] ?: 'Giá thỏa thuận',
+                'category' => $p['category'],
+                'type'     => $p['type_label'],
+                'img'      => ! empty($p['gallery']) ? $p['gallery'][0] : ($p['title_image'] ?: $fallbackImg),
+                'lat'      => $p['latitude'] ? (float) $p['latitude'] : null,
+                'lng'      => $p['longitude'] ? (float) $p['longitude'] : null,
+            ];
+        })->all();
+
         return view('share.property', [
             'code'         => $code,
             'dealId'       => $deal->id,
             'customerName' => $customerName,
             'properties'   => $properties,
+            'mapMarkers'   => $mapMarkers,
         ]);
     }
 
