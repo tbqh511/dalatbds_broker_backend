@@ -10,19 +10,55 @@
 @push('styles')
 <style>
     /* ── Share-package: tinh chỉnh nhẹ trên theme gốc, không đụng class dùng chung ── */
+
+    /* (1) Map nằm GỌN dưới header: hạ z-index #map-main (theme để 990) xuống thấp
+       hơn header (z-50) để bản đồ không tràn đè logo/menu. Khung bo góc cho gọn. */
+    .sp-page .map-container.fw-map { z-index: 0; border-bottom: 1px solid #e6e9f0; }
+    .sp-page .map-container #map-main { z-index: 1; }
+    .sp-page .map-container.fw-map.big_map { height: 460px; }
+    @media (max-width: 768px) { .sp-page .map-container.fw-map.big_map { height: 300px; } }
     .sp-map-empty { height: 100%; display: flex; align-items: center; justify-content: center; color: #fff; background: #2b3344; font-size: 15px; text-align: center; padding: 0 20px; }
-    .sp-intro { margin-bottom: 18px; }
-    .sp-intro p { color: #50596b; margin-top: 4px; }
+
+    /* (2) Badge loại/danh mục: đổ bóng nhẹ để luôn đọc rõ trên ảnh nền bất kỳ */
+    .sp-page .list-single-opt_header_cat .cat-opt { box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+    .sp-page .geodir-category-img .geodir-category-location a { text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+
+    /* (3) Intro: tiêu đề + mô tả thoáng, số đếm thành badge riêng (không dính tên KH) */
+    .sp-intro { margin-bottom: 22px; }
+    .sp-intro .list-main-wrap-title h2 { line-height: 1.35; }
+    .sp-intro .list-main-wrap-title h2 span { color: #4DB7FE; }
+    .sp-count-badge { display: inline-block; background: #eef6ff; color: #2f7fd1; font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 20px; margin-left: 8px; vertical-align: middle; }
+    .sp-intro p { color: #50596b; margin-top: 8px; font-size: 14px; max-width: 760px; }
+
+    /* (4) Card ngang: ảnh kéo đầy chiều cao card, hai cột canh đều nhau */
+    .sp-page .listing-item.has_one_column .geodir-category-listing { display: flex; flex-wrap: wrap; height: 100%; }
+    .sp-page .listing-item.has_one_column .geodir-category-img { align-self: stretch; }
+    .sp-page .listing-item.has_one_column .geodir-category-img,
+    .sp-page .listing-item.has_one_column .geodir-category-img_item { height: 100%; }
+    .sp-page .listing-item.has_one_column .geodir-category-img img { height: 100%; min-height: 260px; }
+    .sp-page .listing-item.has_one_column .geodir-category-content { display: flex; flex-direction: column; padding: 22px 24px; }
+    .sp-page .geodir-category-content_price { margin-bottom: 6px; }
+    .sp-page .geodir-category-content > p { color: #707479; font-size: 13.5px; line-height: 1.6; }
+    /* Đẩy khối feedback xuống đáy để các card canh nút đều nhau */
+    .sp-page .listing-item.has_one_column .sp-fb { margin-top: auto; }
+    @media (max-width: 800px) {
+        .sp-page .listing-item.has_one_column .geodir-category-img img { min-height: 220px; }
+    }
+
     /* Hộp phản hồi của khách gắn dưới mỗi card */
-    .sp-fb { display: flex; gap: 10px; padding: 14px 0 2px; border-top: 1px solid #eee; margin-top: 14px; }
+    .sp-fb { display: flex; gap: 10px; padding: 14px 0 2px; border-top: 1px solid #eee; margin-top: 16px; }
     .sp-fb-btn { flex: 1; padding: 10px 6px; border: 1px solid #e3e3e3; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; cursor: pointer; color: #50596b; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: .2s; line-height: 1.2; }
     .sp-fb-btn i { font-size: 16px; }
     .sp-fb-btn:hover { border-color: #c7c7c7; }
     .sp-fb-btn.done { background: #ecfdf5; border-color: #34d399; color: #065f46; cursor: default; flex: 1 1 100%; flex-direction: row; }
-    .sp-legal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
-    .sp-legal-grid a { aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #eee; display: block; }
+
+    /* (2) Pháp lý: dải thumbnail nhỏ gọn, KHÔNG kéo cao card */
+    .sp-legal { margin-top: 14px; }
+    .sp-legal-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .sp-legal-grid a { width: 64px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; display: block; flex: 0 0 auto; }
     .sp-legal-grid img { width: 100%; height: 100%; object-fit: cover; }
-    .sp-sec-title { font-size: 13px; font-weight: 700; color: #50596b; text-transform: uppercase; letter-spacing: .03em; margin: 16px 0 4px; }
+    .sp-sec-title { font-size: 12px; font-weight: 700; color: #50596b; text-transform: uppercase; letter-spacing: .03em; margin: 0; display: flex; align-items: center; gap: 6px; }
+
     /* Bottom sheet phản hồi */
     .sp-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, .5); display: none; align-items: flex-end; justify-content: center; z-index: 1000; }
     .sp-overlay.open { display: flex; }
@@ -39,7 +75,7 @@
 @endpush
 
 @section('content')
-<div class="content">
+<div class="content sp-page">
     <!-- Map -->
     <div class="map-container fw-map big_map">
         <div id="map-main">
@@ -72,8 +108,8 @@
             <!-- list-main-wrap-header-->
             <div class="list-main-wrap-header box-list-header fl-wrap sp-intro">
                 <div class="list-main-wrap-title">
-                    <h2>Bất động sản dành cho <span>{{ $customerName }}</span> <strong>{{ $properties->count() }}</strong></h2>
-                    <p>Được môi giới DalatBDS chọn lọc &amp; gửi riêng tới bạn. Bấm vào điểm trên bản đồ hoặc địa chỉ để xem vị trí.</p>
+                    <h2>Bất động sản dành cho <span>{{ $customerName }}</span>@if($properties->count())<span class="sp-count-badge">{{ $properties->count() }} BĐS</span>@endif</h2>
+                    <p>Được môi giới DalatBDS chọn lọc &amp; gửi riêng tới bạn. Bấm vào điểm trên bản đồ hoặc địa chỉ để xem vị trí trên bản đồ.</p>
                 </div>
             </div>
             <!-- list-main-wrap-header end-->
@@ -124,11 +160,13 @@
                             </div>
 
                             @if($p['show_legal'] && count($p['legal']))
-                            <div class="sp-sec-title"><i class="fal fa-file-alt"></i> Giấy tờ pháp lý</div>
-                            <div class="sp-legal-grid">
-                                @foreach($p['legal'] as $lg)
-                                <a href="{{ $lg }}" target="_blank" rel="noopener"><img src="{{ $lg }}" loading="lazy" alt="Pháp lý"></a>
-                                @endforeach
+                            <div class="sp-legal">
+                                <div class="sp-sec-title"><i class="fal fa-file-alt"></i> Giấy tờ pháp lý</div>
+                                <div class="sp-legal-grid">
+                                    @foreach($p['legal'] as $lg)
+                                    <a href="{{ $lg }}" target="_blank" rel="noopener"><img src="{{ $lg }}" loading="lazy" alt="Pháp lý"></a>
+                                    @endforeach
+                                </div>
                             </div>
                             @endif
 
