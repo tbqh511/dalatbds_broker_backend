@@ -93,7 +93,7 @@
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg></div>
       <div class="menu-item-body">
-        <div class="menu-item-title">Khách hàng của tôi</div>
+        <div class="menu-item-title">Nguồn khách</div>
         <div class="menu-item-sub">{{ $stats['customers_count'] ?? 0 }} khách</div>
       </div>
       <div class="menu-item-right">›</div>
@@ -116,7 +116,7 @@
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg></div>
       <div class="menu-item-body">
-        <div class="menu-item-title">Khách của tôi</div>
+        <div class="menu-item-title">Khách cần chăm sóc</div>
         <div class="menu-item-sub">{{ $stats['leads_count'] ?? 0 }} khách đang theo dõi</div>
       </div>
       <div class="menu-item-right"><span class="badge badge-blue" style="font-size:10px;">Tổng hợp</span> ›</div>

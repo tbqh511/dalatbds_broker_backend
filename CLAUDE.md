@@ -112,8 +112,22 @@ Tính năng CRM mới nên theo pattern này, không đặt logic trực tiếp 
 
 | Biến | Mục đích |
 |---|---|
+| `APP_KEY` | Laravel app key — tạo bằng `php artisan key:generate` |
+| `DB_HOST` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | Kết nối MySQL (`dalatbds_local` cho local) |
+| `JWT_SECRET` | Ký JWT cho mobile API — tạo bằng `php artisan jwt:secret` |
+| `JWT_TTL=null` | Token không hết hạn (mobile app) |
 | `API_LOGIN_SECRET` | Xác thực server-to-server cho `POST /api/check_telegram_user` và `POST /api/login` |
+| `TELEGRAM_BOT_TOKEN` | Token Telegram Bot API |
+| `TELEGRAM_WEBHOOK_SECRET` | Xác minh webhook request từ Telegram |
+| `TELEGRAM_PUBLIC_CHANNEL_ID` | ID kênh Telegram công khai |
+| `TELEGRAM_SALE_ADMIN_GROUP_ID` | ID group Telegram sale admin |
+| `TELEGRAM_BDS_GROUP_ID` | ID group Telegram BĐS |
+| `TELEGRAM_BOT_USERNAME` / `TELEGRAM_WEBAPP_SHORT_NAME` | Định danh bot |
 | `PLACE_API_KEY` | Google Maps JavaScript API + Places API |
+| `PUSHER_APP_ID` / `PUSHER_APP_KEY` / `PUSHER_APP_SECRET` / `PUSHER_APP_CLUSTER` | WebSocket real-time (cluster `ap1`) |
+| `WEBHOOK_SECRET` | Token xác thực deploy webhook |
+| `RAZOR_KEY` / `RAZOR_SECRET` | Razorpay payment gateway |
+| `CACHE_EXPIRE=-1` | Tắt cache expiry |
 
 ---
 
@@ -272,8 +286,28 @@ Không còn dev mode bypass. Để dev local, cần:
 
 ---
 
+## Deploy
+
+Không có Docker hay CI/CD. Deployment thủ công qua webhook:
+
+```bash
+# 1. Commit và push lên main
+git push origin main
+
+# 2. Gọi webhook deploy (tự động chạy git pull + migrate + cache clear)
+curl "https://dalatbds.com/webhook/deploy.php?token=<WEBHOOK_SECRET>"
+```
+
+Dùng lệnh `/deploy` trong Claude Code để tự động hóa toàn bộ flow commit → push → gọi webhook.
+Dùng `/push` để chỉ commit + push mà không deploy.
+
+Webhook (`public/webhook/deploy.php`) chạy trên cPanel tại `/home/qymxlvghhosting/public_html/dalatbds.com`.
+
+---
+
 ## Thư viện bên thứ 3 — Lưu ý
 
+- **`laravel-debugbar`**: nằm trong `require` (không phải `require-dev`) — không gây lỗi nhưng cần tắt trong production bằng `DEBUGBAR_ENABLED=false`.
 - **CKEditor**: ghim ở v4.22.1 qua CDN với `versionCheck: false` — **không** nâng cấp lên 4.23.0+ (yêu cầu license key trả phí). Dùng trong `create.blade.php` / `edit.blade.php`.
 - **Tin tức/blog**: cấu trúc dữ liệu kiểu WordPress (`news_posts`, `news_postmeta`, `news_terms`, `news_term_taxonomy`, `news_term_relationships`).
 - **Địa danh**: phân cấp hành chính Việt Nam (`LocationsProvince` → `LocationsDistrict` → `LocationsWard` → `LocationsStreet`).
