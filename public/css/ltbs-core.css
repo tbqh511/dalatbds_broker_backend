@@ -1,0 +1,261 @@
+/* ===================================================================
+   LTBS (Đà Lạt BĐS) — Desktop design system core
+   Font Jost + design tokens + base + recreated DS components.
+   Loaded on all new frontend pages (home / listing / detail / dashboard).
+   Rebuilt from Temp/design_handoff_dalat_bds design tokens.
+   =================================================================== */
+
+/* ── Jost webfont (client-provided) ── */
+@font-face{font-family:"Jost";src:url("/fonts/jost/Jost-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Jost";src:url("/fonts/jost/Jost-Medium.ttf") format("truetype");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"Jost";src:url("/fonts/jost/Jost-SemiBold.ttf") format("truetype");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Jost";src:url("/fonts/jost/Jost-Bold.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap}
+
+/* Đà Lạt BĐS — Color tokens
+   Primary brand blue #3270FC. Warm, human semantic accents evoking Đà Lạt:
+   pine green, sunrise amber, misty violet, lake teal. Never garish. */
+:root {
+  /* ── Brand primary ── */
+  --blue-50:  #eef4ff;
+  --blue-100: #e8effe;  /* primary-light surface */
+  --blue-200: #d3e0fe;
+  --blue-300: #a9c3fd;
+  --blue-400: #6a97fc;
+  --blue-500: #3270fc;  /* brand core */
+  --blue-600: #2159e0;
+  --blue-700: #1a48b8;
+  --blue-800: #163a8f;
+
+  /* ── Neutral / ink ── */
+  --ink-900: #0f1c32;  /* headings on light */
+  --ink-800: #1a1a2e;  /* primary text */
+  --ink-700: #303650;
+  --ink-600: #4b5266;
+  --ink-500: #6b7280;  /* secondary text */
+  --ink-400: #9ca3af;  /* tertiary text */
+  --ink-300: #cbd2dd;
+  --ink-200: #e5e7eb;  /* borders */
+  --ink-100: #f1f3f6;  /* secondary surface */
+  --ink-50:  #f7f8fa;  /* app background */
+  --white:   #ffffff;
+
+  /* ── Semantic accents (core / light-surface) ── */
+  --green:        #059669;
+  --green-light:  #d1fae5;
+  --amber:        #d97706;
+  --amber-light:  #fef3c7;
+  --red:          #ef4444;
+  --red-strong:   #dc2626;
+  --red-light:    #fee2e2;
+  --purple:       #7c3aed;
+  --purple-light: #ede9fe;
+  --teal:         #0d9488;
+  --teal-light:   #ccfbf1;
+  --pink:         #db2777;
+  --pink-light:   #fce7f3;
+
+  /* ── Semantic aliases (use these in components) ── */
+  --primary:          var(--blue-500);
+  --primary-hover:    var(--blue-600);
+  --primary-active:   var(--blue-700);
+  --primary-light:    var(--blue-100);
+  --primary-contrast: var(--white);
+
+  --success:       var(--green);
+  --success-light: var(--green-light);
+  --warning:       var(--amber);
+  --warning-light: var(--amber-light);
+  --danger:        var(--red);
+  --danger-light:  var(--red-light);
+
+  --text-primary:   var(--ink-800);
+  --text-secondary: var(--ink-500);
+  --text-tertiary:  var(--ink-400);
+  --text-on-primary: var(--white);
+
+  --bg-primary:    var(--white);
+  --bg-secondary:  var(--ink-100);
+  --bg-app:        var(--ink-50);
+  --bg-card:       var(--white);
+
+  --border:        var(--ink-200);
+  --border-strong: var(--ink-300);
+
+  /* ── Brand gradients (heroes, headers) ── */
+  --grad-primary: linear-gradient(135deg, #3270fc 0%, #2159e0 100%);              /* @kind color */
+  --grad-hero:    linear-gradient(150deg, #163a8f 0%, #2159e0 55%, #3270fc 100%); /* @kind color */
+  --grad-pine:    linear-gradient(135deg, #0d9488 0%, #059669 100%);              /* @kind color */
+  --grad-dusk:    linear-gradient(135deg, #4b3f9e 0%, #7c3aed 100%);              /* @kind color */
+}
+/* Đà Lạt BĐS — Typography tokens. Single family: Jost (geometric, warm).
+   Mobile-first WebApp scale — compact, high-legibility at small sizes. */
+:root {
+  --font-sans: "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Jost", sans-serif; /* headings use same family, heavier weight */
+
+  /* Weights */
+  --fw-regular:  400;  /* @kind font */
+  --fw-medium:   500;  /* @kind font */
+  --fw-semibold: 600;  /* @kind font */
+  --fw-bold:     700;  /* @kind font */
+
+  /* Type scale (px, mobile UI) */
+  --fs-9:   9px;   /* micro labels, nav captions */
+  --fs-10:  10px;  /* badges, pills */
+  --fs-11:  11px;  /* meta, deltas */
+  --fs-12:  12px;  /* secondary body, sublabels */
+  --fs-13:  13px;  /* body small (default CRM body) */
+  --fs-14:  14px;  /* body, buttons */
+  --fs-15:  15px;  /* list titles */
+  --fs-16:  16px;  /* sheet titles, section leads */
+  --fs-18:  18px;  /* card headings */
+  --fs-20:  20px;  /* page titles */
+  --fs-24:  24px;  /* hero numerals */
+  --fs-28:  28px;  /* stat heroes */
+  --fs-34:  34px;  /* price big / marketing */
+
+  /* Line heights */
+  --lh-tight:   1.15;  /* @kind font */
+  --lh-snug:    1.3;   /* @kind font */
+  --lh-normal:  1.5;   /* @kind font */
+  --lh-relaxed: 1.65;  /* @kind font */
+
+  /* Letter spacing */
+  --ls-tight:  -0.01em; /* @kind font */
+  --ls-normal: 0;       /* @kind font */
+  --ls-wide:   0.04em;  /* @kind font */
+  --ls-wider:  0.08em;  /* @kind font */
+}
+/* Đà Lạt BĐS — Spacing, radius, shadow, layout tokens.
+   4px base grid; note the WebApp uses hand-tuned values (e.g. 14px gutters). */
+:root {
+  /* Spacing scale */
+  --sp-1:  2px;
+  --sp-2:  4px;
+  --sp-3:  6px;
+  --sp-4:  8px;
+  --sp-5:  10px;
+  --sp-6:  12px;
+  --sp-7:  14px;   /* app gutter */
+  --sp-8:  16px;   /* page padding */
+  --sp-10: 20px;
+  --sp-12: 24px;
+  --sp-16: 32px;
+  --sp-20: 40px;
+
+  --gutter: 16px;      /* horizontal page gutter */
+  --gutter-tight: 14px;
+
+  /* Radius */
+  --radius-xs:   6px;
+  --radius-sm:   8px;    /* inputs, small buttons */
+  --radius-md:   12px;   /* cards, sheets inner */
+  --radius-lg:   14px;   /* prop cards, hero */
+  --radius-xl:   20px;   /* bottom sheets, dialogs */
+  --radius-pill: 999px;  /* chips, badges, avatars */
+
+  /* Shadows — soft, cool-tinted (mist over Đà Lạt) */
+  --shadow-xs:   0 1px 2px rgba(15, 28, 50, 0.06);
+  --shadow-sm:   0 2px 8px rgba(15, 28, 50, 0.06);
+  --shadow-card: 0 4px 16px rgba(15, 28, 50, 0.07);
+  --shadow-lg:   0 8px 28px rgba(15, 28, 50, 0.12);
+  --shadow-sheet: 0 -8px 32px rgba(15, 28, 50, 0.16);
+  --shadow-primary: 0 2px 8px rgba(50, 112, 252, 0.25);
+  --shadow-primary-lg: 0 6px 20px rgba(50, 112, 252, 0.32);
+
+  /* Layout (Telegram WebApp, one-handed phone) */
+  --app-max-width: 430px;  /* @kind spacing */
+  --header-h: 56px;        /* @kind spacing */
+  --bottom-nav-h: 64px;    /* @kind spacing */
+  --hit-target: 44px;      /* @kind spacing */
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* @kind other */
+  --dur-fast: 0.15s;  /* @kind other */
+  --dur-base: 0.24s;  /* @kind other */
+  --dur-slow: 0.32s;  /* @kind other */
+}
+
+/* ── Base reset (scoped-ish; applies to LTBS pages) ── */
+.ltbs *{box-sizing:border-box}
+.ltbs{font-family:var(--font-sans);color:var(--text-primary);background:var(--bg-card);-webkit-font-smoothing:antialiased;line-height:1.5}
+.ltbs img{display:block;max-width:100%}
+.ltbs a{color:inherit;text-decoration:none}
+.ltbs button{font-family:inherit}
+
+/* ── DS component: Button (recreated from LTBSDesignSystem Button) ── */
+.ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;font-weight:600;border:1px solid transparent;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap;transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease,border-color .15s ease;text-align:center}
+.ds-btn:active{transform:translateY(0) scale(.98)}
+.ds-btn svg{width:1.1em;height:1.1em;flex-shrink:0}
+/* sizes */
+.ds-btn-sm{height:36px;padding:0 14px;font-size:13.5px}
+.ds-btn-md{height:42px;padding:0 18px;font-size:14.5px}
+.ds-btn-lg{height:48px;padding:0 22px;font-size:15px}
+.ds-btn-block{width:100%}
+.ds-btn-square{border-radius:var(--radius-md)}
+/* variants × tones */
+.ds-btn-solid{background:var(--primary);color:#fff;box-shadow:var(--shadow-primary)}
+.ds-btn-solid:hover{background:var(--primary-hover);box-shadow:var(--shadow-primary-lg);transform:translateY(-1px)}
+.ds-btn-soft{background:var(--primary-light);color:var(--primary)}
+.ds-btn-soft:hover{background:var(--blue-200)}
+.ds-btn-ghost{background:transparent;color:var(--primary)}
+.ds-btn-ghost:hover{background:var(--primary-light)}
+.ds-btn-outline{background:#fff;color:var(--ink-900);border-color:var(--border)}
+.ds-btn-outline:hover{border-color:var(--border-strong);background:var(--bg-app)}
+.ds-btn-white{background:#fff;color:var(--primary);box-shadow:var(--shadow-lg)}
+.ds-btn-white:hover{transform:translateY(-1px)}
+.ds-btn-success{background:var(--success);color:#fff}
+.ds-btn-danger{background:var(--danger);color:#fff}
+.ds-btn:disabled,.ds-btn.is-disabled{opacity:.5;cursor:default;pointer-events:none}
+
+/* ── DS component: Icon (24×24 Lucide, stroke 1.7) ── */
+.ds-ic{width:24px;height:24px;flex-shrink:0;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.ds-ic-14{width:14px;height:14px}
+.ds-ic-16{width:16px;height:16px}
+.ds-ic-18{width:18px;height:18px}
+.ds-ic-20{width:20px;height:20px}
+.ds-ic-22{width:22px;height:22px}
+
+/* ── DS component: Badge ── */
+.ds-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:var(--radius-pill);line-height:1}
+.ds-badge-primary{background:var(--primary-light);color:var(--primary)}
+.ds-badge-success{background:var(--success-light);color:var(--success)}
+.ds-badge-warning{background:var(--warning-light);color:var(--warning)}
+.ds-badge-danger{background:var(--danger-light);color:var(--danger)}
+.ds-badge-neutral{background:var(--bg-secondary);color:var(--text-secondary)}
+
+/* ── DS component: Avatar ── */
+.ds-avatar{border-radius:var(--radius-pill);object-fit:cover;background:var(--ink-100);flex-shrink:0}
+
+/* ── Toast (used by ltbs-core.js) ── */
+.ltbs-toast-wrap{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.ltbs-toast{background:var(--ink-900);color:#fff;font-size:13.5px;font-weight:500;padding:11px 18px;border-radius:var(--radius-pill);box-shadow:var(--shadow-lg);opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s}
+.ltbs-toast.on{opacity:1;transform:translateY(0)}
+
+/* ── Shared property card (.hc-*) — used on home carousel, listing grid, detail related ── */
+.hc-card{background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-card);overflow:hidden;transition:transform .2s,box-shadow .2s;display:block}
+.hc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.hc-img{position:relative;aspect-ratio:4/3;background-size:cover;background-position:center;background-color:var(--ink-100)}
+.hc-img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,28,50,0) 55%,rgba(15,28,50,.45) 100%)}
+.hc-heart{position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-sm);padding:0;color:var(--text-secondary)}
+.hc-heart.on{color:var(--danger)}
+.hc-heart.on svg{fill:var(--danger)}
+.hc-verify{position:absolute;left:12px;top:12px;z-index:2;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.95);color:var(--primary);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:var(--radius-pill)}
+.hc-tag{position:absolute;left:12px;bottom:12px;z-index:2;display:inline-flex;align-items:center;gap:4px;background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--radius-pill)}
+.hc-body{padding:16px 18px 18px}
+.hc-price{display:flex;align-items:baseline;gap:6px}
+.hc-pricev{font-size:18px;font-weight:700;color:var(--ink-900);letter-spacing:-.01em}
+.hc-pricem2{font-size:13px;color:var(--text-secondary)}
+.hc-title{font-size:15px;font-weight:600;color:var(--text-primary);line-height:1.4;margin:6px 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hc-addr{font-size:13px;color:var(--text-secondary);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.hc-metarow{display:flex;align-items:center;gap:14px;padding-top:11px;border-top:1px solid var(--border)}
+.hc-meta{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-secondary)}
+
+/* ── Pagination ── */
+.ltbs-pager{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center}
+.ltbs-pager .pg{min-width:38px;height:38px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;color:var(--text-primary);background:#fff;transition:all .15s}
+.ltbs-pager a.pg:hover{border-color:var(--primary);color:var(--primary)}
+.ltbs-pager .pg.is-active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:var(--shadow-primary)}
+.ltbs-pager .pg.is-disabled{opacity:.4;pointer-events:none}
+.ltbs-pager .pg.is-dots{border:none;background:none}

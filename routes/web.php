@@ -95,6 +95,8 @@ Route::post('/webapp/leads/{id}/assign', [CrmLeadController::class, 'doAssign'])
 Route::group(['middleware' => 'telegram.webapp'], function () {
     Route::get('/webapp/logout', [TelegramWebAppController::class, 'logout'])->name('webapp.logout');
     Route::get('/webapp', [TelegramWebAppController::class , 'index'])->name('webapp');
+    // Desktop workspace dashboard (new — shares webapp guard, does not touch Mini App /webapp)
+    Route::get('/webapp/desktop', [TelegramWebAppController::class , 'desktopDashboard'])->name('webapp.desktop');
     Route::get('/webapp/home-feed', [TelegramWebAppController::class , 'homeFeed'])->name('webapp.home_feed');
     Route::get('/webapp/search/suggestions', [TelegramWebAppController::class, 'searchSuggestions'])->name('webapp.search.suggestions');
     Route::get('/webapp/search/results', [TelegramWebAppController::class, 'searchResults'])->name('webapp.search.results');

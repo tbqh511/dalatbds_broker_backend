@@ -3,18 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\parameter;
-use App\Models\Property;
-use Illuminate\Http\Request;
 use App\Models\LocationsStreet;
 use App\Models\LocationsWard;
-use App\Models\ProductType;
+use App\Models\parameter;
 use App\Models\Product;
+use App\Models\Property;
+use Illuminate\Http\Request;
 use PHPUnit\Framework\MockObject\Rule\Parameters;
 
 class FrontEndPropertiesController extends Controller
 {
-
     /**
      * Display the detail of a property by its slug.
      */
@@ -64,7 +62,7 @@ class FrontEndPropertiesController extends Controller
         }
 
         // Telegram in-app browser có "Telegram" trong UA nhưng không phải bot
-        $isTelegramBrowser = !$isCrawler && stripos($userAgent, 'Telegram') !== false;
+        $isTelegramBrowser = ! $isCrawler && stripos($userAgent, 'Telegram') !== false;
 
         if ($isTelegramBrowser) {
             $deepLink = sprintf(
@@ -73,6 +71,7 @@ class FrontEndPropertiesController extends Controller
                 config('services.telegram.webapp_short_name'),
                 $property->id
             );
+
             return redirect($deepLink);
         }
         // === End Smart Deep Link ===
@@ -139,16 +138,16 @@ class FrontEndPropertiesController extends Controller
         );
 
         return view('frontend_properties_detail', [
-            'property'            => $property,
-            'relatedProducts'     => $relatedProducts,
+            'property' => $property,
+            'relatedProducts' => $relatedProducts,
             'highlightedProducts' => $highlightedProducts,
-            'categories'          => $categories,
-            'locationsWards'      => $locationsWards,
-            'telegramDeepLink'    => $telegramDeepLink,
+            'categories' => $categories,
+            'locationsWards' => $locationsWards,
+            'telegramDeepLink' => $telegramDeepLink,
         ]);
     }
 
-        // Helper function to calculate avg_price_per_m2
+    // Helper function to calculate avg_price_per_m2
     private function getAvgPricePerM2ByCategoryLocation($category_id = null, $street_code = null, $ward_code = null)
     {
         $query = Property::query();
@@ -166,14 +165,14 @@ class FrontEndPropertiesController extends Controller
         $properties = $query->whereHas('parameters', function ($query) {
             $query->where('parameters.id', config('global.price_m2'));
         })
-        ->with(['parameters' => function ($query) {
-            $query->select('parameters.id')
-                ->where('parameters.id', config('global.price_m2'));
-        }])
-        ->get();
+            ->with(['parameters' => function ($query) {
+                $query->select('parameters.id')
+                    ->where('parameters.id', config('global.price_m2'));
+            }])
+            ->get();
 
-        $totalPricePerM2 = $properties->sum(fn($property) => $property->parameters->first()?->pivot->value ?? 0);
-        $count = $properties->filter(fn($property) => $property->parameters->first()?->pivot->value)->count();
+        $totalPricePerM2 = $properties->sum(fn ($property) => $property->parameters->first()?->pivot->value ?? 0);
+        $count = $properties->filter(fn ($property) => $property->parameters->first()?->pivot->value)->count();
 
         $avgPricePerM2 = $count > 0 ? $totalPricePerM2 / $count : 0;
 
@@ -183,12 +182,12 @@ class FrontEndPropertiesController extends Controller
 
         if ($avgPricePerM2 >= $ty) {
             if ($avgPricePerM2 % $ty == 0) {
-                return number_format($avgPricePerM2 / $ty, 0) . ' tỷ/m²';
+                return number_format($avgPricePerM2 / $ty, 0).' tỷ/m²';
             } else {
-                return number_format($avgPricePerM2 / $ty, 1) . ' tỷ/m²';
+                return number_format($avgPricePerM2 / $ty, 1).' tỷ/m²';
             }
         } elseif ($avgPricePerM2 > 0) {
-            return number_format($avgPricePerM2 / $trieu, 1) . ' triệu/m²';
+            return number_format($avgPricePerM2 / $trieu, 1).' triệu/m²';
         } else {
             return 'Giá thỏa thuận';
         }
@@ -223,7 +222,6 @@ class FrontEndPropertiesController extends Controller
         // Lấy loại của property hiện tại
         $category_id = $property->category_id;
         $ward_code = $property->ward_code;
-
 
         $relatedProducts = Property::where('category_id', $category_id)
             ->orwhere('ward_code', $ward_code)
@@ -294,11 +292,11 @@ class FrontEndPropertiesController extends Controller
 
         // get the list legals of properties
         $legalsParameter = Parameter::find(config('global.legal')); // Lấy bản ghi theo config
-        $legals = $legalsParameter->type_values;
+        $legals = $legalsParameter?->type_values ?? [];
 
         // get the list directions of properties
         $directionsParameter = Parameter::find(config('global.direction')); // Lấy bản ghi theo config
-        $directions = $directionsParameter->type_values;
+        $directions = $directionsParameter?->type_values ?? [];
 
         // Get search parameters
         $idInput = $request->input('_token');
@@ -319,21 +317,21 @@ class FrontEndPropertiesController extends Controller
         $propertiesQuery = Property::query();
         // Add cotions to query based on search parameters
 
-        if (!empty($categoryInput)) {
+        if (! empty($categoryInput)) {
             $propertiesQuery->whereHas('category', function ($query) use ($categoryInput) {
                 $query->where('category', $categoryInput);
             });
         }
 
-        if (!empty($wardInput)) {
+        if (! empty($wardInput)) {
             $propertiesQuery->where('ward_code', $wardInput);
         }
 
-        if (!empty($streetInput)) {
+        if (! empty($streetInput)) {
             $propertiesQuery->where('street_code', $streetInput);
         }
 
-        if (!empty($textInput)) {
+        if (! empty($textInput)) {
             // Tách chuỗi code thành các phần
             $parts = explode('_', $textInput);
             // Lấy id từ phần tử cuối cùng của mảng parts
@@ -353,8 +351,7 @@ class FrontEndPropertiesController extends Controller
             }
         }
 
-
-        if (!empty($priceRangeInput)) {
+        if (! empty($priceRangeInput)) {
             // Tách giá trị thành mảng các khoảng giá
             $priceRanges = explode(';', $priceRangeInput);
             // Lấy giá trị tối thiểu và tối đa của khoảng giá
@@ -376,7 +373,7 @@ class FrontEndPropertiesController extends Controller
             }
         }
 
-        if (!empty($areaInput)) {
+        if (! empty($areaInput)) {
             // Tách giá trị range diện tích thành mảng
             $areaRange = explode(';', $areaInput);
             $minArea = $areaRange[0];
@@ -398,24 +395,22 @@ class FrontEndPropertiesController extends Controller
             }
         }
 
-        if (!empty($legalInput)) {
+        if (! empty($legalInput)) {
             $propertiesQuery->whereHas('assignParameter', function ($query) use ($legalInput) {
                 $query->where('parameter_id', config('global.legal'))
                     ->where('value', $legalInput);
             });
         }
 
-        if (!empty($directionInput)) {
+        if (! empty($directionInput)) {
             $propertiesQuery->whereHas('assignParameter', function ($query) use ($directionInput) {
                 $query->where('parameter_id', config('global.direction'))
                     ->where('value', $directionInput);
             });
         }
 
-
-
-        if (!empty($numberFloorInput)) {
-            if ($numberRoomInput != "0") {
+        if (! empty($numberFloorInput)) {
+            if ($numberRoomInput != '0') {
                 $propertiesQuery->whereHas('assignParameter', function ($query) use ($numberFloorInput) {
                     $query->where('parameter_id', config('global.number_floor'))
                         ->where('value', $numberFloorInput);
@@ -423,8 +418,8 @@ class FrontEndPropertiesController extends Controller
             }
         }
 
-        if (!empty($numberRoomInput)) {
-            if ($numberRoomInput != "0") {
+        if (! empty($numberRoomInput)) {
+            if ($numberRoomInput != '0') {
                 $propertiesQuery->whereHas('assignParameter', function ($query) use ($numberRoomInput) {
                     $query->where('parameter_id', config('global.number_room'))
                         ->where('value', $numberRoomInput);
@@ -458,54 +453,56 @@ class FrontEndPropertiesController extends Controller
 
     private function generateSearchResultMessage($textInput, $propertyTypeInput, $priceRangeInput, $legalInput, $directionInput, $areaInput, $numberFloorInput, $numberRoomInput, $sortStatus, $categoryInput, $wardInput, $streetInput)
     {
-        $searchResult = "Kết quả cho:\"";
+        $searchResult = 'Kết quả cho:"';
 
         // $textInput = $request->input('text');
-        if (!empty($textInput)) {
-            $searchResult .= "Tìm \"" . $textInput . "\", ";
+        if (! empty($textInput)) {
+            $searchResult .= 'Tìm "'.$textInput.'", ';
         }
 
         //$propertyTypeInput = $request->input('property_type');
-        if (!empty($propertyTypeInput)) {
-            if ($propertyTypeInput == 0)
-                $searchResult .= "Bán, ";
-            else
-                $searchResult .= "Cho thuê, ";
-        }
-
-        if (!empty($legalInput)) {
-            $searchResult .= config('global.legal_title') . ": " . $legalInput . "\", ";
-        }
-        // $directionInput = $request->input('direction');
-        if (!empty($directionInput)) {
-            $searchResult .= config('global.direction_title') . ": " . $directionInput . ", ";
-        }
-
-        if (!empty($categoryInput)) {
-            $searchResult .= "Loại BDS: " . $categoryInput . ", ";
-        }
-
-        if (!empty($streetInput)) {
-            $street = LocationsStreet::where('code', $streetInput)->first();
-            if ($street) {
-                $searchResult .= 'đường ' . $street->street_name . ", ";
+        if (! empty($propertyTypeInput)) {
+            if ($propertyTypeInput == 0) {
+                $searchResult .= 'Bán, ';
+            } else {
+                $searchResult .= 'Cho thuê, ';
             }
         }
 
-        if (!empty($wardInput)) {
+        if (! empty($legalInput)) {
+            $searchResult .= config('global.legal_title').': '.$legalInput.'", ';
+        }
+        // $directionInput = $request->input('direction');
+        if (! empty($directionInput)) {
+            $searchResult .= config('global.direction_title').': '.$directionInput.', ';
+        }
+
+        if (! empty($categoryInput)) {
+            $searchResult .= 'Loại BDS: '.$categoryInput.', ';
+        }
+
+        if (! empty($streetInput)) {
+            $street = LocationsStreet::where('code', $streetInput)->first();
+            if ($street) {
+                $searchResult .= 'đường '.$street->street_name.', ';
+            }
+        }
+
+        if (! empty($wardInput)) {
             $ward = LocationsWard::where('code', $wardInput)->first();
             if ($ward) {
-                $searchResult .= $ward->full_name . ", ";
+                $searchResult .= $ward->full_name.', ';
             }
         }
         // Loại bỏ ký tự phẩy và khoảng trắng cuối cùng
-        $searchResult = rtrim($searchResult, ", ");
+        $searchResult = rtrim($searchResult, ', ');
         // Thêm chuỗi đuôi
         //dd($searchResult );
-        if ($searchResult == "Kết quả cho:\"")
-            $searchResult = "Kết quả cho: \"Tp Đà Lạt\"";
-        else
-            $searchResult .= ", Tp Đà Lạt\"";
+        if ($searchResult == 'Kết quả cho:"') {
+            $searchResult = 'Kết quả cho: "Tp Đà Lạt"';
+        } else {
+            $searchResult .= ', Tp Đà Lạt"';
+        }
 
         return $searchResult;
         // // $priceRangeInput = $request->input('price-range2');
@@ -557,7 +554,6 @@ class FrontEndPropertiesController extends Controller
     /**
      * Get street suggestions for autocomplete.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function autocompleteStreet(Request $request)
@@ -565,7 +561,7 @@ class FrontEndPropertiesController extends Controller
         $term = $request->input('term');
 
         // Query the streets based on the search term
-        $streets = LocationsStreet::where('street_name', 'like', '%' . $term . '%')->pluck('street_name');
+        $streets = LocationsStreet::where('street_name', 'like', '%'.$term.'%')->pluck('street_name');
 
         return response()->json($streets);
     }

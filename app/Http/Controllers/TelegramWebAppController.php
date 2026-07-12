@@ -1235,9 +1235,9 @@ class TelegramWebAppController extends Controller
                 foreach ($properties as $prop) {
                     $product = $svc->recordSend($deal, $prop, $contentTypes, $note, $broker, $code);
                     $recorded[] = [
-                        'product_id'   => $product->id,
-                        'property_id'  => $prop->id,
-                        'status'       => $product->getRawOriginal('status'),
+                        'product_id' => $product->id,
+                        'property_id' => $prop->id,
+                        'status' => $product->getRawOriginal('status'),
                         'status_label' => $product->status instanceof \App\Enums\DealsProductStatus
                             ? $product->status->label()
                             : (string) $product->status,
@@ -1253,14 +1253,14 @@ class TelegramWebAppController extends Controller
             $this->notifyBrokerSentSummary($broker, $lead, $properties->count(), $payload);
 
             return response()->json([
-                'success'    => true,
-                'deal_id'    => $result['deal']->id,
+                'success' => true,
+                'deal_id' => $result['deal']->id,
                 'share_code' => $result['code'],
-                'share_url'  => $payload['share_url'],
-                'zalo_text'  => $payload['zalo_text'],
-                'images'     => $payload['images'],
-                'recorded'   => $result['recorded'],
-                'count'      => count($propertyIds),
+                'share_url' => $payload['share_url'],
+                'zalo_text' => $payload['zalo_text'],
+                'images' => $payload['images'],
+                'recorded' => $result['recorded'],
+                'count' => count($propertyIds),
             ]);
         } catch (\Exception $e) {
             Log::error($e);
@@ -1284,7 +1284,7 @@ class TelegramWebAppController extends Controller
             $customerName = optional($lead->customer)->full_name ?? 'khách';
             $msg = "✅ Đã chuẩn bị {$count} BĐS gửi cho {$customerName}.\n"
                  ."Link khách xem: {$payload['share_url']}\n\n"
-                 ."Bạn có thể copy nội dung + tải ảnh trong app để gửi qua Zalo.";
+                 .'Bạn có thể copy nội dung + tải ảnh trong app để gửi qua Zalo.';
 
             $images = array_slice($payload['images'], 0, 10);
             if (count($images) >= 2) {
@@ -1304,6 +1304,63 @@ class TelegramWebAppController extends Controller
         $categories = Category::where('status', 1)->orderBy('order')->get(['id', 'category']);
 
         return view('frontend_dashboard_temp', compact('categories'));
+    }
+
+    /**
+     * Desktop workspace dashboard for Sale/eBroker (new — shares webapp guard).
+     * KHÔNG đụng Mini App /webapp. Wire dữ liệu thật; empty state khi tài khoản mới.
+     */
+    public function desktopDashboard(Request $request)
+    {
+        $customer = Auth::guard('webapp')->user();
+
+        // Greeting theo giờ
+        $hour = (int) now()->format('H');
+        $greeting = $hour < 11 ? 'Chào buổi sáng' : ($hour < 14 ? 'Chào buổi trưa' : ($hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'));
+
+        // KPIs
+        $activeCount = Property::where('added_by', $customer->id)->where('status', 1)->count();
+        $viewsCount = (int) Property::where('added_by', $customer->id)->sum('total_click');
+        $leadsCount = CrmLead::where('sale_id', $customer->id)->orWhere('user_id', $customer->id)->count();
+        $pendingCount = Property::where('added_by', $customer->id)->where('status', 0)->count();
+
+        $kpis = [
+            ['label' => 'Tin đang đăng', 'value' => $activeCount, 'delta' => 'BĐS trạng thái hoạt động', 'icon' => 'home'],
+            ['label' => 'Lượt xem', 'value' => number_format($viewsCount, 0, ',', '.'), 'delta' => 'Tổng lượt xem tin của bạn', 'icon' => 'eye'],
+            ['label' => 'Khách / Leads', 'value' => $leadsCount, 'delta' => 'Đang theo dõi', 'icon' => 'users'],
+            ['label' => 'Chờ xác minh', 'value' => $pendingCount, 'delta' => 'Tin cần duyệt', 'icon' => 'shield'],
+        ];
+
+        // Nguồn theo địa bàn — my properties grouped by ward
+        $wardCodes = Property::where('added_by', $customer->id)->where('status', 1)
+            ->select('ward_code')->groupBy('ward_code')->pluck('ward_code')->filter();
+        $wardNames = LocationsWard::whereIn('code', $wardCodes)->pluck('full_name', 'code');
+        $wardsData = Property::where('added_by', $customer->id)->where('status', 1)
+            ->select('ward_code')->selectRaw('count(*) as c')->groupBy('ward_code')->get()
+            ->map(fn ($r) => [
+                'name' => $wardNames[$r->ward_code] ?? 'Chưa rõ khu vực',
+                'count' => $r->c,
+            ])->values();
+
+        // Đang chờ xác minh (my pending)
+        $pendingData = Property::with('ward')->where('added_by', $customer->id)->where('status', 0)
+            ->latest()->take(5)->get();
+
+        // Việc hôm nay — bookings hôm nay + leads cần chăm
+        $todayBookings = collect();
+        try {
+            $todayBookings = CrmDealProductBooking::whereDate('scheduled_at', today())
+                ->whereHas('deal.lead', fn ($q) => $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id))
+                ->orderBy('scheduled_at')->take(5)->get();
+        } catch (\Throwable $e) {
+            // schema khác — bỏ qua, empty state sẽ hiện
+        }
+        $nurtureLeads = CrmLead::where(fn ($q) => $q->where('sale_id', $customer->id)->orWhere('user_id', $customer->id))
+            ->latest()->take(5)->get();
+
+        return view('frontend_dashboard_desktop', compact(
+            'customer', 'greeting', 'kpis', 'wardsData', 'pendingData', 'todayBookings', 'nurtureLeads'
+        ));
     }
 
     public function propertyDetailJson(Request $request, $id)

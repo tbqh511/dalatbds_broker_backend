@@ -1,272 +1,215 @@
-@extends('frontends.master')
+@extends('frontends.ltbs.master')
+
+@section('title', 'Danh sách BĐS Đà Lạt — Đà Lạt BĐS')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/ltbs-listing.css') }}">
+@endpush
+
+@php
+    $q = request();
+    $ptype = $q->input('property_type', '');
+    $curWard = $q->input('ward', '');
+    $curCat = $q->input('category', '');
+    $curPrice = $q->input('price-range2', '');
+    $curRoom = $q->input('number_room', '');
+    $curLegal = $q->input('legal', '');
+    $curSort = $q->input('sort_status', '');
+    $priceOptions = [
+        '' => 'Tất cả mức giá',
+        '0;2000000000' => 'Dưới 2 tỷ',
+        '2000000000;5000000000' => '2 – 5 tỷ',
+        '5000000000;10000000000' => '5 – 10 tỷ',
+        '10000000000;999000000000' => 'Trên 10 tỷ',
+    ];
+    $sortOptions = [
+        '' => 'Nổi bật',
+        'price_asc' => 'Giá tăng dần',
+        'price_desc' => 'Giá giảm dần',
+        'view_count' => 'Xem nhiều nhất',
+    ];
+@endphp
+
 @section('content')
-<div class="content">
-    <section class="gray-bg small-padding ">
-        <div class="container">
-            <div class="mob-nav-content-btn  color-bg show-list-wrap-search ntm fl-wrap">Tìm kiếm thêm</div>
-            <div class="list-searh-input-wrap box_list-searh-input-wrap lws_mobile fl-wrap">
-                <div class="list-searh-input-wrap-title fl-wrap"><i class="far fa-sliders-h"></i><span>Bộ Lọc Tìm
-                        Kiếm</span></div>
-                <div class="custom-form fl-wrap">
-                    <form id="searchForm" action="{{ route('properties.index') }}" method="GET">
-                        @csrf
-                        <div class="row">
-                            <div class="col-sm-3">
-                                <div class="listsearch-input-item">
-                                    <input name="text" type="text" placeholder="Tìm BDS" value="{{ request()->input('text') }}" />
-                                </div>
-                            </div>
-                            <div class="col-sm-3">
-                                <div class="listsearch-input-item">
-                                    <select name="property_type" data-placeholder="Tình trạng"
-                                        class="chosen-select on-radius no-search-select">
-                                        <option value="">Cho thuê & Bán</option>
-                                        <option value="0" {{ request()->input('property_type') == '0' ? 'selected' :
-                                            ''}}>Bán</option>
-                                        <option value="1" {{ request()->input('property_type') == '1' ? 'selected' :
-                                            ''}}>Cho Thuê</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-sm-3">
-                                <div class="listsearch-input-item">
-                                    <select name="ward" data-placeholder="Phường Xã"
-                                        class="chosen-select on-radius no-search-select">
-                                        <option value="">Phường Xã</option>
-                                        @foreach ($locationsWards as $locationsWard)
-                                        <option value="{{$locationsWard->code}}" {{ request()->input('ward') ==
-                                            $locationsWard->code ? 'selected' : '' }}>
-                                            {{$locationsWard->full_name}}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+    <form id="plForm" method="GET" action="{{ route('properties.index') }}">
+        <input type="hidden" name="property_type" id="plPtype" value="{{ $ptype }}">
 
-                            <div class="col-sm-3">
-                                <div class="listsearch-input-item">
-                                    <select name="street" data-placeholder="All Categories" class="chosen-select">
-                                        <option value="">Đường</option>
-                                        @foreach ($locationsStreets as $locationsStreet)
-                                        <option value="{{$locationsStreet->code}}" {{ request()->input('street') ==
-                                            $locationsStreet->code ? 'selected' : '' }}>
-                                            {{$locationsStreet->street_name}}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="clearfix"></div>
-                            <div class="col-sm-3">
-                                <div class="listsearch-input-item">
-                                    <select name="category" data-placeholder="Loại BDS"
-                                        class="chosen-select on-radius no-search-select">
-                                        <option value="">Loại BDS</option>
-                                        @foreach ($categories as $categorie)
-                                        <option value="{{ $categorie->category }}" {{ request()->input('category') ==
-                                            $categorie->category ? 'selected' : '' }}>
-                                            {{ $categorie->category }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="listsearch-input-item">
-                                    <div class="price-range-item fl-wrap">
-                                        <span class="pr_title">Giá:</span>
-                                        <input type="text" class="price-range-double" data-min="100000000"
-                                            data-max="{{config('global.max_price')}}" name="price-range2"
-                                            data-step="100000000" value="{{ request()->input('price-range2') }}"
-                                            max_postfix="+">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-3">
-                                <div class="listsearch-input-item">
-                                    <button type="submit" class="btn color-bg fw-btn float-btn small-btn">Tìm
-                                        kiếm</button>
-                                </div>
-                            </div>
-                            </div>
-                        <div class="clearfix"></div>
-                        <div class="hidden-listing-filter fl-wrap">
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <div class="listsearch-input-item">
-                                        <label for="legal">Pháp lý</label>
-                                        <select name="legal" data-placeholder="Chọn pháp lý"
-                                            class="chosen-select on-radius no-search-select">
-                                            <option value="">Chọn pháp lý</option>
-                                            @foreach ($legals as $key => $value)
-                                            <option value="{{ $value }}" {{ Request::input('legal')==$value ? 'selected'
-                                                : '' }}>{{ $value }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="listsearch-input-item">
-                                        <label for="direction">Hướng</label>
-                                        <select name='direction' data-placeholder="Chọn hướng"
-                                            class="chosen-select on-radius no-search-select">
-                                            <option value="">Chọn hướng</option>
-                                            @foreach ($directions as $key => $value)
-                                            <option value="{{ $value }}" {{ Request::input('direction')==$value
-                                                ? 'selected' : '' }}>{{ $value }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-3">
-                                    <div class="listsearch-input-item">
-                                        <label>Diện tích (m²)</label>
-                                        <div class="price-rage-item pr-nopad fl-wrap">
-                                            <input name="area" type="text" class="area-range-double" data-min="1"
-                                                data-max="{{config('global.max_area')}}" data-step="10" data-prefix=""
-                                                value="{{ request()->input('area') }}">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="listsearch-input-item">
-                                        <label>Số tầng</label>
-                                        <select name='number_floor' data-placeholder="Số tầng"
-                                            class="chosen-select on-radius no-search-select">
-                                            <option value="0">Chọn số tầng</option>
-                                            @for ($i = 1; $i <= 10; $i++) <option value="{{ $i }}" {{ request()->
-                                                input('number_floor') == $i ?
-                                                'selected' : ''}}>
-                                                {{ $i == 10 ? '10+' : $i }}
-                                                </option>
-                                                @endfor
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="listsearch-input-item">
-                                        <label>Số phòng</label>
-                                        <select name='number_room' data-placeholder="Số phòng ngủ"
-                                            class="chosen-select on-radius no-search-select">
-                                            <option value="0">Chọn số phòng</option>
-                                            @for ($i = 1; $i <= 10; $i++) <option value="{{ $i }}" {{ request()->
-                                                input('number_room') == $i ? 'selected' : ''}}>{{ $i }}</option>
-                                                @endfor
-                                                <option value="10" {{ request()->input('number_room') == '10' ?
-                                                    'selected' : ''}}>10+</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                </div>
-                            <div class="clearfix"></div>
-                        </div>
-                    </form>
+        {{-- ═══ Search bar ═══ --}}
+        <div class="searchbar">
+            <div class="wrapc searchbar-in">
+                <div class="segbar">
+                    <button type="button" class="seg {{ $ptype === '0' || $ptype === '' ? 'on' : '' }}" onclick="LTBSList.setType(this,'0')">Mua bán</button>
+                    <button type="button" class="seg {{ $ptype === '1' ? 'on' : '' }}" onclick="LTBSList.setType(this,'1')">Cho thuê</button>
                 </div>
-                <div class="more-filter-option-wrap">
-                    <div class="more-filter-option-btn more-filter-option act-hiddenpanel"> <span>Tìm kiếm nâng
-                            cao</span> <i class="fas fa-caret-down"></i></div>
-                    <div class="reset-form reset-btn"> <i class="far fa-sync-alt"></i> Đặt lại bộ lọc</div>
+                <div class="searchfieldWrap">
+                    <div class="searchfield">
+                        <svg viewBox="0 0 24 24" class="ds-ic ds-ic-18" style="color:var(--text-tertiary)"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                        <input name="text" value="{{ $q->input('text') }}" list="plStreets" placeholder="Tìm theo phường, đường, dự án…" autocomplete="off">
+                    </div>
+                    <datalist id="plStreets"></datalist>
                 </div>
+                <button type="submit" class="ds-btn ds-btn-solid ds-btn-lg">
+                    <svg viewBox="0 0 24 24" class="ds-ic ds-ic-18"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                    Tìm
+                </button>
             </div>
-            <div class="list-main-wrap-header box-list-header fl-wrap">
-                <div class="list-main-wrap-title">
-                    <h2>{{ $searchResult }}
-                        <strong>{{ $properties->total() }}</strong>
-                    </h2>
+        </div>
+
+        <div class="main">
+            <div class="wrapc">
+                <div class="trustStrip">
+                    <svg viewBox="0 0 24 24" class="ds-ic ds-ic-16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Mọi tin đều xác minh pháp lý &amp; quy hoạch trước khi lên sóng
                 </div>
-                <div class="list-main-wrap-opt">
-                    <div class="price-opt">
-                        <span class="price-opt-title">Sắp xếp theo:</span>
-                        <div class="listsearch-input-item">
-                            <select name="sort_status" class="chosen-select no-search-select">
-                                <option value="">Bình thường</option>
-                                <option value="view_count" {{ Request::input('sort_status')=='view_count' ? 'selected'
-                                    : '' }}>Phổ biến</option>
-                                {{-- <option>Điểm đánh giá trung bình</option> --}}
-                                <option value="price_asc" {{ Request::input('sort_status')=='price_asc' ? 'selected'
-                                    : '' }}>Giá: thấp đến cao</option>
-                                <option value="price_desc" {{ Request::input('sort_status')=='price_desc' ? 'selected'
-                                    : '' }}>Giá: cao đến thấp</option>
-                            </select>
+
+                <div class="layout withSidebar">
+                    {{-- ═══ Sidebar filters ═══ --}}
+                    <aside class="side">
+                        <div class="side-head">
+                            <span class="side-title">
+                                <svg viewBox="0 0 24 24" class="ds-ic ds-ic-18"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"></path></svg>
+                                Bộ lọc
+                            </span>
+                            <a href="{{ route('properties.index') }}" class="side-clear">Xoá tất cả</a>
+                        </div>
+                        <div style="padding:16px 18px;display:flex;flex-direction:column;gap:16px">
+                            <div class="fgroup">
+                                <div class="fglabel">Khu vực / Phường</div>
+                                <select name="ward" class="sortsel" style="width:100%">
+                                    <option value="">Toàn Đà Lạt</option>
+                                    @foreach ($locationsWards as $w)
+                                        <option value="{{ $w->code }}" @selected($curWard == $w->code)>{{ $w->full_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="fgroup">
+                                <div class="fglabel">Loại bất động sản</div>
+                                <select name="category" class="sortsel" style="width:100%">
+                                    <option value="">Tất cả</option>
+                                    @foreach ($categories as $c)
+                                        <option value="{{ $c->category }}" @selected($curCat == $c->category)>{{ $c->category }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="fgroup">
+                                <div class="fglabel">Mức giá</div>
+                                <select name="price-range2" class="sortsel" style="width:100%">
+                                    @foreach ($priceOptions as $val => $lbl)
+                                        <option value="{{ $val }}" @selected($curPrice === $val)>{{ $lbl }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="fgroup">
+                                <div class="fglabel">Số phòng ngủ</div>
+                                <div class="chipwrap" style="display:flex;gap:6px;flex-wrap:wrap">
+                                    @foreach (['' => 'Tất cả', '1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5+'] as $val => $lbl)
+                                        <button type="button" class="seg {{ (string) $curRoom === (string) $val ? 'on' : '' }}" onclick="LTBSList.setRoom(this,'{{ $val }}')">{{ $lbl }}</button>
+                                    @endforeach
+                                </div>
+                                <input type="hidden" name="number_room" id="plRoom" value="{{ $curRoom }}">
+                            </div>
+                            <div class="fgroup">
+                                <div class="fglabel">Pháp lý</div>
+                                <select name="legal" class="sortsel" style="width:100%">
+                                    <option value="">Tất cả</option>
+                                    @foreach (($legals ?? []) as $lg)
+                                        <option value="{{ $lg }}" @selected($curLegal == $lg)>{{ $lg }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit" class="ds-btn ds-btn-solid ds-btn-md ds-btn-block">Áp dụng bộ lọc</button>
+                        </div>
+                    </aside>
+
+                    {{-- ═══ Results ═══ --}}
+                    <div>
+                        <div class="rtop">
+                            <div>
+                                <h1 class="rtitle">{{ $searchResult }}</h1>
+                                <div class="rcount">{{ $properties->total() }} tin</div>
+                            </div>
+                            <div class="rtools">
+                                <select name="sort_status" class="sortsel" onchange="document.getElementById('plForm').submit()">
+                                    @foreach ($sortOptions as $val => $lbl)
+                                        <option value="{{ $val }}" @selected($curSort === $val)>{{ $lbl }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="viewSeg">
+                                    <button type="button" class="viewSegBtn on" id="viewListBtn" onclick="LTBSList.view('list')">
+                                        <svg viewBox="0 0 24 24" class="ds-ic ds-ic-16"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg><span>Danh sách</span>
+                                    </button>
+                                    <button type="button" class="viewSegBtn" id="viewMapBtn" onclick="LTBSList.view('map')">
+                                        <svg viewBox="0 0 24 24" class="ds-ic ds-ic-16"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3zM9 3v15M15 6v15"></path></svg><span>Bản đồ</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- List view --}}
+                        <div id="viewList">
+                            <div class="rgrid">
+                                @forelse ($properties as $property)
+                                    @include('frontends.ltbs.components.property_card', ['property' => $property])
+                                @empty
+                                    <div class="empty">
+                                        <div class="empty-ic"><svg viewBox="0 0 24 24" class="ds-ic ds-ic-22"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></div>
+                                        <h3>Không tìm thấy tin phù hợp</h3>
+                                        <p>Thử mở rộng khu vực hoặc mức giá. Bạn cũng có thể nhận thông báo khi có tin mới.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                            <div style="margin-top:26px">{{ $properties->links('frontends.ltbs.components.pagination') }}</div>
+                        </div>
+
+                        {{-- Map view (Google Maps enhancement; planning layers/draw = TODO) --}}
+                        <div id="viewMap" style="display:none">
+                            <div class="mapWrap" id="plMap" style="height:calc(100vh - 300px);min-height:460px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)"></div>
+                            {{-- TODO(map): layer quy hoạch (đất ở/TM-DV/nông nghiệp), vẽ vùng tìm kiếm, cluster nâng cao. --}}
                         </div>
                     </div>
-                    </div>
                 </div>
-            <div class="listing-item-container three-columns-grid  box-list_ic fl-wrap">
-                @foreach($properties as $productItem )
-                @include('frontends.components.product_card',['productCard'=>$productItem ])
-                @endforeach
             </div>
-            <div class="pagination">
-                @php
-                    $current = $properties->currentPage();
-                    // Đảm bảo lastPage bao gồm currentPage
-                    $end = max($properties->lastPage(), $current);
-                    $window = 2; // Số trang hiển thị quanh trang hiện tại
-                @endphp
+        </div>
+    </form>
 
-                @if ($properties->onFirstPage())
-                    <a href="#" class="prevposts-link disabled"><i class="fa fa-caret-left"></i></a>
-                @else
-                    <a href="{{ $properties->previousPageUrl() }}" class="prevposts-link"><i class="fa fa-caret-left"></i></a>
-                @endif
-
-                {{-- Logic phân trang nâng cao (giữ lại từ nhánh mới) --}}
-                @if ($end <= 7)
-                    {{-- Hiển thị tất cả nếu số trang nhỏ --}}
-                    @foreach (range(1, $end) as $page)
-                        @if ($page == $current)
-                            <a href="#" class="current-page">{{ $page }}</a>
-                        @else
-                            <a href="{{ $properties->url($page) }}">{{ $page }}</a>
-                        @endif
-                    @endforeach
-                @else
-                    {{-- Hiển thị cửa sổ và dấu chấm --}}
-                    @php
-                        $pages = [];
-                        $pages[] = 1;
-                        $rangeStart = max(2, $current - $window);
-                        $rangeEnd = min($end - 1, $current + $window);
-
-                        if ($rangeStart > 2) {
-                            $pages[] = '...';
-                        }
-                        for ($i = $rangeStart; $i <= $rangeEnd; $i++) {
-                            $pages[] = $i;
-                        }
-                        if ($rangeEnd < $end - 1) {
-                            $pages[] = '...';
-                        }
-                        if ($end > 1) {
-                            $pages[] = $end;
-                        }
-                    @endphp
-
-                    @foreach ($pages as $page)
-                        @if ($page === '...')
-                            <a href="#" class="disabled">...</a>
-                        @else
-                            @if ($page == $current)
-                                <a href="#" class="current-page">{{ $page }}</a>
-                            @else
-                                <a href="{{ $properties->url($page) }}">{{ $page }}</a>
-                            @endif
-                        @endif
-                    @endforeach
-                @endif
-                {{-- Kết thúc logic phân trang nâng cao --}}
-
-                @if ($properties->hasMorePages())
-                    <a href="{{ $properties->nextPageUrl() }}" class="nextposts-link"><i class="fa fa-caret-right"></i></a>
-                @else
-                    <a href="#" class="nextposts-link disabled"><i class="fa fa-caret-right"></i></a>
-                @endif
-            </div>
-            
-            </div>
-    </section>
-    <div class="limit-box fl-wrap"></div>
-</div>
+    {{-- Property coordinates for the map view --}}
+    @php
+        $mapData = [];
+        foreach ($properties as $p) {
+            $mapData[] = [
+                'id' => $p->id,
+                'title' => $p->title,
+                'price' => $p->formatted_prices,
+                'lat' => $p->latitude ? (float) $p->latitude : null,
+                'lng' => $p->longitude ? (float) $p->longitude : null,
+                'url' => route('bds.show', ['slug' => $p->slug]),
+            ];
+        }
+    @endphp
+    <script>window.LTBS_PROPS = {!! json_encode($mapData, JSON_UNESCAPED_UNICODE) !!};</script>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/ltbs-listing.js') }}"></script>
+    <script>
+        // Street autocomplete via existing endpoint
+        (function () {
+            const input = document.querySelector('#plForm input[name=text]');
+            const dl = document.getElementById('plStreets');
+            let t;
+            input?.addEventListener('input', function () {
+                clearTimeout(t);
+                const term = this.value.trim();
+                if (term.length < 2) return;
+                t = setTimeout(async () => {
+                    try {
+                        const r = await fetch('{{ route('autocomplete.street') }}?term=' + encodeURIComponent(term));
+                        const list = await r.json();
+                        dl.innerHTML = (list || []).map(s => `<option value="${s}">`).join('');
+                    } catch (e) {}
+                }, 250);
+            });
+        })();
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=marker&loading=async&callback=LTBSListMapInit" async defer></script>
+@endpush

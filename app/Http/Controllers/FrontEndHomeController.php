@@ -5,14 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\CrmHost;
 use App\Models\Customer;
+use App\Models\LocationsStreet;
+use App\Models\LocationsWard;
+use App\Models\Product;
 use App\Models\Property;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\LocationsStreet;
-use App\Models\LocationsWard;
-use App\Models\ProductType;
-use App\Models\Product;
-use App\Http\Controllers\FrontEndNewsController;
 
 class FrontEndHomeController extends Controller
 {
@@ -41,7 +39,6 @@ class FrontEndHomeController extends Controller
         // Get list top agent
         $agents = Customer::withCount('property')->orderBy('property_count', 'desc')->get();
 
-
         // Set parameters for the product query
         $offset = 0;
         $limit = 6;
@@ -59,7 +56,7 @@ class FrontEndHomeController extends Controller
             ->with('ward')
             ->with('street')
             ->with('host')
-            ->where('status','1')
+            ->where('status', '1')
             ->visibleTo(null)
             ->orderBy($sort, $order)
             ->skip($offset)
@@ -67,26 +64,40 @@ class FrontEndHomeController extends Controller
             ->get();
 
         //get info for homepage
-        $infos= [
+        $infos = [
             [
                 'title' => 'Bất động sản',
-                'value' => Property::count()
+                'value' => Property::count(),
             ],
             [
                 'title' => 'Đối tác',
-                'value' => Customer::count()
+                'value' => Customer::count(),
             ],
-             [
-                 'title' => 'Khách hàng hài lòng',
-                 'value' => CrmHost::count()
-             ],
+            [
+                'title' => 'Khách hàng hài lòng',
+                'value' => CrmHost::count(),
+            ],
             [
                 'title' => 'Bất động sản mới trong tuần',
-                'value' => Property::where('created_at', '>=', Carbon::now()->subDays(7))->count()
+                'value' => Property::where('created_at', '>=', Carbon::now()->subDays(7))->count(),
             ],
             // Các cặp title và value khác có thể thêm vào đây
         ];
         $recentNews = FrontEndNewsController::getRecentNews(3);
+
+        // Ward stats for the "Nhịp đập thị trường" section — số tin đang đăng theo phường.
+        $wardStats = $locationsWards
+            ->map(function ($w) {
+                return [
+                    'code' => $w->code,
+                    'name' => $w->full_name,
+                    'count' => Property::where('ward_code', $w->code)->where('status', 1)->count(),
+                ];
+            })
+            ->filter(fn ($w) => $w['count'] > 0)
+            ->sortByDesc('count')
+            ->take(6)
+            ->values();
         //dd($newestProducts[0]->parameters[0]->pivot->pivot_value);
         //dd($newestProducts[0]->parameters[0]->pivot->value);
         // $valueOfParameterId15 = $newestProducts[0]->parameters->where('name', config('global.area'))->first()->pivot->value;
@@ -105,6 +116,7 @@ class FrontEndHomeController extends Controller
             'agents' => $agents,
             'infos' => $infos,
             'recentNews' => $recentNews,
+            'wardStats' => $wardStats,
         ]);
     }
 
@@ -127,26 +139,25 @@ class FrontEndHomeController extends Controller
         $agents = Customer::withCount('property')->orderBy('property_count', 'desc')->get();
 
         //get info for homepage
-        $infos= [
+        $infos = [
             [
                 'title' => 'Bất động sản',
-                'value' => Property::count()
+                'value' => Property::count(),
             ],
             [
                 'title' => 'Đối tác',
-                'value' => Customer::count()
+                'value' => Customer::count(),
             ],
             [
                 'title' => 'Khách hàng hài lòng',
-                'value' => CrmHost::count()
+                'value' => CrmHost::count(),
             ],
             [
                 'title' => 'Bất động sản mới trong tuần',
-                'value' => Property::where('created_at', '>=', Carbon::now()->subDays(7))->count()
+                'value' => Property::where('created_at', '>=', Carbon::now()->subDays(7))->count(),
             ],
             // Các cặp title và value khác có thể thêm vào đây
         ];
-
 
         return view('about', [
             'agents' => $agents,

@@ -1,955 +1,222 @@
-@extends('frontends.master')
+@extends('frontends.ltbs.master')
 
-@push('head_scripts')
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+@section('title', $property->title . ' — Đà Lạt BĐS')
+@section('meta_description', Str::limit(strip_tags($property->description), 160))
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/ltbs-detail.css') }}">
 @endpush
 
-@push('scripts')
-<script>
-(function () {
-    // Inject back button directly into <body> to avoid stacking context issues
-    var btn = document.createElement('a');
-    btn.href = 'javascript:history.back()';
-    btn.innerHTML = '<i class="fas fa-arrow-left"></i>';
-    btn.style.cssText = [
-        'position:fixed',
-        'top:80px',
-        'left:16px',
-        'z-index:99999',
-        'background:#3270FC',
-        'color:#fff',
-        'font-size:16px',
-        'width:40px',
-        'height:40px',
-        'border-radius:50%',
-        'text-decoration:none',
-        'display:inline-flex',
-        'align-items:center',
-        'justify-content:center',
-        'box-shadow:0 2px 8px rgba(50,112,252,0.5)',
-    ].join(';');
-    document.body.appendChild(btn);
+@php
+    /** @var \App\Models\Property $property */
+    // ── Role gating (server-side; sensitive data NOT emitted to non-privileged roles) ──
+    $u = auth('webapp')->user();
+    $role = $u->role ?? 'guest';
+    $isAdmin = in_array($role, ['admin', 'bds_admin']);
+    $isSale = in_array($role, ['sale', 'sale_admin']);
+    $canSeeExact = $isAdmin; // exact coords + owner contact only for admins
+    $verified = !empty($property->approved_at);
 
-    // Also wire up Telegram native BackButton if available
-    var tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && tg.initData && tg.initData.length > 0) {
-        tg.BackButton.show();
-        tg.BackButton.onClick(function () { window.history.back(); });
+    // EAV spec reader
+    $specVal = function ($pid) use ($property) {
+        if (!$pid) return null;
+        return optional($property->assignParameter->firstWhere('parameter_id', $pid))->value;
+    };
+    $area = $property->area ?? $specVal(config('global.area'));
+    $beds = $property->number_room ?? $specVal(config('global.number_room'));
+    $baths = $property->bathroom ?? $specVal(config('global.bathroom'));
+    $floors = $specVal(config('global.number_floor'));
+    $legal = $specVal(config('global.legal'));
+    $direction = $specVal(config('global.direction'));
+
+    // Gallery
+    $gallery = collect($property->gallery ?? []);
+    $images = $gallery->pluck('image_url')->filter()->values();
+    if ($images->isEmpty()) {
+        $images = collect([$property->title_image]);
     }
-})();
-</script>
-@endpush
+    $mainImage = $property->title_image ?: $images->first();
+
+    $statusMap = [1 => ['Đang mở bán', 'open'], 4 => ['Đã bán', 'sold'], 5 => ['Đã cho thuê', 'sold']];
+    [$statusLabel, $statusCls] = $statusMap[$property->status] ?? ['Đang mở bán', 'open'];
+@endphp
 
 @section('content')
-
-<!-- content -->
-<div class="content">
-    <section class="hidden-section   single-hero-section" data-scrollax-parent="true" id="sec1">
-        <div class="bg-wrap bg-parallax-wrap-gradien">
-            <div class="bg par-elem " data-bg="{{$property->title_image}}"
-                data-scrollax="properties: { translateY: '30%' }"></div>
+    <main class="wrapc">
+        {{-- Breadcrumb --}}
+        <div class="crumbs">
+            <a href="{{ route('index') }}">Trang chủ</a><span class="sep">/</span>
+            <a href="{{ route('properties.index') }}">{{ $property->type }}</a><span class="sep">/</span>
+            @if ($property->ward)<a href="{{ route('properties.index', ['ward' => $property->ward_code]) }}">{{ $property->ward->full_name }}</a><span class="sep">/</span>@endif
+            <span class="cur">{{ $property->code }}</span>
         </div>
-        <div class="container">
-            <!--  list-single-opt_header-->
-            <div class="list-single-opt_header fl-wrap">
-                <ul class="list-single-opt_header_cat">
-                    <li><a href="{{ route('properties.index') }}" class="cat-opt blue-bg">{{
-                            optional($property->category)->category ?? 'Chưa phân loại' }}</a></li>
-                    <li><a href="{{ route('properties.index') }}" class="cat-opt color-bg">{{
-                            $property->created_at->diffForHumans() }}</a></li>
-                </ul>
+
+        {{-- Title row --}}
+        <div class="titlerow">
+            <div class="tl-left">
+                <div class="tl-badges">
+                    <span class="sbadge {{ $statusCls }}"><svg viewBox="0 0 24 24" class="ic ic14"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"></circle></svg>{{ $statusLabel }}</span>
+                    <span class="tl-code">Mã tin {{ $property->code }}</span>
+                    @if ($verified)
+                        <span class="tl-verify"><svg viewBox="0 0 24 24" class="ic ic14"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Đã xác minh</span>
+                    @endif
+                </div>
+                <h1 class="tl-title">{{ $property->title }}</h1>
+                <div class="tl-addr"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>{{ $property->address_location ?: 'TP Đà Lạt' }}</div>
             </div>
-            <!--  list-single-opt_header end -->
-            <!--  list-single-header-item-->
-            <div class="list-single-header-item no-bg-list_sh fl-wrap">
-                <div class="row">
-                    <div class="col-md-12">
-                        <h1>{{ $property->title_by_address }} <span class="verified-badge tolt"
-                                data-microtip-position="bottom" data-tooltip="Đã xác nhận"><i
-                                    class="fas fa-check"></i></span></h1>
-                        <div class="geodir-category-location fl-wrap">
-                            <a href="#"><i class="fas fa-map-marker-alt"></i> {{$property->address_location}}</a>
-                            {{-- <div class="listing-rating card-popup-rainingvis" data-starrating2="4"><span
-                                    class="re_stars-title">Good</span></div> --}}
-                        </div>
-                        <div class="share-holder hid-share">
-                            {{-- <a href="#" class="share-btn showshare sfcs"> <i class="fas fa-share-alt"></i> Share
-                            </a>
-                            <div class="share-container  isShare"></div> --}}
-                        </div>
-                    </div>
-                </div>
-                <div class="list-single-header-footer fl-wrap">
-                    <div class="list-single-header-price" data-propertyprise="50500">
-                        <strong>Giá:</strong>{{$property->formatted_prices}}
-                    </div>
-                    <div class="list-single-header-date"><span>Diện tích:</span>{{
-                        $property->area }} m²</div>
-                    <div class="list-single-stats">
-                        <ul class="no-list-style">
-                            <li><span class="viewed-counter"><i class="fas fa-eye"></i> Lượt xem -
-                                    {{$property->total_click}} </span></li>
-                            {{-- <li><span class="bookmark-counter"><i class="fas fa-heart"></i> Bookmark - 24 </span>
-                            </li> --}}
-                        </ul>
-                    </div>
-                </div>
+            <div class="tl-actions">
+                <button class="actbtn" onclick="LTBS.toggleFav({{ $property->id }}, this)"><svg viewBox="0 0 24 24" class="ic ic17"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>Lưu tin</button>
+                <button class="actbtn" onclick="LTBSDetail.share()"><svg viewBox="0 0 24 24" class="ic ic17"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>Chia sẻ</button>
             </div>
         </div>
-    </section>
-    <!-- breadcrumbs-->
-    @include('frontends.components.home_breadcrumb', [
-    'title' => 'BDS',
-    'nodes' => [
-    ['title' => 'Trang chủ', 'url' => route('index')],
-    ['title' => optional($property->ward)->full_name ?? 'Đà Lạt', 'url' => route('properties.index', ['ward' => $property->ward_code])],
-    ['title' => optional($property->street)->street_name ?? '', 'url' => route('properties.index', ['street' =>
-    $property->street_code])],
-    ]
-    ])
-    <!-- breadcrumbs end -->
-    <div class="gray-bg small-padding fl-wrap">
-        <div class="container">
-            <div class="row">
-                <!--  listing-single content -->
-                <div class="col-md-8">
-                    <div class="list-single-main-wrapper fl-wrap">
-                        <!--  scroll-nav-wrap -->
-                        <div class="scroll-nav-wrap">
-                            <nav class="scroll-nav scroll-init fixed-column_menu-init">
-                                <ul class="no-list-style">
-                                    <li><a class="act-scrlink" href="#sec1"><i
-                                                class="fal fa-home-lg-alt"></i></a><span>Nội dung chính</span></li>
-                                    <li><a href="#sec2"><i class="fal fa-image"></i></a><span>Hình ảnh</span></li>
-                                    <li><a href="#sec3"><i class="fal fa-info"></i> </a><span>Chi tiết</span></li>
-                                    <li><a href="#sec4"><i class="fal fa-bed"></i></a><span>Phòng</span></li>
-                                    <li><a href="#sec5"><i class="fal fa-video"></i></a><span>Video</span></li>
-                                    <li><a href="#sec6"><i class="fal fa-map-pin"></i></a><span>Vị trí</span></li>
-                                    <li><a href="#sec7"><i class="fal fa-comment-alt-lines"></i></a><span>Đánh
-                                            giá</span></li>
-                                </ul>
 
-                                <div class="progress-indicator">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
-                                        <circle cx="16" cy="16" r="15.9155" class="progress-bar__background" />
-                                        <circle cx="16" cy="16" r="15.9155" class="progress-bar__progress
-                                            js-progress-bar" />
-                                    </svg>
-                                </div>
-                            </nav>
+        {{-- Gallery --}}
+        <div class="gallery">
+            <div class="gcell main" onclick="LTBSDetail.lightbox(0)"><img src="{{ $mainImage }}" alt="{{ $property->title }}">
+                <div class="gchips"><span class="gchip"><svg viewBox="0 0 24 24" class="ic ic14"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>{{ max($images->count(), 1) }} ảnh</span></div>
+            </div>
+            <div class="gcell" onclick="LTBSDetail.lightbox(1)"><img src="{{ $images->get(1, $mainImage) }}" alt=""></div>
+            <div class="gcell" onclick="LTBSDetail.lightbox(2)"><img src="{{ $images->get(2, $mainImage) }}" alt="">
+                @if ($images->count() > 3)<div class="gmore"><svg viewBox="0 0 24 24" class="ic ic24" style="stroke:#fff"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>Xem tất cả</div>@endif
+            </div>
+        </div>
+
+        <div class="layout">
+            <div class="mcol">
+                {{-- Price + 8 facts --}}
+                <div class="card">
+                    <div class="pricewrap">
+                        <div class="price">{{ $property->formatted_prices }}</div>
+                        @if ($property->avg_price_per_m2 ?? false)<div class="ppm">Đơn giá <b>{{ $property->avg_price_per_m2 }}</b></div>@endif
+                    </div>
+                    <div class="facts">
+                        <div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg><div><div class="fact-l">Diện tích</div><div class="fact-v">{{ $area ?? '—' }} m²</div></div></div>
+                        <div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"></path><path d="M2 15h20"></path></svg><div><div class="fact-l">Phòng ngủ</div><div class="fact-v">{{ $beds ?? '—' }} PN</div></div></div>
+                        <div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><div><div class="fact-l">Phòng tắm</div><div class="fact-v">{{ $baths ?? '—' }} PT</div></div></div>
+                        <div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg><div><div class="fact-l">Hướng</div><div class="fact-v">{{ $direction ?? '—' }}</div></div></div>
+                        <div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg><div><div class="fact-l">Số tầng</div><div class="fact-v">{{ $floors ?? '—' }}</div></div></div>
+                        <div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><div><div class="fact-l">Pháp lý</div><div class="fact-v">{{ $legal ?? '—' }}</div></div></div>
+                        <div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"></path></svg><div><div class="fact-l">Loại hình</div><div class="fact-v">{{ $property->category->category ?? '—' }}</div></div></div>
+                        <div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg><div><div class="fact-l">Đăng</div><div class="fact-v">{{ $property->created_at?->diffForHumans() }}</div></div></div>
+                    </div>
+                </div>
+
+                {{-- Location (role-aware) --}}
+                <div class="card">
+                    <div class="card-h"><svg viewBox="0 0 24 24" class="ic"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><h2>Vị trí</h2><span class="hnote">{{ $canSeeExact ? 'Toạ độ chính xác' : 'Khu vực ước tính' }}</span></div>
+                    @if ($canSeeExact && $property->latitude && $property->longitude)
+                        <div id="detailMap" style="height:300px;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border)"></div>
+                        <div class="map-addr" style="margin-top:10px">
+                            <svg viewBox="0 0 24 24" class="ic ic22"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            <div><b>{{ $property->address ?: $property->address_location }}</b><br><span>Toạ độ: {{ $property->latitude }}, {{ $property->longitude }} · chỉ hiển thị cho vai trò có quyền</span></div>
                         </div>
-                        <!--  scroll-nav-wrap end-->
-                        <div class="list-single-main-media fl-wrap" id="sec2">
-                            <!-- gallery-items -->
-                            <div class="gallery-items grid-small-pad list-single-gallery three-coulms lightgallery">
-                                @foreach ($property->getGalleryAttribute() as $image)
-                                <div class="gallery-item">
-                                    <div class="grid-item-holder">
-                                        <div class="box-item">
-                                            <img src="{{ $image['image_url'] }}"
-                                                alt="{{ $property->title_by_address }}">
-                                            <a href="{{ $image['image_url'] }}" class="gal-link popup-image"><i
-                                                    class="fa fa-search"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                            <!-- end gallery items -->
+                    @else
+                        <div class="map"><div class="map-grid"></div>
+                            <div class="zone-lbl"><svg viewBox="0 0 24 24" class="ic ic14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>Khu vực ước tính · {{ $property->ward->full_name ?? 'TP Đà Lạt' }}</div>
+                            <div class="zone"></div>
+                            <div class="map-lockbar"><svg viewBox="0 0 24 24" class="ic ic22" style="stroke:#fff"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><div><b>Địa chỉ chính xác được bảo vệ</b><span>{{ $isSale ? 'Mở khoá khi bạn được admin phân bổ vai trò trong deal.' : 'Đăng ký / đăng nhập môi giới để làm việc với tin này.' }}</span></div></div>
                         </div>
-                        <div class="list-single-facts fl-wrap">
-                            <!-- inline-facts -->
-                            <div class="inline-facts-wrap">
-                                <div class="inline-facts">
-                                    <i class="fas fa-home-lg"></i>
-                                    <h6>
-                                        {{$property->type}}
-                                    </h6>
-                                    <span>{{ optional($property->category)->category ?? 'Chưa phân loại' }}</span>
-                                </div>
-                            </div>
-                            <!-- inline-facts end -->
-                            <!-- inline-facts  -->
-                            <div class="inline-facts-wrap">
-                                <div class="inline-facts">
-                                    <i class="fas fa-arrows-alt"></i>
-                                    <h6>{{config('global.area_title')}}</h6>
-                                    <span>{{$property->area}} m²</span>
-                                </div>
-                            </div>
-                            <!-- inline-facts end -->
-                            <!-- inline-facts -->
-                            <div class="inline-facts-wrap">
-                                <div class="inline-facts">
-                                    <i class="fas fa-door-open"></i>
-                                    <h6>{{config('global.number_room_title')}}</h6>
-                                    <span>{{$property->number_room}}</span>
-                                </div>
-                            </div>
-                            <!-- inline-facts end -->
-                            <!-- inline-facts -->
-                            <div class="inline-facts-wrap">
-                                <div class="inline-facts">
-                                    <i class="fas fa-layer-group"></i>
-                                    <h6>{{config('global.number_floor_title')}}</h6>
-                                    <span>{{$property->number_floor}}</span>
-                                </div>
-                            </div>
-                            <!-- inline-facts end -->
+                    @endif
+                </div>
+
+                {{-- Zoning CTA --}}
+                <div class="qh-cta">
+                    <span class="qh-cta-ic"><svg viewBox="0 0 24 24" class="ic ic22" style="stroke:#fff"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+                    <div class="qh-cta-body"><div class="qh-cta-t">Đất này có dính quy hoạch không?</div><div class="qh-cta-s">Tra cứu miễn phí dữ liệu quy hoạch công bố cho thửa đất này.</div></div>
+                    <a class="ds-btn ds-btn-white ds-btn-md" href="{{ route('index') }}#quyhoach">Kiểm tra quy hoạch</a>
+                </div>
+
+                {{-- Description --}}
+                <div class="card">
+                    <div class="card-h"><svg viewBox="0 0 24 24" class="ic"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><h2>Mô tả chi tiết</h2></div>
+                    <div class="desc">{!! nl2br(e($property->description)) !!}</div>
+                </div>
+
+                {{-- Sale/Admin panel (UI shell; interactive pipeline/commission = TODO backend) --}}
+                @if ($isSale || $isAdmin)
+                    <div class="rolecard">
+                        <div class="rc-head {{ $isAdmin ? 'admin' : 'sale' }}">
+                            <span class="rc-ic"><svg viewBox="0 0 24 24" class="ic ic22" style="stroke:#fff"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>
+                            <div><h2>{{ $isAdmin ? 'Bảng quản trị' : 'Bảng làm việc của tôi' }}</h2><p>{{ $u->name ?? '' }} · {{ ucfirst($role) }}</p></div>
                         </div>
-                        <div class="list-single-main-container fl-wrap" id="sec3">
-                            <!-- list-single-main-item -->
-                            <div class="list-single-main-item fl-wrap">
-                                <div class="list-single-main-item-title">
-                                    <h3>Thông tin chi tiết</h3>
+                        <div class="rc-body">
+                            @if ($isAdmin)
+                                <div class="owner-contact">
+                                    <div class="cl-title" style="color:var(--success)"><svg viewBox="0 0 24 24" class="ic ic17"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Liên hệ chủ nhà</div>
+                                    <div class="oc-row"><svg viewBox="0 0 24 24" class="ic ic17"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>{{ $property->host->name ?? '—' }}</div>
+                                    <div class="oc-row"><svg viewBox="0 0 24 24" class="ic ic17"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7a2 2 0 0 1 1.72 2.02z"></path></svg><b>{{ $property->host->contact ?? '—' }}</b></div>
                                 </div>
-                                <div class="list-single-main-item_content fl-wrap">
-                                    <p>{{$property->description}}</p>
-                                </div>
-                            </div>
-                            <!-- list-single-main-item end -->
-                            <!-- list-single-main-item -->
-                            <div class="list-single-main-item fl-wrap">
-                                <div class="list-single-main-item-title">
-                                    <h3>Chi tiết</h3>
-                                </div>
-                                {{-- <div class="list-single-main-item_content fl-wrap">
-                                    <div class="details-list">
-                                        <ul>
-                                            <li><span>Mã Bất động sản:</span>154</li>
-                                            <li><span>Diện tích Lô đất:</span>850 m2</li>
-                                            <li><span>Phòng tắm:</span>4</li>
-                                            <li><span>Phòng:</span>8</li>
-                                            <li><span>Phòng ngủ:</span>2</li>
-                                            <li><span>Diện tích Gara:</span>2 xe hơi</li>
-                                            <li><span>Khả dụng từ ngày:</span>25.05.2020</li>
-                                            <li><span>Giá:</span>$ 50.500,00</li>
-                                            <li><span>Loại:</span>Căn hộ/Nhà</li>
-                                        </ul>
-                                    </div>
-                                </div> --}}
-                                <div class="list-single-main-item_content fl-wrap">
-                                    <div class="details-list">
-                                        <ul>
-                                            @if($property->code)
-                                            <li><span>{{config('global.code_title')}}:</span>{{$property->code}}</li>
-                                            @endif
-                                            @if($property->area)
-                                            <li><span>{{config('global.area_title')}}:</span>{{$property->area}} m²</li>
-                                            @endif
-                                            @if($property->floor_area)
-                                            <li><span>{{config('global.floor_area_title')}}:</span>{{$property->floor_area}}
-                                            </li>
-                                            @endif
-                                            @if($property->legal)
-                                            <li><span>{{config('global.legal_title')}}:</span>{{$property->legal}}</li>
-                                            @endif
-                                            @if($property->direction)
-                                            <li><span>{{config('global.direction_title')}}:</span>{{$property->direction}}
-                                            </li>
-                                            @endif
-                                            @if($property->road_width)
-                                            <li><span>{{config('global.road_width_title')}}:</span>{{$property->road_width}}
-                                                m
-                                            </li>
-                                            @endif
-                                            @if($property->formatted_price_m2)
-                                            <li><span>{{config('global.price_m2_title')}}:</span>{{
-                                                $property->formatted_price_m2}}
-                                            </li>
-                                            @endif
-                                            @if($property->number_floor)
-                                            <li><span>{{config('global.number_floor_title')}}:</span>{{$property->number_floor}}
-                                            </li>
-                                            @endif
-                                            @if($property->number_room)
-                                            <li><span>{{config('global.number_room_title')}}:</span>{{$property->number_room}}
-                                            </li>
-                                            @endif
-                                            @if($property->bathroom)
-                                            <li><span>{{config('global.bathroom_title')}}:</span>{{$property->bathroom}}
-                                            </li>
-                                            @endif
-                                            @if($property->garage)
-                                            <li><span>{{config('global.garage_title')}}:</span>{{$property->garage}}
-                                            </li>
-                                            @endif
-                                            @if($property->pool)
-                                            <li><span>{{config('global.pool_title')}}:</span>{{$property->pool}}</li>
-                                            @endif
-                                            @if($property->furniture)
-                                            <li><span>{{config('global.furniture_title')}}:</span>{{$property->furniture}}
-                                            </li>
-                                            @endif
-                                            @if($property->construction_status)
-                                            <li><span>{{config('global.construction_status_title')}}:</span>{{$property->construction_status}}
-                                            </li>
-                                            @endif
-                                            @if($property->rental_period)
-                                            <li><span>{{config('global.rental_period_title')}}:</span>{{$property->rental_period}}
-                                            </li>
-                                            @endif
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- list-single-main-item end -->
-                            <!-- list-single-main-item -->
-                            <div class="list-single-main-item fl-wrap">
-                                <div class="list-single-main-item-title">
-                                    <h3>Chi tiết thị trường</h3>
-                                </div>
-                                <div class="list-single-main-item_content fl-wrap">
-                                    <div class="details-list">
-                                        <ul>
-                                            @if($property->avg_price_per_m2)
-                                            <li>
-                                                <span>Giá trung bình
-                                                    @if($property->legal)
-                                                    {{ $property->legal . ' ' . $property->address_location . ': ' }}
-                                                    @endif
-                                                </span>
-                                                {{$property->avg_price_per_m2, 0}}
-                                            </li>
-                                            @endif
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- list-single-main-item end -->
-                            <!--   list-single-main-item -->
-                            {{-- <div class="list-single-main-item fl-wrap" id="sec4">
-                                <div class="list-single-main-item-title fl-wrap">
-                                    <h3>Available Rooms</h3>
-                                </div>
-                                <!--   rooms-container -->
-                                <div class="rooms-container fl-wrap">
-                                    <!--  rooms-item -->
-                                    <div class="rooms-item fl-wrap">
-                                        <div class="rooms-media">
-                                            <img src="images/all/1.jpg" alt="dalat-bds">
-                                            <div class="dynamic-gal more-photos-button color-bg"
-                                                data-dynamicPath="[{'src': 'images/all/1.jpg'}, {'src': 'images/all/1.jpg'},{'src': 'images/all/1.jpg'}]">
-                                                <i class="fas fa-camera"></i> <span>3 photos</span>
-                                            </div>
-                                        </div>
-                                        <div class="rooms-details">
-                                            <div class="rooms-details-header fl-wrap">
-                                                <span class="rooms-area">44<strong> / sq ft</strong></span>
-                                                <h3>Standard Family Room</h3>
-                                                <h5>Additional Rooms: <span>Guest Bath</span></h5>
-                                            </div>
-                                            <p>Morbi varius, nulla sit amet rutrum elementum, est elit finibus tellus,
-                                                ut tristique elit risus at metus. Lorem ipsum dolor sit amet,
-                                                consectetur adipiscing elit.</p>
-                                            <div class="facilities-list fl-wrap">
-                                                <ul>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Air conditioner"><i class="fal fa-snowflake"></i>
-                                                    </li>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Tv Inside"><i class="fal fa-tv"></i> </li>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Bed Inside"><i class="fal fa-bed"></i></li>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Fireplace"><i class="fal fa-fireplace"></i> </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!--  rooms-item end -->
-                                    <!--  rooms-item -->
-                                    <div class="rooms-item fl-wrap">
-                                        <div class="rooms-media">
-                                            <img src="images/all/1.jpg" alt="dalat-bds">
-                                            <div class="dynamic-gal more-photos-button color-bg"
-                                                data-dynamicPath="[{'src': 'images/all/1.jpg'}, {'src': 'images/all/1.jpg'} ]">
-                                                <i class="fas fa-camera"></i> <span>2 photos</span>
-                                            </div>
-                                        </div>
-                                        <div class="rooms-details">
-                                            <div class="rooms-details-header fl-wrap">
-                                                <span class="rooms-area">18<strong> / sq ft</strong></span>
-                                                <h3>Modern Bathroom</h3>
-                                                <h5>Additional Rooms: <span>Sauna</span></h5>
-                                            </div>
-                                            <p>Morbi varius, nulla sit amet rutrum elementum, est elit finibus tellus,
-                                                ut tristique elit risus at metus. Lorem ipsum dolor sit amet,
-                                                consectetur adipiscing elit.</p>
-                                            <div class="facilities-list fl-wrap">
-                                                <ul>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Ceramic bath"><i class="fal fa-bath"></i></li>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Multifunctional Shower"><i
-                                                            class="fal fa-shower"></i></li>
-                                                    <li class="tolt" data-microtip-position="top" data-tooltip="Sauna">
-                                                        <i class="fal fa-hot-tub"></i>
-                                                    </li>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Panoramic windows"><i class="fal fa-columns"></i>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!--  rooms-item end -->
-                                    <!--  rooms-item -->
-                                    <div class="rooms-item fl-wrap">
-                                        <div class="rooms-media">
-                                            <img src="images/all/1.jpg" alt="dalat-bds">
-                                            <div class="dynamic-gal more-photos-button color-bg"
-                                                data-dynamicPath="[{'src': 'images/all/1.jpg'}, {'src': 'images/all/1.jpg'},{'src': 'images/all/1.jpg'}]">
-                                                <i class="fas fa-camera"></i> <span>3 photos</span>
-                                            </div>
-                                        </div>
-                                        <div class="rooms-details">
-                                            <div class="rooms-details-header fl-wrap">
-                                                <span class="rooms-area">27<strong> / sq ft</strong></span>
-                                                <h3>Spacious Kitchen</h3>
-                                                <h5>Additional Rooms: <span>Pantry</span></h5>
-                                            </div>
-                                            <p>Morbi varius, nulla sit amet rutrum elementum, est elit finibus tellus,
-                                                ut tristique elit risus at metus. Lorem ipsum dolor sit amet,
-                                                consectetur adipiscing elit.</p>
-                                            <div class="facilities-list fl-wrap">
-                                                <ul>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Microwave"><i class="fal fa-washer"></i> </li>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Panoramic Windows"><i class="fal fa-columns"></i>
-                                                    </li>
-                                                    <li class="tolt" data-microtip-position="top"
-                                                        data-tooltip="Refrigerator"><i
-                                                            class="fal fa-temperature-frigid"></i></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!--  rooms-item end -->
-                                </div>
-                                <!--   rooms-container end -->
-                            </div> --}}
-                            <!-- list-single-main-item end -->
-                            <!-- list-single-main-item -->
-                            {{-- <div class="list-single-main-item fl-wrap">
-                                <div class="list-single-main-item-title">
-                                    <h3>Floor Plans</h3>
-                                </div>
-                                <div class="accordion">
-                                    <a class="toggle act-accordion" href="#"> First Floor Plan <strong>286 sq
-                                            ft</strong> <span></span> </a>
-                                    <div class="accordion-inner visible">
-                                        <img src="images/plans/1.jpg" alt="dalat-bds">
-                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in pulvinar
-                                            neque. Nulla finibus lobortis pulvinar. Donec a consectetur nulla. Nulla
-                                            posuere sapien vitae lectus suscipit, et pulvinar nisi tincidunt. .</p>
-                                    </div>
-                                    <a class="toggle" href="#">Second Floor Plan <strong>280 sq ft</strong>
-                                        <span></span></a>
-                                    <div class="accordion-inner">
-                                        <img src="images/plans/1.jpg" alt="dalat-bds">
-                                        <p>Aliquam erat volutpat. Curabitur convallis fringilla diam sed aliquam. Sed
-                                            tempor iaculis massa faucibus feugiat. In fermentum facilisis massa, a
-                                            consequat purus viverra</p>
-                                    </div>
-                                    <a class="toggle" href="#"> Garage Plan <strong>180 sq ft</strong> <span></span></a>
-                                    <div class="accordion-inner">
-                                        <img src="images/plans/1.jpg" alt="dalat-bds">
-                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tempor iaculis
-                                            massa faucibus feugiat. In fermentum facilisis massa, a consequat purus
-                                            viverra.</p>
-                                    </div>
-                                </div>
-                            </div> --}}
-                            <!-- list-single-main-item end -->
-                            <!-- list-single-main-item -->
-                            @if($property->video_link)
-                            <div class="list-single-main-item fl-wrap" id="sec5">
-                                <div class="list-single-main-item-title">
-                                    <h3>Video</h3>
-                                </div>
-                                <div class="list-single-main-item_content fl-wrap">
-                                    <div class="video-box fl-wrap">
-                                        <img src="{{$property->title_image}}" class="respimg"
-                                            alt="{{ $property->title_by_address }}">
-                                        <a class="video-box-btn image-popup color-bg"
-                                            href="{{ $properties->video_link }}"><i class="fas fa-play"></i></a>
-                                    </div>
-                                </div>
-                            </div>
                             @endif
-                            <!-- list-single-main-item end -->
-                            <!-- list-single-main-item -->
-                            {{-- <div class="list-single-main-item fl-wrap">
-                                <div class="list-single-main-item-title">
-                                    <h3>Features</h3>
-                                </div>
-                                <div class="list-single-main-item_content fl-wrap">
-                                    <div class="listing-features ">
-                                        <ul>
-                                            <li><a href="#"><i class="fal fa-dumbbell"></i> Gym</a></li>
-                                            <li><a href="#"><i class="fal fa-wifi"></i> Wi Fi</a></li>
-                                            <li><a href="#"><i class="fal fa-parking"></i> Parking</a></li>
-                                            <li><a href="#"><i class="fal fa-cloud"></i> Air Conditioned</a></li>
-                                            <li><a href="#"><i class="fal fa-swimmer"></i> Pool</a></li>
-                                            <li><a href="#"><i class="fal fa-cctv"></i> Security</a></li>
-                                            <li><a href="#"><i class="fal fa-washer"></i> Laundry Room</a></li>
-                                            <li><a href="#"><i class="fal fa-utensils"></i> Equipped Kitchen</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div> --}}
-                            <!-- list-single-main-item end -->
-                            <!-- list-single-main-item -->
-                            {{-- <div class="list-single-main-item fw-lmi fl-wrap" id="sec6">
-                                <div class="map-container mapC_vis mapC_vis2">
-                                    <div id="singleMap" data-latitude="40.7427837" data-longitude="-73.11445617675781"
-                                        data-mapTitle="Our Location" data-infotitle="House in Financial Distric"
-                                        data-infotext="70 Bright St New York, USA"></div>
-                                    <div class="scrollContorl"></div>
-                                </div>
-                                <input id="pac-input" class="controls fl-wrap controls-mapwn" autocomplete="on"
-                                    type="text" placeholder="What Nearby? Schools, Gym... " value="">
-                            </div> --}}
-                            <!-- list-single-main-item end -->
-                            <!-- list-single-main-item -->
-                            {{-- <div class="list-single-main-item fl-wrap" id="sec7">
-                                <div class="list-single-main-item-title">
-                                    <h3>Đánh giá <span>2</span></h3>
-                                </div>
-                                <div class="list-single-main-item_content fl-wrap">
-                                    <div class="reviews-comments-wrap fl-wrap">
-                                        <div class="review-total">
-                                            <span class="review-number blue-bg">4.0</span>
-                                            <div class="listing-rating card-popup-rainingvis" data-starrating2="4"><span
-                                                    class="re_stars-title">Tốt</span></div>
-                                        </div>
-                                        <!-- reviews-comments-item -->
-                                        <div class="reviews-comments-item">
-                                            <div class="review-comments-avatar">
-                                                <img src="images/avatar/1.jpg" alt="{{ $property->title_by_address }}">
-                                            </div>
-                                            <div class="reviews-comments-item-text smpar">
-                                                <div class="box-widget-menu-btn smact"><i class="far fa-ellipsis-h"></i>
-                                                </div>
-                                                <div class="show-more-snopt-tooltip bxwt">
-                                                    <a href="#"> <i class="fas fa-reply"></i> Trả lời</a>
-                                                    <a href="#"> <i class="fas fa-exclamation-triangle"></i> Báo cáo
-                                                    </a>
-                                                </div>
-                                                <h4><a href="#">Liza Rose</a></h4>
-                                                <div class="listing-rating card-popup-rainingvis" data-starrating2="3">
-                                                    <span class="re_stars-title">Trung bình</span>
-                                                </div>
-                                                <div class="clearfix"></div>
-                                                <p>" Donec quam felis, ultricies nec, pellentesque eu, pretium quis,
-                                                    sem. Nulla consequat massa quis enim. Donec pede justo, fringilla
-                                                    vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut,
-                                                    imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede
-                                                    mollis pretium. "</p>
-                                                <div class="reviews-comments-item-date"><span
-                                                        class="reviews-comments-item-date-item"><i
-                                                            class="far fa-calendar-check"></i>12 Tháng 4, 2018</span><a
-                                                        href="#" class="rate-review"><i class="fal fa-thumbs-up"></i>
-                                                        Đánh giá hữu ích <span>6</span> </a></div>
-                                            </div>
-                                        </div>
-                                        <!--reviews-comments-item end-->
-                                        <!-- reviews-comments-item -->
-                                        <div class="reviews-comments-item">
-                                            <div class="review-comments-avatar">
-                                                <img src="images/avatar/1.jpg" alt="{{ $property->title_by_address }}">
-                                            </div>
-                                            <div class="reviews-comments-item-text smpar">
-                                                <div class="box-widget-menu-btn smact"><i class="far fa-ellipsis-h"></i>
-                                                </div>
-                                                <div class="show-more-snopt-tooltip bxwt">
-                                                    <a href="#"> <i class="fas fa-reply"></i> Trả lời</a>
-                                                    <a href="#"> <i class="fas fa-exclamation-triangle"></i> Báo cáo
-                                                    </a>
-                                                </div>
-                                                <h4><a href="#">Adam Koncy</a></h4>
-                                                <div class="listing-rating card-popup-rainingvis" data-starrating2="5">
-                                                    <span class="re_stars-title">Xuất sắc</span>
-                                                </div>
-                                                <div class="clearfix"></div>
-                                                <p>" Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
-                                                    posuere convallis purus non cursus. Cras metus neque, gravida
-                                                    sodales massa ut. "</p>
-                                                <div class="reviews-comments-item-date"><span
-                                                        class="reviews-comments-item-date-item"><i
-                                                            class="far fa-calendar-check"></i>03 Tháng 12, 2017</span><a
-                                                        href="#" class="rate-review"><i class="fal fa-thumbs-up"></i>
-                                                        Đánh giá hữu ích <span>2</span> </a></div>
-                                            </div>
-                                        </div>
-                                        <!--reviews-comments-item end-->
-                                    </div>
-                                </div>
-                            </div> --}}
-                            <!-- list-single-main-item end -->
-                            <!-- list-single-main-item -->
-                            {{-- <div class="list-single-main-item fl-wrap" id="sec15">
-                                <div class="list-single-main-item-title fl-wrap">
-                                    <h3>Thêm Đánh giá Của Bạn</h3>
-                                </div>
-                                <!-- Hộp Thêm Đánh giá -->
-                                <div id="add-review" class="add-review-box">
-                                    <div class="leave-rating-wrap">
-                                        <span class="leave-rating-title">Đánh giá của bạn cho bản ghi này: </span>
-                                        <div class="leave-rating">
-                                            <input type="radio" data-ratingtext="Tuyệt vời" name="rating" id="rating-1"
-                                                value="1" />
-                                            <label for="rating-1" class="fal fa-star"></label>
-                                            <input type="radio" data-ratingtext="Tốt" name="rating" id="rating-2"
-                                                value="2" />
-                                            <label for="rating-2" class="fal fa-star"></label>
-                                            <input type="radio" name="rating" data-ratingtext="Trung bình" id="rating-3"
-                                                value="3" />
-                                            <label for="rating-3" class="fal fa-star"></label>
-                                            <input type="radio" data-ratingtext="Công bằng" name="rating" id="rating-4"
-                                                value="4" />
-                                            <label for="rating-4" class="fal fa-star"></label>
-                                            <input type="radio" data-ratingtext="Rất tệ" name="rating" id="rating-5"
-                                                value="5" />
-                                            <label for="rating-5" class="fal fa-star"></label>
-                                        </div>
-                                        <div class="count-radio-wrapper">
-                                            <span id="count-checked-radio">Đánh Giá Của Bạn</span>
-                                        </div>
-                                    </div>
-                                    <!-- Ô Nhận Xét -->
-                                    <form class="add-comment custom-form">
-                                        <fieldset>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <label>Tên của bạn* <span class="dec-icon"><i
-                                                                class="fas fa-user"></i></span></label>
-                                                    <input name="phone" type="text" onClick="this.select()" value="">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label>Email của bạn* <span class="dec-icon"><i
-                                                                class="fas fa-envelope"></i></span></label>
-                                                    <input name="reviewwname" type="text" onClick="this.select()"
-                                                        value="">
-                                                </div>
-                                            </div>
-                                            <textarea cols="40" rows="3" placeholder="Đánh giá của bạn:"></textarea>
-                                        </fieldset>
-                                        <button class="btn big-btn color-bg float-btn">Gửi Đánh giá <i
-                                                class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
-                                    </form>
-                                </div>
-                                <!-- Hộp Thêm Đánh giá / Kết thúc -->
-                            </div> --}}
-                            <!-- list-single-main-item end -->
+                            <p class="pipe-hint" style="margin-top:14px">Pipeline chăm khách, claim vai trò và phân bổ hoa hồng cho tin này đang được phát triển. {{-- TODO(backend): API pipeline/claim/commission theo tin. --}}</p>
                         </div>
                     </div>
-                </div>
-                <!-- listing-single content end-->
-                <!-- sidebar -->
-                <div class="col-md-4">
-                    <!--box-widget-->
-                    <div class="box-widget fl-wrap">
-                        <div class="profile-widget">
-                            <div class="profile-widget-header color-bg smpar fl-wrap">
-                                <div class="pwh_bg"></div>
-                                {{-- <div class="call-btn">
-                                    <a href="tel:123-456-7890" class="tolt color-bg" data-microtip-position="right"
-                                        data-tooltip="Gọi ngay">
-                                        <i class="fas fa-phone-alt"></i>
-                                    </a>
-                                </div> --}}
-                                {{-- <div class="box-widget-menu-btn smact">
-                                    <i class="far fa-ellipsis-h"></i>
-                                </div> --}}
-                                {{-- <div class="show-more-snopt-tooltip bxwt">
-                                    <a href="#"> <i class="fas fa-comment-alt"></i> Viết đánh giá</a>
-                                    <a href="#"> <i class="fas fa-exclamation-triangle"></i> Báo cáo </a>
-                                </div> --}}
-                                <div class="profile-widget-card">
-                                    <div class="profile-widget-image">
-                                        <img src="{{$property->agent ? ($property->agent->profile ? $property->agent->profile : 'https://dalatbds.com/images/users/1693209486.1303.png'):'https://dalatbds.com/images/users/1693209486.1303.png'}}" alt="Đà Lạt BDS">
-                                    </div>
-                                    <div class="profile-widget-header-title">
-                                        @if(isset($property->added_by))
-                                        <h4><a href="{{ route('agent.showid', ['id' => $property->added_by]) }}">{{
-                                                $property->agent->name ?? 'Unknown' }}</a></h4>
-                                        @endif
-                                        <div class="clearfix"></div>
-                                        <div class="pwh_counter"><span>{{ $property->count_properties_by_agent ?? 0
-                                                }}</span>Danh sách Bất động sản</div>
-                                        <div class="clearfix"></div>
-                                        <div class="listing-rating card-popup-rainingvis" data-starrating2="4"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="profile-widget-content fl-wrap">
-                                <div class="contats-list fl-wrap">
-                                    <ul class="no-list-style">
-                                        {{-- <li><span><i class="fal fa-phone"></i> Điện thoại :</span> <a href="#">{{
-                                                $property->agent->mobile ?? 'N/A' }}</a></li>
-                                        <li><span><i class="fal fa-envelope"></i> Email :</span> <a href="#">{{
-                                                $property->agent->email ?? 'N/A' }}</a></li>
-                                        <li><span><i class="fal fa-browser"></i> Website :</span> <a href="#">{{
-                                                $property->agent->website ?? 'N/A' }}</a></li> --}}
-                                    </ul>
-                                </div>
-                                <div class="profile-widget-footer fl-wrap">
-                                    <a href="{{ route('agent.showid', ['id' => $property->added_by]) }}"
-                                        class="btn float-btn color-bg small-btn">Xem Hồ sơ</a>
-                                    <a href="#sec-contact" class="custom-scroll-link tolt" data-microtip-position="left"
-                                        data-tooltip="Xem Bất động sản"><i class="fal fa-paper-plane"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!--box-widget end -->
-                    <!--box-widget: Telegram Deep Link CTA -->
-                    <div class="box-widget fl-wrap">
-                        <div class="box-widget-content fl-wrap" style="padding:16px">
-                            <a href="{{ $telegramDeepLink ?? '' }}"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               style="display:flex;align-items:center;justify-content:center;gap:10px;
-                                      background:#2CA5E0;color:#fff;font-weight:600;font-size:14px;
-                                      padding:12px 16px;border-radius:10px;text-decoration:none;width:100%;
-                                      box-shadow:0 2px 8px rgba(44,165,224,0.4);">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.36l-1.685 7.94c-.126.56-.46.7-.932.434l-2.57-1.893-1.24 1.194c-.137.137-.252.252-.517.252l.185-2.623 4.773-4.31c.208-.185-.045-.287-.32-.1L7.73 14.6 5.19 13.83c-.555-.174-.566-.555.116-.82l9.68-3.73c.463-.167.87.113.944.08z"/>
-                                </svg>
-                                Mở trong Telegram
-                            </a>
-                            <p style="font-size:11px;color:#888;text-align:center;margin:8px 0 0 0">
-                                Xem chi tiết BDS trong Telegram Mini App
-                            </p>
-                        </div>
-                    </div>
-                    <!--box-widget end -->
-                    <!--box-widget-->
-                    <div class="box-widget fl-wrap">
-                        <div class="box-widget-title fl-wrap">Bất động sản Nổi bật</div>
-                        <div class="box-widget-content fl-wrap">
-                            <!-- Bài viết nổi bật -->
-                            {{-- <div class="widget-posts  fl-wrap">
-                                <ul class="no-list-style">
-                                    <li>
-                                        <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                    src="images/all/small/1.jpg" {{ $property->title_by_address }}"></a>
-                                        </div>
-                                        <div class="widget-posts-descr">
-                                            <h4><a href="listing-single.html">Phòng Đô Thị Phải Chăng</a></h4>
-                                            <div class="geodir-category-location fl-wrap"><a href="#"><i
-                                                        class="fas fa-map-marker-alt"></i> 40 Journal Square, NJ, Mỹ</a>
-                                            </div>
-                                            <div class="widget-posts-descr-price"><span>Giá: </span> $ 1500 / mỗi tháng
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                    src="images/all/small/1.jpg"
-                                                    alt="{{ $property->title_by_address }}"></a>
-                                        </div>
-                                        <div class="widget-posts-descr">
-                                            <h4><a href="listing-single.html">Nhà Gia Đình</a></h4>
-                                            <div class="geodir-category-location fl-wrap"><a href="#"><i
-                                                        class="fas fa-map-marker-alt"></i> 70 Bright St New York, Mỹ</a>
-                                            </div>
-                                            <div class="widget-posts-descr-price"><span>Giá: </span> $ 50000</div>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                    src="images/all/small/1.jpg"
-                                                    alt="{{ $property->title_by_address }}"></a>
-                                        </div>
-                                        <div class="widget-posts-descr">
-                                            <h4><a href="listing-single.html">Căn hộ Cho Thuê</a></h4>
-                                            <div class="geodir-category-location fl-wrap"><a href="#"><i
-                                                        class="fas fa-map-marker-alt"></i> 75 Prince St, NY, Mỹ</a>
-                                            </div>
-                                            <div class="widget-posts-descr-price"><span>Giá: </span> $100 / mỗi đêm
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="widget-posts-img"><a href="listing-single.html"><img
-                                                    src="images/all/small/1.jpg"
-                                                    alt="{{ $property->title_by_address }}"></a>
-                                        </div>
-                                        <div class="widget-posts-descr">
-                                            <h4><a href="listing-single.html">Căn hộ Cho Thuê</a></h4>
-                                            <div class="geodir-category-location fl-wrap"><a href="#"><i
-                                                        class="fas fa-map-marker-alt"></i> 75 Prince St, NY, Mỹ</a>
-                                            </div>
-                                            <div class="widget-posts-descr-price"><span>Giá: </span> $100 / mỗi đêm
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div> --}}
-                            <!-- Bài viết nổi bật -->
-                            <div class="widget-posts fl-wrap">
-                                <ul class="no-list-style">
-                                    @foreach($highlightedProducts as $product)
-                                    <li>
-                                        <div class="widget-posts-img">
-                                            <a href="{{ route('bds.show', ['slug' => $product->slug]) }}">
-                                                <img src="{{ $product->title_image }}" alt="{{ $product->title_by_address }}">
-                                            </a>
-                                        </div>
-                                        <div class="widget-posts-descr">
-                                            <h4>
-                                                <a href="{{ route('bds.show', ['slug' => $product->slug]) }}">
-                                                    {{ $product->title_by_address }}
-                                                </a>
-                                            </h4>
-                                            <div class="geodir-category-location fl-wrap">
-                                                <a href="#">
-                                                    <i class="fas fa-map-marker-alt"></i>
-                                                    {{ $product->address_location }}
-                                                </a>
-                                            </div>
-                                            <div class="widget-posts-descr-price">
-                                                <span>Giá: </span> {{ $product->formatted_prices }}
-                                            </div>
-                                        </div>
-                                    </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                            <!-- Kết thúc bài viết nổi bật -->
-                            <!-- Kết thúc bài viết nổi bật -->
-                            <a href="{{ route('properties.index') }}" class="btn float-btn color-bg small-btn">Xem Tất
-                                cả Bất động sản</a>
-                        </div>
-                    </div>
-                    <!--box-widget end -->
-                    <!--box-widget-->
-                    {{-- <div class="box-widget fl-wrap hidden-section" style="margin-top: 30px">
-                        <div class="box-widget-content fl-wrap color-bg">
-                            <div class="color-form reset-action">
-                                <div class="color-form-title fl-wrap">
-                                    <h4>Calculate Your Mortgage</h4>
-                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc posuere convallis
-                                        purus non cursus. </p>
-                                </div>
-                                <form method="post" name="mortgage-form">
-                                    <div class="fl-wrap">
-                                        <label for="amt">Loan Amount </label>
-                                        <input id="amt" name="amt" type="text" placeholder="0" value="0">
-                                        <div class="use-current-price tolt" data-microtip-position="left"
-                                            data-tooltip="Use current price"><i class="fal fa-tag"></i></div>
-                                    </div>
-                                    <label for="apr">Percentage rate</label>
-                                    <div class="price-rage-item fl-wrap">
-                                        <input type="text" id="apr" name="apr" class="price-range" data-min="0"
-                                            data-max="100" data-step="1" value="0" data-prefix="%">
-                                    </div>
-                                    <label for="trm">Loan Term (Years) </label>
-                                    <div class="price-rage-item fl-wrap">
-                                        <input type="text" id="trm" name="trm" class="price-range" data-min="0"
-                                            data-max="5" data-step="1" value="0" data-prefix="Y">
-                                    </div>
-                                    <div class="clearfix"></div>
-                                    <button type="button" id="sbt" class="color2-bg">Calculate</button>
-                                    <div class="reset-form reset-btn"> <i class="far fa-sync-alt"></i> Reset Form</div>
-                                    <div class="monterage-title fl-wrap">
-                                        <h5>Monthly payment:</h5>
-                                        <input type="text" id="pmt" name="mPmt" value="0">
-                                        <div class="monterage-title-item">$<span></span></div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div> --}}
-                    <!--box-widget end -->
-                    <!--box-widget-->
-                    {{-- <div class="box-widget fl-wrap">
-                        <div class="box-widget-title fl-wrap">Propertie Documents</div>
-                        <div class="box-widget-content fl-wrap">
-                            <div class="bwc_download-list">
-                                <a href="#" download><span><i class="fal fa-file-pdf"></i></span>Property
-                                    Presentation</a>
-                                <a href="#" download><span><i class="fal fa-file-word"></i></span>Energetic
-                                    Certificate</a>
-                                <a href="#" download><span><i class="fal fa-file-pdf"></i></span>Property Plans</a>
-                            </div>
-                        </div>
-                    </div> --}}
-                    <!--box-widget end -->
-                    <!--box-widget-->
-                    {{-- <div class="box-widget fl-wrap">
-                        <div class="box-widget-fixed-init fl-wrap" id="sec-contact">
-                            <div class="box-widget-title fl-wrap box-widget-title-color color-bg">Contact Property</div>
-                            <div class="box-widget-content fl-wrap">
-                                <div class="custom-form">
-                                    <form method="post" name="contact-property-form">
-                                        <label>Your name* <span class="dec-icon"><i
-                                                    class="fas fa-user"></i></span></label>
-                                        <input name="phone" type="text" onClick="this.select()" value="">
-                                        <label>Your phone * <span class="dec-icon"><i
-                                                    class="fas fa-phone"></i></span></label>
-                                        <input name="phone" type="text" onClick="this.select()" value="">
-                                        <div class="row">
-                                            <div class="col-sm-6">
-                                                <label>Date <span class="dec-icon"><i
-                                                            class="fas fa-calendar-check"></i></span></label>
-                                                <div class="date-container fl-wrap">
-                                                    <input type="text" placeholder=""
-                                                        style="padding: 16px 5px 16px 60px;" name="datepicker-here"
-                                                        value="" />
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label>Time </label>
-                                                <select data-placeholder="9 AM"
-                                                    class="chosen-select on-radius no-search-select">
-                                                    <option>9 AM</option>
-                                                    <option>10 AM</option>
-                                                    <option>11 AM</option>
-                                                    <option>12 AM</option>
-                                                    <option>13 PM</option>
-                                                    <option>14 PM</option>
-                                                    <option>15 PM</option>
-                                                    <option>16 PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <button type="submit" class="btn float-btn color-bg fw-btn"> Send</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-                    <!--box-widget end -->
-                </div>
-                <!--  sidebar end-->
+                @endif
             </div>
-            <div class="fl-wrap limit-box"></div>
-            <div class="listing-carousel-wrapper carousel-wrap fl-wrap">
-                <div class="list-single-main-item-title">
-                    <h3>Tương Tự</h3>
-                </div>
-                <div class="listing-carousel carousel ">
-                    @foreach($relatedProducts as $productItem )
-                    <!-- slick-slide-item -->
-                    <div class="slick-slide-item">
-                        <!-- listing-item -->
-                        @include('frontends.components.product_card',['productCard'=>$productItem ])
-                        <!-- listing-item end-->
+
+            {{-- Sidebar --}}
+            <aside class="aside">
+                <div class="broker">
+                    <div class="broker-top">
+                        <img class="ds-avatar" style="width:48px;height:48px" src="{{ $property->agent->profile ?? asset('images/ltbs-logo.svg') }}" alt="">
+                        <div><div class="broker-role">Môi giới phụ trách</div><div style="font-weight:700">{{ $property->agent->name ?? 'Đà Lạt BĐS' }}</div></div>
                     </div>
-                    <!-- slick-slide-item end-->
+                    @if ($canSeeExact)
+                        <div class="owner-contact" style="margin-top:14px">
+                            <div class="oc-row"><b>SĐT chủ: {{ $property->host->contact ?? '—' }}</b></div>
+                        </div>
+                    @elseif ($isSale)
+                        <div class="contact-locked">
+                            <div class="cl-title"><svg viewBox="0 0 24 24" class="ic ic17"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Liên hệ chủ nhà</div>
+                            <p class="cl-desc">Thông tin chủ được bảo vệ để chống cắt cầu. Cần được admin phân bổ vai trò trước khi mở khoá.</p>
+                        </div>
+                    @else
+                        <a class="ds-btn ds-btn-solid ds-btn-md ds-btn-block" style="margin-top:14px" href="{{ route('webapp') }}">Đăng ký để liên hệ</a>
+                    @endif
+                    <div class="viewstat" style="margin-top:14px">
+                        <span>{{ $property->total_click ?? 0 }} lượt xem</span> · <span>Đăng {{ $property->created_at?->diffForHumans() }}</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        {{-- Related --}}
+        @if (($relatedProducts ?? collect())->isNotEmpty())
+            <div class="rel">
+                <div class="rel-head"><h2>BĐS liên quan</h2></div>
+                <div class="rgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+                    @foreach ($relatedProducts->take(3) as $rp)
+                        @include('frontends.ltbs.components.property_card', ['property' => $rp])
                     @endforeach
                 </div>
-                {{-- <div class="swiper-button-prev lc-wbtn lc-wbtn_prev"><i class="far fa-angle-left"></i></div>
-                <div class="swiper-button-next lc-wbtn lc-wbtn_next"><i class="far fa-angle-right"></i></div> --}}
+            </div>
+        @endif
+    </main>
+
+    {{-- Sticky CTA bar --}}
+    <div class="ctabar">
+        <div class="wrapc ctabar-in">
+            <div class="ctabar-price"><b>{{ $property->formatted_prices }}</b> · {{ $property->address_location }}</div>
+            <div class="ctabar-actions">
+                <button class="ds-btn ds-btn-outline ds-btn-md" onclick="LTBS.toggleFav({{ $property->id }}, this)">Lưu tin</button>
+                <a class="ds-btn ds-btn-solid ds-btn-md" href="{{ route('webapp') }}">Liên hệ ngay</a>
             </div>
         </div>
     </div>
-</div>
-<!-- content end -->
+
+    @php
+        $galleryJson = $images->values()->all();
+    @endphp
+    <script>
+        window.LTBS_GALLERY = {!! json_encode($galleryJson, JSON_UNESCAPED_UNICODE) !!};
+        @if ($canSeeExact && $property->latitude && $property->longitude)
+        window.LTBS_DETAIL_LATLNG = { lat: {{ (float) $property->latitude }}, lng: {{ (float) $property->longitude }}, title: @json($property->title) };
+        @endif
+    </script>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/ltbs-detail.js') }}"></script>
+    @if ($canSeeExact && $property->latitude && $property->longitude)
+        <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.place_api_key') }}&libraries=marker&loading=async&callback=LTBSDetailMapInit" async defer></script>
+    @endif
+@endpush
