@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/tokens/colors.css">
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/tokens/typography.css">
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/styles.css">
+<script src="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/_ds_bundle.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font-sans);color:var(--text-primary);background:var(--bg-app);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:var(--primary);text-decoration:none}
+a:hover{color:var(--primary-hover)}
+.ic{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:block;flex-shrink:0;width:20px;height:20px}
+.ic12{width:12px;height:12px}.ic13{width:13px;height:13px}.ic14{width:14px;height:14px}.ic15{width:15px;height:15px}.ic16{width:16px;height:16px}.ic17{width:17px;height:17px}.ic18{width:18px;height:18px}.ic22{width:22px;height:22px}.ic24{width:24px;height:24px}.ic26{width:26px;height:26px}.ic28{width:28px;height:28px}
+.page{width:100%;overflow-x:hidden;padding-bottom:84px}
+.wrapc{max-width:1240px;margin:0 auto;padding:0 24px}
+/* header */
+.hdr{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.hdr-in{height:66px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:10px}
+.brandlogo{height:30px;display:block}
+.nav{display:flex;align-items:center;gap:28px}
+.nav a{font-size:14.5px;font-weight:500;color:var(--ink-700);transition:color .15s}
+.nav a:hover{color:var(--primary)}
+.nav a.on{color:var(--primary);font-weight:600}
+.hdr-cta{display:flex;align-items:center;gap:12px}
+.ghostlink{font-size:14.5px;font-weight:600;color:var(--ink-700)}
+/* crumbs */
+.crumbs{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-tertiary);padding:18px 0 10px;flex-wrap:wrap}
+.crumbs a{color:var(--text-secondary);font-weight:500}
+.crumbs .sep{color:var(--ink-300)}
+.crumbs .cur{color:var(--text-primary);font-weight:600}
+/* title row */
+.titlerow{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:16px;flex-wrap:wrap}
+.tl-left{min-width:0;flex:1}
+.tl-badges{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.sbadge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill)}
+.sbadge.open{background:var(--success-light);color:var(--success)}
+.sbadge.negotiating{background:var(--purple-light);color:var(--purple)}
+.sbadge.deposited{background:var(--warning-light);color:#b45309}
+.sbadge.sold{background:var(--ink-100);color:var(--ink-600)}
+.tl-code{font-size:12.5px;font-weight:600;color:var(--text-tertiary);letter-spacing:.02em}
+.tl-verify{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--success)}
+h1.tl-title{font-size:27px;line-height:1.25;font-weight:700;color:var(--ink-900);letter-spacing:-.015em;margin:0}
+.tl-addr{display:flex;align-items:center;gap:7px;font-size:14.5px;color:var(--text-secondary);margin-top:8px}
+.tl-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.actbtn{display:inline-flex;align-items:center;gap:7px;height:42px;padding:0 15px;border-radius:11px;border:1px solid var(--border);background:#fff;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink-700);cursor:pointer;transition:all .15s}
+.actbtn:hover{border-color:var(--border-strong);color:var(--ink-900)}
+.actbtn.on{border-color:var(--danger);color:var(--danger);background:var(--danger-light)}
+/* gallery */
+.gallery{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:10px;height:440px;margin-bottom:12px}
+.gcell{position:relative;overflow:hidden;border-radius:14px;cursor:pointer;background:var(--grad-hero)}
+.gcell.main{grid-row:1/3}
+.gcell img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform .4s}
+.gcell:hover img{transform:scale(1.04)}
+.gchips{position:absolute;left:14px;bottom:14px;display:flex;gap:8px;z-index:2}
+.gchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#fff;background:rgba(15,28,50,.55);backdrop-filter:blur(6px);padding:6px 11px;border-radius:var(--radius-pill)}
+.gmore{position:absolute;inset:0;background:rgba(15,28,50,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;font-weight:700;font-size:16px;z-index:2}
+.thumbstrip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.thumb{width:96px;height:66px;border-radius:10px;overflow:hidden;flex-shrink:0;cursor:pointer;border:2px solid transparent;opacity:.65;transition:all .15s;position:relative}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb.on{opacity:1;border-color:var(--primary)}
+.thumb:hover{opacity:1}
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 372px;gap:30px;align-items:start;margin-top:28px}
+.mcol{min-width:0;display:flex;flex-direction:column;gap:26px}
+/* card */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 26px}
+.card-h{display:flex;align-items:center;gap:10px;margin:0 0 18px}
+.card-h .ic{color:var(--primary)}
+.card-h h2{font-size:18px;font-weight:700;color:var(--ink-900);margin:0;letter-spacing:-.01em}
+.card-h .hnote{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--text-tertiary)}
+/* price block */
+.pricewrap{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.price{font-size:34px;font-weight:700;color:var(--primary);letter-spacing:-.02em;line-height:1}
+.ppm{font-size:14.5px;font-weight:600;color:var(--text-secondary);padding-bottom:4px}
+.ppm b{color:var(--ink-800)}
+/* facts grid */
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.fact{display:flex;flex-direction:column;gap:9px;padding:14px 15px;border-radius:12px;background:var(--ink-50);border:1px solid var(--border)}
+.fact .ic{color:var(--primary)}
+.fact-l{font-size:12px;font-weight:600;color:var(--text-tertiary)}
+.fact-v{font-size:16px;font-weight:700;color:var(--ink-900)}
+/* map */
+.map{position:relative;height:360px;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:linear-gradient(135deg,#e8efe8 0%,#eef2f0 45%,#e5edf2 100%)}
+.map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(20,66,115,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(20,66,115,.06) 1px,transparent 1px);background-size:44px 44px}
+.map-road{position:absolute;background:rgba(255,255,255,.9);box-shadow:0 0 0 1px rgba(20,66,115,.08)}
+.map-lake{position:absolute;border-radius:48% 52% 55% 45%;background:linear-gradient(135deg,#bfe0ea,#9fcfe0);box-shadow:inset 0 0 0 1px rgba(13,148,136,.2)}
+.zone{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:230px;height:230px;border-radius:50%;background:rgba(50,112,252,.13);border:2px dashed var(--primary);display:flex;align-items:center;justify-content:center}
+.zone-lbl{position:absolute;left:50%;bottom:calc(50% + 128px);transform:translateX(-50%);background:#fff;border:1px solid var(--border);box-shadow:var(--shadow-card);border-radius:var(--radius-pill);padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.mpin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);z-index:3;color:var(--danger);filter:drop-shadow(0 4px 6px rgba(15,28,50,.35))}
+.mpin .ic{width:40px;height:40px;fill:var(--danger);stroke:#fff;stroke-width:1.4}
+.mpulse{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:70px;height:70px;border-radius:50%;background:rgba(239,68,68,.22);animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{transform:translate(-50%,-50%) scale(.5);opacity:.9}100%{transform:translate(-50%,-50%) scale(1.6);opacity:0}}
+.poi{position:absolute;display:flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-pill);padding:4px 9px;font-size:11.5px;font-weight:600;color:var(--ink-700);box-shadow:0 2px 6px rgba(15,28,50,.1);white-space:nowrap}
+.poi .dot{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+.map-addr{position:absolute;left:14px;right:14px;bottom:14px;background:#fff;border-radius:12px;box-shadow:var(--shadow-card);padding:13px 16px;display:flex;align-items:center;gap:11px;z-index:4}
+.map-addr .ic{color:var(--danger)}
+.map-addr b{font-size:14px;font-weight:700;color:var(--ink-900)}
+.map-addr span{font-size:12.5px;color:var(--text-secondary)}
+.map-lockbar{position:absolute;left:14px;right:14px;bottom:14px;background:rgba(15,28,50,.82);backdrop-filter:blur(6px);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:11px;z-index:4;color:#fff}
+.map-lockbar b{font-size:13.5px;font-weight:700;display:block}
+.map-lockbar span{font-size:12px;opacity:.85}
+/* quy hoạch check */
+.qh-cta{display:flex;align-items:center;gap:16px;margin-top:14px;padding:18px 20px;border-radius:14px;background:var(--grad-hero);color:#fff}
+.qh-cta-ic{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qh-cta-body{flex:1;min-width:0}
+.qh-cta-t{font-size:15px;font-weight:700}
+.qh-cta-s{font-size:12.5px;opacity:.85;margin-top:3px;line-height:1.5}
+.btn-white{background:#fff!important;color:var(--primary)!important;box-shadow:0 6px 18px rgba(0,0,0,.2)!important}
+.btn-secondary{background:#fff!important;border-color:var(--border)!important;color:var(--ink-900)!important;box-shadow:none!important}
+.btn-secondary:hover{border-color:var(--border-strong)!important;background:var(--bg-app)!important}
+.qhs-overlay{position:fixed;inset:0;z-index:200;background:rgba(15,28,50,.55);display:flex;align-items:center;justify-content:center;padding:40px;animation:qhsFade .2s ease-out}
+.qhs-sheet{width:100%;max-width:1040px;height:min(860px,calc(100vh - 80px));background:#fff;border-radius:24px;box-shadow:0 30px 70px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden;animation:qhsPop .3s var(--ease-out)}
+@keyframes qhsPop{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes qhsUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes qhsFade{from{opacity:0}to{opacity:1}}
+.qhs-grabber{display:none;width:38px;height:4px;background:var(--border-strong);border-radius:2px;margin:10px auto 0;flex-shrink:0}
+.qhs-head{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 10px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.qhs-headtitle{font-size:12px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em}
+.qhs-iconbtn{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg-secondary);color:var(--text-secondary);border:none;cursor:pointer;flex-shrink:0;padding:0}
+.qhs-scroll{flex:1;overflow-y:auto;padding:18px 20px 8px;-webkit-overflow-scrolling:touch;max-width:600px;width:100%;margin:0 auto;box-sizing:border-box}
+.qhs-map{position:relative;height:220px;border-radius:16px;overflow:hidden;background:var(--blue-50);touch-action:none;cursor:ew-resize}
+.qhs-map-zoning{position:absolute;inset:0;background:var(--blue-50)}
+.qhs-map-svg{position:absolute;inset:0;width:100%;height:100%}
+.qhs-map-neighbor{fill:var(--ink-200);fill-opacity:.5;stroke:var(--ink-300);stroke-width:1.5}
+.qhs-map-parcel{fill:var(--primary);fill-opacity:.16;stroke:var(--primary);stroke-width:2.5}
+.qhs-map-parcel.drawing{stroke-dasharray:480;stroke-dashoffset:480;animation:qhsDraw 1.7s ease-out forwards;fill-opacity:0}
+@keyframes qhsDraw{to{stroke-dashoffset:0}}
+.qhs-map-satellite{position:absolute;inset:0;background:linear-gradient(135deg,#3f5c3a 0%,#5a7245 40%,#788a4a 70%,#4d6b42 100%);background-image:radial-gradient(circle at 20% 30%,rgba(255,255,255,.08) 0,transparent 3px),radial-gradient(circle at 60% 65%,rgba(255,255,255,.06) 0,transparent 4px),radial-gradient(circle at 80% 20%,rgba(255,255,255,.07) 0,transparent 3px),linear-gradient(135deg,#3f5c3a 0%,#5a7245 40%,#788a4a 70%,#4d6b42 100%);background-size:34px 34px,40px 40px,28px 28px,100% 100%}
+.qhs-map-label{position:absolute;top:10px;font-size:10.5px;font-weight:700;color:#fff;background:rgba(15,28,50,.4);padding:4px 9px;border-radius:var(--radius-pill);letter-spacing:.02em}
+.qhs-map-label.left{left:10px}
+.qhs-map-label.right{right:10px;background:rgba(255,255,255,.85);color:var(--text-primary)}
+.qhs-map-handle{position:absolute;top:0;bottom:0;width:0;transform:translateX(-50%)}
+.qhs-map-handle::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 0 1px rgba(15,28,50,.2)}
+.qhs-map-grip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:var(--shadow-lg);display:block}
+.qhs-loading{display:flex;flex-direction:column;align-items:center;text-align:center;padding:40px 16px 30px;gap:16px}
+.qhs-spinner{width:38px;height:38px;border-radius:50%;border:3px solid var(--primary-light);border-top-color:var(--primary);animation:qhsSpin 0.9s linear infinite}
+@keyframes qhsSpin{to{transform:rotate(360deg)}}
+.qhs-loading-text{font-size:14px;color:var(--text-secondary);line-height:1.7}
+.qhs-banner{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:16px;margin-top:16px;background:var(--success-light)}
+.qhs-banner-ic{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--success)}
+.qhs-banner-label{font-size:11px;font-weight:700;letter-spacing:.06em;margin-bottom:4px;color:var(--success)}
+.qhs-banner-text{font-size:14px;line-height:1.55;color:var(--text-primary)}
+.qhs-table{margin-top:18px;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.qhs-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:11px 15px;font-size:13.5px}
+.qhs-row+.qhs-row{border-top:1px solid var(--border)}
+.qhs-row-label{color:var(--text-tertiary);flex-shrink:0}
+.qhs-row-val{font-weight:600;color:var(--text-primary);text-align:right}
+.qhs-row-caption{display:block;font-size:11px;font-weight:400;color:var(--text-tertiary);margin-top:2px}
+.qhs-disclaimer{font-size:11px;line-height:1.6;color:var(--text-tertiary);margin:14px 2px 12px}
+.qhs-sentnote{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--success);background:var(--success-light);padding:12px 14px;border-radius:12px;line-height:1.5}
+.qhs-actions{flex-shrink:0;border-top:1px solid var(--border);padding:14px 20px 20px;display:flex;flex-direction:column;gap:10px;background:#fff;max-width:600px;width:100%;margin:0 auto;box-sizing:border-box}
+.qhs-actions-row2{display:flex;align-items:center;gap:8px}
+.qhs-share{width:44px;height:44px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg-secondary);color:var(--text-secondary);border:none;cursor:pointer;padding:0}
+/* description */
+.desc{font-size:15px;line-height:1.75;color:var(--ink-700)}
+.desc p{margin:0 0 14px}
+.desc p:last-child{margin-bottom:0}
+.amen{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px;padding-top:22px;border-top:1px solid var(--border)}
+.amen-i{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:600;color:var(--ink-800)}
+.amen-i .aic{width:38px;height:38px;border-radius:10px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* role work / admin blocks */
+.rolecard{border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)}
+.rc-head{display:flex;align-items:center;gap:12px;padding:18px 24px;color:#fff}
+.rc-head.sale{background:var(--grad-hero)}
+.rc-head.admin{background:var(--grad-dusk)}
+.rc-head .rc-ic{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rc-head h2{font-size:18px;font-weight:700;margin:0}
+.rc-head p{font-size:12.5px;margin:3px 0 0;opacity:.9}
+.rc-body{background:#fff;padding:24px 26px;display:flex;flex-direction:column;gap:26px}
+.sub{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-tertiary);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+/* pipeline stepper */
+.pipe{display:flex;align-items:flex-start;gap:0;position:relative}
+.pstep{flex:1;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;position:relative;text-align:center}
+.pstep .pdot{width:38px;height:38px;border-radius:50%;background:#fff;border:2px solid var(--border-strong);color:var(--text-tertiary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;z-index:2;transition:all .18s}
+.pstep .pline{position:absolute;top:19px;left:-50%;width:100%;height:2.5px;background:var(--border);z-index:1}
+.pstep:first-child .pline{display:none}
+.pstep .plbl{font-size:12.5px;font-weight:600;color:var(--text-secondary);line-height:1.3}
+.pstep.done .pdot{background:var(--primary);border-color:var(--primary);color:#fff}
+.pstep.done .pline{background:var(--primary)}
+.pstep.active .pdot{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 0 0 4px var(--primary-light),var(--shadow-primary)}
+.pstep.active .plbl{color:var(--primary);font-weight:700}
+.pstep.active~.pstep .pline,.pstep.done~.pstep:not(.done):not(.active) .pline{background:var(--border)}
+.pipe-hint{font-size:12.5px;color:var(--text-tertiary);margin-top:14px;text-align:center}
+/* claim roles */
+.claims{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.claim{border:1.5px solid var(--border);border-radius:13px;padding:16px 15px;display:flex;flex-direction:column;gap:10px;transition:all .15s}
+.claim .cl-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--ink-100);color:var(--ink-500)}
+.claim .cl-t{font-size:14px;font-weight:700;color:var(--ink-900);line-height:1.3}
+.claim .cl-s{font-size:12px;color:var(--text-secondary)}
+.claim.mine{border-color:var(--primary);background:var(--primary-light)}
+.claim.mine .cl-ic{background:var(--primary);color:#fff}
+.claim.taken{opacity:.72;background:var(--ink-50)}
+.cl-btn{margin-top:auto;height:36px;border-radius:9px;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.cl-btn.claim-open{background:var(--primary);color:#fff}
+.cl-btn.claim-open:hover{background:var(--primary-hover)}
+.cl-btn.claim-owned{background:var(--primary-light);color:var(--primary);cursor:default}
+.cl-btn.claim-taken{background:transparent;color:var(--text-tertiary);cursor:not-allowed}
+/* commission */
+.comm{display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+.donut{width:150px;height:150px;border-radius:50%;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-primary-lg)}
+.donut::after{content:"";position:absolute;width:96px;height:96px;border-radius:50%;background:#fff}
+.donut-c{position:relative;z-index:2;text-align:center}
+.donut-c .dc-l{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--text-tertiary);text-transform:uppercase}
+.donut-c .dc-v{font-size:22px;font-weight:800;color:var(--ink-900);letter-spacing:-.02em}
+.donut-c .dc-s{font-size:11px;color:var(--text-secondary)}
+.legend{flex:1;min-width:230px;display:flex;flex-direction:column;gap:9px}
+.lg{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;border:1px solid var(--border)}
+.lg.mine{border-color:var(--primary);background:var(--primary-light)}
+.lg .lgdot{width:13px;height:13px;border-radius:4px;flex-shrink:0}
+.lg .lg-t{font-size:13px;font-weight:600;color:var(--ink-800)}
+.lg .lg-o{font-size:11.5px;color:var(--text-tertiary)}
+.lg .lg-amt{margin-left:auto;font-size:13.5px;font-weight:700;color:var(--ink-900);text-align:right}
+.lg .lg-pct{font-size:11px;color:var(--text-tertiary);font-weight:600}
+.mine-tag{font-size:10px;font-weight:700;color:#fff;background:var(--primary);border-radius:var(--radius-pill);padding:2px 7px;margin-left:6px}
+/* timeline */
+.tline{display:flex;flex-direction:column}
+.tl-item{display:flex;gap:14px;padding-bottom:18px;position:relative}
+.tl-item:last-child{padding-bottom:0}
+.tl-item .tl-dot{width:32px;height:32px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2}
+.tl-item .tl-bar{position:absolute;left:15.5px;top:34px;bottom:-4px;width:2px;background:var(--border)}
+.tl-item:last-child .tl-bar{display:none}
+.tl-c{flex:1;padding-top:3px}
+.tl-c .tl-txt{font-size:14px;color:var(--ink-800);font-weight:500}
+.tl-c .tl-meta{font-size:12px;color:var(--text-tertiary);margin-top:3px;display:flex;align-items:center;gap:7px}
+.noteform{display:flex;gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+.noteform input{flex:1;border:1px solid var(--border);border-radius:10px;height:44px;padding:0 15px;font-family:inherit;font-size:14px;color:var(--ink-900);outline:none;transition:border-color .15s}
+.noteform input:focus{border-color:var(--primary)}
+.qbtn{height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--border);background:#fff;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink-700);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
+.qbtn:hover{border-color:var(--primary);color:var(--primary)}
+.qbtn.solid{background:var(--primary);color:#fff;border-color:var(--primary)}
+.qbtn.solid:hover{background:var(--primary-hover);color:#fff}
+.quickrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+/* admin allocation */
+.alloc{display:flex;flex-direction:column;gap:11px}
+.arow{display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid var(--border);border-radius:12px}
+.arow .adot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.arow .a-role{font-size:13.5px;font-weight:600;color:var(--ink-800);width:150px;flex-shrink:0}
+.arow .a-role span{display:block;font-size:11px;color:var(--text-tertiary);font-weight:500}
+.aselect{flex:1;height:40px;border:1px solid var(--border);border-radius:9px;padding:0 12px;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink-900);background:#fff;cursor:pointer;outline:none;min-width:0}
+.aselect:focus{border-color:var(--primary)}
+.a-amt{font-size:14px;font-weight:700;color:var(--ink-900);width:82px;text-align:right;flex-shrink:0}
+.a-fixed{flex:1;font-size:13.5px;font-weight:600;color:var(--ink-800);display:flex;align-items:center;gap:8px}
+.alloc-total{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--ink-50);border-radius:12px;margin-top:4px}
+.alloc-total .at-l{font-size:13px;font-weight:600;color:var(--text-secondary)}
+.alloc-total .at-v{font-size:18px;font-weight:800;color:var(--primary)}
+/* owner box (admin) */
+.owner{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.orow{display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid var(--border);border-radius:12px}
+.orow .ic{color:var(--primary)}
+.orow .o-l{font-size:11.5px;font-weight:600;color:var(--text-tertiary)}
+.orow .o-v{font-size:14.5px;font-weight:700;color:var(--ink-900)}
+.warnbar{display:flex;align-items:center;gap:10px;padding:11px 15px;background:var(--warning-light);border-radius:10px;color:#b45309;font-size:12.5px;font-weight:600;margin-top:14px}
+/* admin pipeline list */
+.deallist{display:flex;flex-direction:column;gap:11px}
+.deal{display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid var(--border);border-radius:12px}
+.deal img{width:38px;height:38px;border-radius:50%;object-fit:cover;background:var(--primary-light);flex-shrink:0}
+.deal .d-name{font-size:14px;font-weight:700;color:var(--ink-900)}
+.deal .d-role{font-size:12px;color:var(--text-secondary)}
+.deal .d-stage{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill);background:var(--primary-light);color:var(--primary)}
+/* actions */
+.actgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.agbtn{display:flex;align-items:center;justify-content:center;gap:8px;height:46px;border-radius:11px;border:1px solid var(--border);background:#fff;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink-800);cursor:pointer;transition:all .15s}
+.agbtn:hover{border-color:var(--border-strong)}
+.agbtn.approve{border-color:var(--success);color:var(--success);background:var(--success-light)}
+.agbtn.danger{border-color:var(--danger);color:var(--danger)}
+.agbtn.danger:hover{background:var(--danger-light)}
+.agbtn.on{outline:2px solid currentColor;outline-offset:-1px}
+/* audit */
+.audit{display:flex;flex-direction:column;gap:0}
+.au{display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--border)}
+.au:last-child{border-bottom:none}
+.au .au-ic{width:30px;height:30px;border-radius:8px;background:var(--ink-100);color:var(--ink-600);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.au .au-c{flex:1}
+.au .au-t{font-size:13.5px;color:var(--ink-800)}
+.au .au-t b{color:var(--ink-900);font-weight:700}
+.au .au-m{font-size:11.5px;color:var(--text-tertiary);margin-top:2px}
+/* aside / sidebar */
+.aside{position:sticky;top:86px;display:flex;flex-direction:column;gap:18px}
+.scard{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.broker{padding:26px 22px 20px}
+.broker-top{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.broker-logo{height:48px;width:auto;display:block}
+.broker-role{font-size:12.5px;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;gap:6px}
+.broker-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+/* contact lock states */
+.contact-locked{padding:20px 22px;border-top:1px solid var(--border)}
+.cl-title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--ink-900);margin-bottom:8px}
+.cl-title .ic{color:var(--text-tertiary)}
+.cl-desc{font-size:13px;line-height:1.6;color:var(--text-secondary);margin:0 0 14px}
+.owner-contact{padding:20px 22px;border-top:1px solid var(--border)}
+.oc-row{display:flex;align-items:center;gap:11px;padding:8px 0;font-size:14px;color:var(--ink-800)}
+.oc-row .ic{color:var(--primary)}
+.oc-row b{font-weight:700;color:var(--ink-900)}
+/* guest CTA card */
+.ctacard{padding:22px;background:var(--grad-hero);color:#fff}
+.ctacard h3{font-size:18px;font-weight:700;margin:0 0 6px}
+.ctacard p{font-size:13px;line-height:1.6;opacity:.9;margin:0 0 16px}
+.ctacard .cta-actions{display:flex;flex-direction:column;gap:10px}
+/* mini stat strip in aside */
+.viewstat{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-top:1px solid var(--border);font-size:13px;color:var(--text-secondary)}
+.viewstat b{color:var(--ink-900);font-weight:700}
+/* related */
+.rel{margin-top:40px}
+.rel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px}
+.rel-head h2{font-size:22px;font-weight:700;color:var(--ink-900);letter-spacing:-.01em;margin:0}
+.rel-head a{font-size:14px;font-weight:600}
+.relgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.rcard{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .2s}
+.rcard:hover{box-shadow:var(--shadow-card);transform:translateY(-2px)}
+.rcard-img{position:relative;height:180px;background:var(--grad-hero)}
+.rcard-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.rcard-badge{position:absolute;top:12px;left:12px;font-size:11px;font-weight:700;padding:5px 10px;border-radius:var(--radius-pill);color:#fff;background:rgba(5,150,105,.92)}
+.rcard-b{padding:16px 18px}
+.rcard-p{font-size:19px;font-weight:700;color:var(--primary);letter-spacing:-.01em}
+.rcard-t{font-size:14.5px;font-weight:600;color:var(--ink-900);margin:5px 0 4px;line-height:1.35}
+.rcard-a{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-secondary)}
+.rcard-m{display:flex;gap:8px;margin-top:12px}
+.rcm{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink-700);background:var(--ink-50);border:1px solid var(--border);padding:5px 9px;border-radius:8px}
+/* role switcher */
+.rswitch{position:fixed;top:82px;right:24px;z-index:70;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 28px rgba(15,28,50,.16);padding:12px 13px;width:230px}
+.rsw-l{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary);display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.rsw-opts{display:flex;flex-direction:column;gap:7px}
+.rsw-opt{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;border:1.5px solid var(--border);cursor:pointer;font-family:inherit;background:#fff;transition:all .15s;text-align:left;width:100%}
+.rsw-opt .rsw-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rsw-opt .rsw-n{font-size:13.5px;font-weight:700;color:var(--ink-900)}
+.rsw-opt .rsw-d{font-size:11px;color:var(--text-tertiary)}
+.rsw-opt.on{border-color:var(--primary);background:var(--primary-light)}
+.rsw-opt:hover{border-color:var(--border-strong)}
+/* sticky CTA bar */
+.ctabar{position:fixed;left:0;right:0;bottom:0;z-index:65;background:#fff;border-top:1px solid var(--border);box-shadow:0 -4px 20px rgba(15,28,50,.08)}
+.ctabar-in{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:16px}
+.ctabar-price{display:flex;flex-direction:column;flex-shrink:0}
+.ctabar-price .cb-l{font-size:11px;font-weight:600;color:var(--text-tertiary)}
+.ctabar-price .cb-v{font-size:22px;font-weight:800;color:var(--primary);letter-spacing:-.02em;line-height:1.1}
+.ctabar-actions{display:flex;gap:11px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.ctabtn{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 22px;border-radius:12px;font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--ink-800);transition:all .15s}
+.ctabtn:hover{border-color:var(--border-strong)}
+.ctabtn.primary{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:var(--shadow-primary)}
+.ctabtn.primary:hover{background:var(--primary-hover)}
+/* lightbox */
+.lightbox{position:fixed;inset:0;z-index:90;background:rgba(15,28,50,.92);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:40px}
+.lb-img{max-width:min(1100px,92vw);max-height:78vh;border-radius:12px;object-fit:contain}
+.lb-close{position:absolute;top:26px;right:30px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lb-close:hover{background:rgba(255,255,255,.28)}
+.lb-thumbs{display:flex;gap:9px}
+.lb-thumbs img{width:76px;height:52px;object-fit:cover;border-radius:8px;cursor:pointer;opacity:.55;border:2px solid transparent}
+.lb-thumbs img.on{opacity:1;border-color:#fff}
+.footspace{height:1px}
+@media(max-width:1080px){
+.layout{grid-template-columns:1fr}
+.aside{position:static}
+.rswitch{width:auto;padding:10px}
+.rsw-opt .rsw-d{display:none}
+.facts,.amen,.owner{grid-template-columns:repeat(2,1fr)}
+.relgrid{grid-template-columns:repeat(2,1fr)}
+.nav{display:none}
+}
+@media(max-width:640px){
+.wrapc{padding:0 16px}
+.gallery{grid-template-columns:1fr;grid-template-rows:auto;height:auto}
+.gcell.main{grid-row:auto;height:260px}
+.gcell:not(.main){display:none}
+.facts,.claims,.amen,.owner,.actgrid,.relgrid{grid-template-columns:1fr 1fr}
+.pipe{overflow-x:auto}
+.pstep{min-width:82px}
+.rswitch{top:auto;bottom:80px;right:12px;left:12px;width:auto}
+.rsw-opts{flex-direction:row}
+.rsw-opt{flex-direction:column;gap:5px;text-align:center;padding:8px 6px}
+.rsw-opt .rsw-n{font-size:11px}
+.ctabar-price .cb-v{font-size:18px}
+.ctabtn{padding:0 14px;font-size:13px;height:44px}
+h1.tl-title{font-size:22px}
+.price{font-size:28px}
+.qh-cta{flex-direction:column;align-items:flex-start}
+.qhs-overlay{align-items:flex-end;padding:0}
+.qhs-sheet{max-width:100%;height:90vh;width:100%;border-radius:24px 24px 0 0;animation:qhsUp .32s var(--ease-out)}
+.qhs-scroll,.qhs-actions{max-width:100%}
+.qhs-map{height:180px}
+.qhs-grabber{display:block}
+}
+@media(max-width:480px){.qhs-sheet{height:94vh;max-height:94vh}}
+</style>
+</helmet>
+<div class="page">
+<header class="hdr"><div class="wrapc hdr-in"><a href="Trang chủ Đà Lạt BĐS.dc.html" class="brand"><img class="brandlogo" src="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/assets/logo-color.svg" alt="DalatBDS"></a><nav class="nav"><a href="Trang danh sách BĐS.dc.html" class="on">Mua bán</a><a href="#">Cho thuê</a><a href="#">Giá thị trường</a><a href="#">Môi giới</a><a href="#">Ký gửi</a></nav><div class="hdr-cta"><a href="#" class="ghostlink">Đăng tin</a><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="solid" tone="primary" size="md" icon="send" hint-size="140px,42px">Mở app</x-import></div></div></header>
+
+<main class="wrapc">
+<div class="crumbs"><a href="Trang chủ Đà Lạt BĐS.dc.html">Trang chủ</a><span class="sep">/</span><a href="Trang danh sách BĐS.dc.html">Mua bán</a><span class="sep">/</span><a href="#">Phường Xuân Hương</a><span class="sep">/</span><span class="cur">{{ code }}</span></div>
+
+<div class="titlerow"><div class="tl-left"><div class="tl-badges"><span class="sbadge {{ statusCls }}"><svg viewBox="0 0 24 24" class="ic ic14"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"></circle></svg>{{ statusLabel }}</span><span class="tl-code">Mã tin {{ code }}</span><span class="tl-verify"><svg viewBox="0 0 24 24" class="ic ic14"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Đã xác minh</span></div><h1 class="tl-title">{{ title }}</h1><div class="tl-addr"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>{{ areaLabel }}</div></div>
+<div class="tl-actions"><button class="actbtn {{ favCls }}" onClick="{{ toggleFav }}"><svg viewBox="0 0 24 24" class="ic ic17" style="fill:{{ favFill }}"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{{ favLabel }}</button><button class="actbtn"><svg viewBox="0 0 24 24" class="ic ic17"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>Chia sẻ</button><button class="actbtn"><svg viewBox="0 0 24 24" class="ic ic17"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Báo tin sai</button></div></div>
+
+<div class="gallery"><div class="gcell main" onClick="{{ openLightbox }}"><img src="{{ mainImage }}" alt="{{ title }}"><div class="gchips"><span class="gchip"><svg viewBox="0 0 24 24" class="ic ic14"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>{{ photoCount }} ảnh</span><span class="gchip"><svg viewBox="0 0 24 24" class="ic ic14"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"></polygon></svg>Video</span><span class="gchip"><svg viewBox="0 0 24 24" class="ic ic14"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>360°</span></div></div>
+<div class="gcell" onClick="{{ openLightbox }}"><img src="{{ img1 }}" alt=""></div>
+<div class="gcell" onClick="{{ openLightbox }}"><img src="{{ img2 }}" alt=""><div class="gmore"><svg viewBox="0 0 24 24" class="ic ic24" style="stroke:#fff"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>Xem tất cả</div></div></div>
+<div class="thumbstrip"><sc-for list="{{ thumbs }}" as="t" hint-placeholder-count="5"><div class="thumb {{ t.cls }}" onClick="{{ t.onClick }}"><img src="{{ t.src }}" alt=""></div></sc-for></div>
+
+<div class="layout">
+<div class="mcol">
+
+<div class="card"><div class="pricewrap"><div class="price">{{ price }}</div><div class="ppm">Đơn giá <b>{{ ppm }}</b></div></div>
+<div class="facts">
+<div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg><div><div class="fact-l">Diện tích</div><div class="fact-v">{{ area }} m²</div></div></div>
+<div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"></path><path d="M2 15h20"></path><path d="M6 10V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4"></path></svg><div><div class="fact-l">Phòng ngủ</div><div class="fact-v">{{ beds }} PN</div></div></div>
+<div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><div><div class="fact-l">Phòng tắm</div><div class="fact-v">{{ baths }} PT</div></div></div>
+<div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg><div><div class="fact-l">Hướng</div><div class="fact-v">{{ direction }}</div></div></div>
+<div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"></path><path d="M9 22V13h6v9"></path></svg><div><div class="fact-l">Mặt tiền</div><div class="fact-v">{{ facade }} m</div></div></div>
+<div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg><div><div class="fact-l">Số tầng</div><div class="fact-v">{{ floors }} tầng</div></div></div>
+<div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><div><div class="fact-l">Pháp lý</div><div class="fact-v">{{ legal }}</div></div></div>
+<div class="fact"><svg viewBox="0 0 24 24" class="ic ic22"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg><div><div class="fact-l">Nội thất</div><div class="fact-v">Đầy đủ</div></div></div>
+</div></div>
+
+<div class="card"><div class="card-h"><svg viewBox="0 0 24 24" class="ic"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><h2>Vị trí</h2><span class="hnote">{{ mapNote }}</span></div>
+<div class="map"><div class="map-grid"></div><div class="map-lake" style="left:14%;top:16%;width:150px;height:96px"></div><div class="map-road" style="left:0;top:52%;width:100%;height:8px"></div><div class="map-road" style="left:44%;top:0;width:7px;height:100%"></div><div class="map-road" style="left:0;top:22%;width:100%;height:5px;opacity:.7"></div>
+<div class="poi" style="left:16%;top:22%"><span class="dot"></span>Hồ Xuân Hương</div><div class="poi" style="left:60%;top:18%"><span class="dot"></span>Chợ Đà Lạt</div><div class="poi" style="left:64%;top:70%"><span class="dot"></span>Trường THPT Bùi Thị Xuân</div><div class="poi" style="left:20%;top:74%"><span class="dot"></span>Rừng thông</div>
+<sc-if value="{{ showZone }}" hint-placeholder-val="{{ true }}"><div class="zone-lbl"><svg viewBox="0 0 24 24" class="ic ic14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>Khu vực ước tính · bán kính ~{{ zoneRadius }}m</div><div class="zone"></div></sc-if>
+<sc-if value="{{ showExact }}" hint-placeholder-val="{{ false }}"><div class="mpulse"></div><div class="mpin"><svg viewBox="0 0 24 24" class="ic"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="#fff" stroke="none"></circle></svg></div><div class="map-addr"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><div><b>{{ exactAddress }}</b><br><span>Toạ độ: {{ coords }} · chỉ hiển thị cho vai trò có quyền</span></div></div></sc-if>
+<sc-if value="{{ showZone }}" hint-placeholder-val="{{ true }}"><div class="map-lockbar"><svg viewBox="0 0 24 24" class="ic ic22" style="stroke:#fff"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><div><b>Địa chỉ chính xác được bảo vệ</b><span>{{ lockNote }}</span></div></div></sc-if>
+</div>
+<div class="qh-cta"><span class="qh-cta-ic"><svg viewBox="0 0 24 24" class="ic ic22" style="stroke:#fff"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span><div class="qh-cta-body"><div class="qh-cta-t">Đất này có dính quy hoạch không?</div><div class="qh-cta-s">Tra cứu miễn phí dữ liệu quy hoạch công bố cho thửa đất này — có kết quả trong 30 giây.</div></div><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="solid" size="md" icon="fileText" class="btn-white" onClick="{{ qhOpen }}" hint-size="190px,44px">Kiểm tra quy hoạch</x-import></div>
+</div>
+
+<div class="card"><div class="card-h"><svg viewBox="0 0 24 24" class="ic"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><h2>Mô tả chi tiết</h2></div>
+<div class="desc"><p>Biệt thự nghỉ dưỡng nằm trên sườn đồi thông thuộc Phường Xuân Hương – Đà Lạt, chỉ 5 phút di chuyển tới Hồ Xuân Hương và khu Hoà Bình. Tầm nhìn mở trọn thung lũng thông xanh, đón nắng sớm hướng Đông Nam, khí hậu trong lành quanh năm.</p><p>Công trình hoàn thiện cao cấp: 2 tầng, 5 phòng ngủ đều có ban công riêng, phòng khách thông tầng với lò sưởi, bếp mở nối sân vườn. Sân vườn 120m² trồng thông và hoa, gara ô tô trong khuôn viên, hệ thống an ninh 24/7.</p><p>Pháp lý sạch, sổ hồng riêng, sang tên công chứng ngay. Phù hợp ở nghỉ dưỡng hoặc khai thác homestay cao cấp.</p></div>
+<div class="amen">
+<div class="amen-i"><span class="aic"><svg viewBox="0 0 24 24" class="ic ic18"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg></span>View đồi thông</div>
+<div class="amen-i"><span class="aic"><svg viewBox="0 0 24 24" class="ic ic18"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"></path><path d="M9 22V13h6v9"></path></svg></span>Sân vườn 120m²</div>
+<div class="amen-i"><span class="aic"><svg viewBox="0 0 24 24" class="ic ic18"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg></span>Gara ô tô</div>
+<div class="amen-i"><span class="aic"><svg viewBox="0 0 24 24" class="ic ic18"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"></path><path d="M2 15h20"></path><path d="M6 10V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4"></path></svg></span>Nội thất đầy đủ</div>
+<div class="amen-i"><span class="aic"><svg viewBox="0 0 24 24" class="ic ic18"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></span>Lò sưởi</div>
+<div class="amen-i"><span class="aic"><svg viewBox="0 0 24 24" class="ic ic18"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg></span>Ban công riêng</div>
+<div class="amen-i"><span class="aic"><svg viewBox="0 0 24 24" class="ic ic18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>Gần hồ &amp; trung tâm</div>
+<div class="amen-i"><span class="aic"><svg viewBox="0 0 24 24" class="ic ic18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>An ninh 24/7</div>
+</div></div>
+
+<sc-if value="{{ isSale }}" hint-placeholder-val="{{ false }}"><div class="rolecard"><div class="rc-head sale"><span class="rc-ic"><svg viewBox="0 0 24 24" class="ic ic22" style="stroke:#fff"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg></span><div><h2>Bảng làm việc của tôi</h2><p>{{ meName }} · eBroker · Phường Xuân Hương</p></div></div>
+<div class="rc-body">
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>Pipeline khách của tôi</p>
+<div class="pipe"><sc-for list="{{ steps }}" as="s" hint-placeholder-count="5"><button class="pstep {{ s.cls }}" onClick="{{ s.onClick }}"><span class="pline"></span><span class="pdot"><sc-if value="{{ s.done }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" class="ic ic16" style="stroke:#fff"><polyline points="20 6 9 17 4 12"></polyline></svg></sc-if><sc-if value="{{ s.showNum }}" hint-placeholder-val="{{ true }}">{{ s.num }}</sc-if></span><span class="plbl">{{ s.label }}</span></button></sc-for></div>
+<div class="pipe-hint">Khách <b>Anh Hoàng Nam</b> đang ở bước “{{ currentStepLabel }}”. Nhấn một bước để cập nhật tiến độ.</div></div>
+
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Vai trò của tôi trong deal</p>
+<div class="claims"><sc-for list="{{ claimCards }}" as="c" hint-placeholder-count="3"><div class="claim {{ c.cls }}"><span class="cl-ic"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="{{ c.icon }}" size="18" color="currentColor" hint-size="18px,18px"></x-import></span><div class="cl-t">{{ c.title }}</div><div class="cl-s">{{ c.sub }}</div><button class="cl-btn {{ c.btnCls }}" onClick="{{ c.onClick }}">{{ c.btnLabel }}</button></div></sc-for></div></div>
+
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>Hoa hồng dự kiến</p>
+<div class="comm"><div class="donut" style="background:{{ donutBg }}"><div class="donut-c"><div class="dc-l">Của tôi</div><div class="dc-v">{{ myCommission }}</div><div class="dc-s">{{ myShareCount }}/4 lát</div></div></div>
+<div class="legend"><sc-for list="{{ commLegend }}" as="l" hint-placeholder-count="4"><div class="lg {{ l.cls }}"><span class="lgdot" style="background:{{ l.color }}"></span><div><div class="lg-t">{{ l.title }}<sc-if value="{{ l.mine }}" hint-placeholder-val="{{ false }}"><span class="mine-tag">Của tôi</span></sc-if></div><div class="lg-o">{{ l.owner }}</div></div><div class="lg-amt">{{ l.amount }}<div class="lg-pct">25%</div></div></div></sc-for></div></div></div>
+
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Nhật ký chăm sóc</p>
+<div class="tline"><sc-for list="{{ notes }}" as="n" hint-placeholder-count="3"><div class="tl-item"><span class="tl-bar"></span><span class="tl-dot"><svg viewBox="0 0 24 24" class="ic ic16" style="stroke:currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span><div class="tl-c"><div class="tl-txt">{{ n.text }}</div><div class="tl-meta">{{ n.time }}</div></div></div></sc-for></div>
+<div class="noteform"><input value="{{ noteInput }}" onInput="{{ onNoteInput }}" placeholder="Thêm ghi chú chăm sóc…"><button class="qbtn solid" onClick="{{ addNote }}"><svg viewBox="0 0 24 24" class="ic ic16" style="stroke:#fff"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Thêm</button></div>
+<div class="quickrow"><button class="qbtn"><svg viewBox="0 0 24 24" class="ic ic16"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Đặt lịch xem nhà</button><button class="qbtn"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Nhận thêm khách</button></div></div>
+</div></div></sc-if>
+
+<sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}"><div class="rolecard"><div class="rc-head admin"><span class="rc-ic"><svg viewBox="0 0 24 24" class="ic ic22" style="stroke:#fff"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span><div><h2>Bảng quản trị</h2><p>Toàn quyền · phân bổ hoa hồng &amp; kiểm soát tin</p></div></div>
+<div class="rc-body">
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Pipeline mọi sale trên tin này</p>
+<div class="deallist"><sc-for list="{{ deals }}" as="d" hint-placeholder-count="3"><div class="deal"><img src="{{ d.photo }}" alt=""><div><div class="d-name">{{ d.name }}</div><div class="d-role">{{ d.role }}</div></div><span class="d-stage">{{ d.stage }}</span></div></sc-for></div></div>
+
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>Phân bổ hoa hồng 4 bên</p>
+<div class="alloc"><sc-for list="{{ allocRows }}" as="a" hint-placeholder-count="4"><div class="arow"><span class="adot" style="background:{{ a.color }}"></span><div class="a-role">{{ a.role }}<span>25% · {{ a.amount }}</span></div><sc-if value="{{ a.editable }}" hint-placeholder-val="{{ true }}"><select class="aselect" value="{{ a.value }}" onChange="{{ a.onChange }}"><sc-for list="{{ a.options }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for></select></sc-if><sc-if value="{{ a.fixed }}" hint-placeholder-val="{{ false }}"><div class="a-fixed"><svg viewBox="0 0 24 24" class="ic ic16" style="color:var(--primary)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Dalatbds (nền tảng)</div></sc-if></div></sc-for>
+<div class="alloc-total"><span class="at-l">Tổng hoa hồng ({{ commRate }}% giá trị giao dịch)</span><span class="at-v">{{ totalCommission }}</span></div></div></div>
+
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>Thông tin chủ &amp; địa chỉ chính xác</p>
+<div class="owner"><div class="orow"><svg viewBox="0 0 24 24" class="ic ic22"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg><div><div class="o-l">Chủ nhà</div><div class="o-v">Ông Trần Văn Bình</div></div></div><div class="orow"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"></path></svg><div><div class="o-l">Điện thoại</div><div class="o-v">0918 762 xxx</div></div></div><div class="orow"><svg viewBox="0 0 24 24" class="ic ic22"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><div><div class="o-l">Địa chỉ chính xác</div><div class="o-v">{{ exactAddress }}</div></div></div><div class="orow"><svg viewBox="0 0 24 24" class="ic ic22"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg><div><div class="o-l">Toạ độ GPS</div><div class="o-v">{{ coords }}</div></div></div></div>
+<div class="warnbar"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Thông tin nhạy cảm — chỉ admin xem được. Mọi lần mở đều được ghi log.</div></div>
+
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Hành động tin</p>
+<div class="actgrid"><sc-for list="{{ adminActions }}" as="a" hint-placeholder-count="6"><button class="agbtn {{ a.cls }}" onClick="{{ a.onClick }}"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="{{ a.icon }}" size="16" color="currentColor" hint-size="16px,16px"></x-import>{{ a.label }}</button></sc-for></div></div>
+
+<div><p class="sub"><svg viewBox="0 0 24 24" class="ic ic16"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Audit log</p>
+<div class="audit"><sc-for list="{{ audit }}" as="a" hint-placeholder-count="4"><div class="au"><span class="au-ic"><svg viewBox="0 0 24 24" class="ic ic15" style="stroke:currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span><div class="au-c"><div class="au-t"><b>{{ a.who }}</b> {{ a.what }}</div><div class="au-m">{{ a.when }}</div></div></div></sc-for></div></div>
+</div></div></sc-if>
+
+</div>
+
+<aside class="aside">
+<div class="scard"><div class="broker"><div class="broker-top"><img class="broker-logo" src="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/assets/logo-color.svg" alt="Đà Lạt BĐS"><div class="broker-role"><svg viewBox="0 0 24 24" class="ic ic14" style="color:var(--primary)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Đơn vị phụ trách tin đăng</div></div>
+<div class="broker-actions"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="solid" tone="primary" size="lg" icon="phone" full="true" hint-size="100%,48px">Gọi hotline</x-import><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="outline" tone="primary" size="lg" icon="send" full="true" hint-size="100%,48px">Chat qua Zalo</x-import></div></div>
+
+<sc-if value="{{ isGuest }}" hint-placeholder-val="{{ true }}"><div class="ctacard"><h3>Đăng ký xem nhà</h3><p>Để lại thông tin, sale phụ trách sẽ liên hệ và sắp lịch dẫn bạn tham quan thực tế.</p><div class="cta-actions"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="solid" tone="primary" size="lg" icon="calendar" full="true" hint-size="100%,48px">Đăng ký xem nhà</x-import></div></div></sc-if>
+
+<sc-if value="{{ isSale }}" hint-placeholder-val="{{ false }}"><div class="contact-locked"><div class="cl-title"><svg viewBox="0 0 24 24" class="ic ic17"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Liên hệ chủ nhà</div><p class="cl-desc">Thông tin chủ được bảo vệ để chống cắt cầu. Bạn cần claim vai trò và được admin phân bổ trước khi mở khoá.</p><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="soft" tone="primary" size="md" icon="shield" full="true" hint-size="100%,44px">Yêu cầu mở quyền</x-import></div></sc-if>
+
+<sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}"><div class="owner-contact"><div class="cl-title"><svg viewBox="0 0 24 24" class="ic ic17" style="color:var(--success)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Liên hệ chủ nhà</div><div class="oc-row"><svg viewBox="0 0 24 24" class="ic ic17"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>Ông Trần Văn Bình</div><div class="oc-row"><svg viewBox="0 0 24 24" class="ic ic17"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"></path></svg><b>0918 762 458</b></div></div></sc-if>
+
+<div class="viewstat"><span>Lượt xem tin</span><b>1.284</b></div>
+<div class="viewstat" style="border-top:none;padding-top:0"><span>Ngày đăng</span><b>02/07/2025</b></div>
+</aside>
+</div>
+
+<sc-if value="{{ qhSheetOpen }}" hint-placeholder-val="{{ false }}"><div class="qhs-overlay" onClick="{{ qhSheetClose }}"><div class="qhs-sheet" onClick="{{ qhStop }}"><div class="qhs-grabber"></div><div class="qhs-head"><span class="qhs-headtitle">Phiếu quy hoạch · {{ code }}</span><button type="button" class="qhs-iconbtn" onClick="{{ qhSheetClose }}" aria-label="Đóng"><svg viewBox="0 0 24 24" class="ic ic16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div><div class="qhs-scroll">
+<div class="qhs-map" ref="{{ setQhMapRef }}" onPointerDown="{{ qhMapDragStart }}"><div class="qhs-map-zoning"><svg viewBox="0 0 300 180" preserveAspectRatio="none" class="qhs-map-svg"><polygon class="qhs-map-neighbor" points="18,18 88,13 92,68 14,74"></polygon><polygon class="qhs-map-neighbor" points="228,128 292,122 296,176 222,176"></polygon><polygon class="qhs-map-neighbor" points="8,108 68,102 74,164 4,164"></polygon><polygon class="qhs-map-parcel {{ qhParcelDrawCls }}" points="170,55 235,48 248,112 198,142 158,108"></polygon></svg></div><div class="qhs-map-satellite" style="clip-path:inset(0 {{ qhMapClipRight }}% 0 0)"></div><span class="qhs-map-label left">Vệ tinh</span><span class="qhs-map-label right">Quy hoạch</span><div class="qhs-map-handle" style="left:{{ qhMapSlider }}%"><span class="qhs-map-grip"></span></div></div>
+<sc-if value="{{ qhIsLoading }}" hint-placeholder-val="{{ false }}"><div class="qhs-loading"><div class="qhs-spinner"></div><p class="qhs-loading-text">Đang định vị thửa…<br></br>Đang đối chiếu quy hoạch công bố…</p></div></sc-if>
+<sc-if value="{{ qhHasResult }}" hint-placeholder-val="{{ false }}"><div class="qhs-banner"><div class="qhs-banner-ic"><svg viewBox="0 0 24 24" class="ic ic18" style="stroke:#fff"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div><div><div class="qhs-banner-label">CHƯA GHI NHẬN CHỒNG LẤN</div><div class="qhs-banner-text">Theo dữ liệu quy hoạch công bố, thửa thuộc đất ở đô thị (ODT) — phù hợp hiện trạng biệt thự hiện hữu.</div></div></div>
+<div class="qhs-table"><div class="qhs-row"><span class="qhs-row-label">Số tờ – Số thửa</span><span class="qhs-row-val">38 – 92</span></div><div class="qhs-row"><span class="qhs-row-label">Phường</span><span class="qhs-row-val">Phường Xuân Hương</span></div><div class="qhs-row"><span class="qhs-row-label">Diện tích quy hoạch</span><span class="qhs-row-val">{{ area }} m²</span></div><div class="qhs-row"><span class="qhs-row-label">Loại đất</span><span class="qhs-row-val">ODT<span class="qhs-row-caption">đất ở đô thị, được xây nhà</span></span></div><div class="qhs-row"><span class="qhs-row-label">Cập nhật dữ liệu</span><span class="qhs-row-val">06/2026</span></div></div>
+<p class="qhs-disclaimer">Dữ liệu tham khảo từ quy hoạch công bố của TP. Đà Lạt. Không thay thế văn bản trả lời quy hoạch chính thức.</p></sc-if>
+</div>
+<div class="qhs-actions"><sc-if value="{{ qhLeadRequested }}" hint-placeholder-val="{{ false }}"><div class="qhs-sentnote"><svg viewBox="0 0 24 24" class="ic ic16" style="stroke:var(--success)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Đã gửi yêu cầu! Chuyên viên sẽ liên hệ trong ít phút.</div></sc-if><sc-if value="{{ qhLeadNotRequested }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="solid" tone="primary" size="lg" block="{{ true }}" disabled="{{ qhIsLoading }}" onClick="{{ qhRequestLead }}" hint-size="100%,50px">Nhờ chuyên viên kiểm tra chuyên sâu — miễn phí</x-import><div class="qhs-actions-row2"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="outline" tone="primary" size="md" disabled="{{ qhIsLoading }}" onClick="{{ qhSheetClose }}" class="btn-secondary" style="flex:1;min-width:0" hint-size="100%,44px">Đóng phiếu quy hoạch</x-import><button type="button" class="qhs-share" aria-label="Chia sẻ"><svg viewBox="0 0 24 24" class="ic ic16"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg></button></div></sc-if></div>
+</div></div></sc-if>
+
+<section class="rel"><div class="rel-head"><h2>BĐS liên quan</h2><a href="Trang danh sách BĐS.dc.html">Xem tất cả →</a></div>
+<div class="relgrid"><sc-for list="{{ related }}" as="r" hint-placeholder-count="3"><a class="rcard" href="Trang chi tiết BĐS.dc.html"><div class="rcard-img"><img src="{{ r.image }}" alt="" loading="lazy"><span class="rcard-badge">Bán</span></div><div class="rcard-b"><div class="rcard-p">{{ r.price }}</div><div class="rcard-t">{{ r.title }}</div><div class="rcard-a"><svg viewBox="0 0 24 24" class="ic ic13"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>{{ r.ward }}</div><div class="rcard-m"><span class="rcm"><svg viewBox="0 0 24 24" class="ic ic12"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>{{ r.area }} m²</span><span class="rcm"><svg viewBox="0 0 24 24" class="ic ic12"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>{{ r.legal }}</span></div></div></a></sc-for></div></section>
+</main>
+<div class="footspace"></div>
+</div>
+
+<div class="rswitch"><div class="rsw-l"><svg viewBox="0 0 24 24" class="ic ic13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Xem trang với vai trò</div><div class="rsw-opts"><sc-for list="{{ roleOpts }}" as="r" hint-placeholder-count="3"><button class="rsw-opt {{ r.cls }}" onClick="{{ r.onClick }}"><span class="rsw-ic" style="background:{{ r.bg }};color:{{ r.fg }}"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="{{ r.icon }}" size="16" color="currentColor" hint-size="16px,16px"></x-import></span><div><div class="rsw-n">{{ r.name }}</div><div class="rsw-d">{{ r.desc }}</div></div></button></sc-for></div></div>
+
+<div class="ctabar"><div class="ctabar-in"><div class="ctabar-price"><span class="cb-l">{{ statusLabel }} · {{ code }}</span><span class="cb-v">{{ price }}</span></div><div class="ctabar-actions"><sc-for list="{{ ctaButtons }}" as="b" hint-placeholder-count="2"><button class="ctabtn {{ b.cls }}" onClick="{{ b.onClick }}">{{ b.label }}</button></sc-for></div></div></div>
+
+<sc-if value="{{ lightbox }}" hint-placeholder-val="{{ false }}"><div class="lightbox"><button class="lb-close" onClick="{{ closeLightbox }}"><svg viewBox="0 0 24 24" class="ic ic24" style="stroke:#fff"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button><img class="lb-img" src="{{ mainImage }}" alt=""><div class="lb-thumbs"><sc-for list="{{ thumbs }}" as="t" hint-placeholder-count="5"><img class="{{ t.cls }}" src="{{ t.src }}" onClick="{{ t.onClick }}" alt=""></sc-for></div></div></sc-if>
+</helmet>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:900},&quot;initialRole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;guest&quot;,&quot;sale&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;guest&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hiển thị&quot;},&quot;zoneRadius&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:300,&quot;min&quot;:300,&quot;max&quot;:500,&quot;step&quot;:50,&quot;unit&quot;:&quot;m&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Bản đồ&quot;},&quot;commissionRate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:1,&quot;max&quot;:3,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hoa hồng&quot;}}">
+class Component extends DCLogic {
+  state = {
+    role: undefined,
+    fav: false,
+    mainImg: 0,
+    lightbox: false,
+    step: 3,
+    closerMine: false,
+    buyerMine: true,
+    noteInput: "",
+    extraNotes: [],
+    listingStatus: "negotiating",
+    alloc: { buyer: "Chị Thu Hà", source: "Anh Đăng Khoa", closer: "Anh Minh Tuấn" },
+    qhSheetOpen: false,
+    qhChecking: false,
+    qhResult: null,
+    qhMapSlider: 50,
+    qhLeadRequested: false,
+  };
+
+  componentDidMount() {
+    this._qhKeyHandler = (e) => { if (e.key === "Escape" && this.state.qhSheetOpen) this.qhSheetClose(); };
+    window.addEventListener("keydown", this._qhKeyHandler);
+  }
+  componentWillUnmount() {
+    window.removeEventListener("keydown", this._qhKeyHandler);
+    clearTimeout(this._qhTimer);
+    window.removeEventListener("pointermove", this.qhMapDragMove);
+    window.removeEventListener("pointerup", this.qhMapDragEnd);
+  }
+  qhOpen = () => {
+    this.setState({ qhSheetOpen: true });
+    if (!this.state.qhResult && !this.state.qhChecking) {
+      this.setState({ qhChecking: true });
+      clearTimeout(this._qhTimer);
+      this._qhTimer = setTimeout(() => this.setState({ qhChecking: false, qhResult: "clean" }), 1600);
+    }
+  };
+  qhSheetClose = () => this.setState({ qhSheetOpen: false });
+  qhStop = (e) => e.stopPropagation();
+  qhRequestLead = () => this.setState({ qhLeadRequested: true });
+  setQhMapRef = (el) => { this.qhMapEl = el; };
+  qhMapDragStart = (e) => {
+    this._qhMapDragging = true;
+    this.updateQhMapSlider(e);
+    window.addEventListener("pointermove", this.qhMapDragMove);
+    window.addEventListener("pointerup", this.qhMapDragEnd);
+  };
+  qhMapDragMove = (e) => { if (this._qhMapDragging) this.updateQhMapSlider(e); };
+  qhMapDragEnd = () => {
+    this._qhMapDragging = false;
+    window.removeEventListener("pointermove", this.qhMapDragMove);
+    window.removeEventListener("pointerup", this.qhMapDragEnd);
+  };
+  updateQhMapSlider = (e) => {
+    if (!this.qhMapEl) return;
+    const rect = this.qhMapEl.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    this.setState({ qhMapSlider: pct });
+  };
+
+  fmtTr(n) {
+    const s = (Math.round(n * 10) / 10).toString().replace(".", ",");
+    return s + " tr";
+  }
+
+  renderVals() {
+    const S = this.state;
+    const role = S.role || this.props.initialRole || "guest";
+    const isGuest = role === "guest", isSale = role === "sale", isAdmin = role === "admin";
+    const meName = "Anh Minh Tuấn";
+    const zoneRadius = this.props.zoneRadius ?? 400;
+    const commRate = this.props.commissionRate ?? 2;
+
+    const images = [
+      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1200&auto=format&fit=crop",
+    ];
+    const thumbs = images.map((src, i) => ({
+      src, cls: S.mainImg === i ? "on" : "",
+      onClick: () => this.setState({ mainImg: i }),
+    }));
+
+    // status
+    const statusMap = {
+      open: ["open", "Đang mở bán"], negotiating: ["negotiating", "Đang thương lượng"],
+      deposited: ["deposited", "Đã cọc"], sold: ["sold", "Đã giao dịch"],
+    };
+    const [statusCls, statusLabel] = statusMap[S.listingStatus];
+
+    // pipeline
+    const stepDefs = ["Tiếp nhận", "Xác nhận", "Chăm sóc", "Xem nhà", "Thương lượng"];
+    const steps = stepDefs.map((label, i) => ({
+      label, num: i + 1, showNum: i > S.step ? true : (i === S.step),
+      done: i < S.step, showNum: !(i < S.step),
+      cls: i < S.step ? "done" : (i === S.step ? "active" : ""),
+      onClick: () => this.setState({ step: i }),
+    }));
+    const currentStepLabel = stepDefs[S.step];
+
+    // claims / commission
+    const slice = commRate / 100 * 12500 / 4; // triệu, price 12,5 tỷ = 12500 tr
+    const totalC = slice * 4;
+    const claimState = { buyer: S.buyerMine, source: false, closer: S.closerMine };
+    const mineCount = (S.buyerMine ? 1 : 0) + (S.closerMine ? 1 : 0);
+
+    const claimCards = [
+      { key: "buyer", icon: "users", title: "Tôi có khách", sub: S.buyerMine ? "Bạn mang người mua đến" : "Chưa ai giữ",
+        cls: S.buyerMine ? "mine" : "",
+        btnLabel: S.buyerMine ? "Bạn đang giữ ✓" : "Claim vai trò",
+        btnCls: S.buyerMine ? "claim-owned" : "claim-open",
+        onClick: () => this.setState(s => ({ buyerMine: !s.buyerMine })) },
+      { key: "source", icon: "home", title: "Tôi có nguồn chủ", sub: "Anh Đăng Khoa đang giữ",
+        cls: "taken", btnLabel: "Đã có người giữ", btnCls: "claim-taken", onClick: () => {} },
+      { key: "closer", icon: "target", title: "Tôi chốt giao dịch", sub: S.closerMine ? "Bạn phụ trách chốt deal" : "Còn trống — có thể claim",
+        cls: S.closerMine ? "mine" : "",
+        btnLabel: S.closerMine ? "Bạn đang giữ ✓" : "Claim vai trò",
+        btnCls: S.closerMine ? "claim-owned" : "claim-open",
+        onClick: () => this.setState(s => ({ closerMine: !s.closerMine })) },
+    ];
+
+    const C_MINE = "#3270fc", C_OTHER = "#cbd2dd", C_PLAT = "#144273";
+    const slices = [
+      { own: S.buyerMine, title: "Môi giới có khách", owner: S.buyerMine ? meName + " (Bạn)" : "Chưa gán" },
+      { own: false, title: "Môi giới có nguồn chủ", owner: "Anh Đăng Khoa" },
+      { own: S.closerMine, title: "Môi giới chốt deal", owner: S.closerMine ? meName + " (Bạn)" : "Còn trống" },
+      { own: false, plat: true, title: "Dalatbds (nền tảng)", owner: "Nền tảng" },
+    ];
+    const colorOf = (s) => s.plat ? C_PLAT : (s.own ? C_MINE : C_OTHER);
+    const donutBg = "conic-gradient(" + slices.map((s, i) =>
+      colorOf(s) + " " + (i * 25) + "% " + ((i + 1) * 25) + "%").join(",") + ")";
+    const commLegend = slices.map(s => ({
+      color: colorOf(s), title: s.title, owner: s.owner, mine: !!s.own,
+      cls: s.own ? "mine" : "", amount: this.fmtTr(slice),
+    }));
+
+    // notes
+    const baseNotes = [
+      { text: "Nhận khách Anh Hoàng Nam từ landing page (Zalo)", time: "02/07 · 09:12" },
+      { text: "Gọi tư vấn — khách rất thích view đồi thông, cần thêm ảnh sân vườn", time: "03/07 · 15:40" },
+      { text: "Đã gửi thêm ảnh & video 360°, hẹn xem nhà cuối tuần", time: "05/07 · 10:05" },
+    ];
+    const notes = [...baseNotes, ...S.extraNotes];
+
+    // admin deals
+    const deals = [
+      { photo: "https://i.pravatar.cc/80?img=13", name: "Anh Minh Tuấn", role: "Chốt giao dịch · nguồn tin", stage: "Xem nhà" },
+      { photo: "https://i.pravatar.cc/80?img=45", name: "Chị Thu Hà", role: "Có khách mua", stage: "Thương lượng" },
+      { photo: "https://i.pravatar.cc/80?img=33", name: "Anh Đăng Khoa", role: "Có nguồn chủ", stage: "Chăm sóc" },
+    ];
+
+    // admin allocation
+    const saleOptions = ["Anh Minh Tuấn", "Chị Thu Hà", "Anh Đăng Khoa", "Chị Bích Loan"];
+    const allocRows = [
+      { role: "Có khách", color: C_MINE, key: "buyer", editable: true },
+      { role: "Có nguồn chủ", color: C_OTHER, key: "source", editable: true },
+      { role: "Chốt giao dịch", color: "#7c3aed", key: "closer", editable: true },
+      { role: "Nền tảng", color: C_PLAT, fixed: true },
+    ].map(r => r.fixed
+      ? { ...r, amount: this.fmtTr(slice) }
+      : { ...r, amount: this.fmtTr(slice), value: S.alloc[r.key], options: saleOptions,
+          onChange: (e) => this.setState(s => ({ alloc: { ...s.alloc, [r.key]: e.target.value } })) });
+
+    // admin actions
+    const setStatus = (st) => this.setState({ listingStatus: st });
+    const adminActions = [
+      { label: "Duyệt tin", cls: "approve", icon: "check" },
+      { label: "Từ chối", cls: "", icon: "x" },
+      { label: "Sửa tin", cls: "", icon: "edit" },
+      { label: "Mở thương lượng", icon: "trendingUp", cls: S.listingStatus === "negotiating" ? "on" : "", onClick: () => setStatus("negotiating") },
+      { label: "Đánh dấu đã cọc", icon: "dollarSign", cls: S.listingStatus === "deposited" ? "on" : "", onClick: () => setStatus("deposited") },
+      { label: "Khoá / Gỡ tin", cls: "danger", icon: "shield", onClick: () => setStatus("sold") },
+    ].map(a => ({ ...a, onClick: a.onClick || (() => {}) }));
+
+    const audit = [
+      { who: "Admin Ngọc", what: "đổi trạng thái tin sang “Đang thương lượng”", when: "Hôm nay · 08:45" },
+      { who: "Anh Minh Tuấn", what: "cập nhật pipeline khách sang bước “Xem nhà”", when: "Hôm qua · 16:20" },
+      { who: "Chị Thu Hà", what: "claim vai trò “Có khách”", when: "05/07 · 11:02" },
+      { who: "Admin Ngọc", what: "duyệt & công khai tin", when: "02/07 · 09:30" },
+    ];
+
+    // role switcher
+    const roleDefs = [
+      { key: "guest", icon: "user", name: "Khách", desc: "Người xem công khai", bg: "var(--bg-secondary)", fg: "var(--text-secondary)" },
+      { key: "sale", icon: "briefcase", name: "Sale", desc: "Môi giới mạng lưới", bg: "var(--success-light)", fg: "var(--success)" },
+      { key: "admin", icon: "shield", name: "Admin", desc: "Quản trị hệ thống", bg: "var(--danger-light)", fg: "var(--danger)" },
+    ];
+    const roleOpts = roleDefs.map(r => ({
+      ...r, cls: role === r.key ? "on" : "",
+      onClick: () => this.setState({ role: r.key }),
+    }));
+
+    // sticky CTA
+    let ctaButtons;
+    if (isGuest) ctaButtons = [
+      { label: "Gọi/Chat sale", cls: "" }, { label: "Đăng ký xem nhà", cls: "primary" },
+    ];
+    else if (isSale) ctaButtons = [
+      { label: "Cập nhật trạng thái", cls: "" }, { label: "Đặt lịch xem", cls: "" }, { label: "Nhận khách", cls: "primary" },
+    ];
+    else ctaButtons = [
+      { label: "Sửa tin", cls: "" }, { label: "Phân bổ hoa hồng", cls: "" }, { label: "Duyệt", cls: "primary" },
+    ];
+    ctaButtons = ctaButtons.map(b => ({ ...b, onClick: () => {} }));
+
+    const related = [
+      { image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop", price: "8,6 tỷ", title: "Biệt thự mini sân vườn rộng", ward: "Phường Lâm Viên – Đà Lạt", area: 200, legal: "Sổ đỏ" },
+      { image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800&auto=format&fit=crop", price: "9,2 tỷ", title: "Nhà phố mặt tiền kinh doanh tốt", ward: "Phường Xuân Hương – Đà Lạt", area: 95, legal: "Sổ hồng" },
+      { image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800&auto=format&fit=crop", price: "12,5 tỷ", title: "Biệt thự nghỉ dưỡng khu Trại Mát", ward: "Phường Xuân Trường – Đà Lạt", area: 240, legal: "Sổ hồng" },
+    ];
+
+    return {
+      code: "DL-2025-00842",
+      title: "Biệt thự nghỉ dưỡng view thung lũng thông, Phường Xuân Hương – Đà Lạt",
+      areaLabel: "Phường Xuân Hương – Đà Lạt, tỉnh Lâm Đồng",
+      price: "12,5 tỷ", ppm: "52,1 tr/m²",
+      area: 240, beds: 5, baths: 4, direction: "Đông Nam", facade: 12, floors: 2, legal: "Sổ hồng",
+      statusCls, statusLabel,
+      favCls: S.fav ? "on" : "", favFill: S.fav ? "var(--danger)" : "none",
+      favLabel: S.fav ? "Đã lưu" : "Lưu tin",
+      toggleFav: () => this.setState(s => ({ fav: !s.fav })),
+      mainImage: images[S.mainImg], img1: images[1], img2: images[2], thumbs, photoCount: 24,
+      openLightbox: () => this.setState({ lightbox: true }),
+      closeLightbox: () => this.setState({ lightbox: false }),
+      lightbox: S.lightbox,
+      // map
+      showZone: !isAdmin, showExact: isAdmin,
+      zoneRadius,
+      mapNote: isAdmin ? "Toạ độ chính xác" : "Khu vực ước tính",
+      exactAddress: "12 Đường Trần Hưng Đạo, Phường Xuân Hương – Đà Lạt",
+      coords: "11.9404° N, 108.4583° E",
+      lockNote: isSale ? "Mở khoá khi bạn được admin phân bổ vai trò trong deal." : "Đăng ký / đăng nhập môi giới để làm việc với tin này.",
+      // role flags
+      isGuest, isSale, isAdmin, meName, roleOpts,
+      // pipeline
+      steps, currentStepLabel,
+      // claims + commission
+      claimCards, donutBg, commLegend,
+      myCommission: this.fmtTr(slice * mineCount), myShareCount: mineCount,
+      // notes
+      notes, noteInput: S.noteInput,
+      onNoteInput: (e) => this.setState({ noteInput: e.target.value }),
+      addNote: () => this.setState(s => s.noteInput.trim() ? ({
+        extraNotes: [...s.extraNotes, { text: s.noteInput.trim(), time: "Vừa xong" }], noteInput: "",
+      }) : {}),
+      // admin
+      deals, allocRows, totalCommission: this.fmtTr(totalC), commRate,
+      adminActions, audit,
+      // cta + related
+      ctaButtons, related,
+      // quy hoạch check
+      qhOpen: this.qhOpen, qhSheetOpen: S.qhSheetOpen, qhSheetClose: this.qhSheetClose, qhStop: this.qhStop,
+      qhIsLoading: S.qhChecking,
+      qhHasResult: !S.qhChecking && S.qhResult === "clean",
+      qhParcelDrawCls: S.qhChecking ? "drawing" : "",
+      qhMapSlider: S.qhMapSlider, qhMapClipRight: 100 - S.qhMapSlider,
+      setQhMapRef: this.setQhMapRef, qhMapDragStart: this.qhMapDragStart,
+      qhLeadRequested: S.qhLeadRequested, qhLeadNotRequested: !S.qhLeadRequested, qhRequestLead: this.qhRequestLead,
+    };
+  }
+}
+</script>
+</body>
+</html>

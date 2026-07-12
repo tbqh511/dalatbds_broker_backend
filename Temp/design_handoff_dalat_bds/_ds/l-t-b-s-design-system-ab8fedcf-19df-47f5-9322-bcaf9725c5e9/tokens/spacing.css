@@ -1,0 +1,50 @@
+/* Đà Lạt BĐS — Spacing, radius, shadow, layout tokens.
+   4px base grid; note the WebApp uses hand-tuned values (e.g. 14px gutters). */
+:root {
+  /* Spacing scale */
+  --sp-1:  2px;
+  --sp-2:  4px;
+  --sp-3:  6px;
+  --sp-4:  8px;
+  --sp-5:  10px;
+  --sp-6:  12px;
+  --sp-7:  14px;   /* app gutter */
+  --sp-8:  16px;   /* page padding */
+  --sp-10: 20px;
+  --sp-12: 24px;
+  --sp-16: 32px;
+  --sp-20: 40px;
+
+  --gutter: 16px;      /* horizontal page gutter */
+  --gutter-tight: 14px;
+
+  /* Radius */
+  --radius-xs:   6px;
+  --radius-sm:   8px;    /* inputs, small buttons */
+  --radius-md:   12px;   /* cards, sheets inner */
+  --radius-lg:   14px;   /* prop cards, hero */
+  --radius-xl:   20px;   /* bottom sheets, dialogs */
+  --radius-pill: 999px;  /* chips, badges, avatars */
+
+  /* Shadows — soft, cool-tinted (mist over Đà Lạt) */
+  --shadow-xs:   0 1px 2px rgba(15, 28, 50, 0.06);
+  --shadow-sm:   0 2px 8px rgba(15, 28, 50, 0.06);
+  --shadow-card: 0 4px 16px rgba(15, 28, 50, 0.07);
+  --shadow-lg:   0 8px 28px rgba(15, 28, 50, 0.12);
+  --shadow-sheet: 0 -8px 32px rgba(15, 28, 50, 0.16);
+  --shadow-primary: 0 2px 8px rgba(50, 112, 252, 0.25);
+  --shadow-primary-lg: 0 6px 20px rgba(50, 112, 252, 0.32);
+
+  /* Layout (Telegram WebApp, one-handed phone) */
+  --app-max-width: 430px;  /* @kind spacing */
+  --header-h: 56px;        /* @kind spacing */
+  --bottom-nav-h: 64px;    /* @kind spacing */
+  --hit-target: 44px;      /* @kind spacing */
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* @kind other */
+  --dur-fast: 0.15s;  /* @kind other */
+  --dur-base: 0.24s;  /* @kind other */
+  --dur-slow: 0.32s;  /* @kind other */
+}

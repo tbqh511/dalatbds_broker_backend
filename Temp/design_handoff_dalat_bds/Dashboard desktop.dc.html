@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/tokens/colors.css">
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/tokens/typography.css">
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/styles.css">
+<script src="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/_ds_bundle.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font-sans);color:var(--text-primary);background:var(--bg-app);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:var(--primary);text-decoration:none}
+a:hover{color:var(--primary-hover)}
+.dash{display:flex;min-height:100vh;background:var(--bg-app)}
+.dash-scrim{display:block;position:fixed;inset:0;background:rgba(15,28,50,.5);z-index:35;border:none;padding:0;cursor:default}
+.dash-side{width:240px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:40}
+.side-logo{padding:22px 20px 16px}
+.side-logo img{height:26px}
+.side-nav{display:flex;flex-direction:column;gap:2px;padding:8px 12px;flex:1}
+.side-link{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:var(--ink-600);transition:background .15s,color .15s}
+.side-link:hover{background:var(--bg-app);color:var(--ink-800)}
+.side-link.active.active-fill{background:var(--primary-light);color:var(--primary);font-weight:600}
+.side-link.active.active-bar{position:relative;color:var(--primary);font-weight:600}
+.side-link.active.active-bar::before{content:"";position:absolute;left:-12px;top:9px;bottom:9px;width:3px;border-radius:0 4px 4px 0;background:var(--primary)}
+.dash-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.dash-top{position:sticky;top:0;z-index:30;height:76px;flex-shrink:0;display:flex;align-items:center;gap:20px;padding:0 32px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.menu-btn{display:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:#fff;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--ink-700);padding:0}
+.top-greet{flex:1;min-width:0}
+.top-greet h1{font-size:20px;font-weight:700;color:var(--ink-900);margin:0;letter-spacing:-.01em}
+.top-greet p{font-size:13px;color:var(--text-secondary);margin:3px 0 0}
+.top-actions{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.top-search{width:230px}
+.bell-btn{position:relative;width:40px;height:40px;border-radius:50%;border:none;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-600);flex-shrink:0;padding:0}
+.bell-dot{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:var(--primary);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff}
+.dash-content{padding:28px 32px 60px;max-width:1440px;width:100%;margin:0 auto}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:24px}
+.kpi-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px}
+.kpi-icon{width:34px;height:34px;border-radius:8px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.kpi-label{font-size:12.5px;color:var(--text-secondary);margin-bottom:4px}
+.kpi-value-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--primary);letter-spacing:-.01em}
+.kpi-spark{flex-shrink:0;transform:translateY(2px)}
+.kpi-delta{font-size:11.5px;color:var(--text-tertiary);margin-top:4px}
+.dash-cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:22px;align-items:start}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card+.card{margin-top:22px}
+.card-note{font-size:12.5px;color:var(--text-tertiary);padding:0 16px 12px;margin-top:-8px}
+.ward-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-top:1px solid var(--border)}
+.ward-row:first-child{border-top:none}
+.ward-row.no-source{background:var(--warning-light)}
+.ward-name{font-size:14px;font-weight:600;color:var(--ink-800)}
+.ward-count{font-size:13px;color:var(--text-secondary)}
+.ward-right{display:flex;align-items:center;gap:10px}
+.pend-row{display:flex;gap:12px;padding:14px 16px;border-top:1px solid var(--border)}
+.pend-row:first-child{border-top:none}
+.pend-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg-secondary)}
+.pend-info{flex:1;min-width:0}
+.pend-addr{font-size:13.5px;font-weight:600;color:var(--ink-800);margin-bottom:9px}
+.pend-bar{display:flex;gap:4px;margin-bottom:6px}
+.pend-seg{flex:1;height:4px;border-radius:2px;background:var(--ink-200)}
+.pend-seg.on{background:var(--primary)}
+.pend-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.pstep{font-size:10.5px;text-align:center;color:var(--ink-300)}
+.pstep.done{color:var(--text-tertiary)}
+.pstep.current{color:var(--primary);font-weight:700}
+.subhead{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);padding:14px 16px 8px}
+.sched-row{display:flex;gap:12px;align-items:center;padding:8px 16px}
+.sched-time{flex-shrink:0;min-width:52px;text-align:center;background:var(--primary-light);color:var(--primary);font-size:12.5px;font-weight:700;padding:6px 4px;border-radius:8px}
+.sched-body{min-width:0}
+.sched-name{font-size:13.5px;font-weight:600;color:var(--ink-800)}
+.sched-addr{font-size:12px;color:var(--text-tertiary);margin-top:1px}
+.lead-row{padding:10px 16px;border-top:1px solid var(--border)}
+.lead-row:first-child{border-top:none}
+.lead-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lead-name{font-size:13.5px;font-weight:600;color:var(--ink-800)}
+.lead-task{font-size:12px;color:var(--text-tertiary);margin-top:3px}
+.notif-row{display:flex;gap:10px;align-items:flex-start;padding:11px 16px;border-top:1px solid var(--border)}
+.notif-row:first-child{border-top:none}
+.notif-ic{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--primary-light);color:var(--primary);margin-top:1px}
+.notif-ic.success{background:var(--success-light);color:var(--success)}
+.notif-body{min-width:0}
+.notif-text{font-size:13px;color:var(--ink-800);line-height:1.4;display:block}
+.notif-time{font-size:11px;color:var(--text-tertiary);display:block;margin-top:2px}
+.empty-block{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:36px 24px 40px}
+.empty-ic{width:52px;height:52px;border-radius:50%;background:var(--bg-app);display:flex;align-items:center;justify-content:center;color:var(--text-tertiary)}
+.empty-ic-success{background:var(--success-light);color:var(--success)}
+.empty-text{font-size:13.5px;color:var(--text-secondary);max-width:280px;line-height:1.5;margin:0}
+@media(max-width:1100px){.dash-side{position:fixed;left:0;top:0;height:100vh;transform:translateX(-100%);transition:transform .24s var(--ease-out);box-shadow:var(--shadow-lg)}.dash.nav-open .dash-side{transform:translateX(0)}.menu-btn{display:flex}.dash-cols{grid-template-columns:1fr}}
+@media(min-width:1101px){.dash-scrim{display:none}}
+@media(max-width:860px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.top-search{display:none}}
+@media(max-width:640px){.dash-top{padding:0 16px;gap:12px}.dash-content{padding:20px 16px 40px}.top-greet h1{font-size:17px}.kpi-grid{gap:12px}.kpi-card{padding:13px}.kpi-value{font-size:22px}}
+</style>
+</helmet>
+<div class="{{ dashCls }}">
+<sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ false }}"><button type="button" class="dash-scrim" onClick="{{ closeSidebar }}" aria-label="Đóng menu"></button></sc-if>
+<aside class="dash-side">
+<div class="side-logo"><img src="_ds/l-t-b-s-design-system-ab8fedcf-19df-47f5-9322-bcaf9725c5e9/assets/logo-color.svg" alt="Đà Lạt BĐS"></div>
+<nav class="side-nav">
+<sc-for list="{{ navItems }}" as="n" hint-placeholder-count="7"><a href="#" class="{{ n.cls }}" onClick="{{ closeSidebar }}"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="{{ n.icon }}" size="18" stroke="1.7" hint-size="18px,18px"></x-import><span>{{ n.label }}</span></a></sc-for>
+</nav>
+</aside>
+<div class="dash-main">
+<header class="dash-top">
+<button type="button" class="menu-btn" onClick="{{ toggleSidebar }}" aria-label="Mở menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+<div class="top-greet"><h1>{{ greeting }}, {{ brokerName }}</h1><p>{{ territoryLine }}</p></div>
+<div class="top-actions">
+<div class="top-search"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Input" variant="search" placeholder="Tìm khách, tin, địa chỉ…" hint-size="100%,38px"></x-import></div>
+<button type="button" class="bell-btn" aria-label="Thông báo"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="bell" size="19" stroke="1.7" hint-size="19px,19px"></x-import><sc-if value="{{ hasNotif }}" hint-placeholder-val="{{ true }}"><span class="bell-dot">{{ notifCount }}</span></sc-if></button>
+<x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Avatar" name="{{ brokerName }}" size="38" tone="blue" hint-size="38px,38px"></x-import>
+</div>
+</header>
+<main class="dash-content">
+<section class="kpi-grid">
+<sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+<div class="kpi-card">
+<div class="kpi-icon"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="{{ k.icon }}" size="18" stroke="1.7" hint-size="18px,18px"></x-import></div>
+<div class="kpi-label">{{ k.label }}</div>
+<div class="kpi-value-row"><span class="kpi-value">{{ k.value }}</span><sc-if value="{{ k.showSpark }}" hint-placeholder-val="{{ false }}"><svg class="kpi-spark" width="56" height="22" viewBox="0 0 56 22" fill="none"><polyline points="0,18 10,14 20,16 30,10 40,11 56,3" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline></svg></sc-if></div>
+<div class="kpi-delta">{{ k.delta }}</div>
+</div>
+</sc-for>
+</section>
+<div class="dash-cols">
+<div class="col-main">
+<div class="card">
+<x-import component-from-global-scope="LTBSDesignSystem_ab8fed.SectionHeader" title="Nguồn theo địa bàn" icon="mapPin" hint-size="100%,44px"></x-import>
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><div class="empty-block"><div class="empty-ic"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="mapPin" size="22" stroke="1.6" hint-size="22px,22px"></x-import></div><p class="empty-text">Địa bàn của bạn đang trống. Thêm tin đầu tiên để bắt đầu phủ nguồn.</p><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="solid" tone="primary" size="sm" icon="plus" hint-size="auto,36px">Thêm tin đầu tiên</x-import></div></sc-if>
+<sc-if value="{{ isNotEmpty }}" hint-placeholder-val="{{ true }}"><p class="card-note">Nguyên tắc: ở đâu có BĐS bán, ở đó phải có nguồn</p><sc-for list="{{ wardsData }}" as="w" hint-placeholder-count="3"><div class="{{ w.rowCls }}"><div class="ward-name">{{ w.name }}</div><div class="ward-right"><sc-if value="{{ w.hasSource }}" hint-placeholder-val="{{ true }}"><span class="ward-count">{{ w.count }} tin đã xác minh</span></sc-if><sc-if value="{{ w.noSource }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Badge" tone="amber" hint-size="auto,20px">chưa có nguồn</x-import><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="soft" tone="primary" size="sm" icon="plus" hint-size="auto,32px">Thêm nguồn khu này</x-import></sc-if></div></div></sc-for></sc-if>
+</div>
+<div class="card">
+<x-import component-from-global-scope="LTBSDesignSystem_ab8fed.SectionHeader" title="Đang chờ xác minh" icon="shield" hint-size="100%,44px"></x-import>
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><div class="empty-block"><div class="empty-ic empty-ic-success"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="check" size="22" stroke="1.8" hint-size="22px,22px"></x-import></div><p class="empty-text">Không có tin nào đang chờ. Mọi tin của bạn đã được xác minh.</p></div></sc-if>
+<sc-if value="{{ isNotEmpty }}" hint-placeholder-val="{{ true }}"><sc-for list="{{ pendingData }}" as="p" hint-placeholder-count="3"><div class="pend-row"><img class="pend-thumb" src="{{ p.image }}" alt="{{ p.address }}"><div class="pend-info"><div class="pend-addr">{{ p.address }}</div><div class="pend-bar"><sc-for list="{{ p.steps }}" as="s" hint-placeholder-count="3"><span class="pend-seg {{ s.barCls }}"></span></sc-for></div><div class="pend-steps"><sc-for list="{{ p.steps }}" as="s" hint-placeholder-count="3"><span class="pstep {{ s.state }}">{{ s.label }}</span></sc-for></div></div></div></sc-for></sc-if>
+</div>
+</div>
+<div class="col-side">
+<div class="card">
+<x-import component-from-global-scope="LTBSDesignSystem_ab8fed.SectionHeader" title="Việc hôm nay" icon="calendar" hint-size="100%,44px"></x-import>
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><div class="empty-block"><div class="empty-ic"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="calendar" size="22" stroke="1.6" hint-size="22px,22px"></x-import></div><p class="empty-text">Hôm nay chưa có lịch xem. Đặt lịch để tiến gần một giao dịch.</p><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Button" variant="soft" tone="primary" size="sm" icon="calendar" hint-size="auto,36px">Đặt lịch xem</x-import></div></sc-if>
+<sc-if value="{{ isNotEmpty }}" hint-placeholder-val="{{ true }}"><div class="subhead">Lịch xem hôm nay</div><sc-for list="{{ scheduleData }}" as="s" hint-placeholder-count="3"><div class="sched-row"><div class="sched-time">{{ s.time }}</div><div class="sched-body"><div class="sched-name">{{ s.client }}</div><div class="sched-addr">{{ s.address }}</div></div></div></sc-for><div class="subhead">Khách cần chăm</div><sc-for list="{{ clientsData }}" as="c" hint-placeholder-count="3"><div class="lead-row"><div class="lead-top"><span class="lead-name">{{ c.name }}</span><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Badge" tone="{{ c.tone }}" solid="{{ c.solid }}" hint-size="auto,20px">{{ c.stage }}</x-import></div><div class="lead-task">{{ c.task }}</div></div></sc-for></sc-if>
+</div>
+<div class="card">
+<x-import component-from-global-scope="LTBSDesignSystem_ab8fed.SectionHeader" title="Thông báo gần đây" icon="bell" hint-size="100%,44px"></x-import>
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><div class="empty-block" style="padding:20px 24px 28px"><p class="empty-text">Chưa có thông báo nào.</p></div></sc-if>
+<sc-if value="{{ isNotEmpty }}" hint-placeholder-val="{{ true }}"><sc-for list="{{ notifData }}" as="ntf" hint-placeholder-count="4"><div class="notif-row"><div class="{{ ntf.iconCls }}"><x-import component-from-global-scope="LTBSDesignSystem_ab8fed.Icon" name="{{ ntf.icon }}" size="14" stroke="1.8" hint-size="14px,14px"></x-import></div><div class="notif-body"><span class="notif-text">{{ ntf.text }}</span><span class="notif-time">{{ ntf.time }}</span></div></div></sc-for></sc-if>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dataMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Có dữ liệu&quot;,&quot;Trống (mới bắt đầu)&quot;],&quot;default&quot;:&quot;Có dữ liệu&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Nội dung&quot;},&quot;activeNavStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Nền màu&quot;,&quot;Thanh màu&quot;],&quot;default&quot;:&quot;Thanh màu&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Sidebar&quot;},&quot;showSparkline&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;KPI&quot;}}">
+class Component extends DCLogic {
+  state = { sidebarOpen: false };
+  navItemsBase = [
+    { icon: "grid", label: "Tổng quan", active: true },
+    { icon: "building", label: "Tin của tôi", active: false },
+    { icon: "shield", label: "Chờ xác minh", active: false },
+    { icon: "users", label: "Khách", active: false },
+    { icon: "calendar", label: "Lịch xem", active: false },
+    { icon: "mapPin", label: "Địa bàn", active: false },
+    { icon: "user", label: "Hồ sơ", active: false }
+  ];
+  wardsData = [
+    { name: "Phường 8", hasSource: true, noSource: false, count: 5, rowCls: "ward-row" },
+    { name: "Phường 9", hasSource: true, noSource: false, count: 3, rowCls: "ward-row" },
+    { name: "Xã Xuân Thọ", hasSource: false, noSource: true, count: 0, rowCls: "ward-row no-source" }
+  ];
+  pendingData = [
+    { image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=300&auto=format&fit=crop", address: "Nhà phố Nguyễn Công Trứ, P.8", steps: [
+      { label: "Sổ", state: "done", barCls: "on" },
+      { label: "Quy hoạch", state: "current", barCls: "on" },
+      { label: "Hiện trạng", state: "pending", barCls: "" }
+    ] },
+    { image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=300&auto=format&fit=crop", address: "Đất nền Phù Đổng Thiên Vương, P.9", steps: [
+      { label: "Sổ", state: "current", barCls: "on" },
+      { label: "Quy hoạch", state: "pending", barCls: "" },
+      { label: "Hiện trạng", state: "pending", barCls: "" }
+    ] },
+    { image: "https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=300&auto=format&fit=crop", address: "Biệt thự Trại Mát", steps: [
+      { label: "Sổ", state: "done", barCls: "on" },
+      { label: "Quy hoạch", state: "done", barCls: "on" },
+      { label: "Hiện trạng", state: "current", barCls: "on" }
+    ] }
+  ];
+  scheduleData = [
+    { time: "09:00", client: "Anh Tuấn", address: "Nhà phố Nguyễn Công Trứ, P.8" },
+    { time: "11:30", client: "Chị Hương", address: "Đất nền Phù Đổng Thiên Vương, P.9" },
+    { time: "14:30", client: "Anh Long", address: "Biệt thự Trại Mát" }
+  ];
+  clientsData = [
+    { name: "Chị Lan", stage: "Tin", tone: "blue", solid: false, task: "gửi tin P.9 đã hẹn" },
+    { name: "Anh Khoa", stage: "Thích", tone: "gray", solid: false, task: "gọi lại xác nhận nhu cầu" },
+    { name: "Anh Đức", stage: "Chốt", tone: "blue", solid: true, task: "chuẩn bị hồ sơ đặt cọc" }
+  ];
+  notifData = [
+    { icon: "check", iconCls: "notif-ic success", text: "Tin Nhà phố Nguyễn Công Trứ, P.8 đã được duyệt xác minh", time: "2 giờ trước" },
+    { icon: "calendar", iconCls: "notif-ic", text: "Anh Tuấn xác nhận lịch xem 09:00 sáng mai", time: "4 giờ trước" },
+    { icon: "mapPin", iconCls: "notif-ic", text: "Có khách hỏi thêm về Đất nền Phù Đổng Thiên Vương", time: "hôm qua" },
+    { icon: "shield", iconCls: "notif-ic", text: "Hồ sơ quy hoạch Xã Xuân Thọ vừa được cập nhật", time: "hôm qua" }
+  ];
+  toggleSidebar = () => this.setState((s) => ({ sidebarOpen: !s.sidebarOpen }));
+  closeSidebar = () => this.setState({ sidebarOpen: false });
+  renderVals() {
+    const isEmpty = (this.props.dataMode ?? "Có dữ liệu") === "Trống (mới bắt đầu)";
+    const isNotEmpty = !isEmpty;
+    const sparkOn = this.props.showSparkline ?? true;
+    const navStyle = (this.props.activeNavStyle ?? "Nền màu") === "Thanh màu" ? "active-bar" : "active-fill";
+    const navItems = this.navItemsBase.map((n) => ({ ...n, cls: "side-link" + (n.active ? " active " + navStyle : "") }));
+    const hour = new Date().getHours();
+    const greeting = hour < 11 ? "Chào buổi sáng" : hour < 13 ? "Chào buổi trưa" : hour < 18 ? "Chào buổi chiều" : "Chào buổi tối";
+    const kpis = [
+      { icon: "shield", label: "Tin đã xác minh", value: isEmpty ? "0" : "8", delta: isEmpty ? "chưa có tin nào" : "+3 tuần này", showSpark: false },
+      { icon: "calendar", label: "Lịch xem đã đặt", value: isEmpty ? "0" : "6", delta: isEmpty ? "chưa có lịch nào" : "mục tiêu 10", showSpark: isNotEmpty && sparkOn },
+      { icon: "mapPin", label: "Khu vực có nguồn", value: isEmpty ? "0 / 3 phường" : "2 / 3 phường", delta: isEmpty ? "chưa phủ khu nào" : "Phường 8, Phường 9", showSpark: false },
+      { icon: "dollarSign", label: "Cọc / Giao dịch", value: "0", delta: "chưa phát sinh", showSpark: false }
+    ];
+    const notifCount = isEmpty ? 0 : this.notifData.length;
+    return {
+      sidebarOpen: this.state.sidebarOpen,
+      dashCls: "dash" + (this.state.sidebarOpen ? " nav-open" : ""),
+      toggleSidebar: this.toggleSidebar,
+      closeSidebar: this.closeSidebar,
+      navItems,
+      greeting,
+      brokerName: "Minh",
+      territoryLine: "Phụ trách Phường 8, Phường 9, Xã Xuân Thọ",
+      kpis,
+      isEmpty,
+      isNotEmpty,
+      wardsData: this.wardsData,
+      pendingData: this.pendingData,
+      scheduleData: this.scheduleData,
+      clientsData: this.clientsData,
+      notifData: this.notifData,
+      notifCount,
+      hasNotif: notifCount > 0
+    };
+  }
+}
+</script>
+</body>
+</html>

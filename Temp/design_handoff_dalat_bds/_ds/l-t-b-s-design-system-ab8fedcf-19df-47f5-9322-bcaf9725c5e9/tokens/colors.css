@@ -1,0 +1,76 @@
+/* Đà Lạt BĐS — Color tokens
+   Primary brand blue #3270FC. Warm, human semantic accents evoking Đà Lạt:
+   pine green, sunrise amber, misty violet, lake teal. Never garish. */
+:root {
+  /* ── Brand primary ── */
+  --blue-50:  #eef4ff;
+  --blue-100: #e8effe;  /* primary-light surface */
+  --blue-200: #d3e0fe;
+  --blue-300: #a9c3fd;
+  --blue-400: #6a97fc;
+  --blue-500: #3270fc;  /* brand core */
+  --blue-600: #2159e0;
+  --blue-700: #1a48b8;
+  --blue-800: #163a8f;
+
+  /* ── Neutral / ink ── */
+  --ink-900: #0f1c32;  /* headings on light */
+  --ink-800: #1a1a2e;  /* primary text */
+  --ink-700: #303650;
+  --ink-600: #4b5266;
+  --ink-500: #6b7280;  /* secondary text */
+  --ink-400: #9ca3af;  /* tertiary text */
+  --ink-300: #cbd2dd;
+  --ink-200: #e5e7eb;  /* borders */
+  --ink-100: #f1f3f6;  /* secondary surface */
+  --ink-50:  #f7f8fa;  /* app background */
+  --white:   #ffffff;
+
+  /* ── Semantic accents (core / light-surface) ── */
+  --green:        #059669;
+  --green-light:  #d1fae5;
+  --amber:        #d97706;
+  --amber-light:  #fef3c7;
+  --red:          #ef4444;
+  --red-strong:   #dc2626;
+  --red-light:    #fee2e2;
+  --purple:       #7c3aed;
+  --purple-light: #ede9fe;
+  --teal:         #0d9488;
+  --teal-light:   #ccfbf1;
+  --pink:         #db2777;
+  --pink-light:   #fce7f3;
+
+  /* ── Semantic aliases (use these in components) ── */
+  --primary:          var(--blue-500);
+  --primary-hover:    var(--blue-600);
+  --primary-active:   var(--blue-700);
+  --primary-light:    var(--blue-100);
+  --primary-contrast: var(--white);
+
+  --success:       var(--green);
+  --success-light: var(--green-light);
+  --warning:       var(--amber);
+  --warning-light: var(--amber-light);
+  --danger:        var(--red);
+  --danger-light:  var(--red-light);
+
+  --text-primary:   var(--ink-800);
+  --text-secondary: var(--ink-500);
+  --text-tertiary:  var(--ink-400);
+  --text-on-primary: var(--white);
+
+  --bg-primary:    var(--white);
+  --bg-secondary:  var(--ink-100);
+  --bg-app:        var(--ink-50);
+  --bg-card:       var(--white);
+
+  --border:        var(--ink-200);
+  --border-strong: var(--ink-300);
+
+  /* ── Brand gradients (heroes, headers) ── */
+  --grad-primary: linear-gradient(135deg, #3270fc 0%, #2159e0 100%);              /* @kind color */
+  --grad-hero:    linear-gradient(150deg, #163a8f 0%, #2159e0 55%, #3270fc 100%); /* @kind color */
+  --grad-pine:    linear-gradient(135deg, #0d9488 0%, #059669 100%);              /* @kind color */
+  --grad-dusk:    linear-gradient(135deg, #4b3f9e 0%, #7c3aed 100%);              /* @kind color */
+}
